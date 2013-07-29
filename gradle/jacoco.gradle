@@ -1,0 +1,16 @@
+if (gradle.gradleVersion == '1.6') {
+    logger.warn("Jacoco code coverage is not available with Gradle 1.6")
+} else {
+    apply plugin: 'jacoco'
+    jacoco {
+        excludes = [
+            '**/*Exception',
+            '**/*Runner',
+            '**/ReaderUtil',
+            '**/SourcePrinter',
+            '**/EscapeUtil',
+            '**/ExpressionPrinter',
+            '**/PrinterState',
+        ]
+    }
+}

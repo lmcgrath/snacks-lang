@@ -1,0 +1,16 @@
+apply plugin: 'pmd'
+
+dependencies {
+    pmd 'net.sourceforge.pmd:pmd:5.0.3'
+}
+
+pmd {
+    toolVersion = '5.0.3'
+    ignoreFailures = true
+    ruleSets = []
+    ruleSetFiles = files("${rootDir}/gradle/pmd/ruleset.xml")
+}
+
+tasks.withType(Pmd) {
+    enabled = project.hasProperty('analyze')
+}

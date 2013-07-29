@@ -1,0 +1,14 @@
+apply plugin: 'findbugs'
+
+findbugs {
+    excludeFilter = file("${rootDir}/gradle/findbugs/exclude.xml")
+    reportLevel = 'low'
+}
+
+tasks.withType(FindBugs) {
+    enabled = project.hasProperty('analyze')
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}

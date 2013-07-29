@@ -1,0 +1,35 @@
+apply plugin: 'jdepend'
+
+dependencies {
+    jdepend 'org.apache.ant:ant-jdepend:1.9.0'
+}
+
+tasks.withType(JDepend) {
+    enabled = project.hasProperty('analyze')
+}
+
+sourceSets.each { sourceSet ->
+
+    def name = sourceSet.name.capitalize()
+    def jdependTaskName = 'jdepend' + name
+    def reportTaskName = 'jdepend' + name + 'Report'
+
+    task (reportTaskName, dependsOn: jdependTaskName) {
+        ext.xmlReport = file("${buildDir}/reports/jdepend/${sourceSet.name}.xml")
+        ext.htmlReport = file("${buildDir}/reports/jdepend/${sourceSet.name}.html")
+        enabled = project.hasProperty('analyze')
+        inputs.files xmlReport
+        outputs.files htmlReport
+        doLast {
+            if (xmlReport.exists()) {
+                ant.xslt(
+                    in: xmlReport.absoluteFile,
+                    style: "${rootDir}/gradle/jdepend/jdepend.xsl",
+                    out: htmlReport.absoluteFile
+                )
+            }
+        }
+    }
+
+    check.dependsOn << reportTaskName
+}

@@ -1,0 +1,49 @@
+ext.grammarDir = file("${generatedDir}/iddic/lang/compiler")
+ext.lexerSpec = file("${projectDir}/src/main/resources/IddicLexer.g4")
+ext.parserSpec = file("${projectDir}/src/main/resources/IddicParser.g4")
+ext.grammarFiles = files(
+    "${grammarDir}/IddicLexer.java",
+    "${grammarDir}/IddicLexer.tokens",
+    "${grammarDir}/IddicParser.java",
+    "${grammarDir}/IddicParser.tokens",
+    "${grammarDir}/IddicParserBaseVisitor.java",
+    "${grammarDir}/IddicParserVisitor.java",
+)
+
+configurations {
+    antlr
+}
+
+dependencies {
+    antlr 'org.antlr:antlr4:4.1'
+}
+
+task (generateLexer, type: JavaExec) {
+    inputs.files lexerSpec
+    classpath configurations.antlr
+    main = 'org.antlr.v4.Tool'
+    args = [ '-o', "${grammarDir}", lexerSpec ]
+    doFirst {
+        grammarDir.mkdirs()
+    }
+}
+
+task (generateParser, type: JavaExec) {
+    inputs.files parserSpec
+    classpath configurations.antlr
+    main = 'org.antlr.v4.Tool'
+    args = [ '-o', "${grammarDir}", '-no-listener', '-visitor', parserSpec ]
+    doFirst {
+        grammarDir.mkdirs()
+    }
+}
+
+task (cleanGrammar) {
+    inputs.files grammarFiles
+    doLast {
+        grammarFiles.each { it.delete() }
+    }
+}
+
+clean.dependsOn << 'cleanParser'
+compileJava.dependsOn << [ 'generateLexer', 'generateParser' ]
