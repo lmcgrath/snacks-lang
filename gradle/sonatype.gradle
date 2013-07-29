@@ -1,0 +1,54 @@
+apply plugin: 'maven'
+apply plugin: 'nexus'
+apply plugin: 'signing'
+
+task(reportsZip, type: Zip, dependsOn: ['check']) {
+    classifier = 'reports'
+    from "${project.buildDir}/reports"
+    into "${project.name}-${project.version}-reports"
+}
+
+artifacts {
+    archives(distZip) {
+        classifier = 'dist'
+    }
+    archives(reportsZip) {
+        classifier = 'reports'
+    }
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        beforeDeployment { deployment -> signing.signPom(deployment) }
+
+        pom.project {
+            name "${project.name}"
+            description "${project.description}"
+            url 'http://iddic.io/'
+            inceptionYear '2013'
+            packaging 'jar'
+
+            scm {
+                url 'https://github.com/lmcgrath/iddic'
+                connection 'scm:https://github.com/lmcgrath/iddic.git'
+                developerConnection 'scm:git://github.com/lmcgrath/iddic.git'
+            }
+
+            licenses {
+                license {
+                    name 'The MIT License'
+                    url 'http://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'lmcgrath'
+                    name 'Logan McGrath'
+                    email 'mcgrath.logan@gmail.com'
+                }
+            }
+        }
+    }
+}

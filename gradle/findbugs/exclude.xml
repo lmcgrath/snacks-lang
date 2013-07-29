@@ -1,0 +1,12 @@
+<FindBugsFilter>
+    <Match>
+        <Or>
+            <Bug code="UwF"/>
+            <Bug code="SIC"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="iddic.util.StringUtil"/>
+        <Bug code="Dm"/>
+    </Match>
+</FindBugsFilter>

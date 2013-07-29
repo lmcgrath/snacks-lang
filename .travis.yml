@@ -1,0 +1,12 @@
+language: java
+#after_script: "gradle uploadArchives -PnexusUsername=$SONATYPE_USERNAME -PnexusPassword=$SONATYPE_PASSWORD"
+jdk:
+  - oraclejdk7
+  - openjdk7
+branches:
+  only:
+    - master
+env:
+  global:
+    - secure: "Abn41xo4PnTAPnU3JM1R/kPiTh4DXHjz5ePhDqI6oZR5uViDYGqrm+o3KXPK\nnFWBdaR8Kr5MvUCmMEaYlltj3TDtJd/ICWy+dFwQRs6tCVgjqMbdfSW+ucDv\nMZEQWCroF1J7Oa5PWpFgZmCjmVkFdbxdTvzgm4yyFzhmXERE2yA="
+    - secure: "dTyCBmDPVPyeQFMVCgVvlW8fp11CLerEeOVXAI3Po0QpCcJgQ9c7Xw3uoUgu\nrbXu6gORcEKmLjl+bvrIr6Xj+8yRC5cONHXxKGqMUpIbZ8/cwkHBa7RVtlwi\nRLJ2jfNEXnMXWisFOoGLK05ynFcxeYrxb9+ewAhIAdparr/RuOE="

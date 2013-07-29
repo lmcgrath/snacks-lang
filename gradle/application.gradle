@@ -1,0 +1,12 @@
+apply plugin: 'application'
+
+applicationName = 'iddic'
+mainClassName = 'iddic.lang.cli.MainRunner'
+
+def distFiles = files(
+    "${project.projectDir}/LICENSE",
+)
+
+applicationDistribution.from(distFiles) {
+    into '/'
+}
