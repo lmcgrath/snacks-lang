@@ -1,22 +1,33 @@
 package iddic.lang.compiler;
 
-import static iddic.lang.compiler.CharStream.EOF;
-import static java.lang.Character.isJavaIdentifierPart;
-import static java.lang.Character.isJavaIdentifierStart;
+import static com.google.common.primitives.Chars.asList;
+import static iddic.lang.compiler.StringReader.EOF;
+import static java.lang.Character.isLetter;
 import static java.lang.Character.isWhitespace;
+import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
 
+import java.util.List;
 import iddic.lang.syntax.*;
 
-public class Parser {
+public class Parser implements AutoCloseable {
 
-    private static final char[] symbols = new char[] { '+', '-', '*', '/' };
-    private final CharStream input;
+    private static final List<Character> SYMBOL_CHARS = asList(
+        '+', '-', '*', '/', '<', '=', '>', '@', '!', '$', '^', '&', '|', '?', '.', ':', '~', '_'
+    );
 
-    public Parser(CharStream input) {
+    private final InputReader input;
+
+    public Parser(InputReader input) {
         this.input = input;
     }
 
+    @Override
+    public void close() {
+        input.close();
+    }
+
     public Expression parse() throws ParseException {
+        skipWhitespace();
         if (peek() == EOF) {
             return new Nothing();
         } else {
@@ -28,12 +39,31 @@ public class Parser {
         input.consume();
     }
 
+    private void ensureNoAtoms() throws ParseException {
+        if (expectingAtom() && peek() != '(') {
+            throw unexpected();
+        }
+    }
+
+    private void ensureNoNonDigits() throws ParseException {
+        if (expectingId()) {
+            throw unexpected();
+        } else if (expectingString()) {
+            throw unexpected("string");
+        }
+    }
+
+    private void ensureNoStrings() throws ParseException {
+        if (expectingString()) {
+            throw unexpected("string");
+        }
+    }
+
     private boolean expecting(char c) {
         return peek() == c;
     }
 
     private boolean expectingAtom() {
-        skipWhitespace();
         return !expecting(')');
     }
 
@@ -46,7 +76,7 @@ public class Parser {
     }
 
     private boolean expectingId() {
-        return isJavaIdentifierStart(peek());
+        return isLetter(peek()) || SYMBOL_CHARS.contains((char) peek());
     }
 
     private boolean expectingNumber() {
@@ -61,17 +91,12 @@ public class Parser {
         }
     }
 
-    private boolean expectingSymbol() {
-        for (char c : symbols) {
-            if (expecting(c)) {
-                return true;
-            }
-        }
-        return false;
+    private boolean expectingString() {
+        return peek() == '"';
     }
 
-    private String getText(int start) {
-        return input.getText(start);
+    private String getText(Position start) {
+        return input.getSegment(start).getValue();
     }
 
     private int lookAhead(int offset) {
@@ -82,7 +107,7 @@ public class Parser {
         return input.peek();
     }
 
-    private int position() {
+    private Position position() {
         return input.position();
     }
 
@@ -100,8 +125,8 @@ public class Parser {
             expression = requireId();
         } else if (expectingNumber()) {
             expression = requireNumber();
-        } else if (expectingSymbol()) {
-            expression = requireSymbol();
+        } else if (expectingString()) {
+            expression = requireString();
         } else if (expecting('(')) {
             expression = requireList();
         } else {
@@ -111,32 +136,35 @@ public class Parser {
     }
 
     private Expression requireId() throws ParseException {
-        int start = position();
-        if (isJavaIdentifierStart(peek())) {
+        Position start = position();
+        if (expectingId()) {
             consume();
-            while (isJavaIdentifierPart(peek())) {
+            while (expectingId() || expectingDigit()) {
                 consume();
             }
+            ensureNoStrings();
             return new Identifier(getText(start));
         } else {
-            throw unexpectedInput("expecting letter");
+            throw unexpectedInput("expecting identifier");
         }
     }
 
     private Expression requireList() throws ParseException {
-        skipWhitespace();
         require('(');
+        skipWhitespace();
         Expression expression = requireAtom();
+        skipWhitespace();
         while (expectingAtom()) {
             expression = new Apply(expression, requireAtom());
+            skipWhitespace();
         }
-        skipWhitespace();
         require(')');
         return expression;
     }
 
     private Expression requireNumber() throws ParseException {
-        int start = position();
+        Position start = position();
+        Expression expression;
         if (expectingDigit()) {
             while (expectingDigit()) {
                 consume();
@@ -146,31 +174,47 @@ public class Parser {
                 while (expectingDigit()) {
                     consume();
                 }
-                return new DoubleLiteral(Double.parseDouble(getText(start)));
+                expression = new DoubleLiteral(Double.parseDouble(getText(start)));
             } else {
-                return new IntegerLiteral(Integer.parseInt(getText(start)));
+                expression = new IntegerLiteral(Integer.parseInt(getText(start)));
             }
         } else if (expectingDouble()) {
             consume();
             while (expectingDigit()) {
                 consume();
             }
-            return new DoubleLiteral(Double.parseDouble(getText(start)));
+            expression = new DoubleLiteral(Double.parseDouble(getText(start)));
         } else {
-            throw unexpectedInput("expecting digits");
+            throw unexpectedInput("expecting integer or double");
         }
+        ensureNoNonDigits();
+        return expression;
     }
 
-    private Expression requireSymbol() {
-        int start = position();
-        consume();
-        return new Identifier(getText(start));
+    private Expression requireString() throws ParseException {
+        require('"');
+        Position start = position();
+        while (peek() != '"') {
+            consume();
+        }
+        Expression expression = new StringLiteral(unescapeJava(getText(start)));
+        require('"');
+        ensureNoAtoms();
+        return expression;
     }
 
     private void skipWhitespace() {
         while (isWhitespace(peek())) {
             consume();
         }
+    }
+
+    private ParseException unexpected() throws ParseException {
+        throw new ParseException("Unexpected '" + (char) peek() + "' in " + position());
+    }
+
+    private ParseException unexpected(String name) throws ParseException {
+        throw new ParseException("Unexpected " + name + " in " + position());
     }
 
     private ParseException unexpectedInput(String alternative) throws ParseException {
@@ -181,6 +225,6 @@ public class Parser {
         } else {
             input = "'" + (char) peek + "'";
         }
-        throw new ParseException("Unexpected " + input + "; " + alternative);
+        throw new ParseException("Unexpected " + input + "; " + alternative + " in " + position());
     }
 }
