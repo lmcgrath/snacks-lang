@@ -31,12 +31,18 @@ public class Parser implements AutoCloseable {
         if (peek() == EOF) {
             return new Nothing();
         } else {
-            return requireList();
+            return requirePhrase();
         }
     }
 
     private void consume() {
         input.consume();
+    }
+
+    private void consume(int length) {
+        for (int i = 0; i < length; i++) {
+            consume();
+        }
     }
 
     private void ensureNoAtoms() throws ParseException {
@@ -76,7 +82,16 @@ public class Parser implements AutoCloseable {
     }
 
     private boolean expectingId() {
-        return isLetter(peek()) || SYMBOL_CHARS.contains((char) peek());
+        return isId(peek());
+    }
+
+    private boolean expectingKeyword(String word) throws ParseException {
+        for (int i = 0; i < word.length(); i++) {
+            if (lookAhead(i + 1) != word.charAt(i)) {
+                return false;
+            }
+        }
+        return !isId(lookAhead(word.length() + 1));
     }
 
     private boolean expectingNumber() {
@@ -97,6 +112,10 @@ public class Parser implements AutoCloseable {
 
     private String getText(Position start) {
         return input.getSegment(start).getValue();
+    }
+
+    private boolean isId(int c) {
+        return isLetter(c) || SYMBOL_CHARS.contains((char) c);
     }
 
     private int lookAhead(int offset) {
@@ -128,7 +147,7 @@ public class Parser implements AutoCloseable {
         } else if (expectingString()) {
             expression = requireString();
         } else if (expecting('(')) {
-            expression = requireList();
+            expression = requirePhrase();
         } else {
             throw unexpectedInput("expecting identifier or number");
         }
@@ -136,6 +155,10 @@ public class Parser implements AutoCloseable {
     }
 
     private Expression requireId() throws ParseException {
+        return new Identifier(requireIdText());
+    }
+
+    private String requireIdText() throws ParseException {
         Position start = position();
         if (expectingId()) {
             consume();
@@ -143,29 +166,43 @@ public class Parser implements AutoCloseable {
                 consume();
             }
             ensureNoStrings();
-            return new Identifier(getText(start));
+            return getText(start);
         } else {
             throw unexpectedInput("expecting identifier");
         }
     }
 
-    private Expression requireList() throws ParseException {
-        require('(');
-        skipWhitespace();
-        Expression expression = requireAtom();
-        skipWhitespace();
-        while (expectingAtom()) {
-            expression = new Apply(expression, requireAtom());
-            skipWhitespace();
+    private void requireKeyword(String word) throws ParseException {
+        for (int i = 0; i < word.length(); i++) {
+            if (!expecting(word.charAt(i))) {
+                throw unexpectedInput("keyword '" + word + "'");
+            }
+            consume();
         }
-        require(')');
-        return expression;
+        if (isId(peek())) {
+            throw unexpectedInput("keyword '" + word + "'");
+        }
+    }
+
+    private Expression requireLet() throws ParseException {
+        requireKeyword("let");
+        skipWhitespace();
+        String id = requireIdText();
+        skipWhitespace();
+        require('=');
+        skipWhitespace();
+        Expression definition = requireAtom();
+        skipWhitespace();
+        requireKeyword("in");
+        skipWhitespace();
+        Expression scope = requirePhrase();
+        return new Let(id, definition, scope);
     }
 
     private Expression requireNumber() throws ParseException {
-        Position start = position();
-        Expression expression;
-        if (expectingDigit()) {
+        if (expectingDigit() || expectingDouble()) {
+            Position start = position();
+            Expression expression;
             while (expectingDigit()) {
                 consume();
             }
@@ -178,16 +215,29 @@ public class Parser implements AutoCloseable {
             } else {
                 expression = new IntegerLiteral(Integer.parseInt(getText(start)));
             }
-        } else if (expectingDouble()) {
-            consume();
-            while (expectingDigit()) {
-                consume();
-            }
-            expression = new DoubleLiteral(Double.parseDouble(getText(start)));
+            ensureNoNonDigits();
+            return expression;
         } else {
             throw unexpectedInput("expecting integer or double");
         }
-        ensureNoNonDigits();
+    }
+
+    private Expression requirePhrase() throws ParseException {
+        require('(');
+        skipWhitespace();
+        Expression expression;
+        if (expectingKeyword("let")) {
+            expression = requireLet();
+        } else {
+            expression = requireAtom();
+            skipWhitespace();
+            while (expectingAtom()) {
+                expression = new Apply(expression, requireAtom());
+                skipWhitespace();
+            }
+        }
+        skipWhitespace();
+        require(')');
         return expression;
     }
 

@@ -8,8 +8,8 @@ import java.util.Arrays;
 
 public class StreamReader implements InputReader {
 
-    private static final int READ_CHUNK_SIZE = 1024;
-    private static final int INITIAL_BUFFER_SIZE = 1024;
+    private static final int READ_CHUNK_SIZE = 10;
+    private static final int INITIAL_BUFFER_SIZE = 10;
 
     private final Reader reader;
     public String source = "<unknown>";
