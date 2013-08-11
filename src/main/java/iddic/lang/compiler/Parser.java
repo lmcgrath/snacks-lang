@@ -1,23 +1,17 @@
 package iddic.lang.compiler;
 
-import static com.google.common.primitives.Chars.asList;
-import static iddic.lang.compiler.StringReader.EOF;
-import static java.lang.Character.isLetter;
-import static java.lang.Character.isWhitespace;
-import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
+import static iddic.lang.compiler.StringStream.EOF;
+import static iddic.lang.compiler.Terminals.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import iddic.lang.syntax.*;
 
 public class Parser implements AutoCloseable {
 
-    private static final List<Character> SYMBOL_CHARS = asList(
-        '+', '-', '*', '/', '<', '=', '>', '@', '!', '$', '^', '&', '|', '?', '.', ':', '~', '_'
-    );
+    private final TokenStream input;
 
-    private final InputReader input;
-
-    public Parser(InputReader input) {
+    public Parser(TokenStream input) {
         this.input = input;
     }
 
@@ -27,99 +21,27 @@ public class Parser implements AutoCloseable {
     }
 
     public Expression parse() throws ParseException {
-        skipWhitespace();
-        if (peek() == EOF) {
+        if (expect(EOF)) {
             return new Nothing();
         } else {
             return requirePhrase();
         }
     }
 
-    private void consume() {
-        input.consume();
+    private boolean expect(int kind) {
+        return peek() == kind;
     }
 
-    private void consume(int length) {
-        for (int i = 0; i < length; i++) {
-            consume();
-        }
+    private boolean expectAtom() {
+        return peek() == ID
+            || peek() == INT
+            || peek() == DOUBLE
+            || peek() == DOUBLE_QUOTE
+            || peek() == LPAREN;
     }
 
-    private void ensureNoAtoms() throws ParseException {
-        if (expectingAtom() && peek() != '(') {
-            throw unexpected();
-        }
-    }
-
-    private void ensureNoNonDigits() throws ParseException {
-        if (expectingId()) {
-            throw unexpected();
-        } else if (expectingString()) {
-            throw unexpected("string");
-        }
-    }
-
-    private void ensureNoStrings() throws ParseException {
-        if (expectingString()) {
-            throw unexpected("string");
-        }
-    }
-
-    private boolean expecting(char c) {
-        return peek() == c;
-    }
-
-    private boolean expectingAtom() {
-        return !expecting(')');
-    }
-
-    private boolean expectingDigit() {
-        return peek() >= '0' && peek() <= '9';
-    }
-
-    private boolean expectingDouble() {
-        return peek() == '.' && lookAhead(0) >= '0' && lookAhead(0) <= '9';
-    }
-
-    private boolean expectingId() {
-        return isId(peek());
-    }
-
-    private boolean expectingKeyword(String word) throws ParseException {
-        for (int i = 0; i < word.length(); i++) {
-            if (lookAhead(i + 1) != word.charAt(i)) {
-                return false;
-            }
-        }
-        return !isId(lookAhead(word.length() + 1));
-    }
-
-    private boolean expectingNumber() {
-        int peek = peek();
-        if (peek >= '0' && peek <= '9') {
-            return true;
-        } else if (peek == '.') {
-            int lookAhead = lookAhead(0);
-            return lookAhead >= '0' && peek <= '9';
-        } else {
-            return false;
-        }
-    }
-
-    private boolean expectingString() {
-        return peek() == '"';
-    }
-
-    private String getText(Position start) {
-        return input.getSegment(start).getValue();
-    }
-
-    private boolean isId(int c) {
-        return isLetter(c) || SYMBOL_CHARS.contains((char) c);
-    }
-
-    private int lookAhead(int offset) {
-        return input.lookAhead(offset);
+    private Token nextToken() {
+        return input.nextToken();
     }
 
     private int peek() {
@@ -130,151 +52,48 @@ public class Parser implements AutoCloseable {
         return input.position();
     }
 
-    private void require(char c) throws ParseException {
-        if (peek() == c) {
-            consume();
+    private Token require(int kind) throws ParseException {
+        if (expect(kind)) {
+            return nextToken();
         } else {
-            throw unexpectedInput("expecting '" + c + "'");
+            throw unexpectedToken();
         }
     }
 
     private Expression requireAtom() throws ParseException {
-        Expression expression;
-        if (expectingId()) {
-            expression = requireId();
-        } else if (expectingNumber()) {
-            expression = requireNumber();
-        } else if (expectingString()) {
-            expression = requireString();
-        } else if (expecting('(')) {
-            expression = requirePhrase();
-        } else {
-            throw unexpectedInput("expecting identifier or number");
-        }
-        return expression;
-    }
-
-    private Expression requireId() throws ParseException {
-        return new Identifier(requireIdText());
-    }
-
-    private String requireIdText() throws ParseException {
-        Position start = position();
-        if (expectingId()) {
-            consume();
-            while (expectingId() || expectingDigit()) {
-                consume();
-            }
-            ensureNoStrings();
-            return getText(start);
-        } else {
-            throw unexpectedInput("expecting identifier");
-        }
-    }
-
-    private void requireKeyword(String word) throws ParseException {
-        for (int i = 0; i < word.length(); i++) {
-            if (!expecting(word.charAt(i))) {
-                throw unexpectedInput("keyword '" + word + "'");
-            }
-            consume();
-        }
-        if (isId(peek())) {
-            throw unexpectedInput("keyword '" + word + "'");
-        }
-    }
-
-    private Expression requireLet() throws ParseException {
-        requireKeyword("let");
-        skipWhitespace();
-        String id = requireIdText();
-        skipWhitespace();
-        require('=');
-        skipWhitespace();
-        Expression definition = requireAtom();
-        skipWhitespace();
-        requireKeyword("in");
-        skipWhitespace();
-        Expression scope = requirePhrase();
-        return new Let(id, definition, scope);
-    }
-
-    private Expression requireNumber() throws ParseException {
-        if (expectingDigit() || expectingDouble()) {
-            Position start = position();
-            Expression expression;
-            while (expectingDigit()) {
-                consume();
-            }
-            if (expectingDouble()) {
-                consume();
-                while (expectingDigit()) {
-                    consume();
-                }
-                expression = new DoubleLiteral(Double.parseDouble(getText(start)));
-            } else {
-                expression = new IntegerLiteral(Integer.parseInt(getText(start)));
-            }
-            ensureNoNonDigits();
+        if (expect(ID)) {
+            return new Identifier((String) nextToken().getValue());
+        } else if (expect(INT)) {
+            return new IntegerLiteral((Integer) nextToken().getValue());
+        } else if (expect(DOUBLE)) {
+            return new DoubleLiteral((Double) nextToken().getValue());
+        } else if (expect(DOUBLE_QUOTE)) {
+            require(DOUBLE_QUOTE);
+            Expression expression = new StringLiteral((String) require(STRING).getValue());
+            require(DOUBLE_QUOTE);
             return expression;
+        } else if (expect(LPAREN)) {
+            return requirePhrase();
         } else {
-            throw unexpectedInput("expecting integer or double");
+            throw unexpectedToken();
         }
     }
 
     private Expression requirePhrase() throws ParseException {
-        require('(');
-        skipWhitespace();
-        Expression expression;
-        if (expectingKeyword("let")) {
-            expression = requireLet();
-        } else {
-            expression = requireAtom();
-            skipWhitespace();
-            while (expectingAtom()) {
-                expression = new Apply(expression, requireAtom());
-                skipWhitespace();
+        require(LPAREN);
+        Expression expression = requireAtom();
+        if (expectAtom()) {
+            List<Expression> arguments = new ArrayList<>();
+            while (expectAtom()) {
+                arguments.add(requireAtom());
             }
+            expression = new Apply(expression, arguments);
         }
-        skipWhitespace();
-        require(')');
+        require(RPAREN);
         return expression;
     }
 
-    private Expression requireString() throws ParseException {
-        require('"');
-        Position start = position();
-        while (peek() != '"') {
-            consume();
-        }
-        Expression expression = new StringLiteral(unescapeJava(getText(start)));
-        require('"');
-        ensureNoAtoms();
-        return expression;
-    }
-
-    private void skipWhitespace() {
-        while (isWhitespace(peek())) {
-            consume();
-        }
-    }
-
-    private ParseException unexpected() throws ParseException {
-        throw new ParseException("Unexpected '" + (char) peek() + "' in " + position());
-    }
-
-    private ParseException unexpected(String name) throws ParseException {
-        throw new ParseException("Unexpected " + name + " in " + position());
-    }
-
-    private ParseException unexpectedInput(String alternative) throws ParseException {
-        int peek = peek();
-        String input;
-        if (peek == EOF) {
-            input = "end-of-file";
-        } else {
-            input = "'" + (char) peek + "'";
-        }
-        throw new ParseException("Unexpected " + input + "; " + alternative + " in " + position());
+    private ParseException unexpectedToken() {
+        return new ParseException(position() + ": Unexpected " + nameOf(peek()));
     }
 }

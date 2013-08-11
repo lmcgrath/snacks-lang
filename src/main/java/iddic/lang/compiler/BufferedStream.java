@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 
-public class StreamReader implements InputReader {
+public class BufferedStream implements TextStream {
 
     private static final int READ_CHUNK_SIZE = 10;
     private static final int INITIAL_BUFFER_SIZE = 10;
@@ -20,7 +20,7 @@ public class StreamReader implements InputReader {
     private int size;
     private boolean eof;
 
-    public StreamReader(InputStream stream) {
+    public BufferedStream(InputStream stream) {
         reader = new InputStreamReader(stream);
         data = new char[INITIAL_BUFFER_SIZE];
     }
@@ -39,7 +39,7 @@ public class StreamReader implements InputReader {
         hasMore();
         if (eof) {
             assert lookAhead(1) == EOF;
-            throw new IllegalStateException("cannot consume EOF");
+            throw new IllegalStateException("Cannot consume EOF");
         } else if (position < size) {
             if (peek() == '\n') {
                 line++;
@@ -67,11 +67,6 @@ public class StreamReader implements InputReader {
     }
 
     @Override
-    public Segment getSegment(Position start, Position end) {
-        return new Segment(getText(start.getOffset(), end.getOffset()), start, end);
-    }
-
-    @Override
     public int lookAhead(int offset) {
         hasMore();
         if (offset < 0) {
@@ -92,9 +87,8 @@ public class StreamReader implements InputReader {
         return new Position(source, position, line, column);
     }
 
-    @Override
-    public int size() {
-        return size;
+    private Segment getSegment(Position start, Position end) {
+        return new Segment(getText(start.getOffset(), end.getOffset()), start, end);
     }
 
     private String getText(int start, int stop) {

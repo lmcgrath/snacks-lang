@@ -31,6 +31,10 @@ public class Segment {
         }
     }
 
+    public Position getStart() {
+        return start;
+    }
+
     public String getValue() {
         return value;
     }

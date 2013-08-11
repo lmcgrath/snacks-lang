@@ -28,7 +28,9 @@ public class ParserRunner implements CommandLineRunner {
         System.setErr(out);
         out.println("Type any input to see how it parses:");
         out.print(">>> ");
-        try (InputReader reader = new StreamReader(System.in); Parser parser = new Parser(reader)) {
+        TextStream reader = new BufferedStream(System.in);
+        Parser parser = new Parser(new TokenStream(new TokenSource(reader)));
+        try {
             Expression quit = new Identifier("quit");
             while (true) {
                 try {
@@ -38,10 +40,9 @@ public class ParserRunner implements CommandLineRunner {
                     } else {
                         out.println(expression);
                     }
-                } catch (IddicException exception) {
+                } catch (IddicException | ScanException exception) {
                     reader.consumeLine();
                     exception.printStackTrace(out);
-
                 }
                 out.print(">>> ");
             }
