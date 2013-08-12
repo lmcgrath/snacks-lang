@@ -7,8 +7,9 @@ import java.io.PrintStream;
 import java.util.List;
 import iddic.lang.IddicException;
 import iddic.lang.cli.CommandLineRunner;
-import iddic.lang.compiler.syntax.Expression;
-import iddic.lang.compiler.syntax.Identifier;
+import iddic.lang.compiler.syntax.IdentifierNode;
+import iddic.lang.compiler.syntax.SyntaxNode;
+import iddic.lang.compiler.syntax.SyntaxPrinter;
 
 public class ParserRunner implements CommandLineRunner {
 
@@ -30,15 +31,15 @@ public class ParserRunner implements CommandLineRunner {
         out.print(">>> ");
         TextStream reader = new BufferedStream(System.in);
         Parser parser = new Parser(new TokenStream(new TokenSource(reader)));
+        SyntaxPrinter printer = new SyntaxPrinter();
         try {
-            Expression quit = new Identifier("quit");
             while (true) {
                 try {
-                    Expression expression = parser.parse();
-                    if (quit.equals(expression)) {
+                    SyntaxNode node = parser.parse();
+                    if (node instanceof IdentifierNode && "quit".equals(((IdentifierNode) node).getName())) {
                         break;
                     } else {
-                        out.println(expression);
+                        printer.print(node, out);
                     }
                 } catch (IddicException | ScanException exception) {
                     reader.consumeLine();

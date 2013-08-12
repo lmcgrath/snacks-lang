@@ -67,6 +67,10 @@ public class TokenSource implements AutoCloseable {
         input.close();
     }
 
+    public Token empty(int kind) {
+        return new Token(kind, new Segment("", input.position(), input.position()), null);
+    }
+
     public Token nextToken() {
         skipWhitespace();
         start = input.position();

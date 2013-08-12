@@ -1,6 +1,7 @@
 package iddic.lang.compiler;
 
 import static iddic.lang.compiler.Terminals.nameOf;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 public class Token {
 
@@ -12,6 +13,10 @@ public class Token {
         this.kind = kind;
         this.segment = segment;
         this.value = value;
+    }
+
+    public Position getEnd() {
+        return segment.getEnd();
     }
 
     public int getKind() {
@@ -32,6 +37,6 @@ public class Token {
 
     @Override
     public String toString() {
-        return "(" + nameOf(kind) + " \"" + segment.getValue() + "\" " + getStart() + ")";
+        return "(" + nameOf(kind) + " \"" + escapeJava(segment.getValue()) + "\" " + getStart() + ")";
     }
 }

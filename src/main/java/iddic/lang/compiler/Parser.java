@@ -3,8 +3,6 @@ package iddic.lang.compiler;
 import static iddic.lang.compiler.StringStream.EOF;
 import static iddic.lang.compiler.Terminals.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import iddic.lang.compiler.syntax.*;
 
 public class Parser implements AutoCloseable {
@@ -20,9 +18,9 @@ public class Parser implements AutoCloseable {
         input.close();
     }
 
-    public Expression parse() throws ParseException {
+    public SyntaxNode parse() throws ParseException {
         if (expect(EOF)) {
-            return Nothing.INSTANCE;
+            return new NothingNode(empty(NOTHING));
         } else {
             return requirePhrase();
         }
@@ -63,22 +61,22 @@ public class Parser implements AutoCloseable {
         }
     }
 
-    private Expression requireAtom() throws ParseException {
+    private SyntaxNode requireAtom() throws ParseException {
         if (expect(ID)) {
-            return new Identifier((String) nextToken().getValue());
+            return new IdentifierNode(nextToken());
         } else if (expect(BOOL)) {
-            return "True".equals(nextToken().getValue()) ? IddicBool.TRUE : IddicBool.FALSE;
+            return new BooleanNode(nextToken());
         } else if (expect(NOTHING)) {
-            return Nothing.INSTANCE;
+            return new NothingNode(nextToken());
         } else if (expect(INT)) {
-            return new IddicInteger((Integer) nextToken().getValue());
+            return new IntegerNode(nextToken());
         } else if (expect(DOUBLE)) {
-            return new IddicDouble((Double) nextToken().getValue());
+            return new DoubleNode(nextToken());
         } else if (expect(DOUBLE_QUOTE)) {
             require(DOUBLE_QUOTE);
-            Expression expression = new IddicString((String) require(STRING).getValue());
+            SyntaxNode node = new StringNode((expect(STRING) ? require(STRING) : empty(STRING)));
             require(DOUBLE_QUOTE);
-            return expression;
+            return node;
         } else if (expect(LPAREN)) {
             return requirePhrase();
         } else {
@@ -86,18 +84,18 @@ public class Parser implements AutoCloseable {
         }
     }
 
-    private Expression requirePhrase() throws ParseException {
+    private Token empty(int kind) {
+        return input.empty(kind);
+    }
+
+    private SyntaxNode requirePhrase() throws ParseException {
         require(LPAREN);
-        Expression expression = requireAtom();
-        if (expectAtom()) {
-            List<Expression> arguments = new ArrayList<>();
-            while (expectAtom()) {
-                arguments.add(requireAtom());
-            }
-            expression = new Apply(expression, arguments);
+        SyntaxNode node = requireAtom();
+        while (expectAtom()) {
+            node = new ApplyNode(node, requireAtom());
         }
         require(RPAREN);
-        return expression;
+        return node;
     }
 
     private ParseException unexpectedToken() {

@@ -30,6 +30,10 @@ public class TokenStream implements SourceStream {
         }
     }
 
+    public Token empty(int kind) {
+        return source.empty(kind);
+    }
+
     @Override
     public int lookAhead(int offset) {
         hasMore();
