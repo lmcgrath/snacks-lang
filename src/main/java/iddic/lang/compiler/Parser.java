@@ -5,7 +5,7 @@ import static iddic.lang.compiler.Terminals.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import iddic.lang.syntax.*;
+import iddic.lang.compiler.syntax.*;
 
 public class Parser implements AutoCloseable {
 
@@ -22,7 +22,7 @@ public class Parser implements AutoCloseable {
 
     public Expression parse() throws ParseException {
         if (expect(EOF)) {
-            return new Nothing();
+            return Nothing.INSTANCE;
         } else {
             return requirePhrase();
         }
@@ -33,11 +33,14 @@ public class Parser implements AutoCloseable {
     }
 
     private boolean expectAtom() {
-        return peek() == ID
-            || peek() == INT
-            || peek() == DOUBLE
-            || peek() == DOUBLE_QUOTE
-            || peek() == LPAREN;
+        int t = peek();
+        return t == ID
+            || t == BOOL
+            || t == NOTHING
+            || t == INT
+            || t == DOUBLE
+            || t == DOUBLE_QUOTE
+            || t == LPAREN;
     }
 
     private Token nextToken() {
@@ -63,13 +66,17 @@ public class Parser implements AutoCloseable {
     private Expression requireAtom() throws ParseException {
         if (expect(ID)) {
             return new Identifier((String) nextToken().getValue());
+        } else if (expect(BOOL)) {
+            return "True".equals(nextToken().getValue()) ? IddicBool.TRUE : IddicBool.FALSE;
+        } else if (expect(NOTHING)) {
+            return Nothing.INSTANCE;
         } else if (expect(INT)) {
-            return new IntegerLiteral((Integer) nextToken().getValue());
+            return new IddicInteger((Integer) nextToken().getValue());
         } else if (expect(DOUBLE)) {
-            return new DoubleLiteral((Double) nextToken().getValue());
+            return new IddicDouble((Double) nextToken().getValue());
         } else if (expect(DOUBLE_QUOTE)) {
             require(DOUBLE_QUOTE);
-            Expression expression = new StringLiteral((String) require(STRING).getValue());
+            Expression expression = new IddicString((String) require(STRING).getValue());
             require(DOUBLE_QUOTE);
             return expression;
         } else if (expect(LPAREN)) {

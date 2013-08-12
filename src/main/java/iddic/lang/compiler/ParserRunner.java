@@ -7,8 +7,8 @@ import java.io.PrintStream;
 import java.util.List;
 import iddic.lang.IddicException;
 import iddic.lang.cli.CommandLineRunner;
-import iddic.lang.syntax.Expression;
-import iddic.lang.syntax.Identifier;
+import iddic.lang.compiler.syntax.Expression;
+import iddic.lang.compiler.syntax.Identifier;
 
 public class ParserRunner implements CommandLineRunner {
 
