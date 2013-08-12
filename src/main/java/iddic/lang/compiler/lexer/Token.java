@@ -1,6 +1,6 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.lexer;
 
-import static iddic.lang.compiler.Terminals.nameOf;
+import static iddic.lang.compiler.lexer.Terminals.nameOf;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 public class Token {

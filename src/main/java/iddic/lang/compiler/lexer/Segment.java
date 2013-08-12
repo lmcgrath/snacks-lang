@@ -1,4 +1,4 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.lexer;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;

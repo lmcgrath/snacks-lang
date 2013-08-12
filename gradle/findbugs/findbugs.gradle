@@ -3,6 +3,7 @@ apply plugin: 'findbugs'
 findbugs {
     excludeFilter = file("${rootDir}/gradle/findbugs/exclude.xml")
     reportLevel = 'low'
+    ignoreFailures = true
 }
 
 tasks.withType(FindBugs) {

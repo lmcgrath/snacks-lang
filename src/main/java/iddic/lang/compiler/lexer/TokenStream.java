@@ -1,4 +1,4 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.lexer;
 
 import java.util.ArrayList;
 import java.util.List;

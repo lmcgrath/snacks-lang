@@ -1,4 +1,4 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.parser;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.List;
 import iddic.lang.IddicException;
 import iddic.lang.cli.CommandLineRunner;
+import iddic.lang.compiler.lexer.*;
 import iddic.lang.compiler.syntax.IdentifierNode;
 import iddic.lang.compiler.syntax.SyntaxNode;
 import iddic.lang.compiler.syntax.SyntaxPrinter;

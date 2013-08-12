@@ -1,4 +1,4 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.lexer;
 
 public interface TextStream extends SourceStream {
 

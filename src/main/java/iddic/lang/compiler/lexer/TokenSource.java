@@ -1,7 +1,6 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.lexer;
 
-import static iddic.lang.compiler.SourceStream.EOF;
-import static iddic.lang.compiler.Terminals.*;
+import static iddic.lang.compiler.lexer.Terminals.*;
 import static java.lang.Character.isDigit;
 import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.Character.isJavaIdentifierStart;
@@ -27,7 +26,7 @@ public class TokenSource implements AutoCloseable {
     }
 
     private static boolean isBreak(int c) {
-        return isWhitespace(c) || c == '(' || c == ')' || c == EOF;
+        return isWhitespace(c) || c == '(' || c == ')' || c == SourceStream.EOF;
     }
 
     private static boolean isIdentifierPart(int c) {
@@ -74,8 +73,8 @@ public class TokenSource implements AutoCloseable {
     public Token nextToken() {
         skipWhitespace();
         start = input.position();
-        if (expect(EOF)) {
-            return token(EOF);
+        if (expect(SourceStream.EOF)) {
+            return token(SourceStream.EOF);
         }
         switch (states.peek()) {
             case DEFAULT: return matchDefault();
@@ -120,7 +119,7 @@ public class TokenSource implements AutoCloseable {
             return token(RPAREN);
         } else if (match('"')) {
             enterState(State.STRING);
-            return token(DOUBLE_QUOTE);
+            return token(DQUOTE);
         } else if (isJavaIdentifierStart(peek()) || isIdentifierPart(peek())) {
             return matchId();
         } else if (isDigit(peek())) {
@@ -205,7 +204,7 @@ public class TokenSource implements AutoCloseable {
         while (true) {
             if (match('"')) {
                 leaveState();
-                return token(DOUBLE_QUOTE);
+                return token(DQUOTE);
             } else if (match('\\')) {
                 matchEscapeSequence();
             } else if (expect('\r') || expect('\n')) {

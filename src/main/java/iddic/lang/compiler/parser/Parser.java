@@ -1,8 +1,11 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.parser;
 
-import static iddic.lang.compiler.StringStream.EOF;
-import static iddic.lang.compiler.Terminals.*;
+import static iddic.lang.compiler.lexer.StringStream.EOF;
+import static iddic.lang.compiler.lexer.Terminals.*;
 
+import iddic.lang.compiler.lexer.Position;
+import iddic.lang.compiler.lexer.Token;
+import iddic.lang.compiler.lexer.TokenStream;
 import iddic.lang.compiler.syntax.*;
 
 public class Parser implements AutoCloseable {
@@ -37,7 +40,7 @@ public class Parser implements AutoCloseable {
             || t == NOTHING
             || t == INT
             || t == DOUBLE
-            || t == DOUBLE_QUOTE
+            || t == DQUOTE
             || t == LPAREN;
     }
 
@@ -72,10 +75,10 @@ public class Parser implements AutoCloseable {
             return new IntegerNode(nextToken());
         } else if (expect(DOUBLE)) {
             return new DoubleNode(nextToken());
-        } else if (expect(DOUBLE_QUOTE)) {
-            require(DOUBLE_QUOTE);
+        } else if (expect(DQUOTE)) {
+            require(DQUOTE);
             SyntaxNode node = new StringNode((expect(STRING) ? require(STRING) : empty(STRING)));
-            require(DOUBLE_QUOTE);
+            require(DQUOTE);
             return node;
         } else if (expect(LPAREN)) {
             return requirePhrase();

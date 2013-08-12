@@ -1,12 +1,16 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.source;
 
-import static iddic.lang.compiler.Terminals.DOUBLE;
-import static iddic.lang.compiler.Terminals.DOUBLE_QUOTE;
-import static iddic.lang.compiler.Terminals.INT;
+import static iddic.lang.compiler.lexer.Terminals.DOUBLE;
+import static iddic.lang.compiler.lexer.Terminals.DQUOTE;
+import static iddic.lang.compiler.lexer.Terminals.INT;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import iddic.lang.compiler.lexer.ScanException;
+import iddic.lang.compiler.lexer.StringStream;
+import iddic.lang.compiler.lexer.Token;
+import iddic.lang.compiler.lexer.TokenSource;
 import org.junit.Test;
 
 public class TokenSourceTest {
@@ -49,9 +53,9 @@ public class TokenSourceTest {
     @Test
     public void shouldGetString() {
         TokenSource tokens = scan("\"this is a string\"");
-        assertThat(tokens.nextToken().getKind(), equalTo(DOUBLE_QUOTE));
+        assertThat(tokens.nextToken().getKind(), equalTo(DQUOTE));
         assertThat(tokens.nextToken().getText(), equalTo("this is a string"));
-        assertThat(tokens.nextToken().getKind(), equalTo(DOUBLE_QUOTE));
+        assertThat(tokens.nextToken().getKind(), equalTo(DQUOTE));
     }
 
     @Test
@@ -61,7 +65,7 @@ public class TokenSourceTest {
         Token string = tokens.nextToken();
         assertThat(string.getValue(), equalTo((Object) "this\nis\na\nstring"));
         assertThat(string.getText(), equalTo((Object) "this\\nis\\na\\nstring"));
-        assertThat(tokens.nextToken().getKind(), equalTo(DOUBLE_QUOTE));
+        assertThat(tokens.nextToken().getKind(), equalTo(DQUOTE));
     }
 
     @Test
@@ -71,7 +75,7 @@ public class TokenSourceTest {
         Token string = tokens.nextToken();
         assertThat(string.getValue(), equalTo((Object) "Clockwise: ⟳"));
         assertThat(string.getText(), equalTo((Object) "Clockwise: \\u27F3"));
-        assertThat(tokens.nextToken().getKind(), equalTo(DOUBLE_QUOTE));
+        assertThat(tokens.nextToken().getKind(), equalTo(DQUOTE));
     }
 
     @Test
@@ -81,7 +85,7 @@ public class TokenSourceTest {
         Token string = tokens.nextToken();
         assertThat(string.getValue(), equalTo((Object) "Cyrillic Zhe: Ж"));
         assertThat(string.getText(), equalTo((Object) "Cyrillic Zhe: \\uu0416"));
-        assertThat(tokens.nextToken().getKind(), equalTo(DOUBLE_QUOTE));
+        assertThat(tokens.nextToken().getKind(), equalTo(DQUOTE));
     }
 
     @Test(expected = ScanException.class)

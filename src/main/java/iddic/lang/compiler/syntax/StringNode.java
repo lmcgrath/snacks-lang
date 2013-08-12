@@ -1,8 +1,8 @@
 package iddic.lang.compiler.syntax;
 
 import iddic.lang.IddicException;
-import iddic.lang.compiler.Position;
-import iddic.lang.compiler.Token;
+import iddic.lang.compiler.lexer.Position;
+import iddic.lang.compiler.lexer.Token;
 
 public class StringNode implements SyntaxNode {
 

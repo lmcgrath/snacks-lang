@@ -1,4 +1,4 @@
-package iddic.lang.compiler;
+package iddic.lang.compiler.parser;
 
 import iddic.lang.IddicException;
 
