@@ -79,10 +79,9 @@ public class StringStream implements TextStream {
     }
 
     private String getText(int start, int stop) {
-        int endPosition = stop - start;
-        if (endPosition >= size) {
-            endPosition = size - 1;
+        if (stop >= size) {
+            stop = size - 1;
         }
-        return start < size ? data.substring(start, endPosition) : "";
+        return start < size ? data.substring(start, stop) : "";
     }
 }
