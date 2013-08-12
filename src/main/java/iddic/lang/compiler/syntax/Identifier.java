@@ -1,39 +1,27 @@
 package iddic.lang.compiler.syntax;
 
-import static iddic.lang.util.StringUtil.stringify;
-
 import java.util.Objects;
-import iddic.lang.IddicException;
 
-public class Identifier extends SyntaxNode {
+public class Identifier implements Expression {
 
-    private final String value;
+    private final String name;
 
-    public Identifier(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws IddicException {
-        return visitor.visitIdentifier(this, state);
+    public Identifier(String name) {
+        this.name = name;
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof Identifier && Objects.equals(value, ((Identifier) o).value);
-    }
-
-    public String getValue() {
-        return value;
+        return o == this || o instanceof Identifier && Objects.equals(name, ((Identifier) o).name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hash(name);
     }
 
     @Override
     public String toString() {
-        return stringify(this, value);
+        return name;
     }
 }

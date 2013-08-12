@@ -29,9 +29,9 @@ uploadArchives {
             packaging 'jar'
 
             scm {
-                url 'https://github.com/lmcgrath/iddic'
-                connection 'scm:https://github.com/lmcgrath/iddic.git'
-                developerConnection 'scm:git://github.com/lmcgrath/iddic.git'
+                url 'https://github.com/lmcgrath/iddic-lang'
+                connection 'scm:https://github.com/lmcgrath/iddic-lang.git'
+                developerConnection 'scm:git://github.com/lmcgrath/iddic-lang.git'
             }
 
             licenses {

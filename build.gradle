@@ -22,7 +22,6 @@ buildscript {
 }
 
 apply from: "${scriptsDir}/application.gradle"
-apply from: "${scriptsDir}/antlr.gradle"
 apply from: "${scriptsDir}/dependencies.gradle"
 apply from: "${scriptsDir}/test.gradle"
 apply from: "${scriptsDir}/sonatype.gradle"

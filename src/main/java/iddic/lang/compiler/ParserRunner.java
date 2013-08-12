@@ -1,29 +1,16 @@
 package iddic.lang.compiler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import static java.lang.System.err;
+import static java.lang.System.out;
+
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
 import iddic.lang.IddicException;
 import iddic.lang.cli.CommandLineRunner;
-import iddic.lang.cli.RunnerException;
-import iddic.lang.compiler.syntax.SyntaxPrinter;
+import iddic.lang.compiler.syntax.Expression;
+import iddic.lang.compiler.syntax.Identifier;
 
 public class ParserRunner implements CommandLineRunner {
-
-    private final BufferedReader input;
-    private final PrintStream output;
-    private final SyntaxPrinter printer;
-
-    public ParserRunner() {
-        this.input = new BufferedReader(new InputStreamReader(System.in));
-        this.output = System.out;
-        this.printer = new SyntaxPrinter();
-    }
 
     @Override
     public String getCommand() {
@@ -32,39 +19,34 @@ public class ParserRunner implements CommandLineRunner {
 
     @Override
     public String getHelpText() {
-        return "Parses input and displays the resultant concrete syntax tree";
-    }
-
-    public void run() {
-        run(new ArrayList<String>());
+        return "Parses input and displays the resultant abstract syntax tree";
     }
 
     @Override
     public void run(List<String> args) {
-        PrintStream systemError = System.err;
-        System.setErr(output);
-        output.println("Type any input to see how it parses:");
-        output.print(">>> ");
+        PrintStream systemError = err;
+        System.setErr(out);
+        out.println("Type any input to see how it parses:");
+        out.print(">>> ");
+        TextStream reader = new BufferedStream(System.in);
+        Parser parser = new Parser(new TokenStream(new TokenSource(reader)));
         try {
-            String input;
-            while (null != (input = this.input.readLine())) {
-                if ("quit".equals(input)) {
-                    break;
-                } else if (!"".equals(input.trim())) {
-                    try {
-                        Translator translator = new Translator();
-                        IddicLexer lexer = new IddicLexer(new ANTLRInputStream(input));
-                        IddicParser parser = new IddicParser(new CommonTokenStream(lexer));
-                        printer.print(translator.translate(parser.moduleDeclaration()), output);
-                    } catch (IddicException exception) {
-                        exception.printStackTrace(output);
+            Expression quit = new Identifier("quit");
+            while (true) {
+                try {
+                    Expression expression = parser.parse();
+                    if (quit.equals(expression)) {
+                        break;
+                    } else {
+                        out.println(expression);
                     }
+                } catch (IddicException | ScanException exception) {
+                    reader.consumeLine();
+                    exception.printStackTrace(out);
                 }
-                output.print(">>> ");
+                out.print(">>> ");
             }
-            output.println("Goodbye!");
-        } catch (IOException exception) {
-            throw new RunnerException(exception);
+            out.println("Goodbye!");
         } finally {
             System.setErr(systemError);
         }
