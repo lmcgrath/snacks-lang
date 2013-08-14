@@ -1,9 +1,8 @@
 package iddic.lang.compiler.parser;
 
-import static iddic.lang.compiler.lexer.StringStream.EOF;
-import static iddic.lang.compiler.lexer.Terminals.*;
+import static iddic.lang.compiler.lexer.Terminal.*;
 
-import iddic.lang.compiler.lexer.Position;
+import iddic.lang.compiler.lexer.Terminal;
 import iddic.lang.compiler.lexer.Token;
 import iddic.lang.compiler.lexer.TokenStream;
 import iddic.lang.compiler.syntax.*;
@@ -29,16 +28,16 @@ public class Parser implements AutoCloseable {
         }
     }
 
-    private boolean expect(int kind) {
+    private boolean expect(Terminal kind) {
         return peek() == kind;
     }
 
     private boolean expectAtom() {
-        int t = peek();
+        Terminal t = peek();
         return t == ID
             || t == BOOL
             || t == NOTHING
-            || t == INT
+            || t == INTEGER
             || t == DOUBLE
             || t == DQUOTE
             || t == LPAREN;
@@ -48,15 +47,11 @@ public class Parser implements AutoCloseable {
         return input.nextToken();
     }
 
-    private int peek() {
+    private Terminal peek() {
         return input.peek();
     }
 
-    private Position position() {
-        return input.position();
-    }
-
-    private Token require(int kind) throws ParseException {
+    private Token require(Terminal kind) throws ParseException {
         if (expect(kind)) {
             return nextToken();
         } else {
@@ -71,7 +66,7 @@ public class Parser implements AutoCloseable {
             return new BooleanNode(nextToken());
         } else if (expect(NOTHING)) {
             return new NothingNode(nextToken());
-        } else if (expect(INT)) {
+        } else if (expect(INTEGER)) {
             return new IntegerNode(nextToken());
         } else if (expect(DOUBLE)) {
             return new DoubleNode(nextToken());
@@ -87,7 +82,7 @@ public class Parser implements AutoCloseable {
         }
     }
 
-    private Token empty(int kind) {
+    private Token empty(Terminal kind) {
         return input.empty(kind);
     }
 
@@ -102,6 +97,6 @@ public class Parser implements AutoCloseable {
     }
 
     private ParseException unexpectedToken() {
-        return new ParseException(position() + ": Unexpected " + nameOf(peek()));
+        return new ParseException("Unexpected " + peek());
     }
 }

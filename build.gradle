@@ -23,10 +23,10 @@ buildscript {
 
 apply from: "${scriptsDir}/application.gradle"
 apply from: "${scriptsDir}/dependencies.gradle"
+apply from: "${scriptsDir}/jflex.gradle"
 apply from: "${scriptsDir}/test.gradle"
 apply from: "${scriptsDir}/sonatype.gradle"
 apply from: "${scriptsDir}/jacoco.gradle"
 apply from: "${scriptsDir}/findbugs/findbugs.gradle"
 apply from: "${scriptsDir}/jdepend/jdepend.gradle"
 apply from: "${scriptsDir}/pmd/pmd.gradle"
-

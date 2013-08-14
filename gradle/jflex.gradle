@@ -1,0 +1,28 @@
+ext.scannerSpec = file("${projectDir}/src/main/resources/iddic.flex")
+ext.scannerClass = file("${projectDir}/src/generated/java/iddic/lang/compiler/lexer/TokenSource.java")
+
+configurations {
+    jflex
+}
+
+dependencies {
+    jflex 'de.jflex:jflex:1.4.3'
+}
+
+task (generateScanner, type: JavaExec) {
+    inputs.file scannerSpec
+    outputs.file scannerClass
+    main = 'JFlex.Main'
+    args = ['-d', "${scannerClass.parentFile}", "${scannerSpec}"]
+    classpath = configurations.jflex
+}
+
+task (cleanScanner) {
+    inputs.file scannerClass
+    doLast {
+        scannerClass.delete()
+    }
+}
+
+build.dependsOn << 'generateScanner'
+clean.dependsOn << 'cleanScanner'

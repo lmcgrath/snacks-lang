@@ -1,34 +1,19 @@
 package iddic.lang.compiler.lexer;
 
-import static iddic.lang.compiler.lexer.Terminals.nameOf;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 public class Token {
 
-    private final int kind;
-    private final Segment segment;
+    private final Terminal kind;
     private final Object value;
 
-    public Token(int kind, Segment segment, Object value) {
+    public Token(Terminal kind, Object value) {
         this.kind = kind;
-        this.segment = segment;
         this.value = value;
     }
 
-    public Position getEnd() {
-        return segment.getEnd();
-    }
-
-    public int getKind() {
+    public Terminal getKind() {
         return kind;
-    }
-
-    public Position getStart() {
-        return segment.getStart();
-    }
-
-    public String getText() {
-        return segment.getValue();
     }
 
     public Object getValue() {
@@ -37,6 +22,6 @@ public class Token {
 
     @Override
     public String toString() {
-        return "(" + nameOf(kind) + " \"" + escapeJava(segment.getValue()) + "\" " + getStart() + ")";
+        return "(" + kind + " \"" + escapeJava(value.toString()) + "\")";
     }
 }

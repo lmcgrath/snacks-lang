@@ -1,3 +1,5 @@
+ext.generatedDir = file("${projectDir}/src/generated/java")
+
 apply plugin: 'application'
 
 applicationName = 'iddic'
@@ -11,3 +13,39 @@ applicationDistribution.from(distFiles) {
     into '/'
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir "${projectDir}/src/main/java"
+            srcDir "${generatedDir}"
+        }
+        resources {
+            srcDir "${projectDir}/src/main/resources"
+        }
+    }
+    test {
+        java {
+            srcDir "${projectDir}/src/test/java"
+        }
+        resources {
+            srcDir "${projectDir}/src/test/resources"
+        }
+    }
+}
+
+task (setUpGeneratedDir) {
+    outputs.dir generatedDir
+    doLast {
+        generatedDir.mkdirs()
+    }
+}
+
+task (cleanUpGeneratedDir) {
+    inputs.dir generatedDir
+    doLast {
+        file("${projectDir}/src/generated").deleteDir()
+    }
+}
+
+compileJava.dependsOn << setUpGeneratedDir
+clean.dependsOn << cleanUpGeneratedDir

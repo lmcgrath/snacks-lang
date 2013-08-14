@@ -1,9 +1,12 @@
 package iddic.lang.compiler.lexer;
 
+import static iddic.lang.compiler.lexer.Terminal.EOF;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TokenStream implements SourceStream {
+public class TokenStream {
 
     private final TokenSource source;
     private final List<Token> tokens;
@@ -15,12 +18,10 @@ public class TokenStream implements SourceStream {
         this.tokens = new ArrayList<>(1024);
     }
 
-    @Override
     public void close() {
         source.close();
     }
 
-    @Override
     public void consume() {
         hasMore();
         if (eof) {
@@ -30,12 +31,11 @@ public class TokenStream implements SourceStream {
         }
     }
 
-    public Token empty(int kind) {
-        return source.empty(kind);
+    public Token empty(Terminal kind) {
+        return new Token(kind, null);
     }
 
-    @Override
-    public int lookAhead(int offset) {
+    public Terminal lookAhead(int offset) {
         hasMore();
         if (offset < 0) {
             offset++;
@@ -58,21 +58,19 @@ public class TokenStream implements SourceStream {
         }
     }
 
-    @Override
-    public int peek() {
+    public Terminal peek() {
         return peekToken().getKind();
-    }
-
-    @Override
-    public Position position() {
-        return peekToken().getStart();
     }
 
     private void hasMore() {
         if (!eof && position >= size()) {
-            Token token = source.nextToken();
-            tokens.add(token);
-            eof = (token.getKind() == EOF);
+            try {
+                Token token = source.nextToken();
+                tokens.add(token);
+                eof = (token.getKind() == EOF);
+            } catch (IOException exception) {
+                throw new ScanException(exception);
+            }
         }
     }
 

@@ -1,7 +1,6 @@
 package iddic.lang.compiler.syntax;
 
 import iddic.lang.IddicException;
-import iddic.lang.compiler.lexer.Position;
 
 public class ApplyNode implements SyntaxNode {
 
@@ -22,18 +21,8 @@ public class ApplyNode implements SyntaxNode {
         return argument;
     }
 
-    @Override
-    public Position getEnd() {
-        return argument.getEnd();
-    }
-
     public SyntaxNode getFunction() {
         return function;
-    }
-
-    @Override
-    public Position getStart() {
-        return function.getStart();
     }
 
     @Override
