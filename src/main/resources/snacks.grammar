@@ -5,9 +5,10 @@
 %import "java.util.List",
         "java.util.Set",
         "snacks.lang.compiler.syntax.*",
-        "static java.util.Arrays.*";
+        "static java.util.Arrays.*",
+        "static java.util.Collections.*";
 
-%terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, BOOL, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
+%terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
     FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
@@ -17,6 +18,20 @@
 ;
 
 %init {: report = new ParserEvents(); :};
+
+%embed {:
+    private Symbol conditional(Symbol head, Symbol[] tail, Symbol defaultCase) {
+        List<Symbol> elements = new ArrayList<>();
+        elements.add(head);
+        if (tail != null) {
+            addAll(elements, tail);
+        }
+        if (defaultCase != null) {
+            elements.add(defaultCase);
+        }
+        return new Conditional(elements);
+    }
+:};
 
 %right EXPONENT;
 %left MULTIPLY, DIVIDE, MODULO;
@@ -201,6 +216,7 @@ primary_expression
     | tuple_literal
     | set_literal
     | block
+    | conditional
     | DQUOTE interpolation_list.e DQUOTE                    {: return new StringInterpolation(e); :}
     | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return new StringLiteral(val); :}
     | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return new StringInterpolation(e); :}
@@ -255,6 +271,31 @@ tailed_function
         {: return new FunctionLiteral(a, e, t); :}
     ;
 
+conditional
+    = conditional_case.h default_case.e END                     {: return conditional(h, null, e); :}
+    | conditional_case.h alternative_cases.t default_case.e END {: return conditional(h, t, e); :}
+    ;
+
+conditional_case
+    = IF expression.c THEN sequence.e       {: return new TruthyCase(c, new Block(e)); :}
+    | UNLESS expression.c THEN sequence.e   {: return new FalsyCase(c, new Block(e)); :}
+    ;
+
+alternative_cases
+    = alternative_case
+    | alternative_cases alternative_case
+    ;
+
+alternative_case
+    = ELSE_IF expression.c THEN sequence.e      {: return new TruthyCase(c, new Block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e  {: return new FalsyCase(c, new Block(e)); :}
+    ;
+
+default_case
+    = ELSE sequence.e {: return new DefaultCase(new Block(e)); :}
+    |
+    ;
+
 oparen
     = LARG
     | LPAREN
@@ -285,6 +326,7 @@ function_arguments
 
 function_argument
     = FWORD.a suffix_typespec.t {: return new Argument(a, t); :}
+    | THROWAWAY                 {: return new Argument("_", null); :}
     ;
 
 suffix_typespec

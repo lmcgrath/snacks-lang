@@ -235,37 +235,33 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         detectSelector();
                         return token(CHARACTER, unescapeJava(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\''))).charAt(0));
                     }
-/*
     "else if"       { return token(ELSE_IF); }
     "else unless"   { return token(ELSE_UNLESS); }
     "else"          { detectNewLine(); return token(ELSE); }
     "if"            { return token(IF); }
-*/
     "in"            { detectNewLine(); return token(IN); }
     "is"            { detectNewLine(); return token(IS); }
     "is not"        { detectNewLine(); return token(IS_NOT); }
-/*
     "unless"        { return token(UNLESS); }
-    "embrace"       { detectNewLine(); return token(EMBRACE); }
+    //"embrace"       { detectNewLine(); return token(EMBRACE); }
     "end"           { return token(END); }
-    "ensure"        { detectNewLine(); return token(ENSURE); }
-    "for"           { return token(FOR); }
-*/
+    //"ensure"        { detectNewLine(); return token(ENSURE); }
+    //"for"           { return token(FOR); }
     "from"          { return token(FROM); }
     //"hurl"          { return token(HURL); }
     "import"        { return token(IMPORT); }
     "not in"        { detectNewLine(); return token(NOT_IN); }
     "not" | "!"     { detectNewLine(); return token(NOT); }
     "or" | "||"     { detectNewLine(); return token(OR); }
-/*
-    "return"        { return token(RETURN); }
+    //"return"        { return token(RETURN); }
     "then"          { detectNewLine(); return token(THEN); }
+/*
     "until"         { return token(UNTIL); }
     "using"         { return token(USING); }
     "var"           { return token(VAR); }
     "while"         { return token(WHILE); }
-    "_"             { return token(THROWAWAY); }
 */
+    "_"             { return token(THROWAWAY); }
     "$"             { detectNewLine(); return token(APPLY); }
     {Identifier}    { detectSelector(); return token(IDENTIFIER, yytext()); }
     ";"             { detectNewLine(); return token(SEMICOLON); }
