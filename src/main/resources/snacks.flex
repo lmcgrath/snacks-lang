@@ -125,7 +125,7 @@ import beaver.Symbol;
     }
 
     private void error(String message) {
-        throw new ScanException(message + " in " + source + " (" + yyline + ", " + yycolumn + ")");
+        throw new ScannerException(message + " in " + source + " (" + yyline + ", " + yycolumn + ")");
     }
 
     private boolean endOfInterpolation() {
@@ -455,7 +455,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 }
 
 <DETECT_FUNCTION_STATE> {
-    {FunctionArgument}+ (")" | "}") (":" {FunctionArgument}+)? "->"
+    {FunctionArgument}+ [\)\}] {FunctionArgument}* "->"
                     { yypushback(yylength()); flipState(FUNCTION_STATE); }
     {FunctionArgument}+ "->"
                     { yypushback(yylength()); flipState(FUNCTION_STATE); }
