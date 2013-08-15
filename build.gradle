@@ -23,6 +23,7 @@ buildscript {
 
 apply from: "${scriptsDir}/application.gradle"
 apply from: "${scriptsDir}/dependencies.gradle"
+apply from: "${scriptsDir}/beaver.gradle"
 apply from: "${scriptsDir}/jflex.gradle"
 apply from: "${scriptsDir}/test.gradle"
 apply from: "${scriptsDir}/sonatype.gradle"

@@ -1,0 +1,323 @@
+%goal module_declaration;
+%goal expression;
+%package "snacks.lang.compiler";
+%class "Parser";
+%import "java.util.List",
+        "java.util.Set",
+        "snacks.lang.compiler.syntax.*",
+        "static java.util.Arrays.*";
+
+%terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, BOOL, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
+    KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
+    FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
+    TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
+    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN,
+    LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
+    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOLLAR
+;
+
+%init {: report = new ParserEvents(); :};
+
+%right EXPONENT;
+%left MULTIPLY, DIVIDE, MODULO;
+%left PLUS, MINUS;
+%left BIT_AND;
+%left BIT_OR;
+%left BIT_XOR;
+%left COALESCE;
+%left LSHIFT, RSHIFT, URSHIFT;
+%left IS, IS_NOT, EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_THAN_EQUALS, LESS_THAN_EQUALS, IN, NOT_IN;
+%right NOT;
+%left AND;
+%left OR;
+%left RANGE, XRANGE;
+%right APPLY;
+%right ASSIGN;
+
+%typeof IDENTIFIER = "String";
+%typeof FWORD = "String";
+%typeof STRING = "String";
+%typeof INTEGER = "Integer";
+%typeof DOUBLE = "Double";
+%typeof REGEX_OPTIONS = "Set<Character>";
+%typeof SYMBOL = "String";
+%typeof KEY_SYMBOL = "String";
+%typeof CHARACTER = "Character";
+
+%typeof function_argument = "Argument";
+%typeof import_alias = "String";
+%typeof sub_import = "SubImport";
+%typeof annotation = "Annotation";
+%typeof opt_annotations = "Annotation[]";
+%typeof suffix_typespec = "TypeSpec";
+%typeof function_typespec = "TypeSpec";
+
+module_declaration
+    = module_expressions.e opt_terms {: return new Module(e); :}
+    | {: return new Module(); :}
+    ;
+
+module_expressions
+    = module_expression
+    | module_expressions terms module_expression
+    ;
+
+module_expression
+    = import_expression
+    | from_expression
+    | declaration
+    ;
+
+import_expression
+    = IMPORT qualified_identifier.id import_alias.a {: return new Import(id, a == null ? id[id.length - 1] : a); :}
+    ;
+
+from_expression
+    = FROM qualified_identifier.id IMPORT sub_imports.s                         {: return new FromImport(id, s); :}
+    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN    {: return new FromImport(id, s); :}
+    ;
+
+sub_imports
+    = sub_import
+    | sub_imports COMMA sub_import
+    ;
+
+sub_import
+    = IDENTIFIER.id import_alias.a {: return new SubImport(id, a == null ? id : a); :}
+    ;
+
+import_alias
+    = AS IDENTIFIER.id {: return new Symbol(id); :}
+    |
+    ;
+
+declaration
+    = opt_annotations.a IDENTIFIER.id ASSIGN expression.e
+        {: return a == null ? new Declaration(id, e) : new Declaration(id, e, a); :}
+    ;
+
+opt_annotations
+    = annotations.a NEWLINE* {: return new Symbol(a); :}
+    |
+    ;
+
+annotations
+    = annotation
+    | annotations NEWLINE* annotation
+    ;
+
+annotation
+    = AT qualified_identifier.id                            {: return new Annotation(id, new NothingLiteral()); :}
+    | AT qualified_identifier.id LPAREN expression.e RPAREN {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id LPAREN map_list.e RPAREN   {: return new Annotation(id, new MapLiteral(e)); :}
+    | AT qualified_identifier.id LPAREN keyed_list.e RPAREN {: return new Annotation(id, new MapLiteral(e)); :}
+    | AT qualified_identifier.id tuple_literal.e            {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id map_literal.e              {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id set_literal.e              {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id list_literal.e             {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id function_literal.e         {: return new Annotation(id, e); :}
+    | AT qualified_identifier.id block.e                    {: return new Annotation(id, e); :}
+    ;
+
+qualified_identifier
+    = IDENTIFIER.id
+    | qualified_identifier DOT IDENTIFIER
+    ;
+
+expression
+    = prefix_expression
+    | tailed_function
+    | expression.l EXPONENT expression.r        {: return new BinaryExpression("**", l, r); :}
+    | expression.l MULTIPLY expression.r        {: return new BinaryExpression("*", l, r); :}
+    | expression.l DIVIDE expression.r          {: return new BinaryExpression("/", l, r); :}
+    | expression.l MODULO expression.r          {: return new BinaryExpression("%", l, r); :}
+    | expression.l PLUS expression.r            {: return new BinaryExpression("+", l, r); :}
+    | expression.l MINUS expression.r           {: return new BinaryExpression("-", l, r); :}
+    | expression.l BIT_AND expression.r         {: return new BinaryExpression("&", l, r); :}
+    | expression.l BIT_OR expression.r          {: return new BinaryExpression("|", l, r); :}
+    | expression.l BIT_XOR expression.r         {: return new BinaryExpression("^", l, r); :}
+    | expression.l COALESCE expression.r        {: return new BinaryExpression("?", l, r); :}
+    | expression.l LSHIFT expression.r          {: return new BinaryExpression("<<", l, r); :}
+    | expression.l RSHIFT expression.r          {: return new BinaryExpression(">>", l, r); :}
+    | expression.l URSHIFT expression.r         {: return new BinaryExpression(">>>", l, r); :}
+    | expression.l IS expression.r              {: return new BinaryExpression("is", l, r); :}
+    | expression.l IS_NOT expression.r          {: return new BinaryExpression("is not", l, r); :}
+    | expression.l EQUALS expression.r          {: return new BinaryExpression("==", l, r); :}
+    | expression.l NOT_EQUALS expression.r      {: return new BinaryExpression("!=", l, r); :}
+    | expression.l GREATER_THAN expression.r    {: return new BinaryExpression(">", l, r); :}
+    | expression.l LESS_THAN expression.r       {: return new BinaryExpression("<", l, r); :}
+    | expression.l GREATER_THAN_EQUALS expression.r {: return new BinaryExpression(">=", l, r); :}
+    | expression.l LESS_THAN_EQUALS expression.r {: return new BinaryExpression("<=", l, r); :}
+    | expression.l IN expression.r              {: return new BinaryExpression("in", l, r); :}
+    | expression.l NOT_IN expression.r          {: return new BinaryExpression("not in", l, r); :}
+    | NOT expression.e                          {: return new UnaryExpression("not", e); :}
+    | expression.l AND expression.r             {: return new BinaryExpression("and", l, r); :}
+    | expression.l OR expression.r              {: return new BinaryExpression("or", l, r); :}
+    | expression.l RANGE expression.r           {: return new BinaryExpression("..", l, r); :}
+    | expression.l XRANGE expression.r          {: return new BinaryExpression("...", l, r); :}
+    | expression.l APPLY expression.r           {: return new BinaryExpression("$", l, r); :}
+    | expression.l ASSIGN expression.r          {: return new BinaryExpression("=", l, r); :}
+    ;
+
+prefix_expression
+    = postfix_expression
+    | postfix_expression.e arguments.a  {: return new ArgumentsExpression(e, a); :}
+    | MINUS prefix_expression.e         {: return new UnaryExpression("-", e); :}
+    | PLUS prefix_expression.e          {: return new UnaryExpression("+", e); :}
+    | BIT_NOT prefix_expression.e       {: return new UnaryExpression("~", e); :}
+    ;
+
+postfix_expression
+    = primary_expression
+    | postfix_expression.e DOT IDENTIFIER.id            {: return new AccessExpression(e, id); :}
+    | postfix_expression.e LINDEX list.l COMMA? RSQUARE {: return new IndexExpression(e, l); :}
+    | postfix_expression.e LARG arguments.a RPAREN      {: return new ArgumentsExpression(e, a); :}
+    ;
+
+arguments
+    = postfix_expression
+    | arguments postfix_expression
+    ;
+
+list
+    = expression
+    | list COMMA expression
+    ;
+
+primary_expression
+    = IDENTIFIER.id                 {: return new Identifier(id); :}
+    | INTEGER.val                   {: return new IntegerLiteral(val); :}
+    | DOUBLE.val                    {: return new DoubleLiteral(val); :}
+    | TRUE                          {: return new BooleanLiteral(true); :}
+    | FALSE                         {: return new BooleanLiteral(false); :}
+    | NOTHING                       {: return new NothingLiteral(); :}
+    | CHARACTER.c                   {: return new CharacterLiteral(c); :}
+    | SYMBOL.s                      {: return new SymbolLiteral(s); :}
+    | LPAREN expression.e RPAREN    {: return e; :}
+    | QUOTE STRING.val QUOTE        {: return new StringLiteral(val); :}
+    | function_literal
+    | map_literal
+    | list_literal
+    | tuple_literal
+    | set_literal
+    | block
+    | DQUOTE interpolation_list.e DQUOTE                    {: return new StringInterpolation(e); :}
+    | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return new StringLiteral(val); :}
+    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return new StringInterpolation(e); :}
+    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return new RegexLiteral(asList(e), o); :}
+    ;
+
+list_literal
+    = LSQUARE list.e COMMA? RSQUARE {: return new ListLiteral(e); :}
+    | LSQUARE RSQUARE               {: return new ListLiteral(); :}
+    ;
+
+tuple_literal
+    = LPAREN COMMA? RPAREN              {: return new TupleLiteral(); :}
+    | LPAREN expression.e COMMA RPAREN  {: return new TupleLiteral(e); :}
+    ;
+
+set_literal
+    = LCURLY COMMA RCURLY               {: return new SetLiteral(); :}
+    | LCURLY expression.e COMMA RCURLY  {: return new SetLiteral(e); :}
+    | LCURLY expression.e COMMA list.es COMMA? RCURLY {: return new SetLiteral(e, es); :}
+    ;
+
+map_literal
+    = LCURLY COLON RCURLY               {: return new MapLiteral(); :}
+    | LCURLY keyed_list.e COMMA? RCURLY {: return new MapLiteral(e); :}
+    | LCURLY map_list.e COMMA? RCURLY   {: return new MapLiteral(e); :}
+    ;
+
+block
+    = LCURLY sequence.e term* RCURLY {: return new Block(e); :}
+    ;
+
+sequence
+    = expression
+    | sequence term+ expression
+    ;
+
+function_literal
+    = oparen function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN
+        {: return new FunctionLiteral(a, e, t); :}
+    | LCURLY function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
+        {: return new FunctionLiteral(a, new Block(e), t); :}
+    ;
+
+function_typespec
+    = DOLLAR qualified_fword.t {: return new TypeSpec(t); :}
+    |
+    ;
+
+tailed_function
+    = oparen function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
+        {: return new FunctionLiteral(a, e, t); :}
+    ;
+
+oparen
+    = LARG
+    | LPAREN
+    ;
+
+keyed_list
+    = keyed_entry
+    | keyed_list COMMA keyed_entry
+    ;
+
+keyed_entry
+    = KEY_SYMBOL.k expression.v {: return new MapEntry(new SymbolLiteral(k), v); :}
+    ;
+
+map_list
+    = map_entry
+    | map_list COMMA map_entry
+    ;
+
+map_entry
+    = expression.k GOES_TO expression.v {: return new MapEntry(k, v); :}
+    ;
+
+function_arguments
+    = function_argument
+    | function_arguments function_argument
+    ;
+
+function_argument
+    = FWORD.a suffix_typespec.t {: return new Argument(a, t); :}
+    ;
+
+suffix_typespec
+    = COLON qualified_fword.t {: return new TypeSpec(t); :}
+    |
+    ;
+
+qualified_fword
+    = FWORD
+    | qualified_fword DOT FWORD
+    ;
+
+interpolation_list
+    = interpolation
+    | interpolation_list interpolation
+    ;
+
+interpolation
+    = STRING.val {: return new StringLiteral(val); :}
+    | LINTERPOLATE expression.e RINTERPOLATE {: return e; :}
+    ;
+
+opt_terms
+    = terms
+    |
+    ;
+
+terms
+    = term
+    | terms term
+    ;
+
+term
+    = NEWLINE
+    | SEMICOLON
+    ;

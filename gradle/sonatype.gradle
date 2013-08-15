@@ -24,14 +24,14 @@ uploadArchives {
         pom.project {
             name "${project.name}"
             description "${project.description}"
-            url 'http://iddic.io/'
+            url 'http://snacks.io/'
             inceptionYear '2013'
             packaging 'jar'
 
             scm {
-                url 'https://github.com/lmcgrath/iddic-lang'
-                connection 'scm:https://github.com/lmcgrath/iddic-lang.git'
-                developerConnection 'scm:git://github.com/lmcgrath/iddic-lang.git'
+                url 'https://github.com/lmcgrath/snacks-lang'
+                connection 'scm:https://github.com/lmcgrath/snacks-lang.git'
+                developerConnection 'scm:git://github.com/lmcgrath/snacks-lang.git'
             }
 
             licenses {

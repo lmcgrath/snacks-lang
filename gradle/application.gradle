@@ -2,8 +2,8 @@ ext.generatedDir = file("${projectDir}/src/generated/java")
 
 apply plugin: 'application'
 
-applicationName = 'iddic'
-mainClassName = 'iddic.lang.cli.MainRunner'
+applicationName = 'snacks'
+mainClassName = 'snacks.lang.cli.MainRunner'
 
 def distFiles = files(
     "${project.projectDir}/LICENSE",

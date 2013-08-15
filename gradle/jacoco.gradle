@@ -6,11 +6,6 @@ if (gradle.gradleVersion == '1.6') {
         excludes = [
             '**/*Exception',
             '**/*Runner',
-            '**/ReaderUtil',
-            '**/SourcePrinter',
-            '**/EscapeUtil',
-            '**/ExpressionPrinter',
-            '**/PrinterState',
         ]
     }
 }

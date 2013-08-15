@@ -6,7 +6,7 @@
         </Or>
     </Match>
     <Match>
-        <Class name="iddic.util.StringUtil"/>
+        <Class name="snacks.util.StringUtil"/>
         <Bug code="Dm"/>
     </Match>
 </FindBugsFilter>

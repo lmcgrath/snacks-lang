@@ -1,1 +1,1 @@
-# Iddic Programming Language [![Build Status](https://secure.travis-ci.org/lmcgrath/iddic-lang.png)](https://travis-ci.org/lmcgrath/iddic-lang/)
+# Snacks Programming Language [![Build Status](https://secure.travis-ci.org/lmcgrath/snacks-lang.png)](https://travis-ci.org/lmcgrath/snacks-lang/)

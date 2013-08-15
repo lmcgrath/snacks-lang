@@ -1,0 +1,56 @@
+ext.grammarSpec = file("${projectDir}/src/main/resources/snacks.grammar")
+ext.parserClasses = files(
+    "${generatedDir}/snacks/lang/compiler/Parser.java",
+    "${generatedDir}/snacks/lang/compiler/Terminals.java"
+)
+
+configurations {
+    beaver
+}
+
+dependencies {
+    beaver 'net.sf.beaver:beaver-ant:0.9.11'
+    compile 'net.sf.beaver:beaver-cc:0.9.11'
+    compile 'net.sf.beaver:beaver-rt:0.9.11'
+}
+
+task (cleanParser) << {
+    parserClasses.each { it.delete() }
+}
+
+task (generateParser, dependsOn: setUpGeneratedDir) {
+    inputs.file grammarSpec
+    outputs.file parserClasses
+    doLast {
+        ant.taskdef (
+            name: 'beaver',
+            classname: 'beaver.comp.run.AntTask',
+            classpath: configurations.beaver.asPath
+        )
+        ant.beaver (
+            file: grammarSpec,
+            destdir: generatedDir,
+            compress: 'no',
+            exportTables: 'no',
+            sortTerminals: 'no',
+            terminalNames: 'yes',
+            exportTerminals: 'yes',
+            useSwitch: 'no',
+            anonymousActions: 'no',
+            reportActions: 'no',
+        )
+    }
+}
+
+task (verifyParser, dependsOn: generateParser) << {
+    def allFound = true
+    parserClasses.each {
+        allFound = allFound && it.exists()
+    }
+    if (!allFound) {
+        throw new GradleException("Failed to generate parser")
+    }
+}
+
+compileJava.dependsOn << verifyParser
+clean.dependsOn << cleanParser

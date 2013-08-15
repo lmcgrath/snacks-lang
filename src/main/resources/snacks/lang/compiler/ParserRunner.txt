@@ -1,0 +1,10 @@
+SNACKS PARSER
+
+To start the parser, enter the following command:
+
+    $ snacks parse
+
+The parser will operate on individual lines of code and print the resultant
+concrete parse tree for inspection:
+
+    >>> main = 2 + 2
