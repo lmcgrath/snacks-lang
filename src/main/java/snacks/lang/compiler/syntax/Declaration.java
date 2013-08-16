@@ -4,7 +4,9 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.List;
+import java.util.Objects;
 import beaver.Symbol;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class Declaration extends Symbol {
 
@@ -16,6 +18,27 @@ public class Declaration extends Symbol {
         this.name = name;
         this.body = body;
         this.annotations = asList(annotations);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof Declaration) {
+            Declaration other = (Declaration) o;
+            return new EqualsBuilder()
+                .append(name, other.name)
+                .append(body, other.body)
+                .append(annotations, other.annotations)
+                .isEquals();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, body, annotations);
     }
 
     @Override

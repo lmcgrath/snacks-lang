@@ -19,8 +19,17 @@ public final class SyntaxFactory {
         return new ArgumentsExpression(function, arguments);
     }
 
+    public static Symbol arg(String name) {
+        return new Argument(name, null);
+    }
+
     public static Symbol arg(String name, Symbol type) {
         return new Argument(name, type);
+    }
+
+    @SafeVarargs
+    public static <T> T[] array(T... elements) {
+        return elements;
     }
 
     public static Symbol begin(Symbol expression, Symbol[] embraceCases) {
@@ -71,8 +80,16 @@ public final class SyntaxFactory {
         return new FromImport(module, subImports);
     }
 
+    public static Symbol func(Symbol[] args, Symbol body) {
+        return new FunctionLiteral(args, body, null);
+    }
+
     public static Symbol func(Symbol[] args, Symbol body, Symbol type) {
         return new FunctionLiteral(args, body, type);
+    }
+
+    public static Symbol hurl(Symbol expression) {
+        return new Hurl(expression);
     }
 
     public static Symbol id(String name) {
@@ -101,6 +118,10 @@ public final class SyntaxFactory {
 
     public static Symbol literal(String value) {
         return new StringLiteral(value);
+    }
+
+    public static Symbol literal(char value) {
+        return new CharacterLiteral(value);
     }
 
     public static Symbol literal(int value) {
@@ -135,8 +156,16 @@ public final class SyntaxFactory {
         return new NothingLiteral();
     }
 
+    public static String[] qid(String... ids) {
+        return ids;
+    }
+
     public static Symbol regex(List<Symbol> elements, Set<Character> options) {
         return new RegexLiteral(elements, options);
+    }
+
+    public static Symbol result(Symbol expression) {
+        return new Result(expression);
     }
 
     public static Symbol set(Symbol element, Symbol[] elements) {
@@ -165,6 +194,10 @@ public final class SyntaxFactory {
 
     public static Symbol tuple(Symbol... elements) {
         return new TupleLiteral(elements);
+    }
+
+    public static Symbol tuple(Symbol element, Symbol[] elements) {
+        return new TupleLiteral(element, elements);
     }
 
     public static Symbol type(String[] id) {
@@ -197,6 +230,10 @@ public final class SyntaxFactory {
 
     public static Symbol using(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
         return new Exceptional(usings, expression, embraceCases, ensureCase);
+    }
+
+    public static Symbol var(String name, Symbol value) {
+        return new Var(name, value);
     }
 
     private SyntaxFactory() {

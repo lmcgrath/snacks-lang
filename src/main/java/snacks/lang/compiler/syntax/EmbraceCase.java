@@ -1,6 +1,8 @@
 package snacks.lang.compiler.syntax;
 
+import java.util.Objects;
 import beaver.Symbol;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class EmbraceCase extends Symbol {
 
@@ -12,6 +14,27 @@ public class EmbraceCase extends Symbol {
         this.argument = argument;
         this.type = type;
         this.expression = expression;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof EmbraceCase) {
+            EmbraceCase other = (EmbraceCase) o;
+            return new EqualsBuilder()
+                .append(argument, other.argument)
+                .append(type, other.type)
+                .append(expression, other.expression)
+                .isEquals();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(argument, type, expression);
     }
 
     @Override

@@ -217,14 +217,14 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     {Double}        { detectSelector(); return token(DOUBLE, Double.parseDouble(yytext())); }
     {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
     "\\" {NewLine}+ { /* ignore */ }
-    {Whitespace} | {NewLine}   { /* ignore */ }
+    {Whitespace}    { /* ignore */ }
     {NewLine}+      { return token(NEWLINE); }
 }
 
 <SELECTOR_STATE> {
     "["             { leaveState(); return token(LINDEX); }
     "("             { leaveState(); return token(LARG); }
-    .               { leaveState(); yypushback(1); }
+    . | {NewLine}   { leaveState(); yypushback(1); }
 }
 
 <INTERPOLATION_STATE> {
@@ -305,8 +305,8 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 }
 
 <EAT_NEWLINE_STATE> {
-    [ \t\f]+        { }
-    {NewLine}       { leaveState(); detectNewLine(); }
+    [ \t\f]+        { /* ignore */ }
+    {NewLine}+      { leaveState(); detectNewLine(); }
     .               { yypushback(1); leaveState(); }
 }
 
@@ -360,13 +360,13 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 }
 
 <FUNCTION_STATE> {
-    "$"             { return token(DOLLAR); }
+    "::"            { return token(DOUBLE_COLON); }
     ":"             { return token(COLON); }
     {Identifier}    { return token(FWORD, yytext()); }
     "."             { return token(DOT); }
     ")"             { return token(RPAREN); }
     "}"             { return token(RCURLY); }
-    "->"            { leaveState(); return token(APPLIES_TO); }
+    "->"            { leaveState(); detectNewLine(); return token(APPLIES_TO); }
     {AnyWhitespace} { /* ignore */ }
 }
 
@@ -382,7 +382,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     {Identifier}    { return token(IDENTIFIER, yytext()); }
     "."             { return token(DOT); }
     ":"             { return token(COLON); }
-    "->"            { leaveState(); return token(APPLIES_TO); }
+    "->"            { leaveState(); detectNewLine(); return token(APPLIES_TO); }
     {Whitespace}    { /* ignore */ }
 }
 

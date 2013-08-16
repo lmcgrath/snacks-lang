@@ -2,6 +2,7 @@ package snacks.lang.compiler;
 
 import static beaver.Symbol.getColumn;
 import static beaver.Symbol.getLine;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static snacks.lang.compiler.Terminals.NAMES;
 import static java.util.logging.Logger.getLogger;
 
@@ -47,7 +48,7 @@ public class ParserEvents extends Events {
             .append(getPosition(symbol))
             .append(": ").append(message).append(' ');
         if (symbol.value != null) {
-            builder.append('"').append(symbol.value).append("\" ");
+            builder.append('"').append(escapeJava(symbol.value.toString())).append("\" ");
         }
         builder.append(getCompleteId(symbol));
         logger.warning(builder.toString());

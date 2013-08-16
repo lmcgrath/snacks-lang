@@ -1,5 +1,6 @@
 package snacks.lang.compiler.syntax;
 
+import java.util.Objects;
 import beaver.Symbol;
 
 public class DoubleLiteral extends Symbol {
@@ -8,6 +9,16 @@ public class DoubleLiteral extends Symbol {
 
     public DoubleLiteral(double value) {
         this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o == this || o instanceof DoubleLiteral && value == ((DoubleLiteral) o).value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 
     @Override

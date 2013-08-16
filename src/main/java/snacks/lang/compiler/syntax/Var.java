@@ -4,25 +4,25 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class Using extends Symbol {
+public class Var extends Symbol {
 
     private final String name;
-    private final Symbol expression;
+    private final Symbol value;
 
-    public Using(String name, Symbol expression) {
+    public Var(String name, Symbol value) {
         this.name = name;
-        this.expression = expression;
+        this.value = value;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof Using) {
-            Using other = (Using) o;
+        } else if (o instanceof Var) {
+            Var other = (Var) o;
             return new EqualsBuilder()
                 .append(name, other.name)
-                .append(expression, other.expression)
+                .append(value, other.value)
                 .isEquals();
         } else {
             return false;
@@ -31,11 +31,11 @@ public class Using extends Symbol {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, expression);
+        return Objects.hash(name, value);
     }
 
     @Override
     public String toString() {
-        return "(using " + (name == null ? expression : name + " = " + expression) + ")";
+        return "(var " + name + " = " + value + ")";
     }
 }

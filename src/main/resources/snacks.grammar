@@ -15,7 +15,7 @@
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
     DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
-    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOLLAR, DO
+    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, DO
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -123,7 +123,7 @@ annotations
     ;
 
 annotation
-    = AT qualified_identifier.id                            {: return annotation(id, nothing(); :}
+    = AT qualified_identifier.id                            {: return annotation(id, nothing()); :}
     | AT qualified_identifier.id LPAREN expression.e RPAREN {: return annotation(id, e); :}
     | AT qualified_identifier.id LPAREN map_list.e RPAREN   {: return annotation(id, map(e)); :}
     | AT qualified_identifier.id LPAREN keyed_list.e RPAREN {: return annotation(id, map(e)); :}
@@ -142,15 +142,12 @@ qualified_identifier
 
 statement
     = expression
-    | VAR IDENTIFIER.v ASSIGN expression.e
-    | HURL expression.e
-    | RETURN expression.e
-    | WHILE expression.c DO sequence.e default_case.d END
-        {: return loop(truthy(c, block(e)), d); :}
-    | UNTIL expression.c DO sequence.e default_case.d END
-        {: return loop(falsy(c, block(e)), d); :}
-    | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END
-        {: return loop(v, e, block(s), d); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e  {: return var(v, e); :}
+    | HURL expression.e                     {: return hurl(e); :}
+    | RETURN expression.e                   {: return result(e); :}
+    | WHILE expression.c DO sequence.e default_case.d END               {: return loop(truthy(c, block(e)), d); :}
+    | UNTIL expression.c DO sequence.e default_case.d END               {: return loop(falsy(c, block(e)), d); :}
+    | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
     ;
 
 expression
@@ -246,6 +243,7 @@ list_literal
 tuple_literal
     = LPAREN COMMA? RPAREN              {: return tuple(); :}
     | LPAREN expression.e COMMA RPAREN  {: return tuple(e); :}
+    | LPAREN expression.e COMMA list.es COMMA? RPAREN {: return tuple(e, es); :}
     ;
 
 set_literal
@@ -261,7 +259,8 @@ map_literal
     ;
 
 block
-    = LCURLY sequence.e term* RCURLY {: return block(e); :}
+    = LCURLY term* RCURLY               {: return block(); :}
+    | LCURLY sequence.e term* RCURLY    {: return block(e); :}
     ;
 
 sequence
@@ -275,7 +274,7 @@ function_literal
     ;
 
 function_typespec
-    = DOLLAR qualified_fword.t {: return type(t); :}
+    = DOUBLE_COLON qualified_fword.t {: return type(t); :}
     |
     ;
 

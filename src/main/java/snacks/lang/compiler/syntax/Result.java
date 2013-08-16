@@ -3,17 +3,17 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class EnsureCase extends Symbol {
+public class Result extends Symbol {
 
     private final Symbol expression;
 
-    public EnsureCase(Symbol expression) {
+    public Result(Symbol expression) {
         this.expression = expression;
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof EnsureCase && Objects.equals(expression, ((EnsureCase) o).expression);
+        return o == this || o instanceof Result && Objects.equals(expression, ((Result) o).expression);
     }
 
     @Override
@@ -23,6 +23,6 @@ public class EnsureCase extends Symbol {
 
     @Override
     public String toString() {
-        return "(ensure " + expression + ")";
+        return "(return " + expression + ")";
     }
 }
