@@ -24,8 +24,7 @@ import beaver.Symbol;
 %class Scanner
 %function nextToken
 %type Symbol
-%extends beaver.Scanner
-%implements AutoCloseable
+%extends AbstractScanner
 
 %unicode
 %line
@@ -40,14 +39,6 @@ import beaver.Symbol;
 %eofval}
 
 %{
-    private final Deque<Integer> braces = new ArrayDeque<>();
-    private final Deque<Integer> states = new ArrayDeque<>();
-    private final StringBuilder string = new StringBuilder();
-
-    private String source = "NULL";
-
-    { states.push(YYINITIAL); }
-
     public Scanner(InputStream stream, String source) throws IOException {
         this(new InputStreamReader(stream, "UTF-8"));
         this.source = source;
@@ -67,107 +58,19 @@ import beaver.Symbol;
         }
     }
 
-    private void badInput() throws IOException {
-        String message = "Unexpected input '" + yytext() + "'";
-        error(message);
-        throw new IOException(message);
+    @Override
+    public int line() {
+        return yyline;
     }
 
-    private void beginInterpolation() {
-        enterState(YYINITIAL);
-        braces.push(0);
+    @Override
+    public int column() {
+        return yycolumn;
     }
 
-    private void beginString(int state) {
-        enterState(state);
-        string.setLength(0);
-    }
-
-    private void bracesDown() {
-        if (!braces.isEmpty()) {
-            braces.push(braces.pop() - 1);
-        }
-    }
-
-    private void bracesUp() {
-        if (braces.isEmpty()) {
-            braces.push(1);
-        } else {
-            braces.push(braces.pop() + 1);
-        }
-    }
-
-    private void detectFunction() {
-        enterState(DETECT_FUNCTION_STATE);
-    }
-
-    private void detectNewLine() {
-        enterState(EAT_NEWLINE_STATE);
-    }
-
-    private void detectSelector() {
-        enterState(SELECTOR_STATE);
-    }
-
-    private void enterState(int state) {
-        states.push(state);
-        yybegin(state);
-    }
-
-    private void flipState(int state) {
-        states.pop();
-        enterState(state);
-    }
-
-    private void leaveState() {
-        states.pop();
-        yybegin(states.peek());
-    }
-
-    private void error(String message) {
-        throw new ScannerException(message + " in " + source + " (" + yyline + ", " + yycolumn + ")");
-    }
-
-    private boolean endOfInterpolation() {
-        if (!braces.isEmpty() && braces.peek() < 0) {
-            leaveState();
-            braces.pop();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean hasString() {
-        return string.length() > 0;
-    }
-
-    private void octalToHex() {
-        string.append(octalToHex(yytext()));
-    }
-
-    private String octalToHex(String text) {
-        return String.format("\\u%04x", Integer.parseInt(text.substring(1), 8));
-    }
-
-    private Symbol rawString() {
-        String value = string.toString();
-        string.setLength(0);
-        return token(STRING, value);
-    }
-
-    private Symbol string() {
-        String value = string.toString();
-        string.setLength(0);
-        return token(STRING, unescapeJava(value.replaceAll("\\\\u+", "\\\\u")));
-    }
-
-    private Symbol token(short type) {
-        return new Token(type, yyline, yycolumn, yylength(), source);
-    }
-
-    private Symbol token(short type, Object value) {
-        return new Token(type, yyline, yycolumn, yylength(), source, value);
+    @Override
+    public int length() {
+        return yylength();
     }
 %}
 
@@ -208,6 +111,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 %state DETECT_FUNCTION_STATE
 %state FUNCTION_STATE
 %state ANNOTATION_STATE
+%state EMBRACE_STATE
 
 %%
 
@@ -222,19 +126,20 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "Nothing"       { detectSelector(); return token(NOTHING); }
     "and" | "&&"    { detectNewLine(); return token(AND); }
     "as"            { return token(AS); }
-    //"begin"         { detectNewLine(); return token(BEGIN); }
-    [Cc] "'" {OctalEscape} "'"
+    "begin"         { detectNewLine(); return token(BEGIN); }
+    "c"+ "'" {OctalEscape} "'"
                     {
                         String text = yytext();
                         detectSelector();
                         return token(CHARACTER, unescapeJava(octalToHex(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\'')))).charAt(0));
                     }
-    [Cc] "'" {Character} "'"
+    "c"+ "'" {Character} "'"
                     {
                         String text = yytext();
                         detectSelector();
                         return token(CHARACTER, unescapeJava(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\''))).charAt(0));
                     }
+    "do"            { return token(DO); }
     "else if"       { return token(ELSE_IF); }
     "else unless"   { return token(ELSE_UNLESS); }
     "else"          { detectNewLine(); return token(ELSE); }
@@ -243,24 +148,22 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "is"            { detectNewLine(); return token(IS); }
     "is not"        { detectNewLine(); return token(IS_NOT); }
     "unless"        { return token(UNLESS); }
-    //"embrace"       { detectNewLine(); return token(EMBRACE); }
+    "embrace"       { enterState(EMBRACE_STATE); return token(EMBRACE); }
     "end"           { return token(END); }
-    //"ensure"        { detectNewLine(); return token(ENSURE); }
-    //"for"           { return token(FOR); }
+    "ensure"        { detectNewLine(); return token(ENSURE); }
+    "for"           { return token(FOR); }
     "from"          { return token(FROM); }
-    //"hurl"          { return token(HURL); }
+    "hurl"          { return token(HURL); }
     "import"        { return token(IMPORT); }
     "not in"        { detectNewLine(); return token(NOT_IN); }
     "not" | "!"     { detectNewLine(); return token(NOT); }
     "or" | "||"     { detectNewLine(); return token(OR); }
-    //"return"        { return token(RETURN); }
+    "return"        { return token(RETURN); }
     "then"          { detectNewLine(); return token(THEN); }
-/*
     "until"         { return token(UNTIL); }
     "using"         { return token(USING); }
     "var"           { return token(VAR); }
     "while"         { return token(WHILE); }
-*/
     "_"             { return token(THROWAWAY); }
     "$"             { detectNewLine(); return token(APPLY); }
     {Identifier}    { detectSelector(); return token(IDENTIFIER, yytext()); }
@@ -315,9 +218,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
     "\\" {NewLine}+ { /* ignore */ }
     {Whitespace} | {NewLine}   { /* ignore */ }
-/*
     {NewLine}+      { return token(NEWLINE); }
-*/
 }
 
 <SELECTOR_STATE> {
@@ -348,7 +249,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                     }
     {OctalEscape}   { octalToHex(); }
     {InterpolationCharacter}
-                    { string.append(yytext()); }
+                    { gatherString(); }
     "\\" .          { badInput(); }
 }
 
@@ -364,7 +265,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         }
                     }
     {StringCharacter}
-                    { string.append(yytext()); }
+                    { gatherString(); }
 }
 
 <REGEX_STATE> {
@@ -387,7 +288,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         }
                     }
     {RegexCharacter} | {NewLine}
-                    { string.append(yytext()); }
+                    { gatherString(); }
 }
 
 <REGEX_OPTIONS_STATE> {
@@ -419,9 +320,9 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                             return token(TRIPLE_QUOTE);
                         }
                     }
-    "'"             { string.append(yytext()); }
+    "'"             { gatherString(); }
     {StringCharacter} | {NewLine}
-                    { string.append(yytext()); }
+                    { gatherString(); }
 }
 
 <HEREDOC_STATE> {
@@ -434,7 +335,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                             return token(TRIPLE_DQUOTE);
                         }
                     }
-    "\""            { string.append(yytext()); }
+    "\""            { gatherString(); }
     "#{"            {
                         if (hasString()) {
                             yypushback(2);
@@ -446,7 +347,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                     }
     {OctalEscape}   { octalToHex(); }
     {InterpolationCharacter} | {NewLine}
-                    { string.append(yytext()); }
+                    { gatherString(); }
     "\\" .          { badInput(); }
 }
 
@@ -475,6 +376,14 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     {Whitespace}    { /* ignore */ }
     "("             { leaveState(); return token(LPAREN); }
     .               { yypushback(1); leaveState(); }
+}
+
+<EMBRACE_STATE> {
+    {Identifier}    { return token(IDENTIFIER, yytext()); }
+    "."             { return token(DOT); }
+    ":"             { return token(COLON); }
+    "->"            { leaveState(); return token(APPLIES_TO); }
+    {Whitespace}    { /* ignore */ }
 }
 
 . { badInput(); }

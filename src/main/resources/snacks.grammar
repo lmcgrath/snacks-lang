@@ -14,7 +14,7 @@
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
     DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
-    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOLLAR
+    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOLLAR, DO
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -139,6 +139,19 @@ qualified_identifier
     | qualified_identifier DOT IDENTIFIER
     ;
 
+statement
+    = expression
+    | VAR IDENTIFIER.v ASSIGN expression.e
+    | HURL expression.e
+    | RETURN expression.e
+    | WHILE expression.c DO sequence.e default_case.d END
+        {: return new Loop(new TruthyCase(c, new Block(e)), d); :}
+    | UNTIL expression.c DO sequence.e default_case.d END
+        {: return new Loop(new FalsyCase(c, new Block(e)), d); :}
+    | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END
+        {: return new IteratorLoop(v, e, new Block(s), d); :}
+    ;
+
 expression
     = prefix_expression
     | tailed_function
@@ -217,6 +230,7 @@ primary_expression
     | set_literal
     | block
     | conditional
+    | exceptional
     | DQUOTE interpolation_list.e DQUOTE                    {: return new StringInterpolation(e); :}
     | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return new StringLiteral(val); :}
     | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return new StringInterpolation(e); :}
@@ -250,8 +264,8 @@ block
     ;
 
 sequence
-    = expression
-    | sequence term+ expression
+    = statement
+    | sequence term+ statement
     ;
 
 function_literal
@@ -294,6 +308,44 @@ alternative_case
 default_case
     = ELSE sequence.e {: return new DefaultCase(new Block(e)); :}
     |
+    ;
+
+exceptional
+    = BEGIN sequence.s embrace_cases.e ensure_case.f END    {: return new Exceptional(null, new Block(s), e, f); :}
+    | BEGIN sequence.s embrace_cases.e END                  {: return new Exceptional(null, new Block(s), e, null); :}
+    | BEGIN sequence.s ensure_case.f END                    {: return new Exceptional(null, new Block(s), null, f); :}
+    | usings.u term* DO sequence.s embrace_cases.e ensure_case.f END {: return new Exceptional(u, new Block(s), e, f); :}
+    | usings.u term* DO sequence.s embrace_cases.e END      {: return new Exceptional(u, new Block(s), e, null); :}
+    | usings.u term* DO sequence.s ensure_case.f END        {: return new Exceptional(u, new Block(s), null, f); :}
+    | usings.u term* DO sequence.s END                      {: return new Exceptional(u, new Block(s), null, null); :}
+    ;
+
+usings
+    = using
+    | usings term+ using
+    ;
+
+using
+    = USING expression.e                            {: return new Using(null, e); :}
+    | USING VAR IDENTIFIER.id ASSIGN expression.e   {: return new Using(id, e); :}
+    ;
+
+embrace_cases
+    = embrace_case
+    | embrace_cases embrace_case
+    ;
+
+embrace_case
+    = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e {: return new EmbraceCase(a, t, new Block(e)); :}
+    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e                    {: return new EmbraceCase(a, null, new Block(e)); :}
+    ;
+
+embrace_typespec
+    = COLON qualified_identifier.id {: return new TypeSpec(id); :}
+    ;
+
+ensure_case
+    = ENSURE sequence.e {: return new EnsureCase(new Block(e)); :}
     ;
 
 oparen
