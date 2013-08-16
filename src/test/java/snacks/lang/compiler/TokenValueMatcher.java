@@ -1,4 +1,4 @@
-package snacks.lang.compiler.scanner;
+package snacks.lang.compiler;
 
 import java.util.Objects;
 import beaver.Symbol;

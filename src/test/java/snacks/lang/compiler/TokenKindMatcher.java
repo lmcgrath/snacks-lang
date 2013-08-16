@@ -1,4 +1,4 @@
-package snacks.lang.compiler.scanner;
+package snacks.lang.compiler;
 
 import beaver.Symbol;
 import org.hamcrest.Description;
