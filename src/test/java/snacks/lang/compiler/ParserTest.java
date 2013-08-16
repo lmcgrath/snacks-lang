@@ -182,6 +182,89 @@ public class ParserTest {
         assertThat(expression("{}"), equalTo(block()));
     }
 
+    @Test
+    public void shouldParseImport() {
+        assertThat(parse("import snacks.bananas"), equalTo(module(
+            importId(qid("snacks", "bananas")))
+        ));
+    }
+
+    @Test
+    public void shouldParseImportWithAlias() {
+        assertThat(parse("import snacks.bananas as fruit"), equalTo(module(
+            importId(qid("snacks", "bananas"), "fruit")
+        )));
+    }
+
+    @Test
+    public void shouldParseFrom() {
+        assertThat(parse("from snacks.fruit import bananas"), equalTo(module(
+            from(qid("snacks", "fruit"), sub("bananas"))
+        )));
+    }
+
+    @Test
+    public void shouldParseFromWithAlias() {
+        assertThat(parse("from snacks.fruit import bananas as fruit"), equalTo(module(
+            from(qid("snacks", "fruit"), sub("bananas", "fruit"))
+        )));
+    }
+
+    @Test
+    public void shouldParseMultipleFrom() {
+        assertThat(parse("from snacks.fruit import bananas, apples, pears"), equalTo(module(
+            from(
+                qid("snacks", "fruit"),
+                sub("bananas"),
+                sub("apples"),
+                sub("pears")
+            )
+        )));
+    }
+
+    @Test
+    public void shouldParseMultipleFromWithParentheses() {
+        assertThat(parse("from snacks.fruit import (bananas, apples, pears)"), equalTo(module(
+            from(
+                qid("snacks", "fruit"),
+                sub("bananas"),
+                sub("apples"),
+                sub("pears")
+            )
+        )));
+    }
+
+    @Test
+    public void shouldParseMultipleFromWithAlias() {
+        assertThat(parse("from snacks.fruit import bananas, apples, pears as pandas"), equalTo(module(
+            from(
+                qid("snacks", "fruit"),
+                sub("bananas"),
+                sub("apples"),
+                sub("pears", "pandas")
+            )
+        )));
+    }
+
+    @Test
+    public void shouldParseDeclaration() {
+        assertThat(parse("test = a b c"), equalTo(module(
+            def("test", apply(id("a"), id("b"), id("c"))))
+        ));
+    }
+
+    @Test
+    public void shouldParseDeclarationType() {
+        Symbol tree = parse(
+            "test :: waffles",
+            "test = a b c"
+        );
+        assertThat(tree, equalTo(module(
+            defType("test", type(qid("waffles"))),
+            def("test", apply(id("a"), id("b"), id("c")))
+        )));
+    }
+
     private static Symbol expression(String... inputs) {
         try {
             return (Symbol) new Parser().parse(
@@ -193,7 +276,7 @@ public class ParserTest {
         }
     }
 
-    private static Symbol module(String... inputs) {
+    private static Symbol parse(String... inputs) {
         try {
             return (Symbol) new Parser().parse(
                 new Scanner(new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8"))))

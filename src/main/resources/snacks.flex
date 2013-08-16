@@ -168,6 +168,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "$"             { detectNewLine(); return token(APPLY); }
     {Identifier}    { detectSelector(); return token(IDENTIFIER, yytext()); }
     ";"             { detectNewLine(); return token(SEMICOLON); }
+    "::"            { detectNewLine(); return token(DOUBLE_COLON); }
     ":"             { detectNewLine(); return token(COLON); }
     "~"             { detectNewLine(); return token(BIT_NOT); }
     "=="            { detectNewLine(); return token(EQUALS); }

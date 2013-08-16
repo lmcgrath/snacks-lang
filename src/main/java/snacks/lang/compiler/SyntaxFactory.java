@@ -60,6 +60,10 @@ public final class SyntaxFactory {
         return new Declaration(name, expression, annotations);
     }
 
+    public static Symbol defType(String name, Symbol type) {
+        return new DeclarationType(name, type);
+    }
+
     public static Symbol embrace(String var, Symbol type, Symbol expression) {
         return new EmbraceCase(var, type, expression);
     }

@@ -64,7 +64,6 @@
 %typeof import_alias = "String";
 %typeof sub_import = "SubImport";
 %typeof annotation = "Annotation";
-%typeof opt_annotations = "Annotation[]";
 %typeof suffix_typespec = "TypeSpec";
 %typeof function_typespec = "TypeSpec";
 
@@ -82,6 +81,7 @@ module_expression
     = import_expression
     | from_expression
     | declaration
+    | declaration_typespec
     ;
 
 import_expression
@@ -103,18 +103,17 @@ sub_import
     ;
 
 import_alias
-    = AS IDENTIFIER.id {: return id(id); :}
+    = AS IDENTIFIER.id {: return new Symbol(id); :}
     |
     ;
 
 declaration
-    = opt_annotations.a IDENTIFIER.id ASSIGN expression.e
-        {: return a == null ? def(id, e) : def(id, e, a); :}
+    = annotations.a NEWLINE* IDENTIFIER.id ASSIGN expression.e  {: return def(id, e, a); :}
+    | IDENTIFIER.id ASSIGN expression.e                         {: return def(id, e); :}
     ;
 
-opt_annotations
-    = annotations.a NEWLINE* {: return new Symbol(a); :}
-    |
+declaration_typespec
+    = IDENTIFIER.id DOUBLE_COLON qualified_identifier.t {: return defType(id, type(t)); :}
     ;
 
 annotations
