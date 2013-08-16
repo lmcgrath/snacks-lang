@@ -8,11 +8,11 @@ import beaver.Symbol;
 
 public class FunctionLiteral extends Symbol {
 
-    private final List<Argument> arguments;
+    private final List<Symbol> arguments;
     private final Symbol body;
-    private final TypeSpec type;
+    private final Symbol type;
 
-    public FunctionLiteral(Argument[] arguments, Symbol body, TypeSpec type) {
+    public FunctionLiteral(Symbol[] arguments, Symbol body, Symbol type) {
         this.arguments = asList(arguments);
         this.body = body;
         this.type = type;

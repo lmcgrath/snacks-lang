@@ -5,9 +5,9 @@ import beaver.Symbol;
 public class Argument extends Symbol {
 
     private final String name;
-    private final TypeSpec type;
+    private final Symbol type;
 
-    public Argument(String name, TypeSpec type) {
+    public Argument(String name, Symbol type) {
         this.name = name;
         this.type = type;
     }

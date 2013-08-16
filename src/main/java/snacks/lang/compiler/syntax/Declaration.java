@@ -10,9 +10,9 @@ public class Declaration extends Symbol {
 
     private final String name;
     private final Symbol body;
-    private final List<Annotation> annotations;
+    private final List<Symbol> annotations;
 
-    public Declaration(String name, Symbol body, Annotation... annotations) {
+    public Declaration(String name, Symbol body, Symbol... annotations) {
         this.name = name;
         this.body = body;
         this.annotations = asList(annotations);

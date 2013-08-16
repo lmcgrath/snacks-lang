@@ -5,6 +5,7 @@
 %import "java.util.List",
         "java.util.Set",
         "snacks.lang.compiler.syntax.*",
+        "static snacks.lang.compiler.SyntaxFactory.*",
         "static java.util.Arrays.*",
         "static java.util.Collections.*";
 
@@ -68,8 +69,8 @@
 %typeof function_typespec = "TypeSpec";
 
 module_declaration
-    = module_expressions.e opt_terms {: return new Module(e); :}
-    | {: return new Module(); :}
+    = module_expressions.e opt_terms {: return module(e); :}
+    | {: return module(); :}
     ;
 
 module_expressions
@@ -84,12 +85,12 @@ module_expression
     ;
 
 import_expression
-    = IMPORT qualified_identifier.id import_alias.a {: return new Import(id, a == null ? id[id.length - 1] : a); :}
+    = IMPORT qualified_identifier.id import_alias.a {: return importId(id, a == null ? id[id.length - 1] : a); :}
     ;
 
 from_expression
-    = FROM qualified_identifier.id IMPORT sub_imports.s                         {: return new FromImport(id, s); :}
-    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN    {: return new FromImport(id, s); :}
+    = FROM qualified_identifier.id IMPORT sub_imports.s                         {: return from(id, s); :}
+    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN    {: return from(id, s); :}
     ;
 
 sub_imports
@@ -98,17 +99,17 @@ sub_imports
     ;
 
 sub_import
-    = IDENTIFIER.id import_alias.a {: return new SubImport(id, a == null ? id : a); :}
+    = IDENTIFIER.id import_alias.a {: return sub(id, a == null ? id : a); :}
     ;
 
 import_alias
-    = AS IDENTIFIER.id {: return new Symbol(id); :}
+    = AS IDENTIFIER.id {: return id(id); :}
     |
     ;
 
 declaration
     = opt_annotations.a IDENTIFIER.id ASSIGN expression.e
-        {: return a == null ? new Declaration(id, e) : new Declaration(id, e, a); :}
+        {: return a == null ? def(id, e) : def(id, e, a); :}
     ;
 
 opt_annotations
@@ -122,16 +123,16 @@ annotations
     ;
 
 annotation
-    = AT qualified_identifier.id                            {: return new Annotation(id, new NothingLiteral()); :}
-    | AT qualified_identifier.id LPAREN expression.e RPAREN {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id LPAREN map_list.e RPAREN   {: return new Annotation(id, new MapLiteral(e)); :}
-    | AT qualified_identifier.id LPAREN keyed_list.e RPAREN {: return new Annotation(id, new MapLiteral(e)); :}
-    | AT qualified_identifier.id tuple_literal.e            {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id map_literal.e              {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id set_literal.e              {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id list_literal.e             {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id function_literal.e         {: return new Annotation(id, e); :}
-    | AT qualified_identifier.id block.e                    {: return new Annotation(id, e); :}
+    = AT qualified_identifier.id                            {: return annotation(id, nothing(); :}
+    | AT qualified_identifier.id LPAREN expression.e RPAREN {: return annotation(id, e); :}
+    | AT qualified_identifier.id LPAREN map_list.e RPAREN   {: return annotation(id, map(e)); :}
+    | AT qualified_identifier.id LPAREN keyed_list.e RPAREN {: return annotation(id, map(e)); :}
+    | AT qualified_identifier.id tuple_literal.e            {: return annotation(id, e); :}
+    | AT qualified_identifier.id map_literal.e              {: return annotation(id, e); :}
+    | AT qualified_identifier.id set_literal.e              {: return annotation(id, e); :}
+    | AT qualified_identifier.id list_literal.e             {: return annotation(id, e); :}
+    | AT qualified_identifier.id function_literal.e         {: return annotation(id, e); :}
+    | AT qualified_identifier.id block.e                    {: return annotation(id, e); :}
     ;
 
 qualified_identifier
@@ -145,61 +146,61 @@ statement
     | HURL expression.e
     | RETURN expression.e
     | WHILE expression.c DO sequence.e default_case.d END
-        {: return new Loop(new TruthyCase(c, new Block(e)), d); :}
+        {: return loop(truthy(c, block(e)), d); :}
     | UNTIL expression.c DO sequence.e default_case.d END
-        {: return new Loop(new FalsyCase(c, new Block(e)), d); :}
+        {: return loop(falsy(c, block(e)), d); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END
-        {: return new IteratorLoop(v, e, new Block(s), d); :}
+        {: return loop(v, e, block(s), d); :}
     ;
 
 expression
     = prefix_expression
     | tailed_function
-    | expression.l EXPONENT expression.r        {: return new BinaryExpression("**", l, r); :}
-    | expression.l MULTIPLY expression.r        {: return new BinaryExpression("*", l, r); :}
-    | expression.l DIVIDE expression.r          {: return new BinaryExpression("/", l, r); :}
-    | expression.l MODULO expression.r          {: return new BinaryExpression("%", l, r); :}
-    | expression.l PLUS expression.r            {: return new BinaryExpression("+", l, r); :}
-    | expression.l MINUS expression.r           {: return new BinaryExpression("-", l, r); :}
-    | expression.l BIT_AND expression.r         {: return new BinaryExpression("&", l, r); :}
-    | expression.l BIT_OR expression.r          {: return new BinaryExpression("|", l, r); :}
-    | expression.l BIT_XOR expression.r         {: return new BinaryExpression("^", l, r); :}
-    | expression.l COALESCE expression.r        {: return new BinaryExpression("?", l, r); :}
-    | expression.l LSHIFT expression.r          {: return new BinaryExpression("<<", l, r); :}
-    | expression.l RSHIFT expression.r          {: return new BinaryExpression(">>", l, r); :}
-    | expression.l URSHIFT expression.r         {: return new BinaryExpression(">>>", l, r); :}
-    | expression.l IS expression.r              {: return new BinaryExpression("is", l, r); :}
-    | expression.l IS_NOT expression.r          {: return new BinaryExpression("is not", l, r); :}
-    | expression.l EQUALS expression.r          {: return new BinaryExpression("==", l, r); :}
-    | expression.l NOT_EQUALS expression.r      {: return new BinaryExpression("!=", l, r); :}
-    | expression.l GREATER_THAN expression.r    {: return new BinaryExpression(">", l, r); :}
-    | expression.l LESS_THAN expression.r       {: return new BinaryExpression("<", l, r); :}
-    | expression.l GREATER_THAN_EQUALS expression.r {: return new BinaryExpression(">=", l, r); :}
-    | expression.l LESS_THAN_EQUALS expression.r {: return new BinaryExpression("<=", l, r); :}
-    | expression.l IN expression.r              {: return new BinaryExpression("in", l, r); :}
-    | expression.l NOT_IN expression.r          {: return new BinaryExpression("not in", l, r); :}
-    | NOT expression.e                          {: return new UnaryExpression("not", e); :}
-    | expression.l AND expression.r             {: return new BinaryExpression("and", l, r); :}
-    | expression.l OR expression.r              {: return new BinaryExpression("or", l, r); :}
-    | expression.l RANGE expression.r           {: return new BinaryExpression("..", l, r); :}
-    | expression.l XRANGE expression.r          {: return new BinaryExpression("...", l, r); :}
-    | expression.l APPLY expression.r           {: return new BinaryExpression("$", l, r); :}
-    | expression.l ASSIGN expression.r          {: return new BinaryExpression("=", l, r); :}
+    | expression.l EXPONENT expression.r        {: return binary("**", l, r); :}
+    | expression.l MULTIPLY expression.r        {: return binary("*", l, r); :}
+    | expression.l DIVIDE expression.r          {: return binary("/", l, r); :}
+    | expression.l MODULO expression.r          {: return binary("%", l, r); :}
+    | expression.l PLUS expression.r            {: return binary("+", l, r); :}
+    | expression.l MINUS expression.r           {: return binary("-", l, r); :}
+    | expression.l BIT_AND expression.r         {: return binary("&", l, r); :}
+    | expression.l BIT_OR expression.r          {: return binary("|", l, r); :}
+    | expression.l BIT_XOR expression.r         {: return binary("^", l, r); :}
+    | expression.l COALESCE expression.r        {: return binary("?", l, r); :}
+    | expression.l LSHIFT expression.r          {: return binary("<<", l, r); :}
+    | expression.l RSHIFT expression.r          {: return binary(">>", l, r); :}
+    | expression.l URSHIFT expression.r         {: return binary(">>>", l, r); :}
+    | expression.l IS expression.r              {: return binary("is", l, r); :}
+    | expression.l IS_NOT expression.r          {: return binary("is not", l, r); :}
+    | expression.l EQUALS expression.r          {: return binary("==", l, r); :}
+    | expression.l NOT_EQUALS expression.r      {: return binary("!=", l, r); :}
+    | expression.l GREATER_THAN expression.r    {: return binary(">", l, r); :}
+    | expression.l LESS_THAN expression.r       {: return binary("<", l, r); :}
+    | expression.l GREATER_THAN_EQUALS expression.r {: return binary(">=", l, r); :}
+    | expression.l LESS_THAN_EQUALS expression.r {: return binary("<=", l, r); :}
+    | expression.l IN expression.r              {: return binary("in", l, r); :}
+    | expression.l NOT_IN expression.r          {: return binary("not in", l, r); :}
+    | NOT expression.e                          {: return unary("not", e); :}
+    | expression.l AND expression.r             {: return binary("and", l, r); :}
+    | expression.l OR expression.r              {: return binary("or", l, r); :}
+    | expression.l RANGE expression.r           {: return binary("..", l, r); :}
+    | expression.l XRANGE expression.r          {: return binary("...", l, r); :}
+    | expression.l APPLY expression.r           {: return binary("$", l, r); :}
+    | expression.l ASSIGN expression.r          {: return binary("=", l, r); :}
     ;
 
 prefix_expression
     = postfix_expression
-    | postfix_expression.e arguments.a  {: return new ArgumentsExpression(e, a); :}
-    | MINUS prefix_expression.e         {: return new UnaryExpression("-", e); :}
-    | PLUS prefix_expression.e          {: return new UnaryExpression("+", e); :}
-    | BIT_NOT prefix_expression.e       {: return new UnaryExpression("~", e); :}
+    | postfix_expression.e arguments.a  {: return apply(e, a); :}
+    | MINUS prefix_expression.e         {: return unary("-", e); :}
+    | PLUS prefix_expression.e          {: return unary("+", e); :}
+    | BIT_NOT prefix_expression.e       {: return unary("~", e); :}
     ;
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e DOT IDENTIFIER.id            {: return new AccessExpression(e, id); :}
-    | postfix_expression.e LINDEX list.l COMMA? RSQUARE {: return new IndexExpression(e, l); :}
-    | postfix_expression.e LARG arguments.a RPAREN      {: return new ArgumentsExpression(e, a); :}
+    | postfix_expression.e DOT IDENTIFIER.id            {: return access(e, id); :}
+    | postfix_expression.e LINDEX list.l COMMA? RSQUARE {: return index(e, l); :}
+    | postfix_expression.e LARG arguments.a RPAREN      {: return apply(e, a); :}
     ;
 
 arguments
@@ -213,16 +214,16 @@ list
     ;
 
 primary_expression
-    = IDENTIFIER.id                 {: return new Identifier(id); :}
-    | INTEGER.val                   {: return new IntegerLiteral(val); :}
-    | DOUBLE.val                    {: return new DoubleLiteral(val); :}
-    | TRUE                          {: return new BooleanLiteral(true); :}
-    | FALSE                         {: return new BooleanLiteral(false); :}
-    | NOTHING                       {: return new NothingLiteral(); :}
-    | CHARACTER.c                   {: return new CharacterLiteral(c); :}
-    | SYMBOL.s                      {: return new SymbolLiteral(s); :}
+    = IDENTIFIER.id                 {: return id(id); :}
+    | INTEGER.val                   {: return literal(val); :}
+    | DOUBLE.val                    {: return literal(val); :}
+    | TRUE                          {: return literal(true); :}
+    | FALSE                         {: return literal(false); :}
+    | NOTHING                       {: return nothing(); :}
+    | CHARACTER.c                   {: return literal(c); :}
+    | SYMBOL.s                      {: return symbol(s); :}
     | LPAREN expression.e RPAREN    {: return e; :}
-    | QUOTE STRING.val QUOTE        {: return new StringLiteral(val); :}
+    | QUOTE STRING.val QUOTE        {: return literal(val); :}
     | function_literal
     | map_literal
     | list_literal
@@ -231,36 +232,36 @@ primary_expression
     | block
     | conditional
     | exceptional
-    | DQUOTE interpolation_list.e DQUOTE                    {: return new StringInterpolation(e); :}
-    | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return new StringLiteral(val); :}
-    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return new StringInterpolation(e); :}
-    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return new RegexLiteral(asList(e), o); :}
+    | DQUOTE interpolation_list.e DQUOTE                    {: return interpolation(e); :}
+    | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return literal(val); :}
+    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return interpolation(e); :}
+    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
     ;
 
 list_literal
-    = LSQUARE list.e COMMA? RSQUARE {: return new ListLiteral(e); :}
-    | LSQUARE RSQUARE               {: return new ListLiteral(); :}
+    = LSQUARE list.e COMMA? RSQUARE {: return list(e); :}
+    | LSQUARE RSQUARE               {: return list(); :}
     ;
 
 tuple_literal
-    = LPAREN COMMA? RPAREN              {: return new TupleLiteral(); :}
-    | LPAREN expression.e COMMA RPAREN  {: return new TupleLiteral(e); :}
+    = LPAREN COMMA? RPAREN              {: return tuple(); :}
+    | LPAREN expression.e COMMA RPAREN  {: return tuple(e); :}
     ;
 
 set_literal
-    = LCURLY COMMA RCURLY               {: return new SetLiteral(); :}
-    | LCURLY expression.e COMMA RCURLY  {: return new SetLiteral(e); :}
-    | LCURLY expression.e COMMA list.es COMMA? RCURLY {: return new SetLiteral(e, es); :}
+    = LCURLY COMMA RCURLY               {: return set(); :}
+    | LCURLY expression.e COMMA RCURLY  {: return set(e); :}
+    | LCURLY expression.e COMMA list.es COMMA? RCURLY {: return set(e, es); :}
     ;
 
 map_literal
-    = LCURLY COLON RCURLY               {: return new MapLiteral(); :}
-    | LCURLY keyed_list.e COMMA? RCURLY {: return new MapLiteral(e); :}
-    | LCURLY map_list.e COMMA? RCURLY   {: return new MapLiteral(e); :}
+    = LCURLY COLON RCURLY               {: return map(); :}
+    | LCURLY keyed_list.e COMMA? RCURLY {: return map(e); :}
+    | LCURLY map_list.e COMMA? RCURLY   {: return map(e); :}
     ;
 
 block
-    = LCURLY sequence.e term* RCURLY {: return new Block(e); :}
+    = LCURLY sequence.e term* RCURLY {: return block(e); :}
     ;
 
 sequence
@@ -269,20 +270,17 @@ sequence
     ;
 
 function_literal
-    = oparen function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN
-        {: return new FunctionLiteral(a, e, t); :}
-    | LCURLY function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
-        {: return new FunctionLiteral(a, new Block(e), t); :}
+    = oparen function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN     {: return func(a, e, t); :}
+    | LCURLY function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY {: return func(a, block(e), t); :}
     ;
 
 function_typespec
-    = DOLLAR qualified_fword.t {: return new TypeSpec(t); :}
+    = DOLLAR qualified_fword.t {: return type(t); :}
     |
     ;
 
 tailed_function
-    = oparen function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
-        {: return new FunctionLiteral(a, e, t); :}
+    = oparen function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e {: return func(a, e, t); :}
     ;
 
 conditional
@@ -291,8 +289,8 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c THEN sequence.e       {: return new TruthyCase(c, new Block(e)); :}
-    | UNLESS expression.c THEN sequence.e   {: return new FalsyCase(c, new Block(e)); :}
+    = IF expression.c THEN sequence.e       {: return truthy(c, block(e)); :}
+    | UNLESS expression.c THEN sequence.e   {: return falsy(c, block(e)); :}
     ;
 
 alternative_cases
@@ -301,23 +299,23 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c THEN sequence.e      {: return new TruthyCase(c, new Block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e  {: return new FalsyCase(c, new Block(e)); :}
+    = ELSE_IF expression.c THEN sequence.e      {: return truthy(c, block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e  {: return falsy(c, block(e)); :}
     ;
 
 default_case
-    = ELSE sequence.e {: return new DefaultCase(new Block(e)); :}
+    = ELSE sequence.e {: return dcase(block(e)); :}
     |
     ;
 
 exceptional
-    = BEGIN sequence.s embrace_cases.e ensure_case.f END    {: return new Exceptional(null, new Block(s), e, f); :}
-    | BEGIN sequence.s embrace_cases.e END                  {: return new Exceptional(null, new Block(s), e, null); :}
-    | BEGIN sequence.s ensure_case.f END                    {: return new Exceptional(null, new Block(s), null, f); :}
-    | usings.u term* DO sequence.s embrace_cases.e ensure_case.f END {: return new Exceptional(u, new Block(s), e, f); :}
-    | usings.u term* DO sequence.s embrace_cases.e END      {: return new Exceptional(u, new Block(s), e, null); :}
-    | usings.u term* DO sequence.s ensure_case.f END        {: return new Exceptional(u, new Block(s), null, f); :}
-    | usings.u term* DO sequence.s END                      {: return new Exceptional(u, new Block(s), null, null); :}
+    = BEGIN sequence.s embrace_cases.e ensure_case.f END    {: return begin(block(s), e, f); :}
+    | BEGIN sequence.s embrace_cases.e END                  {: return begin(block(s), e, null); :}
+    | BEGIN sequence.s ensure_case.f END                    {: return begin(block(s), null, f); :}
+    | usings.u term* DO sequence.s embrace_cases.e ensure_case.f END {: return using(u, block(s), e, f); :}
+    | usings.u term* DO sequence.s embrace_cases.e END      {: return using(u, block(s), e); :}
+    | usings.u term* DO sequence.s ensure_case.f END        {: return using(u, block(s), f); :}
+    | usings.u term* DO sequence.s END                      {: return using(u, block(s)); :}
     ;
 
 usings
@@ -326,8 +324,8 @@ usings
     ;
 
 using
-    = USING expression.e                            {: return new Using(null, e); :}
-    | USING VAR IDENTIFIER.id ASSIGN expression.e   {: return new Using(id, e); :}
+    = USING expression.e                            {: return using((String) null, e); :}
+    | USING VAR IDENTIFIER.id ASSIGN expression.e   {: return using(id, e); :}
     ;
 
 embrace_cases
@@ -336,16 +334,16 @@ embrace_cases
     ;
 
 embrace_case
-    = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e {: return new EmbraceCase(a, t, new Block(e)); :}
-    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e                    {: return new EmbraceCase(a, null, new Block(e)); :}
+    = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e {: return embrace(a, t, block(e)); :}
+    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e                    {: return embrace(a, null, block(e)); :}
     ;
 
 embrace_typespec
-    = COLON qualified_identifier.id {: return new TypeSpec(id); :}
+    = COLON qualified_identifier.id {: return type(id); :}
     ;
 
 ensure_case
-    = ENSURE sequence.e {: return new EnsureCase(new Block(e)); :}
+    = ENSURE sequence.e {: return ensure(block(e)); :}
     ;
 
 oparen
@@ -359,7 +357,7 @@ keyed_list
     ;
 
 keyed_entry
-    = KEY_SYMBOL.k expression.v {: return new MapEntry(new SymbolLiteral(k), v); :}
+    = KEY_SYMBOL.k expression.v {: return entry(symbol(k), v); :}
     ;
 
 map_list
@@ -368,7 +366,7 @@ map_list
     ;
 
 map_entry
-    = expression.k GOES_TO expression.v {: return new MapEntry(k, v); :}
+    = expression.k GOES_TO expression.v {: return entry(k, v); :}
     ;
 
 function_arguments
@@ -377,12 +375,12 @@ function_arguments
     ;
 
 function_argument
-    = FWORD.a suffix_typespec.t {: return new Argument(a, t); :}
-    | THROWAWAY                 {: return new Argument("_", null); :}
+    = FWORD.a suffix_typespec.t {: return arg(a, t); :}
+    | THROWAWAY                 {: return arg("_", null); :}
     ;
 
 suffix_typespec
-    = COLON qualified_fword.t {: return new TypeSpec(t); :}
+    = COLON qualified_fword.t {: return type(t); :}
     |
     ;
 
@@ -397,7 +395,7 @@ interpolation_list
     ;
 
 interpolation
-    = STRING.val {: return new StringLiteral(val); :}
+    = STRING.val {: return literal(val); :}
     | LINTERPOLATE expression.e RINTERPOLATE {: return e; :}
     ;
 

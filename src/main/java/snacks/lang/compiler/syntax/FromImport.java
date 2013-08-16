@@ -9,9 +9,9 @@ import beaver.Symbol;
 public class FromImport extends Symbol {
 
     private final List<String> module;
-    private final List<SubImport> subImports;
+    private final List<Symbol> subImports;
 
-    public FromImport(String[] module, SubImport... subImports) {
+    public FromImport(String[] module, Symbol... subImports) {
         this.module = asList(module);
         this.subImports = asList(subImports);
     }
