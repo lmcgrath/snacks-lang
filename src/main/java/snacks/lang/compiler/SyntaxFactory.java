@@ -1,5 +1,9 @@
 package snacks.lang.compiler;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.addAll;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
@@ -9,6 +13,10 @@ public final class SyntaxFactory {
 
     public static Symbol access(Symbol expression, String property) {
         return new AccessExpression(expression, property);
+    }
+
+    public static Symbol annotated(Symbol expression, Symbol... annotations) {
+        return new Annotated(expression, annotations);
     }
 
     public static Symbol annotation(String[] id, Symbol value) {
@@ -44,6 +52,22 @@ public final class SyntaxFactory {
         return new Exceptional(null, expression, embraceCases, ensureCase);
     }
 
+    public static Symbol begin(Symbol[] usings, Symbol expression) {
+        return new Exceptional(usings, expression, null, null);
+    }
+
+    public static Symbol begin(Symbol[] usings, Symbol expression, Symbol[] embraceCases) {
+        return new Exceptional(usings, expression, embraceCases, null);
+    }
+
+    public static Symbol begin(Symbol[] usings, Symbol expression, Symbol ensureCase) {
+        return new Exceptional(usings, expression, null, ensureCase);
+    }
+
+    public static Symbol begin(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
+        return new Exceptional(usings, expression, embraceCases, ensureCase);
+    }
+
     public static Symbol binary(String operator, Symbol left, Symbol right) {
         return new BinaryExpression(operator, left, right);
     }
@@ -52,16 +76,32 @@ public final class SyntaxFactory {
         return new Block(elements);
     }
 
+    public static Symbol conditional(Symbol... cases) {
+        return new Conditional(asList(cases));
+    }
+
+    public static Symbol conditional(Symbol head, Symbol[] tail, Symbol defaultCase) {
+        List<Symbol> elements = new ArrayList<>();
+        elements.add(head);
+        if (tail != null) {
+            addAll(elements, tail);
+        }
+        if (defaultCase != null) {
+            elements.add(defaultCase);
+        }
+        return new Conditional(elements);
+    }
+
     public static Symbol dcase(Symbol expression) {
         return new DefaultCase(expression);
     }
 
-    public static Symbol def(String name, Symbol expression, Symbol... annotations) {
-        return new Declaration(name, expression, annotations);
+    public static Symbol def(String name, Symbol expression) {
+        return new Declaration(name, expression);
     }
 
-    public static Symbol defType(String name, Symbol type) {
-        return new DeclarationType(name, type);
+    public static Symbol embrace(String var, Symbol expression) {
+        return new EmbraceCase(var, null, expression);
     }
 
     public static Symbol embrace(String var, Symbol type, Symbol expression) {
@@ -82,6 +122,14 @@ public final class SyntaxFactory {
 
     public static Symbol from(String[] module, Symbol... subImports) {
         return new FromImport(module, subImports);
+    }
+
+    public static Symbol func(Symbol body) {
+        return new FunctionLiteral(new Symbol[0], body, null);
+    }
+
+    public static Symbol func(Symbol body, Symbol type) {
+        return new FunctionLiteral(new Symbol[0], body, type);
     }
 
     public static Symbol func(Symbol[] args, Symbol body) {
@@ -218,22 +266,6 @@ public final class SyntaxFactory {
 
     public static Symbol using(Symbol value) {
         return new Using(null, value);
-    }
-
-    public static Symbol using(Symbol[] usings, Symbol expression) {
-        return new Exceptional(usings, expression, null, null);
-    }
-
-    public static Symbol using(Symbol[] usings, Symbol expression, Symbol[] embraceCases) {
-        return new Exceptional(usings, expression, embraceCases, null);
-    }
-
-    public static Symbol using(Symbol[] usings, Symbol expression, Symbol ensureCase) {
-        return new Exceptional(usings, expression, null, ensureCase);
-    }
-
-    public static Symbol using(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
-        return new Exceptional(usings, expression, embraceCases, ensureCase);
     }
 
     public static Symbol var(String name, Symbol value) {

@@ -13,26 +13,13 @@
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
     FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
-    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN,
+    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
-    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, DO
+    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON,
+    LFUNC, LFUNC_MULTILINE
 ;
 
 %init {: report = new ParserEvents(); :};
-
-%embed {:
-    private Symbol conditional(Symbol head, Symbol[] tail, Symbol defaultCase) {
-        List<Symbol> elements = new ArrayList<>();
-        elements.add(head);
-        if (tail != null) {
-            addAll(elements, tail);
-        }
-        if (defaultCase != null) {
-            elements.add(defaultCase);
-        }
-        return new Conditional(elements);
-    }
-:};
 
 %right EXPONENT;
 %left MULTIPLY, DIVIDE, MODULO;
@@ -64,8 +51,11 @@
 %typeof import_alias = "String";
 %typeof sub_import = "SubImport";
 %typeof annotation = "Annotation";
+%typeof opt_annotations = "Symbol[]";
 %typeof suffix_typespec = "TypeSpec";
 %typeof function_typespec = "TypeSpec";
+%typeof opt_function_arguments = "Symbol[]";
+%typeof opt_usings = "Symbol[]";
 
 module_declaration
     = module_expressions.e opt_terms {: return module(e); :}
@@ -78,19 +68,10 @@ module_expressions
     ;
 
 module_expression
-    = import_expression
-    | from_expression
-    | declaration
-    | declaration_typespec
-    ;
-
-import_expression
-    = IMPORT qualified_identifier.id import_alias.a {: return importId(id, a == null ? id[id.length - 1] : a); :}
-    ;
-
-from_expression
-    = FROM qualified_identifier.id IMPORT sub_imports.s                         {: return from(id, s); :}
-    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN    {: return from(id, s); :}
+    = IMPORT qualified_identifier.id import_alias.a         {: return importId(id, a == null ? id[id.length - 1] : a); :}
+    | FROM qualified_identifier.id IMPORT sub_imports.s     {: return from(id, s); :}
+    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
+    | opt_annotations.a IDENTIFIER.id ASSIGN expression.e   {: return a == null ? def(id, e) : annotated(def(id, e), a); :}
     ;
 
 sub_imports
@@ -107,13 +88,9 @@ import_alias
     |
     ;
 
-declaration
-    = annotations.a NEWLINE* IDENTIFIER.id ASSIGN expression.e  {: return def(id, e, a); :}
-    | IDENTIFIER.id ASSIGN expression.e                         {: return def(id, e); :}
-    ;
-
-declaration_typespec
-    = IDENTIFIER.id DOUBLE_COLON qualified_identifier.t {: return defType(id, type(t)); :}
+opt_annotations
+    = annotations.a NEWLINE* {: return new Symbol(a); :}
+    |
     ;
 
 annotations
@@ -194,9 +171,10 @@ prefix_expression
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e DOT IDENTIFIER.id            {: return access(e, id); :}
-    | postfix_expression.e LINDEX list.l COMMA? RSQUARE {: return index(e, l); :}
-    | postfix_expression.e LARG arguments.a RPAREN      {: return apply(e, a); :}
+    | postfix_expression.e DOT IDENTIFIER.id        {: return access(e, id); :}
+    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE {: return index(e, a); :}
+    | postfix_expression.e LARG RPAREN              {: return apply(e); :}
+    | postfix_expression.e LARG arguments.a RPAREN  {: return apply(e, a); :}
     ;
 
 arguments
@@ -252,9 +230,9 @@ set_literal
     ;
 
 map_literal
-    = LCURLY COLON RCURLY               {: return map(); :}
-    | LCURLY keyed_list.e COMMA? RCURLY {: return map(e); :}
-    | LCURLY map_list.e COMMA? RCURLY   {: return map(e); :}
+    = LCURLY COLON RCURLY                           {: return map(); :}
+    | LCURLY keyed_list.e COMMA? NEWLINE* RCURLY    {: return map(e); :}
+    | LCURLY map_list.e COMMA? NEWLINE* RCURLY      {: return map(e); :}
     ;
 
 block
@@ -268,8 +246,12 @@ sequence
     ;
 
 function_literal
-    = oparen function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN     {: return func(a, e, t); :}
-    | LCURLY function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY {: return func(a, block(e), t); :}
+    = LFUNC function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN
+        {: return func(a, e, t); :}
+    | LFUNC APPLIES_TO expression.e RPAREN
+        {: return func(e); :}
+    | LFUNC_MULTILINE function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
+        {: return func(a, block(e), t); :}
     ;
 
 function_typespec
@@ -278,7 +260,12 @@ function_typespec
     ;
 
 tailed_function
-    = oparen function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e {: return func(a, e, t); :}
+    = LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e {: return func(a, e, t); :}
+    ;
+
+opt_function_arguments
+    = function_arguments.a {: return new Symbol(a); :}
+    |
     ;
 
 conditional
@@ -287,8 +274,8 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c THEN sequence.e       {: return truthy(c, block(e)); :}
-    | UNLESS expression.c THEN sequence.e   {: return falsy(c, block(e)); :}
+    = IF expression.c THEN sequence.e term*     {: return truthy(c, block(e)); :}
+    | UNLESS expression.c THEN sequence.e term* {: return falsy(c, block(e)); :}
     ;
 
 alternative_cases
@@ -297,23 +284,25 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c THEN sequence.e      {: return truthy(c, block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e  {: return falsy(c, block(e)); :}
+    = ELSE_IF expression.c THEN sequence.e term*        {: return truthy(c, block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return falsy(c, block(e)); :}
     ;
 
 default_case
-    = ELSE sequence.e {: return dcase(block(e)); :}
+    = ELSE sequence.e term* {: return dcase(block(e)); :}
     |
     ;
 
 exceptional
-    = BEGIN sequence.s embrace_cases.e ensure_case.f END    {: return begin(block(s), e, f); :}
-    | BEGIN sequence.s embrace_cases.e END                  {: return begin(block(s), e, null); :}
-    | BEGIN sequence.s ensure_case.f END                    {: return begin(block(s), null, f); :}
-    | usings.u term* DO sequence.s embrace_cases.e ensure_case.f END {: return using(u, block(s), e, f); :}
-    | usings.u term* DO sequence.s embrace_cases.e END      {: return using(u, block(s), e); :}
-    | usings.u term* DO sequence.s ensure_case.f END        {: return using(u, block(s), f); :}
-    | usings.u term* DO sequence.s END                      {: return using(u, block(s)); :}
+    = BEGIN opt_usings.u sequence.s term* embrace_cases.e ensure_case.f END {: return begin(u, block(s), e, f); :}
+    | BEGIN opt_usings.u sequence.s term* embrace_cases.e END   {: return begin(u, block(s), e, null); :}
+    | BEGIN opt_usings.u sequence.s term* ensure_case.f END     {: return begin(u, block(s), null, f); :}
+    | BEGIN opt_usings.u sequence.s term* END                   {: return begin(u, block(s), null, null); :}
+    ;
+
+opt_usings
+    = usings.u term+ {: return new Symbol(u); :}
+    |                {: return new Symbol(null); :}
     ;
 
 usings
@@ -322,8 +311,8 @@ usings
     ;
 
 using
-    = USING expression.e                            {: return using((String) null, e); :}
-    | USING VAR IDENTIFIER.id ASSIGN expression.e   {: return using(id, e); :}
+    = USING expression.e                        {: return using((String) null, e); :}
+    | USING IDENTIFIER.id ASSIGN expression.e   {: return using(id, e); :}
     ;
 
 embrace_cases
@@ -332,8 +321,8 @@ embrace_cases
     ;
 
 embrace_case
-    = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e {: return embrace(a, t, block(e)); :}
-    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e                    {: return embrace(a, null, block(e)); :}
+    = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e term*   {: return embrace(a, t, block(e)); :}
+    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e term*                      {: return embrace(a, null, block(e)); :}
     ;
 
 embrace_typespec
@@ -341,12 +330,7 @@ embrace_typespec
     ;
 
 ensure_case
-    = ENSURE sequence.e {: return ensure(block(e)); :}
-    ;
-
-oparen
-    = LARG
-    | LPAREN
+    = ENSURE sequence.e term* {: return ensure(block(e)); :}
     ;
 
 keyed_list

@@ -84,6 +84,31 @@ public class ParserTest {
     }
 
     @Test
+    public void shouldParseIndexExpression() {
+        assertThat(expression("fruits[0]"), equalTo(index(id("fruits"), literal(0))));
+    }
+
+    @Test
+    public void shouldParseIndexExpressionWithMultipleArguments() {
+        assertThat(expression("fruits[1 2 3]"), equalTo(index(id("fruits"), literal(1), literal(2), literal(3))));
+    }
+
+    @Test
+    public void shouldParseArgumentsExpression() {
+        assertThat(expression("fruits 0"), equalTo(apply(id("fruits"), literal(0))));
+    }
+
+    @Test
+    public void shouldParseMultipleArgumentsExpression() {
+        assertThat(expression("fruits 1 2 3"), equalTo(apply(id("fruits"), literal(1), literal(2), literal(3))));
+    }
+
+    @Test
+    public void shouldParseParenthesizedArgumentsExpression() {
+        assertThat(expression("fruits(1 2 3)"), equalTo(apply(id("fruits"), literal(1), literal(2), literal(3))));
+    }
+
+    @Test
     public void shouldParseFunction() {
         assertThat(expression("(a b c -> a b c)"), equalTo(
             func(array(arg("a"), arg("b"), arg("c")), apply(id("a"), id("b"), id("c")))
@@ -141,6 +166,16 @@ public class ParserTest {
             apply(id("a"), id("b")),
             type(qid("z"))
         )));
+    }
+
+    @Test
+    public void shouldParseFunctionWithNoArgs() {
+        assertThat(expression("(-> a b)"), equalTo(func(apply(id("a"), id("b")))));
+    }
+
+    @Test
+    public void shouldParseTailedFunctionWithNoArgs() {
+        assertThat(expression("() -> a b"), equalTo(func(apply(id("a"), id("b")))));
     }
 
     @Test
@@ -249,19 +284,198 @@ public class ParserTest {
     @Test
     public void shouldParseDeclaration() {
         assertThat(parse("test = a b c"), equalTo(module(
-            def("test", apply(id("a"), id("b"), id("c"))))
-        ));
+            def("test", apply(id("a"), id("b"), id("c")))
+        )));
     }
 
     @Test
-    public void shouldParseDeclarationType() {
+    public void shouldParseFunctionCalledWithZeroArgs() {
+        assertThat(expression("test()"), equalTo(apply(id("test"))));
+    }
+
+    @Test
+    public void shouldParseVariableDeclaration() {
         Symbol tree = parse(
-            "test :: waffles",
-            "test = a b c"
+            "test = {",
+            "    var waffles = bananas",
+            "    say waffles",
+            "}"
         );
         assertThat(tree, equalTo(module(
-            defType("test", type(qid("waffles"))),
-            def("test", apply(id("a"), id("b"), id("c")))
+            def("test", block(
+                var("waffles", id("bananas")),
+                apply(id("say"), id("waffles"))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseConditionalCase() {
+        Symbol tree = parse(
+            "test = if bananas then",
+            "           waffles 1 2 3",
+            "       else if toast then",
+            "           ducks 4 5 6",
+            "       else",
+            "           waffles anyway!",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", conditional(
+                truthy(id("bananas"), block(apply(id("waffles"), literal(1), literal(2), literal(3)))),
+                truthy(id("toast"), block(apply(id("ducks"), literal(4), literal(5), literal(6)))),
+                dcase(block(apply(id("waffles"), id("anyway!"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseExceptionalCase() {
+        Symbol tree = parse(
+            "test = begin",
+            "           try something dangerous",
+            "       embrace oops ->",
+            "           say oops.message",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                block(apply(id("try"), id("something"), id("dangerous"))),
+                array(
+                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseUsingCase() {
+        Symbol tree = parse(
+            "test = begin",
+            "           using try = uranium238",
+            "           try something dangerous",
+            "       embrace oops ->",
+            "           say oops.message",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                array(
+                    using("try", id("uranium238"))
+                ),
+                block(apply(id("try"), id("something"), id("dangerous"))),
+                array(
+                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseMultipleUsings() {
+        Symbol tree = parse(
+            "test = begin",
+            "           using try = uranium238",
+            "           using something = centrifuge + lots of electricity",
+            "           try something dangerous",
+            "       embrace oops ->",
+            "           say oops.message",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                array(
+                    using("try", id("uranium238")),
+                    using("something", binary("+", id("centrifuge"), apply(id("lots"), id("of"), id("electricity"))))
+                ),
+                block(apply(id("try"), id("something"), id("dangerous"))),
+                array(
+                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseUsingWithUndeclaredResource() {
+        Symbol tree = parse(
+            "test = begin",
+            "           using 'secret' surveillance program",
+            "           try something unconstitutional",
+            "       embrace oops ->",
+            "           say oops.message",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                array(
+                    using(apply(literal("secret"), id("surveillance"), id("program")))
+                ),
+                block(apply(id("try"), id("something"), id("unconstitutional"))),
+                array(
+                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseExceptionalWithTypedEmbrace() {
+        Symbol tree = parse(
+            "test = begin",
+            "           try something dangerous",
+            "       embrace oops:ouch.BustedFoot ->",
+            "           say 'ouch!'",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                block(apply(id("try"), id("something"), id("dangerous"))),
+                array(
+                    embrace("oops", type(qid("ouch", "BustedFoot")), block(apply(id("say"), literal("ouch!"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseUsingWithTypedEmbrace() {
+        Symbol tree = parse(
+            "test = begin",
+            "           using 'secret' surveillance program",
+            "           try something unconstitutional",
+            "       embrace oops:PoliticalFallout ->",
+            "           blame aliens",
+            "       ensure",
+            "           perform some cleanup",
+            "       end"
+        );
+        assertThat(tree, equalTo(module(
+            def("test", begin(
+                array(
+                    using(apply(literal("secret"), id("surveillance"), id("program")))
+                ),
+                block(apply(id("try"), id("something"), id("unconstitutional"))),
+                array(
+                    embrace("oops", type(qid("PoliticalFallout")), block(apply(id("blame"), id("aliens"))))
+                ),
+                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+            ))
         )));
     }
 

@@ -139,7 +139,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         detectSelector();
                         return token(CHARACTER, unescapeJava(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\''))).charAt(0));
                     }
-    "do"            { return token(DO); }
+    "do"            { detectNewLine(); return token(DO); }
     "else if"       { return token(ELSE_IF); }
     "else unless"   { return token(ELSE_UNLESS); }
     "else"          { detectNewLine(); return token(ELSE); }
@@ -195,11 +195,11 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "|"             { detectNewLine(); return token(BIT_OR); }
     "^"             { detectNewLine(); return token(BIT_XOR); }
     "?"             { detectNewLine(); return token(COALESCE); }
-    "("             { detectFunction(); detectNewLine(); return token(LPAREN); }
+    "("             { detectFunction(); yypushback(1); }
     ")"             { detectSelector(); return token(RPAREN); }
     "["             { detectNewLine(); return token(LSQUARE); }
     "]"             { detectSelector(); return token(RSQUARE); }
-    "{"             { bracesUp(); detectFunction(); detectNewLine(); return token(LCURLY); }
+    "{"             { bracesUp(); detectFunction(); yypushback(1); }
     "}"             {
                         bracesDown();
                         if (endOfInterpolation()) {
@@ -353,14 +353,18 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 }
 
 <DETECT_FUNCTION_STATE> {
-    {FunctionArgument}+ [\)\}] {FunctionArgument}* "->"
+    "(" {FunctionArgument}* ")" {FunctionArgument}* "->"
                     { yypushback(yylength()); flipState(FUNCTION_STATE); }
-    {FunctionArgument}+ "->"
+    [\(\{] {FunctionArgument}* "->"
                     { yypushback(yylength()); flipState(FUNCTION_STATE); }
+    "("             { leaveState(); detectNewLine(); return token(LPAREN); }
+    "{"             { leaveState(); detectNewLine(); return token(LCURLY); }
     .               { yypushback(1); leaveState(); }
 }
 
 <FUNCTION_STATE> {
+    "("             { return token(LFUNC); }
+    "{"             { return token(LFUNC_MULTILINE); }
     "::"            { return token(DOUBLE_COLON); }
     ":"             { return token(COLON); }
     {Identifier}    { return token(FWORD, yytext()); }
