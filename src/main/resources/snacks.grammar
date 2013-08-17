@@ -58,8 +58,8 @@
 %typeof begin_case = "Symbol[]";
 
 module_declaration
-    = module_expressions.e opt_terms {: return module(e); :}
-    | {: return module(); :}
+    = module_expressions.e opt_terms    {: return module(e); :}
+    |                                   {: return module(); :}
     ;
 
 module_expressions
@@ -89,13 +89,13 @@ import_alias
     ;
 
 opt_annotations
-    = annotations.a NEWLINE* {: return new Symbol(a); :}
+    = annotations.a nl* {: return new Symbol(a); :}
     |
     ;
 
 annotations
     = annotation
-    | annotations NEWLINE* annotation
+    | annotations nl* annotation
     ;
 
 annotation
@@ -129,36 +129,36 @@ statement
 expression
     = prefix_expression
     | tailed_function
-    | expression.l EXPONENT expression.r        {: return binary("**", l, r); :}
-    | expression.l MULTIPLY expression.r        {: return binary("*", l, r); :}
-    | expression.l DIVIDE expression.r          {: return binary("/", l, r); :}
-    | expression.l MODULO expression.r          {: return binary("%", l, r); :}
-    | expression.l PLUS expression.r            {: return binary("+", l, r); :}
-    | expression.l MINUS expression.r           {: return binary("-", l, r); :}
-    | expression.l BIT_AND expression.r         {: return binary("&", l, r); :}
-    | expression.l BIT_OR expression.r          {: return binary("|", l, r); :}
-    | expression.l BIT_XOR expression.r         {: return binary("^", l, r); :}
-    | expression.l COALESCE expression.r        {: return binary("?", l, r); :}
-    | expression.l LSHIFT expression.r          {: return binary("<<", l, r); :}
-    | expression.l RSHIFT expression.r          {: return binary(">>", l, r); :}
-    | expression.l URSHIFT expression.r         {: return binary(">>>", l, r); :}
-    | expression.l IS expression.r              {: return binary("is", l, r); :}
-    | expression.l IS_NOT expression.r          {: return binary("is not", l, r); :}
-    | expression.l EQUALS expression.r          {: return binary("==", l, r); :}
-    | expression.l NOT_EQUALS expression.r      {: return binary("!=", l, r); :}
-    | expression.l GREATER_THAN expression.r    {: return binary(">", l, r); :}
-    | expression.l LESS_THAN expression.r       {: return binary("<", l, r); :}
+    | expression.l EXPONENT expression.r            {: return binary("**", l, r); :}
+    | expression.l MULTIPLY expression.r            {: return binary("*", l, r); :}
+    | expression.l DIVIDE expression.r              {: return binary("/", l, r); :}
+    | expression.l MODULO expression.r              {: return binary("%", l, r); :}
+    | expression.l PLUS expression.r                {: return binary("+", l, r); :}
+    | expression.l MINUS expression.r               {: return binary("-", l, r); :}
+    | expression.l BIT_AND expression.r             {: return binary("&", l, r); :}
+    | expression.l BIT_OR expression.r              {: return binary("|", l, r); :}
+    | expression.l BIT_XOR expression.r             {: return binary("^", l, r); :}
+    | expression.l COALESCE expression.r            {: return binary("?", l, r); :}
+    | expression.l LSHIFT expression.r              {: return binary("<<", l, r); :}
+    | expression.l RSHIFT expression.r              {: return binary(">>", l, r); :}
+    | expression.l URSHIFT expression.r             {: return binary(">>>", l, r); :}
+    | expression.l IS expression.r                  {: return binary("is", l, r); :}
+    | expression.l IS_NOT expression.r              {: return binary("is not", l, r); :}
+    | expression.l EQUALS expression.r              {: return binary("==", l, r); :}
+    | expression.l NOT_EQUALS expression.r          {: return binary("!=", l, r); :}
+    | expression.l GREATER_THAN expression.r        {: return binary(">", l, r); :}
+    | expression.l LESS_THAN expression.r           {: return binary("<", l, r); :}
     | expression.l GREATER_THAN_EQUALS expression.r {: return binary(">=", l, r); :}
-    | expression.l LESS_THAN_EQUALS expression.r {: return binary("<=", l, r); :}
-    | expression.l IN expression.r              {: return binary("in", l, r); :}
-    | expression.l NOT_IN expression.r          {: return binary("not in", l, r); :}
-    | NOT expression.e                          {: return unary("not", e); :}
-    | expression.l AND expression.r             {: return binary("and", l, r); :}
-    | expression.l OR expression.r              {: return binary("or", l, r); :}
-    | expression.l RANGE expression.r           {: return binary("..", l, r); :}
-    | expression.l XRANGE expression.r          {: return binary("...", l, r); :}
-    | expression.l APPLY expression.r           {: return binary("$", l, r); :}
-    | expression.l ASSIGN expression.r          {: return binary("=", l, r); :}
+    | expression.l LESS_THAN_EQUALS expression.r    {: return binary("<=", l, r); :}
+    | expression.l IN expression.r                  {: return binary("in", l, r); :}
+    | expression.l NOT_IN expression.r              {: return binary("not in", l, r); :}
+    | NOT expression.e                              {: return unary("not", e); :}
+    | expression.l AND expression.r                 {: return binary("and", l, r); :}
+    | expression.l OR expression.r                  {: return binary("or", l, r); :}
+    | expression.l RANGE expression.r               {: return binary("..", l, r); :}
+    | expression.l XRANGE expression.r              {: return binary("...", l, r); :}
+    | expression.l APPLY expression.r               {: return binary("$", l, r); :}
+    | expression.l ASSIGN expression.r              {: return binary("=", l, r); :}
     ;
 
 prefix_expression
@@ -171,10 +171,10 @@ prefix_expression
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e DOT IDENTIFIER.id        {: return access(e, id); :}
-    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE {: return index(e, a); :}
-    | postfix_expression.e LARG RPAREN              {: return apply(e); :}
-    | postfix_expression.e LARG arguments.a RPAREN  {: return apply(e, a); :}
+    | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
+    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {: return index(e, a); :}
+    | postfix_expression.e LARG RPAREN                          {: return apply(e); :}
+    | postfix_expression.e LARG arguments.a RPAREN              {: return apply(e, a); :}
     ;
 
 arguments
@@ -218,21 +218,21 @@ list_literal
     ;
 
 tuple_literal
-    = LPAREN COMMA? RPAREN              {: return tuple(); :}
-    | LPAREN expression.e COMMA RPAREN  {: return tuple(e); :}
-    | LPAREN expression.e COMMA list.es COMMA? RPAREN {: return tuple(e, es); :}
+    = LPAREN COMMA? RPAREN                              {: return tuple(); :}
+    | LPAREN expression.e COMMA RPAREN                  {: return tuple(e); :}
+    | LPAREN expression.e COMMA list.es COMMA? RPAREN   {: return tuple(e, es); :}
     ;
 
 set_literal
-    = LCURLY COMMA RCURLY               {: return set(); :}
-    | LCURLY expression.e COMMA RCURLY  {: return set(e); :}
-    | LCURLY expression.e COMMA list.es COMMA? RCURLY {: return set(e, es); :}
+    = LCURLY COMMA RCURLY                               {: return set(); :}
+    | LCURLY expression.e COMMA RCURLY                  {: return set(e); :}
+    | LCURLY expression.e COMMA list.es COMMA? RCURLY   {: return set(e, es); :}
     ;
 
 map_literal
-    = LCURLY COLON RCURLY                           {: return map(); :}
-    | LCURLY keyed_list.e COMMA? NEWLINE* RCURLY    {: return map(e); :}
-    | LCURLY map_list.e COMMA? NEWLINE* RCURLY      {: return map(e); :}
+    = LCURLY COLON RCURLY                   {: return map(); :}
+    | LCURLY keyed_list.e COMMA? nl* RCURLY {: return map(e); :}
+    | LCURLY map_list.e COMMA? nl* RCURLY   {: return map(e); :}
     ;
 
 block
@@ -294,10 +294,10 @@ default_case
     ;
 
 exceptional
-    = begin_case.u sequence.s term* embrace_cases.e ensure_case.f END {: return begin(u, block(s), e, f); :}
-    | begin_case.u sequence.s term* embrace_cases.e END {: return begin(u, block(s), e, null); :}
-    | begin_case.u sequence.s term* ensure_case.f END   {: return begin(u, block(s), null, f); :}
-    | begin_case.u sequence.s term* END                 {: return begin(u, block(s), null, null); :}
+    = begin_case.u sequence.s term* embrace_cases.e ensure_case.f END   {: return begin(u, block(s), e, f); :}
+    | begin_case.u sequence.s term* embrace_cases.e END                 {: return begin(u, block(s), e, null); :}
+    | begin_case.u sequence.s term* ensure_case.f END                   {: return begin(u, block(s), null, f); :}
+    | begin_case.u sequence.s term* END                                 {: return begin(u, block(s), null, null); :}
     ;
 
 begin_case
@@ -377,8 +377,8 @@ interpolation_list
     ;
 
 interpolation
-    = STRING.val {: return literal(val); :}
-    | LINTERPOLATE expression.e RINTERPOLATE {: return e; :}
+    = STRING.val                                {: return literal(val); :}
+    | LINTERPOLATE expression.e RINTERPOLATE    {: return e; :}
     ;
 
 opt_terms
@@ -392,6 +392,10 @@ terms
     ;
 
 term
-    = NEWLINE
+    = nl
     | SEMICOLON
+    ;
+
+nl
+    = NEWLINE
     ;
