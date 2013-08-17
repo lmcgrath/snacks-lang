@@ -1,20 +1,16 @@
 package snacks.lang.compiler.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
-import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class Import extends Symbol {
 
-    private final List<String> module;
+    private final Symbol module;
     private final String alias;
 
-    public Import(String[] module, String alias) {
-        this.module = asList(module);
+    public Import(Symbol module, String alias) {
+        this.module = module;
         this.alias = alias;
     }
 
@@ -40,10 +36,10 @@ public class Import extends Symbol {
 
     @Override
     public String toString() {
-        if (alias.equals(module.get(module.size() - 1))) {
-            return "(import " + join(module, '.') + ")";
+        if (alias.equals(((QualifiedIdentifier) module).getLastSegment())) {
+            return "(import " + module + ")";
         } else {
-            return "(import " + join(module, '.') + " as " + alias + ")";
+            return "(import " + module + " as " + alias + ")";
         }
     }
 }

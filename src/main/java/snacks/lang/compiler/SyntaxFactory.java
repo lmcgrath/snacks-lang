@@ -19,7 +19,7 @@ public final class SyntaxFactory {
         return new Annotated(expression, annotations);
     }
 
-    public static Symbol annotation(String[] id, Symbol value) {
+    public static Symbol annotation(Symbol id, Symbol value) {
         return new Annotation(id, value);
     }
 
@@ -120,7 +120,7 @@ public final class SyntaxFactory {
         return new FalsyCase(condition, expression);
     }
 
-    public static Symbol from(String[] module, Symbol... subImports) {
+    public static Symbol from(Symbol module, Symbol... subImports) {
         return new FromImport(module, subImports);
     }
 
@@ -148,11 +148,11 @@ public final class SyntaxFactory {
         return new Identifier(name);
     }
 
-    public static Symbol importId(String[] id) {
-        return new Import(id, id[id.length - 1]);
+    public static Symbol importId(Symbol id) {
+        return new Import(id, ((QualifiedIdentifier) id).getLastSegment());
     }
 
-    public static Symbol importId(String[] id, String alias) {
+    public static Symbol importId(Symbol id, String alias) {
         return new Import(id, alias);
     }
 
@@ -208,8 +208,12 @@ public final class SyntaxFactory {
         return new NothingLiteral();
     }
 
-    public static String[] qid(String... ids) {
-        return ids;
+    public static Symbol qid(QualifiedIdentifier id, String segment) {
+        return new QualifiedIdentifier(id, segment);
+    }
+
+    public static Symbol qid(String... ids) {
+        return new QualifiedIdentifier(ids);
     }
 
     public static Symbol regex(List<Symbol> elements, Set<Character> options) {
@@ -252,7 +256,7 @@ public final class SyntaxFactory {
         return new TupleLiteral(element, elements);
     }
 
-    public static Symbol type(String[] id) {
+    public static Symbol type(Symbol id) {
         return new TypeSpec(id);
     }
 

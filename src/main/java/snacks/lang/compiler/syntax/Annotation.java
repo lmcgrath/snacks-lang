@@ -1,20 +1,16 @@
 package snacks.lang.compiler.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
-import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class Annotation extends Symbol {
 
-    private final List<String> name;
+    private final Symbol name;
     private final Symbol value;
 
-    public Annotation(String[] name, Symbol value) {
-        this.name = asList(name);
+    public Annotation(Symbol name, Symbol value) {
+        this.name = name;
         this.value = value;
     }
 
@@ -40,6 +36,6 @@ public class Annotation extends Symbol {
 
     @Override
     public String toString() {
-        return "@" + join(name, '.') + (value instanceof NothingLiteral ? "" : "(" + value + ")");
+        return "@" + name + (value instanceof NothingLiteral ? "" : "(" + value + ")");
     }
 }

@@ -1,18 +1,14 @@
 package snacks.lang.compiler.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
-import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 
 public class TypeSpec extends Symbol {
 
-    private final List<String> type;
+    private final Symbol type;
 
-    public TypeSpec(String[] type) {
-        this.type = asList(type);
+    public TypeSpec(Symbol type) {
+        this.type = type;
     }
 
     @Override
@@ -27,6 +23,6 @@ public class TypeSpec extends Symbol {
 
     @Override
     public String toString() {
-        return join(type, '.');
+        return type.toString();
     }
 }

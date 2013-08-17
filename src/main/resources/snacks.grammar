@@ -56,6 +56,8 @@
 %typeof function_typespec = "TypeSpec";
 %typeof opt_function_arguments = "Symbol[]";
 %typeof begin_case = "Symbol[]";
+%typeof qualified_identifier = "QualifiedIdentifier";
+%typeof qualified_fword = "QualifiedIdentifier";
 
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
@@ -68,7 +70,7 @@ module_expressions
     ;
 
 module_expression
-    = IMPORT qualified_identifier.id import_alias.a         {: return importId(id, a == null ? id[id.length - 1] : a); :}
+    = IMPORT qualified_identifier.id import_alias.a         {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s     {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
     | opt_annotations.a IDENTIFIER.id ASSIGN expression.e   {: return a == null ? def(id, e) : annotated(def(id, e), a); :}
@@ -112,8 +114,8 @@ annotation
     ;
 
 qualified_identifier
-    = IDENTIFIER.id
-    | qualified_identifier DOT IDENTIFIER
+    = IDENTIFIER.id                                 {: return qid(id); :}
+    | qualified_identifier.ids DOT IDENTIFIER.id    {: return qid(ids, id); :}
     ;
 
 statement
@@ -367,8 +369,8 @@ suffix_typespec
     ;
 
 qualified_fword
-    = FWORD
-    | qualified_fword DOT FWORD
+    = FWORD.id                          {: return qid(id); :}
+    | qualified_fword.ids DOT FWORD.id  {: return qid(ids, id); :}
     ;
 
 interpolation_list

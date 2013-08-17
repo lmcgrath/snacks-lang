@@ -10,11 +10,11 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class FromImport extends Symbol {
 
-    private final List<String> module;
+    private final Symbol module;
     private final List<Symbol> subImports;
 
-    public FromImport(String[] module, Symbol... subImports) {
-        this.module = asList(module);
+    public FromImport(Symbol module, Symbol... subImports) {
+        this.module = module;
         this.subImports = asList(subImports);
     }
 
@@ -40,6 +40,6 @@ public class FromImport extends Symbol {
 
     @Override
     public String toString() {
-        return "(from " + join(module, '.') + " import " + join(subImports, ", ") + ")";
+        return "(from " + module + " import " + join(subImports, ", ") + ")";
     }
 }
