@@ -118,9 +118,9 @@ qualified_identifier
 
 statement
     = expression
-    | VAR IDENTIFIER.v ASSIGN expression.e  {: return var(v, e); :}
-    | HURL expression.e                     {: return hurl(e); :}
-    | RETURN expression.e                   {: return result(e); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
+    | HURL expression.e                                                 {: return hurl(e); :}
+    | RETURN expression.e                                               {: return result(e); :}
     | WHILE expression.c DO sequence.e default_case.d END               {: return loop(truthy(c, block(e)), d); :}
     | UNTIL expression.c DO sequence.e default_case.d END               {: return loop(falsy(c, block(e)), d); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
