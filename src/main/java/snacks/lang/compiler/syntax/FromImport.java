@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class FromImport extends Symbol {
+public class FromImport extends Symbol implements Visitable {
 
     private final Symbol module;
     private final List<Symbol> subImports;
@@ -16,6 +17,11 @@ public class FromImport extends Symbol {
     public FromImport(Symbol module, Symbol... subImports) {
         this.module = module;
         this.subImports = asList(subImports);
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitFromImport(this, state);
     }
 
     @Override
@@ -31,6 +37,14 @@ public class FromImport extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public Symbol getModule() {
+        return module;
+    }
+
+    public List<Symbol> getSubImports() {
+        return subImports;
     }
 
     @Override

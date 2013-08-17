@@ -27,6 +27,8 @@ public class ParserRunner implements CommandLineRunner {
         out.println("Type any input to see how it parses:");
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        Parser parser = new Parser();
+        SyntaxPrinter printer = new SyntaxPrinter();
         String line;
         try {
             while (null != (line = reader.readLine())) {
@@ -34,9 +36,9 @@ public class ParserRunner implements CommandLineRunner {
                     if ("quit".equals(line)) {
                         break;
                     } else {
-                        out.println(new Parser().parse(
+                        printer.print(parser.parse(
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
-                        ));
+                        ), out);
                     }
                 } catch (Parser.Exception | IOException | ScannerException exception) {
                     exception.printStackTrace(out);

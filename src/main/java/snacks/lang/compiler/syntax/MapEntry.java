@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class MapEntry extends Symbol {
+public class MapEntry extends Symbol implements Visitable {
 
     private final Symbol key;
     private final Symbol value;
@@ -12,6 +13,11 @@ public class MapEntry extends Symbol {
     public MapEntry(Symbol key, Symbol value) {
         this.key = key;
         this.value = value;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitMapEntry(this, state);
     }
 
     @Override
@@ -27,6 +33,14 @@ public class MapEntry extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public Symbol getKey() {
+        return key;
+    }
+
+    public Symbol getValue() {
+        return value;
     }
 
     @Override

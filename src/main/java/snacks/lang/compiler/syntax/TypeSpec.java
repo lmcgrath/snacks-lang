@@ -2,8 +2,9 @@ package snacks.lang.compiler.syntax;
 
 import java.util.Objects;
 import beaver.Symbol;
+import snacks.lang.SnacksException;
 
-public class TypeSpec extends Symbol {
+public class TypeSpec extends Symbol implements Visitable {
 
     private final Symbol type;
 
@@ -12,8 +13,17 @@ public class TypeSpec extends Symbol {
     }
 
     @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitTypeSpec(this, state);
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof TypeSpec && Objects.equals(type, ((TypeSpec) o).type);
+    }
+
+    public Symbol getType() {
+        return type;
     }
 
     @Override

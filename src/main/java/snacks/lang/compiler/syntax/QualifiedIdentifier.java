@@ -8,8 +8,9 @@ import java.util.Objects;
 import beaver.Symbol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import snacks.lang.SnacksException;
 
-public class QualifiedIdentifier extends Symbol {
+public class QualifiedIdentifier extends Symbol implements Visitable {
 
     private final List<String> segments;
 
@@ -26,6 +27,11 @@ public class QualifiedIdentifier extends Symbol {
             .addAll(head.segments)
             .add(segment)
             .build();
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitQualifiedIdentifier(this, state);
     }
 
     @Override

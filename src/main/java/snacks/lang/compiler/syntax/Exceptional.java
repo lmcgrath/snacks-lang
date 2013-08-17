@@ -8,19 +8,25 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class Exceptional extends Symbol {
+public class Exceptional extends Symbol implements Visitable {
 
-    private final List<Symbol> usings;
+    private final List<Symbol> useCases;
     private final Symbol expression;
     private final List<Symbol> embraceCases;
     private final Symbol ensureCase;
 
-    public Exceptional(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
+    public Exceptional(Symbol[] useCases, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
         this.expression = expression;
         this.ensureCase = ensureCase;
-        this.usings = usings == null ? new ArrayList<Symbol>() : asList(usings);
+        this.useCases = useCases == null ? new ArrayList<Symbol>() : asList(useCases);
         this.embraceCases = embraceCases == null ? new ArrayList<Symbol>() : asList(embraceCases);
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitExceptional(this, state);
     }
 
     @Override
@@ -30,7 +36,7 @@ public class Exceptional extends Symbol {
         } else if (o instanceof Exceptional) {
             Exceptional other = (Exceptional) o;
             return new EqualsBuilder()
-                .append(usings, other.usings)
+                .append(useCases, other.useCases)
                 .append(expression, other.expression)
                 .append(embraceCases, other.embraceCases)
                 .append(ensureCase, other.ensureCase)
@@ -40,19 +46,35 @@ public class Exceptional extends Symbol {
         }
     }
 
+    public List<Symbol> getEmbraceCases() {
+        return embraceCases;
+    }
+
+    public Symbol getEnsureCase() {
+        return ensureCase;
+    }
+
+    public Symbol getExpression() {
+        return expression;
+    }
+
+    public List<Symbol> getUseCases() {
+        return useCases;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(usings, expression, embraceCases, ensureCase);
+        return Objects.hash(useCases, expression, embraceCases, ensureCase);
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        if (usings.isEmpty()) {
+        if (useCases.isEmpty()) {
             builder.append("(begin ");
         } else {
             builder.append("(");
-            builder.append(join(usings, ", "));
+            builder.append(join(useCases, ", "));
             builder.append(" do ");
         }
         builder.append(expression);

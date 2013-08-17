@@ -4,8 +4,9 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.util.Objects;
 import beaver.Symbol;
+import snacks.lang.SnacksException;
 
-public class CharacterLiteral extends Symbol {
+public class CharacterLiteral extends Symbol implements Visitable {
 
     private final char value;
 
@@ -14,8 +15,17 @@ public class CharacterLiteral extends Symbol {
     }
 
     @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitCharacterLiteral(this, state);
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof CharacterLiteral && value == ((CharacterLiteral) o).value;
+    }
+
+    public char getValue() {
+        return value;
     }
 
     @Override

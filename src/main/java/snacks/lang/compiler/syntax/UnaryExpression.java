@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class UnaryExpression extends Symbol {
+public class UnaryExpression extends Symbol implements Visitable {
 
     private final String operator;
     private final Symbol operand;
@@ -12,6 +13,11 @@ public class UnaryExpression extends Symbol {
     public UnaryExpression(String operator, Symbol operand) {
         this.operator = operator;
         this.operand = operand;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitUnaryExpression(this, state);
     }
 
     @Override
@@ -27,6 +33,14 @@ public class UnaryExpression extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public Symbol getOperand() {
+        return operand;
+    }
+
+    public String getOperator() {
+        return operator;
     }
 
     @Override

@@ -145,15 +145,15 @@ expression
     | expression.l RSHIFT expression.r              {: return binary(">>", l, r); :}
     | expression.l URSHIFT expression.r             {: return binary(">>>", l, r); :}
     | expression.l IS expression.r                  {: return binary("is", l, r); :}
-    | expression.l IS_NOT expression.r              {: return binary("is not", l, r); :}
+    | expression.l IS_NOT expression.r              {: return unary("not", binary("is", l, r)); :}
     | expression.l EQUALS expression.r              {: return binary("==", l, r); :}
-    | expression.l NOT_EQUALS expression.r          {: return binary("!=", l, r); :}
+    | expression.l NOT_EQUALS expression.r          {: return unary("not", binary("==", l, r)); :}
     | expression.l GREATER_THAN expression.r        {: return binary(">", l, r); :}
     | expression.l LESS_THAN expression.r           {: return binary("<", l, r); :}
     | expression.l GREATER_THAN_EQUALS expression.r {: return binary(">=", l, r); :}
     | expression.l LESS_THAN_EQUALS expression.r    {: return binary("<=", l, r); :}
     | expression.l IN expression.r                  {: return binary("in", l, r); :}
-    | expression.l NOT_IN expression.r              {: return binary("not in", l, r); :}
+    | expression.l NOT_IN expression.r              {: return unary("not", binary("in", l, r)); :}
     | NOT expression.e                              {: return unary("not", e); :}
     | expression.l AND expression.r                 {: return binary("and", l, r); :}
     | expression.l OR expression.r                  {: return binary("or", l, r); :}

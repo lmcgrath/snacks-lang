@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class Import extends Symbol {
+public class Import extends Symbol implements Visitable {
 
     private final Symbol module;
     private final String alias;
@@ -12,6 +13,11 @@ public class Import extends Symbol {
     public Import(Symbol module, String alias) {
         this.module = module;
         this.alias = alias;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitImport(this, state);
     }
 
     @Override
@@ -27,6 +33,14 @@ public class Import extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public Symbol getModule() {
+        return module;
     }
 
     @Override

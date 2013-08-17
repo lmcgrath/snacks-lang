@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class BinaryExpression extends Symbol {
+public class BinaryExpression extends Symbol implements Visitable {
 
     private final String operator;
     private final Symbol left;
@@ -14,6 +15,11 @@ public class BinaryExpression extends Symbol {
         this.operator = operator;
         this.left = left;
         this.right = right;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitBinaryExpression(this, state);
     }
 
     @Override
@@ -30,6 +36,18 @@ public class BinaryExpression extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public Symbol getLeft() {
+        return left;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public Symbol getRight() {
+        return right;
     }
 
     @Override

@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class FunctionLiteral extends Symbol {
+public class FunctionLiteral extends Symbol implements Visitable {
 
     private final List<Symbol> arguments;
     private final Symbol body;
@@ -19,6 +20,11 @@ public class FunctionLiteral extends Symbol {
         this.arguments = arguments == null ? new ArrayList<Symbol>() : asList(arguments);
         this.body = body;
         this.type = type;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitFunctionLiteral(this, state);
     }
 
     @Override
@@ -35,6 +41,18 @@ public class FunctionLiteral extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public List<Symbol> getArguments() {
+        return arguments;
+    }
+
+    public Symbol getBody() {
+        return body;
+    }
+
+    public Symbol getType() {
+        return type;
     }
 
     @Override

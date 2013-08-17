@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
+import snacks.lang.SnacksException;
 
-public class SetLiteral extends Symbol {
+public class SetLiteral extends Symbol implements Visitable {
 
     private final List<Symbol> elements;
 
@@ -24,8 +25,17 @@ public class SetLiteral extends Symbol {
     }
 
     @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitSetLiteral(this, state);
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof SetLiteral && Objects.equals(elements, ((SetLiteral) o).elements);
+    }
+
+    public List<Symbol> getElements() {
+        return elements;
     }
 
     @Override

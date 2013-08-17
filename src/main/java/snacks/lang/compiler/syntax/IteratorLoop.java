@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class IteratorLoop extends Symbol {
+public class IteratorLoop extends Symbol implements Visitable {
 
     private final String variable;
     private final Symbol expression;
@@ -16,6 +17,11 @@ public class IteratorLoop extends Symbol {
         this.expression = expression;
         this.action = action;
         this.defaultCase = defaultCase;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitIteratorLoop(this, state);
     }
 
     @Override
@@ -33,6 +39,22 @@ public class IteratorLoop extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public Symbol getAction() {
+        return action;
+    }
+
+    public Symbol getDefaultCase() {
+        return defaultCase;
+    }
+
+    public Symbol getExpression() {
+        return expression;
+    }
+
+    public String getVariable() {
+        return variable;
     }
 
     @Override

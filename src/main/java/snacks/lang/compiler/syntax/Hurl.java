@@ -2,8 +2,9 @@ package snacks.lang.compiler.syntax;
 
 import java.util.Objects;
 import beaver.Symbol;
+import snacks.lang.SnacksException;
 
-public class Hurl extends Symbol {
+public class Hurl extends Symbol implements Visitable {
 
     private final Symbol expression;
 
@@ -12,8 +13,17 @@ public class Hurl extends Symbol {
     }
 
     @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitHurl(this, state);
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof Hurl && Objects.equals(expression, ((Hurl) o).expression);
+    }
+
+    public Symbol getExpression() {
+        return expression;
     }
 
     @Override

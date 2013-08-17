@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class Annotated extends Symbol {
+public class Annotated extends Symbol implements Visitable {
 
     private final List<Symbol> annotations;
     private final Symbol expression;
@@ -16,6 +17,11 @@ public class Annotated extends Symbol {
     public Annotated(Symbol expression, Symbol... annotations) {
         this.annotations = asList(annotations);
         this.expression = expression;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitAnnotated(this, state);
     }
 
     @Override
@@ -31,6 +37,14 @@ public class Annotated extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public List<Symbol> getAnnotations() {
+        return annotations;
+    }
+
+    public Symbol getExpression() {
+        return expression;
     }
 
     @Override

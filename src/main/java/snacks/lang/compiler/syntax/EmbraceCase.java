@@ -3,8 +3,9 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
-public class EmbraceCase extends Symbol {
+public class EmbraceCase extends Symbol implements Visitable {
 
     private final String argument;
     private final Symbol type;
@@ -14,6 +15,11 @@ public class EmbraceCase extends Symbol {
         this.argument = argument;
         this.type = type;
         this.expression = expression;
+    }
+
+    @Override
+    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitEmbraceCase(this, state);
     }
 
     @Override
@@ -30,6 +36,18 @@ public class EmbraceCase extends Symbol {
         } else {
             return false;
         }
+    }
+
+    public String getArgument() {
+        return argument;
+    }
+
+    public Symbol getExpression() {
+        return expression;
+    }
+
+    public Symbol getType() {
+        return type;
     }
 
     @Override
