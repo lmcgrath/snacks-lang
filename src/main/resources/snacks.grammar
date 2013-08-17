@@ -13,7 +13,7 @@
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
     FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
-    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USING, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
+    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
     APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON,
     LFUNC, LFUNC_MULTILINE
@@ -55,7 +55,7 @@
 %typeof suffix_typespec = "TypeSpec";
 %typeof function_typespec = "TypeSpec";
 %typeof opt_function_arguments = "Symbol[]";
-%typeof opt_usings = "Symbol[]";
+%typeof begin_case = "Symbol[]";
 
 module_declaration
     = module_expressions.e opt_terms {: return module(e); :}
@@ -294,25 +294,25 @@ default_case
     ;
 
 exceptional
-    = BEGIN opt_usings.u sequence.s term* embrace_cases.e ensure_case.f END {: return begin(u, block(s), e, f); :}
-    | BEGIN opt_usings.u sequence.s term* embrace_cases.e END   {: return begin(u, block(s), e, null); :}
-    | BEGIN opt_usings.u sequence.s term* ensure_case.f END     {: return begin(u, block(s), null, f); :}
-    | BEGIN opt_usings.u sequence.s term* END                   {: return begin(u, block(s), null, null); :}
+    = begin_case.u sequence.s term* embrace_cases.e ensure_case.f END {: return begin(u, block(s), e, f); :}
+    | begin_case.u sequence.s term* embrace_cases.e END {: return begin(u, block(s), e, null); :}
+    | begin_case.u sequence.s term* ensure_case.f END   {: return begin(u, block(s), null, f); :}
+    | begin_case.u sequence.s term* END                 {: return begin(u, block(s), null, null); :}
     ;
 
-opt_usings
-    = usings.u term+ {: return new Symbol(u); :}
-    |                {: return new Symbol(null); :}
+begin_case
+    = BEGIN             {: return new Symbol(null); :}
+    | use_cases.u term+ {: return new Symbol(u); :}
     ;
 
-usings
-    = using
-    | usings term+ using
+use_cases
+    = use_case
+    | use_cases term+ use_case
     ;
 
-using
-    = USING expression.e                        {: return using((String) null, e); :}
-    | USING IDENTIFIER.id ASSIGN expression.e   {: return using(id, e); :}
+use_case
+    = USE expression.e                      {: return use((String) null, e); :}
+    | USE IDENTIFIER.id ASSIGN expression.e {: return use(id, e); :}
     ;
 
 embrace_cases

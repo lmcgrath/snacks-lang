@@ -260,7 +260,7 @@ public final class SyntaxFactory {
         return new UnaryExpression(operator, operand);
     }
 
-    public static Symbol using(String var, Symbol value) {
+    public static Symbol use(String var, Symbol value) {
         return new Using(var, value);
     }
 

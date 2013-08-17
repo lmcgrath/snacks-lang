@@ -161,7 +161,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "return"        { return token(RETURN); }
     "then"          { detectNewLine(); return token(THEN); }
     "until"         { return token(UNTIL); }
-    "using"         { return token(USING); }
+    "use"           { return token(USE); }
     "var"           { return token(VAR); }
     "while"         { return token(WHILE); }
     "_"             { return token(THROWAWAY); }

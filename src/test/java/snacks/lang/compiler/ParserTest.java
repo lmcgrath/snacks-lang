@@ -352,10 +352,9 @@ public class ParserTest {
     }
 
     @Test
-    public void shouldParseUsingCase() {
+    public void shouldParseUseCase() {
         Symbol tree = parse(
-            "test = begin",
-            "           using try = uranium238",
+            "test = use try = uranium238",
             "           try something dangerous",
             "       embrace oops ->",
             "           say oops.message",
@@ -366,7 +365,7 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", begin(
                 array(
-                    using("try", id("uranium238"))
+                    use("try", id("uranium238"))
                 ),
                 block(apply(id("try"), id("something"), id("dangerous"))),
                 array(
@@ -378,11 +377,10 @@ public class ParserTest {
     }
 
     @Test
-    public void shouldParseMultipleUsings() {
+    public void shouldParseMultipleUses() {
         Symbol tree = parse(
-            "test = begin",
-            "           using try = uranium238",
-            "           using something = centrifuge + lots of electricity",
+            "test = use try = uranium238",
+            "       use something = centrifuge + lots of electricity",
             "           try something dangerous",
             "       embrace oops ->",
             "           say oops.message",
@@ -393,36 +391,10 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", begin(
                 array(
-                    using("try", id("uranium238")),
-                    using("something", binary("+", id("centrifuge"), apply(id("lots"), id("of"), id("electricity"))))
+                    use("try", id("uranium238")),
+                    use("something", binary("+", id("centrifuge"), apply(id("lots"), id("of"), id("electricity"))))
                 ),
                 block(apply(id("try"), id("something"), id("dangerous"))),
-                array(
-                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
-                ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
-            ))
-        )));
-    }
-
-    @Test
-    public void shouldParseUsingWithUndeclaredResource() {
-        Symbol tree = parse(
-            "test = begin",
-            "           using 'secret' surveillance program",
-            "           try something unconstitutional",
-            "       embrace oops ->",
-            "           say oops.message",
-            "       ensure",
-            "           perform some cleanup",
-            "       end"
-        );
-        assertThat(tree, equalTo(module(
-            def("test", begin(
-                array(
-                    using(apply(literal("secret"), id("surveillance"), id("program")))
-                ),
-                block(apply(id("try"), id("something"), id("unconstitutional"))),
                 array(
                     embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
                 ),
@@ -454,15 +426,12 @@ public class ParserTest {
     }
 
     @Test
-    public void shouldParseUsingWithTypedEmbrace() {
+    public void shouldParseUndeclaredUse() {
         Symbol tree = parse(
-            "test = begin",
-            "           using 'secret' surveillance program",
+            "test = use 'secret' surveillance program",
             "           try something unconstitutional",
-            "       embrace oops:PoliticalFallout ->",
-            "           blame aliens",
-            "       ensure",
-            "           perform some cleanup",
+            "       embrace problem:PoliticalFallout ->",
+            "           make problem disappear",
             "       end"
         );
         assertThat(tree, equalTo(module(
@@ -471,10 +440,10 @@ public class ParserTest {
                     using(apply(literal("secret"), id("surveillance"), id("program")))
                 ),
                 block(apply(id("try"), id("something"), id("unconstitutional"))),
-                array(
-                    embrace("oops", type(qid("PoliticalFallout")), block(apply(id("blame"), id("aliens"))))
-                ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+                array(embrace("problem",
+                    type(qid("PoliticalFallout")),
+                    block(apply(id("make"), id("problem"), id("disappear")))
+                ))
             ))
         )));
     }
