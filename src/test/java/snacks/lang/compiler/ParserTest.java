@@ -214,7 +214,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseEmptyBlock() {
-        assertThat(expression("{}"), equalTo(block()));
+        assertThat(expression("{}"), equalTo(func(block())));
     }
 
     @Test
@@ -302,10 +302,10 @@ public class ParserTest {
             "}"
         );
         assertThat(tree, equalTo(module(
-            def("test", block(
+            def("test", func(block(
                 var("waffles", id("bananas")),
                 apply(id("say"), id("waffles"))
-            ))
+            )))
         )));
     }
 

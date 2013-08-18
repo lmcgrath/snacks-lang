@@ -238,8 +238,8 @@ map_literal
     ;
 
 block
-    = LCURLY term* RCURLY               {: return block(); :}
-    | LCURLY sequence.e term* RCURLY    {: return block(e); :}
+    = LCURLY term* RCURLY               {: return func(block()); :}
+    | LCURLY sequence.e term* RCURLY    {: return func(block(e)); :}
     ;
 
 sequence
