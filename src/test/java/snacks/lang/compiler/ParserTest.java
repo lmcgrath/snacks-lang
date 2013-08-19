@@ -1,16 +1,13 @@
 package snacks.lang.compiler;
 
-import static org.apache.commons.lang.StringUtils.join;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static snacks.lang.compiler.CompilerUtil.expression;
+import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.SyntaxFactory.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import beaver.Symbol;
 import org.junit.Test;
-import snacks.lang.compiler.Parser.AltGoals;
 
 public class ParserTest {
 
@@ -446,26 +443,5 @@ public class ParserTest {
                 ))
             ))
         )));
-    }
-
-    private static Symbol expression(String... inputs) {
-        try {
-            return (Symbol) new Parser().parse(
-                new Scanner(new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8")))),
-                AltGoals.expression
-            );
-        } catch (IOException | Parser.Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    private static Symbol parse(String... inputs) {
-        try {
-            return (Symbol) new Parser().parse(
-                new Scanner(new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8"))))
-            );
-        } catch (IOException | Parser.Exception exception) {
-            throw new RuntimeException(exception);
-        }
     }
 }

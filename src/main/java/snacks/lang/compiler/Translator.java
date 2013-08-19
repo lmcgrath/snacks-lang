@@ -1,0 +1,270 @@
+package snacks.lang.compiler;
+
+import static snacks.lang.compiler.ast.AstFactory.apply;
+import static snacks.lang.compiler.ast.AstFactory.constant;
+import static snacks.lang.compiler.ast.AstFactory.declaration;
+
+import java.util.HashSet;
+import java.util.Set;
+import beaver.Symbol;
+import snacks.lang.SnacksException;
+import snacks.lang.compiler.ast.AstNode;
+import snacks.lang.compiler.ast.DeclaredExpression;
+import snacks.lang.compiler.syntax.*;
+
+public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
+
+    private final Registry registry;
+
+    public Translator(Registry registry) {
+        this.registry = registry;
+    }
+
+    public Set<AstNode> translate(String module, Symbol node) throws SnacksException {
+        TranslatorState state = new TranslatorState(registry, module);
+        state.beginCollection();
+        translate(node, state);
+        return new HashSet<>(state.acceptCollection());
+    }
+
+    @Override
+    public AstNode visitAccessExpression(AccessExpression node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitAnnotated(Annotated node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitAnnotation(Annotation node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitArgument(Argument node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitArgumentsExpression(ArgumentsExpression node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitBinaryExpression(BinaryExpression node, TranslatorState state) throws SnacksException {
+        AstNode left = translate(node.getLeft(), state);
+        AstNode right = translate(node.getRight(), state);
+        return apply(apply(state.getOperator(node.getOperator(), left.getType(), right.getType()), left), right);
+    }
+
+    @Override
+    public AstNode visitBlock(Block node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitBooleanLiteral(BooleanLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitCharacterLiteral(CharacterLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitConditional(Conditional node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitDeclaration(Declaration node, TranslatorState state) throws SnacksException {
+        DeclaredExpression declaration = declaration(state.getModule(), node.getName(), translate(node.getBody(), state));
+        state.register(declaration.getName(), declaration.getType());
+        state.collect(declaration);
+        return null;
+    }
+
+    @Override
+    public AstNode visitDefaultCase(DefaultCase node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitDoubleLiteral(DoubleLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitEmbraceCase(EmbraceCase node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitEnsureCase(EnsureCase node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitExceptional(Exceptional node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitFalsyCase(FalsyCase node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitFromImport(FromImport node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitFunctionLiteral(FunctionLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitHurl(Hurl node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitIdentifier(Identifier node, TranslatorState state) throws SnacksException {
+        return state.reference(node.getValue());
+    }
+
+    @Override
+    public AstNode visitImport(Import node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitIndexExpression(IndexExpression node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitIntegerLiteral(IntegerLiteral node, TranslatorState state) throws SnacksException {
+        return constant(node.getValue());
+    }
+
+    @Override
+    public AstNode visitIteratorLoop(IteratorLoop node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitListLiteral(ListLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitLoop(Loop node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitMapEntry(MapEntry node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitMapLiteral(MapLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitModule(Module node, TranslatorState state) throws SnacksException {
+        for (Symbol element : node.getElements()) {
+            translate(element, state);
+        }
+        return null;
+    }
+
+    @Override
+    public AstNode visitNothingLiteral(NothingLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitQualifiedIdentifier(QualifiedIdentifier node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitRegexLiteral(RegexLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitResult(Result node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitSetLiteral(SetLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitStringInterpolation(StringInterpolation node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitStringLiteral(StringLiteral node, TranslatorState state) throws SnacksException {
+        return constant(node.getValue());
+    }
+
+    @Override
+    public AstNode visitSubImport(SubImport node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitSymbolLiteral(SymbolLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitTruthyCase(TruthyCase node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitTupleLiteral(TupleLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitTypeSpec(TypeSpec node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitUnaryExpression(UnaryExpression node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitUsing(Using node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitVar(Var node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    private AstNode translate(Visitable node, TranslatorState state) throws SnacksException {
+        return node.accept(this, state);
+    }
+
+    private AstNode translate(Symbol node, TranslatorState state) throws SnacksException {
+        return translate((Visitable) node, state);
+    }
+}

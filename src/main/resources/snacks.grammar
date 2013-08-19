@@ -2,8 +2,10 @@
 %goal expression;
 %package "snacks.lang.compiler";
 %class "Parser";
-%import "java.util.List",
+%import "java.io.IOException",
+        "java.util.List",
         "java.util.Set",
+        "snacks.lang.SnacksException",
         "snacks.lang.compiler.syntax.*",
         "static snacks.lang.compiler.SyntaxFactory.*",
         "static java.util.Arrays.*",
@@ -20,6 +22,24 @@
 ;
 
 %init {: report = new ParserEvents(); :};
+
+%embed {:
+    public Symbol parse(Scanner input) throws SnacksException {
+        try {
+            return (Symbol) super.parse(input);
+        } catch (IOException | Parser.Exception exception) {
+            throw new SnacksException(exception);
+        }
+    }
+
+    public Symbol parse(Scanner input, short altGoal) throws SnacksException {
+        try {
+            return (Symbol) super.parse(input, altGoal);
+        } catch (IOException | Parser.Exception exception) {
+            throw new SnacksException(exception);
+        }
+    }
+:};
 
 %right EXPONENT;
 %left MULTIPLY, DIVIDE, MODULO;

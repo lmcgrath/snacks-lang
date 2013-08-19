@@ -6,6 +6,7 @@ import static java.lang.System.out;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
+import snacks.lang.SnacksException;
 import snacks.lang.cli.CommandLineRunner;
 
 public class ParserRunner implements CommandLineRunner {
@@ -40,7 +41,7 @@ public class ParserRunner implements CommandLineRunner {
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         ), out);
                     }
-                } catch (Parser.Exception | IOException | ScannerException exception) {
+                } catch (SnacksException | ScannerException exception) {
                     exception.printStackTrace(out);
                 }
                 out.print(">>> ");
