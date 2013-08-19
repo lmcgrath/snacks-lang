@@ -11,8 +11,6 @@ public interface AstNode {
 
     Type getType();
 
-    boolean hasType();
-
     boolean isFunction();
 
     boolean isReference();

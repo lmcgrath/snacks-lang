@@ -66,11 +66,6 @@ public class Apply implements AstNode {
     }
 
     @Override
-    public boolean hasType() {
-        return type.isFunction();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(function, argument);
     }

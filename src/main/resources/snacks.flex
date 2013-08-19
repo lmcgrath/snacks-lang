@@ -120,7 +120,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     {Symbol} ":"    { detectNewLine(); return token(KEY_SYMBOL, yytext().substring(0, yylength() - 1)); }
     ":" {Symbol}    { detectSelector(); return token(SYMBOL, yytext().substring(1)); }
     "`" {Symbol} "`"
-                    { return token(IDENTIFIER); }
+                    { return token(IDENTIFIER, yytext().substring(1, yylength() - 1)); }
     {Comment}       { /* ignore */ }
     "<>" | "!="     { detectNewLine(); return token(NOT_EQUALS); }
     "True"          { detectSelector(); return token(TRUE); }

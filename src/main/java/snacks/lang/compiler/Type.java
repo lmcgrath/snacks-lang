@@ -14,6 +14,8 @@ public interface Type {
 
     List<Type> getParameters();
 
+    boolean isApplicableTo(Type type);
+
     boolean isFunction();
 
     boolean isParameterized();

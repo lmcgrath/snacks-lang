@@ -9,10 +9,7 @@ import static snacks.lang.compiler.AstFactory.locator;
 import static snacks.lang.compiler.AstFactory.reference;
 import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
-import static snacks.lang.compiler.TypeOperator.INTEGER_TYPE;
-import static snacks.lang.compiler.TypeOperator.STRING_TYPE;
-import static snacks.lang.compiler.TypeOperator.func;
-import static snacks.lang.compiler.TypeOperator.type;
+import static snacks.lang.compiler.TypeOperator.*;
 
 import java.util.Set;
 import org.junit.Before;
@@ -30,11 +27,44 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldTranslateDeclaration() throws SnacksException {
-        Type type = func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE));
-        assertThat(translate("example = 2 + 2"), defines(declaration("test", "example", apply(
-            apply(reference("+", type), constant(2)), constant(2)
-        ))));
+    public void shouldResolveTypeOfPlusWithIntegers() throws SnacksException {
+        translate("example = 2 + 2");
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
+    @Test
+    public void shouldResolveTypeOfPlusWithInteger() throws SnacksException {
+        translate("example = `+` 2");
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(possibility(
+            func(STRING_TYPE, STRING_TYPE),
+            func(DOUBLE_TYPE, DOUBLE_TYPE),
+            func(INTEGER_TYPE, INTEGER_TYPE)
+        )));
+    }
+
+    @Test
+    public void shouldResolveTypeOfExpressionUsingPossibleTypes() throws SnacksException {
+        translate(
+            "partial = `+` 2",
+            "example = partial 'bananas'"
+        );
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
+    }
+
+    @Test(expected = OverloadException.class)
+    public void shouldNotOverloadConstantSymbolsOfSameNameAndType() throws SnacksException {
+        translate(
+            "oops = 2 + 3",
+            "oops = 4 - 2"
+        );
+    }
+
+    @Test(expected = OverloadException.class)
+    public void shouldNotOverloadConstantSymbolsOfSameNameAndDifferentType() throws SnacksException {
+        translate(
+            "oops = 2 + 3",
+            "oops = 2 + '2'"
+        );
     }
 
     @Test
@@ -45,7 +75,14 @@ public class TranslatorTest {
         );
         assertThat(nodes, defines(declaration("test", "value", constant("Hello, World!"))));
         assertThat(nodes, defines(declaration("test", "example", apply(
-            apply(reference("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(2)),
+            apply(
+                reference("+", possibility(
+                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
+                    func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
+                )),
+                constant(2)
+            ),
             reference("test", "value", STRING_TYPE)
         ))));
     }
@@ -60,8 +97,16 @@ public class TranslatorTest {
     public void shouldSelectReferenceByNameAndType() throws SnacksException {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        assertThat(translate("example = concat 3 'waffles'"), defines(declaration("test", "example", apply(
-            apply(reference("test", "concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(3)),
+        Set<AstNode> definitions = translate("example = concat 3 'waffles'");
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
+        assertThat(definitions, defines(declaration("test", "example", apply(
+            apply(
+                reference("test", "concat", possibility(
+                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
+                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
+                )),
+                constant(3)
+            ),
             constant("waffles")
         ))));
     }

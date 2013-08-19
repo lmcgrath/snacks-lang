@@ -44,11 +44,6 @@ public class DoubleConstant implements AstNode {
         return false;
     }
 
-    @Override
-    public boolean hasType() {
-        return true;
-    }
-
     public double getValue() {
         return value;
     }

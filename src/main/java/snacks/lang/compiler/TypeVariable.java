@@ -49,6 +49,11 @@ public class TypeVariable implements Type {
     }
 
     @Override
+    public boolean isApplicableTo(Type type) {
+        return state.isApplicableTo(type);
+    }
+
+    @Override
     public boolean isFunction() {
         return state.isFunction();
     }
@@ -89,6 +94,8 @@ public class TypeVariable implements Type {
         List<Type> getParameters();
 
         List<Type> getPossibilities();
+
+        boolean isApplicableTo(Type type);
 
         boolean isFunction();
 
@@ -131,6 +138,11 @@ public class TypeVariable implements Type {
         @Override
         public List<Type> getPossibilities() {
             return expose().getPossibilities();
+        }
+
+        @Override
+        public boolean isApplicableTo(Type type) {
+            return expose().isApplicableTo(type);
         }
 
         @Override
@@ -192,6 +204,11 @@ public class TypeVariable implements Type {
         @Override
         public List<Type> getPossibilities() {
             return Arrays.<Type>asList(parent);
+        }
+
+        @Override
+        public boolean isApplicableTo(Type type) {
+            return false;
         }
 
         @Override

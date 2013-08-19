@@ -2,7 +2,6 @@ package snacks.lang.compiler;
 
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isUpperCase;
-import static java.util.Arrays.asList;
 import static snacks.lang.compiler.AstFactory.reference;
 import static snacks.lang.compiler.TypeOperator.*;
 
@@ -45,6 +44,16 @@ public class SymbolEnvironment {
         op("/", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
 
         op("%", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+    }
+
+    private static void detectClash(Reference reference, Map<Locator, Set<Reference>> symbols) throws SnacksException {
+        if (symbols.containsKey(reference.getLocator())) {
+            for (Reference existing : symbols.get(reference.getLocator())) {
+                if (!existing.isFunction() && !reference.isFunction()) {
+                    throw new OverloadException("Declaration " + reference + " clashes with " + existing);
+                }
+            }
+        }
     }
 
     private static void op(String operator, Type type) {
@@ -102,23 +111,30 @@ public class SymbolEnvironment {
     }
 
     public Type typeOf(Locator locator) throws SnacksException {
-        return genericCopy(state.getType(locator));
-    }
-
-    public List<Type> typesOf(Locator locator) {
-        return state.typesOf(locator);
-    }
-
-    public List<Type> unify(Type left, Type right) throws TypeException {
-        List<Type> leftPossibilities = left.expose().getPossibilities();
-        List<Type> rightPossibilities = right.expose().getPossibilities();
-        List<Type> possibilities = new ArrayList<>();
-        for (Type a : leftPossibilities) {
-            for (Type b : rightPossibilities) {
-                possibilities.addAll(unifyPossibility(a, b));
-            }
+        List<Type> types = state.typesOf(locator);
+        if (types.size() == 1) {
+            return types.get(0);
+        } else {
+            return possibility(types);
         }
-        return possibilities;
+    }
+
+    public void unify(Type left, Type right) throws TypeException {
+        Type a = left.expose();
+        Type b = right.expose();
+        if (a.isVariable()) {
+            if (!a.equals(b)) {
+                if (occursIn(a, b)) {
+                    throw new TypeException("Recursive unification: " + a + " != " + b);
+                } else {
+                    a.bind(b);
+                }
+            }
+        } else if (b.isVariable()) {
+            unify(b, a);
+        } else {
+            unifyParameters(a, b);
+        }
     }
 
     private Type genericCopy(Type type) {
@@ -162,36 +178,19 @@ public class SymbolEnvironment {
         return false;
     }
 
-    private List<Type> unifyParameters(Type left, Type right) throws TypeException {
+    private List<Type> typesOf(Locator locator) {
+        return state.typesOf(locator);
+    }
+
+    private void unifyParameters(Type left, Type right) throws TypeException {
         List<Type> leftParameters = left.getParameters();
         List<Type> rightParameters = right.getParameters();
         if (left.getName().equals(right.getName()) && leftParameters.size() == rightParameters.size()) {
-            List<Type> possibilities = new ArrayList<>();
             for (int i = 0; i < leftParameters.size(); i++) {
-                possibilities.addAll(unify(leftParameters.get(i), rightParameters.get(i)));
+                unify(leftParameters.get(i), rightParameters.get(i));
             }
-            return possibilities;
         } else {
-            return asList();
-        }
-    }
-
-    private List<Type> unifyPossibility(Type left, Type right) throws TypeException {
-        List<Type> possibilities = new ArrayList<>();
-        if (left.isVariable()) {
-            if (!left.equals(right)) {
-                if (occursIn(left, right)) {
-                    throw new TypeException("Recursive unification: " + left + " != " + right);
-                } else {
-                    return right.getPossibilities();
-                }
-            } else {
-                return asList();
-            }
-        } else if (right.isVariable()) {
-            return unify(right, left);
-        } else {
-            return unifyParameters(left, right);
+            throw new TypeException("Type mismatch: " + left + " != " + right);
         }
     }
 
@@ -252,9 +251,8 @@ public class SymbolEnvironment {
             if (!symbols.containsKey(reference.getLocator())) {
                 symbols.put(reference.getLocator(), new HashSet<Reference>());
             }
-            if (!symbols.get(reference.getLocator()).add(reference)) {
-                throw new RedefinedSymbolException("Cannot redefine " + reference.getName() + ":" + reference.getType());
-            }
+            detectClash(reference, symbols);
+            symbols.get(reference.getLocator()).add(reference);
         }
 
         @Override
@@ -325,9 +323,8 @@ public class SymbolEnvironment {
             if (!symbols.containsKey(reference.getLocator())) {
                 symbols.put(reference.getLocator(), new HashSet<Reference>());
             }
-            if (!symbols.get(reference.getLocator()).add(reference)) {
-                throw new RedefinedSymbolException("Cannot redefine " + reference.getName() + ":" + reference.getType());
-            }
+            detectClash(reference, symbols);
+            symbols.get(reference.getLocator()).add(reference);
         }
 
         @Override

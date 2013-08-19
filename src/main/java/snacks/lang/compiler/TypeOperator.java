@@ -1,5 +1,8 @@
 package snacks.lang.compiler;
 
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.join;
+
 import java.util.*;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -17,6 +20,14 @@ public class TypeOperator implements Type {
 
     public static Type type(String name) {
         return new TypeOperator(name);
+    }
+
+    public static Type possibility(Type... possibilities) {
+        return possibility(asList(possibilities));
+    }
+
+    public static Type possibility(Collection<Type> possibilities) {
+        return new TypeOperator("?", possibilities);
     }
 
     private final String name;
@@ -63,7 +74,11 @@ public class TypeOperator implements Type {
 
     @Override
     public List<Type> getPossibilities() {
-        return Arrays.<Type>asList(this);
+        if (isPossibility()) {
+            return parameters;
+        } else {
+            return Arrays.<Type>asList(this);
+        }
     }
 
     public TypeOperator extend(Type type) {
@@ -81,8 +96,23 @@ public class TypeOperator implements Type {
     }
 
     @Override
+    public boolean isApplicableTo(Type type) {
+        if (isPossibility()) {
+            for (Type ftype : parameters) {
+                if (ftype.isFunction() && ftype.isApplicableTo(type)) {
+                    return true;
+                }
+            }
+        } else if (isFunction()) {
+            Type argumentType = parameters.get(0).expose();
+            return argumentType.isVariable() || argumentType.equals(type.expose());
+        }
+        return false;
+    }
+
+    @Override
     public boolean isFunction() {
-        return "->".equals(getName());
+        return "->".equals(getName()) || isPossibility() && isPossiblyFunction();
     }
 
     @Override
@@ -97,12 +127,12 @@ public class TypeOperator implements Type {
 
     @Override
     public boolean isPossibility() {
-        return false;
+        return "?".equals(getName());
     }
 
     @Override
     public boolean isVariable() {
-        return false;
+        return isPossibility() && isPossiblyVariable();
     }
 
     @Override
@@ -112,18 +142,25 @@ public class TypeOperator implements Type {
         } else if (parameters.isEmpty()) {
             return name;
         } else {
-            return "(" + name + " " + join(parameters) + ")";
+            return "(" + name + " " + join(parameters, ", ") + ")";
         }
     }
 
-    private String join(List<Type> types) {
-        StringBuilder builder = new StringBuilder();
-        Iterator<Type> iterator = types.iterator();
-        builder.append(iterator.next());
-        while (iterator.hasNext()) {
-            builder.append(", ");
-            builder.append(iterator.next());
+    private boolean isPossiblyFunction() {
+        for (Type type : parameters) {
+            if (type.isFunction()) {
+                return true;
+            }
         }
-        return builder.toString();
+        return false;
+    }
+
+    private boolean isPossiblyVariable() {
+        for (Type type : parameters) {
+            if (type.isVariable()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

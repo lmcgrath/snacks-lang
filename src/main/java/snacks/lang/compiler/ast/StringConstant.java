@@ -45,11 +45,6 @@ public class StringConstant implements AstNode {
         return false;
     }
 
-    @Override
-    public boolean hasType() {
-        return true;
-    }
-
     public String getValue() {
         return value;
     }

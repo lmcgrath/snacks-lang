@@ -67,11 +67,6 @@ public class DeclaredExpression implements AstNode {
     }
 
     @Override
-    public boolean hasType() {
-        return body.hasType();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(module, name, body);
     }

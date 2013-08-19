@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static snacks.lang.compiler.AstFactory.apply;
 import static snacks.lang.compiler.AstFactory.locator;
 import static snacks.lang.compiler.TypeOperator.func;
+import static snacks.lang.compiler.TypeOperator.possibility;
 
 import java.util.*;
 import snacks.lang.SnacksException;
@@ -52,11 +53,13 @@ public class TranslatorState {
     }
 
     public Reference reference(String value) throws SnacksException {
+        Locator locator;
         if (environment().isDefined(locator(module, value))) {
-            return new Reference(locator(module, value), environment());
+            locator = locator(module, value);
         } else {
-            return new Reference(locator("snacks/lang", value), environment());
+            locator = locator("snacks/lang", value);
         }
+        return new Reference(locator, environment().typeOf(locator));
     }
 
     public void register(String name, Type type) throws SnacksException {
@@ -72,18 +75,12 @@ public class TranslatorState {
         ApplyTypes applyTypes = resolveApplyTypes(function, argument);
         function = dereference(function, applyTypes.functionType);
         argument = dereference(argument, applyTypes.argumentType);
-        Type argumentType = argument.getType();
-        Type resultType = createVariable();
+        Type resultType = resolveResultType(function.getType(), argument.getType());
         AstNode expression = apply(function, argument, resultType);
-        List<Type> possibilities = unify(func(argumentType, resultType), applyTypes.functionType);
         if (!arguments.isEmpty()) {
             expression = resolve(expression, arguments);
         }
         return expression;
-    }
-
-    public List<Type> unify(Type left, Type right) throws TypeException {
-        return environment().unify(left, right);
     }
 
     private AstNode dereference(AstNode argument, Type argumentType) {
@@ -133,21 +130,59 @@ public class TranslatorState {
             Reference reference = function.getReference();
             List<Type> possibilities = new ArrayList<>();
             for (Type type : reference.getPossibleTypes()) {
-                if (type.isFunction()) {
-                    Type actualArgumentType = type.getParameters().get(0);
-                    if (actualArgumentType.isVariable() || actualArgumentType.equals(argumentType)) {
-                        possibilities.add(type);
-                    }
+                if (type.isApplicableTo(argumentType)) {
+                    possibilities.add(type);
                 }
             }
             if (possibilities.isEmpty()) {
                 throw new TypeException("Cannot apply any " + reference + " to " + argumentType);
             } else {
-                return new TypePossibility(possibilities);
+                return possibility(possibilities);
             }
         } else {
             return function.getType();
         }
+    }
+
+    private Type resolveResultType(Type functionType, Type argumentType) throws TypeException {
+        List<Type> possibleResults = new ArrayList<>();
+        List<Type> variables = new ArrayList<>();
+        for (Type ftype : functionType.getPossibilities()) {
+            for (Type atype : argumentType.getPossibilities()) {
+                List<Type> parameters = ftype.getParameters();
+                Type farg = parameters.get(0).expose();
+                if (atype.equals(farg)) {
+                    possibleResults.add(parameters.get(1));
+                } else if (farg.isVariable()) {
+                    variables.add(farg);
+                }
+            }
+        }
+        if (possibleResults.isEmpty()) {
+            if (variables.isEmpty()) {
+                throw new TypeException("Function " + functionType + " can't be applied to " + argumentType);
+            } else {
+                return unify(functionType, argumentType);
+            }
+        } else if (possibleResults.size() == 1) {
+            return possibleResults.get(0);
+        } else {
+            return possibility(possibleResults);
+        }
+    }
+
+    private Type unify(Type functionType, Type argumentType) throws TypeException {
+        TypeException lastException = null;
+        for (Type ftype : functionType.getPossibilities()) {
+            try {
+                Type resultType = createVariable();
+                environment().unify(func(argumentType, resultType), ftype);
+                return resultType.expose();
+            } catch (TypeException exception) {
+                lastException = exception;
+            }
+        }
+        throw lastException;
     }
 
     private static final class ApplyTypes {

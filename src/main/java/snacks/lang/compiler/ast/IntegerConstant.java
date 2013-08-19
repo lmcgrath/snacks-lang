@@ -44,11 +44,6 @@ public class IntegerConstant implements AstNode {
         return false;
     }
 
-    @Override
-    public boolean hasType() {
-        return true;
-    }
-
     public int getValue() {
         return value;
     }

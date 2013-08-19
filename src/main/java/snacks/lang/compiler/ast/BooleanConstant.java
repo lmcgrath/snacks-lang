@@ -44,11 +44,6 @@ public class BooleanConstant implements AstNode {
         return false;
     }
 
-    @Override
-    public boolean hasType() {
-        return true;
-    }
-
     public boolean getValue() {
         return value;
     }

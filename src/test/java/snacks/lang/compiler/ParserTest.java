@@ -444,4 +444,11 @@ public class ParserTest {
             ))
         )));
     }
+
+    @Test
+    public void shouldParsePartialApplication() {
+        assertThat(parse("example = `+` 2"), equalTo(module(
+            def("example", apply(id("+"), literal(2)))
+        )));
+    }
 }
