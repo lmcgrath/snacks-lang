@@ -1,32 +1,32 @@
 package snacks.lang.compiler;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.compiler.CompilerUtil.parse;
-import static snacks.lang.compiler.TranslatorMatcher.defines;
 import static snacks.lang.compiler.AstFactory.apply;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
+import static snacks.lang.compiler.AstFactory.locator;
 import static snacks.lang.compiler.AstFactory.reference;
-import static snacks.lang.compiler.ast.Type.INTEGER_TYPE;
-import static snacks.lang.compiler.ast.Type.STRING_TYPE;
-import static snacks.lang.compiler.ast.Type.func;
-import static snacks.lang.compiler.ast.Type.type;
+import static snacks.lang.compiler.CompilerUtil.parse;
+import static snacks.lang.compiler.TranslatorMatcher.defines;
+import static snacks.lang.compiler.TypeOperator.INTEGER_TYPE;
+import static snacks.lang.compiler.TypeOperator.STRING_TYPE;
+import static snacks.lang.compiler.TypeOperator.func;
+import static snacks.lang.compiler.TypeOperator.type;
 
 import java.util.Set;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
-import snacks.lang.compiler.ast.Type;
 
 public class TranslatorTest {
 
-    private Registry registry;
+    private SymbolEnvironment environment;
 
     @Before
     public void setUp() {
-        registry = new Registry();
+        environment = new SymbolEnvironment();
     }
 
     @Test
@@ -50,28 +50,35 @@ public class TranslatorTest {
         ))));
     }
 
-    @Test(expected = UndefinedReferenceException.class)
-    public void shouldThrowException_whenOperatorUndefined() throws SnacksException {
-        registry.add(reference("test", "oddball", type("Unknown")));
+    @Test(expected = TypeException.class)
+    public void shouldThrowException_whenOperandTypesDontMatchOperator() throws SnacksException {
+        environment.define(reference("test", "oddball", type("Unknown")));
         translate("example = 2 + oddball");
     }
 
-    @Ignore
     @Test
     public void shouldSelectReferenceByNameAndType() throws SnacksException {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
         assertThat(translate("example = concat 3 'waffles'"), defines(declaration("test", "example", apply(
-            apply(reference("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(3)),
+            apply(reference("test", "concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(3)),
             constant("waffles")
         ))));
     }
 
-    private void define(String name, Type type) {
-        registry.add(reference("test", name, type));
+    @Test
+    public void identityFunctionShouldHaveTypeOfArgument() throws SnacksException {
+        Type var = environment.createVariable();
+        define("identity", func(var, var));
+        translate("example = identity 12");
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
+    private void define(String name, Type type) throws SnacksException {
+        environment.define(reference("test", name, type));
     }
 
     private Set<AstNode> translate(String... inputs) throws SnacksException {
-        return new Translator(registry).translate("test", parse(inputs));
+        return new Translator(environment).translate("test", parse(inputs));
     }
 }

@@ -3,6 +3,7 @@ package snacks.lang.compiler.ast;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
+import snacks.lang.compiler.Type;
 
 public class DeclaredExpression implements AstNode {
 
@@ -46,8 +47,28 @@ public class DeclaredExpression implements AstNode {
     }
 
     @Override
+    public Reference getReference() {
+        throw new IllegalStateException();
+    }
+
+    @Override
     public Type getType() {
         return body.getType();
+    }
+
+    @Override
+    public boolean isFunction() {
+        return body.isFunction();
+    }
+
+    @Override
+    public boolean isReference() {
+        return false;
+    }
+
+    @Override
+    public boolean hasType() {
+        return body.hasType();
     }
 
     @Override

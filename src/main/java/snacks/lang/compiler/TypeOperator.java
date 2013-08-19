@@ -1,10 +1,10 @@
-package snacks.lang.compiler.ast;
+package snacks.lang.compiler;
 
 import java.util.*;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class Type {
+public class TypeOperator implements Type {
 
     public static final Type BOOLEAN_TYPE = type("Boolean");
     public static final Type DOUBLE_TYPE = type("Double");
@@ -12,22 +12,22 @@ public class Type {
     public static final Type STRING_TYPE = type("String");
 
     public static Type func(Type argument, Type result) {
-        return new Type("->", argument, result);
+        return new TypeOperator("->", argument, result);
     }
 
     public static Type type(String name) {
-        return new Type(name);
+        return new TypeOperator(name);
     }
 
     private final String name;
     private final List<Type> parameters;
 
-    public Type(String name, Type... parameters) {
+    public TypeOperator(String name, Type... parameters) {
         this.parameters = ImmutableList.copyOf(parameters);
         this.name = name;
     }
 
-    public Type(String name, Collection<Type> parameters) {
+    public TypeOperator(String name, Collection<Type> parameters) {
         this.parameters = ImmutableList.copyOf(parameters);
         this.name = name;
     }
@@ -36,8 +36,8 @@ public class Type {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof Type) {
-            Type other = (Type) o;
+        } else if (o instanceof TypeOperator) {
+            TypeOperator other = (TypeOperator) o;
             return new EqualsBuilder()
                 .append(name, other.name)
                 .append(parameters, other.parameters)
@@ -47,12 +47,42 @@ public class Type {
         }
     }
 
+    @Override
+    public void bind(Type type) {
+        throw new IllegalStateException("Cannot bind to non-generic type");
+    }
+
+    @Override
+    public Type expose() {
+        List<Type> types = new ArrayList<>();
+        for (Type type : getParameters()) {
+            types.add(type.expose());
+        }
+        return new TypeOperator(name, types);
+    }
+
+    @Override
+    public List<Type> getPossibilities() {
+        return Arrays.<Type>asList(this);
+    }
+
+    public TypeOperator extend(Type type) {
+        return new TypeOperator(name, ImmutableList.<Type>builder().addAll(parameters).add(type).build());
+    }
+
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public List<Type> getParameters() {
         return parameters;
+    }
+
+    @Override
+    public boolean isFunction() {
+        return "->".equals(getName());
     }
 
     @Override
@@ -60,8 +90,19 @@ public class Type {
         return Objects.hash(name, parameters);
     }
 
+    @Override
     public boolean isParameterized() {
         return !parameters.isEmpty();
+    }
+
+    @Override
+    public boolean isPossibility() {
+        return false;
+    }
+
+    @Override
+    public boolean isVariable() {
+        return false;
     }
 
     @Override

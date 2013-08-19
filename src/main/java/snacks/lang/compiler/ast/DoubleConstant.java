@@ -1,9 +1,10 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.ast.Type.DOUBLE_TYPE;
+import static snacks.lang.compiler.TypeOperator.DOUBLE_TYPE;
 
 import java.util.Objects;
 import snacks.lang.SnacksException;
+import snacks.lang.compiler.Type;
 
 public class DoubleConstant implements AstNode {
 
@@ -19,6 +20,11 @@ public class DoubleConstant implements AstNode {
     }
 
     @Override
+    public Reference getReference() {
+        throw new IllegalStateException();
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof DoubleConstant && value == ((DoubleConstant) o).value;
     }
@@ -26,6 +32,21 @@ public class DoubleConstant implements AstNode {
     @Override
     public Type getType() {
         return DOUBLE_TYPE;
+    }
+
+    @Override
+    public boolean isFunction() {
+        return false;
+    }
+
+    @Override
+    public boolean isReference() {
+        return false;
+    }
+
+    @Override
+    public boolean hasType() {
+        return true;
     }
 
     public double getValue() {

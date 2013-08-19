@@ -29,7 +29,7 @@ public class TranslatorRunner implements CommandLineRunner {
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
-        Translator translator = new Translator(new Registry());
+        Translator translator = new Translator(new SymbolEnvironment());
         AstPrinter printer = new AstPrinter();
         String line;
         try {

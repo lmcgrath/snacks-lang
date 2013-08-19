@@ -1,18 +1,20 @@
 package snacks.lang.compiler.ast;
 
-import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
+import snacks.lang.compiler.Type;
 
 public class Apply implements AstNode {
 
     private final AstNode function;
     private final AstNode argument;
+    private final Type type;
 
-    public Apply(AstNode function, AstNode argument) {
+    public Apply(AstNode function, AstNode argument, Type type) {
         this.function = function;
         this.argument = argument;
+        this.type = type;
     }
 
     @Override
@@ -35,6 +37,11 @@ public class Apply implements AstNode {
         return visitor.visitApply(this, state);
     }
 
+    @Override
+    public Reference getReference() {
+        throw new IllegalStateException();
+    }
+
     public AstNode getArgument() {
         return argument;
     }
@@ -45,13 +52,22 @@ public class Apply implements AstNode {
 
     @Override
     public Type getType() {
-        Type type = function.getType();
-        if (type.isParameterized()) {
-            List<Type> parameters = type.getParameters();
-            return parameters.get(parameters.size() - 1);
-        } else {
-            return type;
-        }
+        return type.expose();
+    }
+
+    @Override
+    public boolean isFunction() {
+        return type.isFunction();
+    }
+
+    @Override
+    public boolean isReference() {
+        return false;
+    }
+
+    @Override
+    public boolean hasType() {
+        return type.isFunction();
     }
 
     @Override

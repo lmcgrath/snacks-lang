@@ -1,10 +1,12 @@
 package snacks.lang.compiler;
 
-import static snacks.lang.compiler.AstFactory.apply;
+import static java.util.Arrays.asList;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
 import snacks.lang.SnacksException;
@@ -14,14 +16,14 @@ import snacks.lang.compiler.syntax.*;
 
 public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
-    private final Registry registry;
+    private final SymbolEnvironment environment;
 
-    public Translator(Registry registry) {
-        this.registry = registry;
+    public Translator(SymbolEnvironment environment) {
+        this.environment = environment;
     }
 
     public Set<AstNode> translate(String module, Symbol node) throws SnacksException {
-        TranslatorState state = new TranslatorState(registry, module);
+        TranslatorState state = new TranslatorState(environment, module);
         state.beginCollection();
         translate(node, state);
         return new HashSet<>(state.acceptCollection());
@@ -49,18 +51,22 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitArgumentsExpression(ArgumentsExpression node, TranslatorState state) throws SnacksException {
-        AstNode result = translate(node.getExpression(), state);
-        for (Symbol argument : node.getArguments()) {
-            result = apply(result, translate(argument, state));
+        AstNode function = translate(node.getExpression(), state);
+        List<AstNode> arguments = new ArrayList<>();
+        for (Symbol n : node.getArguments()) {
+            arguments.add(translate(n, state));
         }
-        return result;
+        return state.resolve(function, arguments);
     }
 
     @Override
     public AstNode visitBinaryExpression(BinaryExpression node, TranslatorState state) throws SnacksException {
-        AstNode left = translate(node.getLeft(), state);
-        AstNode right = translate(node.getRight(), state);
-        return apply(apply(state.getOperator(node.getOperator(), left.getType(), right.getType()), left), right);
+        AstNode function = state.reference(node.getOperator());
+        List<AstNode> arguments = asList(
+            translate(node.getLeft(), state),
+            translate(node.getRight(), state)
+        );
+        return state.resolve(function, arguments);
     }
 
     @Override
