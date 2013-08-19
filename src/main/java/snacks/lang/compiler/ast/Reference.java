@@ -2,6 +2,7 @@ package snacks.lang.compiler.ast;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
 public class Reference implements AstNode {
 
@@ -31,8 +32,17 @@ public class Reference implements AstNode {
         }
     }
 
+    public String getModule() {
+        return module;
+    }
+
     public String getName() {
         return name;
+    }
+
+    @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitReference(this, state);
     }
 
     @Override

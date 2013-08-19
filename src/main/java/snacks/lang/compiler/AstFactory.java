@@ -1,9 +1,19 @@
-package snacks.lang.compiler.ast;
+package snacks.lang.compiler;
+
+import snacks.lang.compiler.ast.*;
 
 public final class AstFactory {
 
     public static AstNode apply(AstNode function, AstNode argument) {
         return new Apply(function, argument);
+    }
+
+    public static AstNode constant(boolean value) {
+        return new BooleanConstant(value);
+    }
+
+    public static AstNode constant(double value) {
+        return new DoubleConstant(value);
     }
 
     public static AstNode constant(int value) {

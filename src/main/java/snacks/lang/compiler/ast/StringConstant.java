@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static snacks.lang.compiler.ast.Type.STRING_TYPE;
 
 import java.util.Objects;
+import snacks.lang.SnacksException;
 
 public class StringConstant implements AstNode {
 
@@ -19,8 +20,17 @@ public class StringConstant implements AstNode {
     }
 
     @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitStringConstant(this, state);
+    }
+
+    @Override
     public Type getType() {
         return STRING_TYPE;
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override

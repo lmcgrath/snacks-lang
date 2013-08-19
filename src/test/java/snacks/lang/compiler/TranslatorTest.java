@@ -3,10 +3,10 @@ package snacks.lang.compiler;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
-import static snacks.lang.compiler.ast.AstFactory.apply;
-import static snacks.lang.compiler.ast.AstFactory.constant;
-import static snacks.lang.compiler.ast.AstFactory.declaration;
-import static snacks.lang.compiler.ast.AstFactory.reference;
+import static snacks.lang.compiler.AstFactory.apply;
+import static snacks.lang.compiler.AstFactory.constant;
+import static snacks.lang.compiler.AstFactory.declaration;
+import static snacks.lang.compiler.AstFactory.reference;
 import static snacks.lang.compiler.ast.Type.INTEGER_TYPE;
 import static snacks.lang.compiler.ast.Type.STRING_TYPE;
 import static snacks.lang.compiler.ast.Type.func;
@@ -14,6 +14,7 @@ import static snacks.lang.compiler.ast.Type.type;
 
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
@@ -21,22 +22,16 @@ import snacks.lang.compiler.ast.Type;
 
 public class TranslatorTest {
 
-    private Type intType;
-    private Type stringType;
     private Registry registry;
 
     @Before
     public void setUp() {
-        intType = INTEGER_TYPE;
-        stringType = STRING_TYPE;
         registry = new Registry();
-        defineIntPlusInt();
-        defineIntPlusString();
     }
 
     @Test
     public void shouldTranslateDeclaration() throws SnacksException {
-        Type type = func(intType, func(intType, intType));
+        Type type = func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE));
         assertThat(translate("example = 2 + 2"), defines(declaration("test", "example", apply(
             apply(reference("+", type), constant(2)), constant(2)
         ))));
@@ -50,8 +45,8 @@ public class TranslatorTest {
         );
         assertThat(nodes, defines(declaration("test", "value", constant("Hello, World!"))));
         assertThat(nodes, defines(declaration("test", "example", apply(
-            apply(reference("+", func(intType, func(stringType, stringType))), constant(2)),
-            reference("test", "value", stringType)
+            apply(reference("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(2)),
+            reference("test", "value", STRING_TYPE)
         ))));
     }
 
@@ -61,12 +56,19 @@ public class TranslatorTest {
         translate("example = 2 + oddball");
     }
 
-    private void defineIntPlusInt() {
-        registry.add(reference("snacks/lang", "+", func(intType, func(intType, intType))));
+    @Ignore
+    @Test
+    public void shouldSelectReferenceByNameAndType() throws SnacksException {
+        define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+        define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
+        assertThat(translate("example = concat 3 'waffles'"), defines(declaration("test", "example", apply(
+            apply(reference("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))), constant(3)),
+            constant("waffles")
+        ))));
     }
 
-    private void defineIntPlusString() {
-        registry.add(reference("snacks/lang", "+", func(intType, func(stringType, stringType))));
+    private void define(String name, Type type) {
+        registry.add(reference("test", name, type));
     }
 
     private Set<AstNode> translate(String... inputs) throws SnacksException {

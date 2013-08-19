@@ -1,9 +1,9 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.ast.Type.func;
-
+import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
 public class Apply implements AstNode {
 
@@ -31,8 +31,27 @@ public class Apply implements AstNode {
     }
 
     @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitApply(this, state);
+    }
+
+    public AstNode getArgument() {
+        return argument;
+    }
+
+    public AstNode getFunction() {
+        return function;
+    }
+
+    @Override
     public Type getType() {
-        return func(function.getType(), argument.getType());
+        Type type = function.getType();
+        if (type.isParameterized()) {
+            List<Type> parameters = type.getParameters();
+            return parameters.get(parameters.size() - 1);
+        } else {
+            return type;
+        }
     }
 
     @Override

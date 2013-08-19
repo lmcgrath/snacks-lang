@@ -6,6 +6,8 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class Type {
 
+    public static final Type BOOLEAN_TYPE = type("Boolean");
+    public static final Type DOUBLE_TYPE = type("Double");
     public static final Type INTEGER_TYPE = type("Integer");
     public static final Type STRING_TYPE = type("String");
 
@@ -17,8 +19,8 @@ public class Type {
         return new Type(name);
     }
 
-    protected final String name;
-    protected final List<Type> parameters;
+    private final String name;
+    private final List<Type> parameters;
 
     public Type(String name, Type... parameters) {
         this.parameters = ImmutableList.copyOf(parameters);
@@ -56,6 +58,10 @@ public class Type {
     @Override
     public int hashCode() {
         return Objects.hash(name, parameters);
+    }
+
+    public boolean isParameterized() {
+        return !parameters.isEmpty();
     }
 
     @Override

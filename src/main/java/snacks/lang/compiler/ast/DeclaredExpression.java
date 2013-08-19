@@ -2,6 +2,7 @@ package snacks.lang.compiler.ast;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
 public class DeclaredExpression implements AstNode {
 
@@ -31,8 +32,17 @@ public class DeclaredExpression implements AstNode {
         }
     }
 
+    public AstNode getBody() {
+        return body;
+    }
+
     public String getName() {
         return name;
+    }
+
+    @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitDeclaredExpression(this, state);
     }
 
     @Override

@@ -3,6 +3,7 @@ package snacks.lang.compiler.ast;
 import static snacks.lang.compiler.ast.Type.INTEGER_TYPE;
 
 import java.util.Objects;
+import snacks.lang.SnacksException;
 
 public class IntegerConstant implements AstNode {
 
@@ -18,8 +19,17 @@ public class IntegerConstant implements AstNode {
     }
 
     @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitIntegerConstant(this, state);
+    }
+
+    @Override
     public Type getType() {
         return INTEGER_TYPE;
+    }
+
+    public int getValue() {
+        return value;
     }
 
     @Override

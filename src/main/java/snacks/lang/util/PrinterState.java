@@ -17,7 +17,8 @@ public class PrinterState {
     }
 
     public void begin(Object node) {
-        println(formatNode(node));
+        out.print(getIndent());
+        out.println("+" + formatNode(node));
         indent();
     }
 
@@ -27,7 +28,7 @@ public class PrinterState {
 
     public void println(Object value) {
         out.print(getIndent());
-        out.println("+" + value);
+        out.println("-" + value);
     }
 
     private void dedent() {

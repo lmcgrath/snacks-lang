@@ -1,8 +1,8 @@
 package snacks.lang.compiler;
 
-import static snacks.lang.compiler.ast.AstFactory.apply;
-import static snacks.lang.compiler.ast.AstFactory.constant;
-import static snacks.lang.compiler.ast.AstFactory.declaration;
+import static snacks.lang.compiler.AstFactory.apply;
+import static snacks.lang.compiler.AstFactory.constant;
+import static snacks.lang.compiler.AstFactory.declaration;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -49,7 +49,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitArgumentsExpression(ArgumentsExpression node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        AstNode result = translate(node.getExpression(), state);
+        for (Symbol argument : node.getArguments()) {
+            result = apply(result, translate(argument, state));
+        }
+        return result;
     }
 
     @Override
@@ -66,7 +70,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitBooleanLiteral(BooleanLiteral node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        return constant(node.getValue());
     }
 
     @Override
@@ -94,7 +98,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitDoubleLiteral(DoubleLiteral node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        return constant(node.getValue());
     }
 
     @Override

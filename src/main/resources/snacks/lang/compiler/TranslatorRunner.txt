@@ -1,0 +1,10 @@
+SNACKS PARSER
+
+To start the translator, enter the following command:
+
+    $ snacks translate
+
+The parser will operate on individual lines of code and print the resultant
+abstract parse tree for inspection:
+
+    >>> main = 2 + 2

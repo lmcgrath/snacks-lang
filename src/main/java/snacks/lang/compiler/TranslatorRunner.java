@@ -9,27 +9,28 @@ import java.util.List;
 import snacks.lang.SnacksException;
 import snacks.lang.cli.CommandLineRunner;
 
-public class ParserRunner implements CommandLineRunner {
+public class TranslatorRunner implements CommandLineRunner {
 
     @Override
     public String getCommand() {
-        return "parse";
+        return "translate";
     }
 
     @Override
     public String getHelpText() {
-        return "Parses input and displays the resultant concrete syntax tree";
+        return "Parses input and displays the resultant abstract syntax tree";
     }
 
     @Override
     public void run(List<String> args) {
         PrintStream systemError = err;
         System.setErr(out);
-        out.println("Type any input to see how it parses:");
+        out.println("Type any input to see how it translates:");
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
-        SyntaxPrinter printer = new SyntaxPrinter();
+        Translator translator = new Translator(new Registry());
+        AstPrinter printer = new AstPrinter();
         String line;
         try {
             while (null != (line = reader.readLine())) {
@@ -37,9 +38,9 @@ public class ParserRunner implements CommandLineRunner {
                     if ("quit".equals(line)) {
                         break;
                     } else {
-                        printer.print(parser.parse(
+                        printer.print(translator.translate("test", parser.parse(
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
-                        ), out);
+                        )), out);
                     }
                 } catch (SnacksException | ScannerException exception) {
                     exception.printStackTrace(out);
