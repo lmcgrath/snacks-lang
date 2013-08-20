@@ -5,6 +5,8 @@ import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
 import static snacks.lang.compiler.AstFactory.locator;
+import static snacks.lang.compiler.SyntaxFactory.importId;
+import static snacks.lang.compiler.SyntaxFactory.qid;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -139,7 +141,12 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitFromImport(FromImport node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
+        for (Symbol s : node.getSubImports()) {
+            SubImport sub = (SubImport) s;
+            translate(importId(qid(identifier, sub.getExpression()), sub.getAlias()), state);
+        }
+        return null;
     }
 
     @Override

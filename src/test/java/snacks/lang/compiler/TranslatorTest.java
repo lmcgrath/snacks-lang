@@ -91,7 +91,7 @@ public class TranslatorTest {
     public void shouldThrowException_whenOperandTypesDontMatchOperator() throws SnacksException {
         define("oddball", type("Unknown"));
         translate(
-            "import examples.oddball",
+            "import test.example.oddball",
             "example = 2 + oddball"
         );
     }
@@ -101,13 +101,13 @@ public class TranslatorTest {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
         Set<AstNode> definitions = translate(
-            "import examples._",
+            "import test.example._",
             "example = concat 3 'waffles'"
         );
         assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
         assertThat(definitions, defines(declaration("test", "example", apply(
             apply(
-                reference("examples", "concat", possibility(
+                reference("test/example", "concat", possibility(
                     func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
                     func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))
                 )),
@@ -122,14 +122,47 @@ public class TranslatorTest {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
-            "import examples._",
+            "import test.example._",
             "example = identity 12"
         );
         assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
     }
 
+    @Test
+    public void shouldBeAbleToAliasImport() throws SnacksException {
+        Type var = environment.createVariable();
+        define("identity", func(var, var));
+        translate(
+            "import test.example.identity as id",
+            "example = id 12"
+        );
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
+    @Test
+    public void shouldBeAbleToImportUsingFrom() throws SnacksException {
+        Type var = environment.createVariable();
+        define("identity", func(var, var));
+        translate(
+            "from test.example import identity",
+            "example = identity 12"
+        );
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
+    @Test
+    public void shouldBeAbleToAliasImportUsingFrom() throws SnacksException {
+        Type var = environment.createVariable();
+        define("identity", func(var, var));
+        translate(
+            "from test.example import identity as id",
+            "example = id 12"
+        );
+        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
     private void define(String name, Type type) throws SnacksException {
-        environment.define(reference("examples", name, type));
+        environment.define(reference("test/example", name, type));
     }
 
     private Set<AstNode> translate(String... inputs) throws SnacksException {
