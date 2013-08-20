@@ -28,7 +28,7 @@ public class PrinterState {
 
     public void println(Object value) {
         out.print(getIndent());
-        out.println("-" + value);
+        out.println(" " + value);
     }
 
     private void dedent() {

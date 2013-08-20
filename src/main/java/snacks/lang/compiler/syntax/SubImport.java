@@ -7,11 +7,11 @@ import snacks.lang.SnacksException;
 
 public class SubImport extends Symbol implements Visitable {
 
-    private final String module;
+    private final String expression;
     private final String alias;
 
-    public SubImport(String module, String alias) {
-        this.module = module;
+    public SubImport(String expression, String alias) {
+        this.expression = expression;
         this.alias = alias;
     }
 
@@ -27,7 +27,7 @@ public class SubImport extends Symbol implements Visitable {
         } else if (o instanceof SubImport) {
             SubImport other = (SubImport) o;
             return new EqualsBuilder()
-                .append(module, other.module)
+                .append(expression, other.expression)
                 .append(alias, other.alias)
                 .isEquals();
         } else {
@@ -39,21 +39,21 @@ public class SubImport extends Symbol implements Visitable {
         return alias;
     }
 
-    public String getModule() {
-        return module;
+    public String getExpression() {
+        return expression;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(module, alias);
+        return Objects.hash(expression, alias);
     }
 
     @Override
     public String toString() {
-        if (alias.equals(module)) {
-            return module;
+        if (alias.equals(expression)) {
+            return expression;
         } else {
-            return module + " as " + alias;
+            return expression + " as " + alias;
         }
     }
 }

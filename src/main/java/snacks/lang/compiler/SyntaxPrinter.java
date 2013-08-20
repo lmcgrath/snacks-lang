@@ -22,7 +22,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     @Override
     public Void visitAccessExpression(AccessExpression node, PrinterState state) throws SnacksException {
         print(node.getExpression(), state);
-        state.println(node.getProperty());
+        state.println("property: " + node.getProperty());
         return null;
     }
 
@@ -44,7 +44,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitArgument(Argument node, PrinterState state) throws SnacksException {
-        state.println(node.getName());
+        state.println("name: " + node.getName());
         print(node.getType(), state);
         return null;
     }
@@ -60,7 +60,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitBinaryExpression(BinaryExpression node, PrinterState state) throws SnacksException {
-        state.println(node.getOperator());
+        state.println("operator: " + node.getOperator());
         print(node.getLeft(), state);
         print(node.getRight(), state);
         return null;
@@ -76,13 +76,13 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitBooleanLiteral(BooleanLiteral node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value(node.getValue(), state);
         return null;
     }
 
     @Override
     public Void visitCharacterLiteral(CharacterLiteral node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value("'" + node.getValue() + "'", state);
         return null;
     }
 
@@ -97,7 +97,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     @Override
     public Void visitDeclaration(Declaration node, PrinterState state) throws SnacksException {
         state.begin(node);
-        state.println(node.getName());
+        state.println("name: " + node.getName());
         print(node.getBody(), state);
         state.end();
         return null;
@@ -111,13 +111,13 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitDoubleLiteral(DoubleLiteral node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value(node.getValue(), state);
         return null;
     }
 
     @Override
     public Void visitEmbraceCase(EmbraceCase node, PrinterState state) throws SnacksException {
-        state.println(node.getArgument());
+        state.println("argument: " + node.getArgument());
         print(node.getType(), state);
         print(node.getExpression(), state);
         return null;
@@ -151,7 +151,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitFromImport(FromImport node, PrinterState state) throws SnacksException {
-        state.println(node.getModule());
+        state.println("module: " + node.getModule());
         for (Symbol subImport : node.getSubImports()) {
             print(subImport, state);
         }
@@ -178,14 +178,14 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitIdentifier(Identifier node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value(node.getValue(), state);
         return null;
     }
 
     @Override
     public Void visitImport(Import node, PrinterState state) throws SnacksException {
-        state.println(node.getModule());
-        state.println(node.getAlias());
+        state.println("module: " + node.getModule());
+        state.println("alias: " + node.getAlias());
         return null;
     }
 
@@ -199,13 +199,13 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitIntegerLiteral(IntegerLiteral node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value(node.getValue(), state);
         return null;
     }
 
     @Override
     public Void visitIteratorLoop(IteratorLoop node, PrinterState state) throws SnacksException {
-        state.println(node.getVariable());
+        state.println("variable: " + node.getVariable());
         print(node.getExpression(), state);
         print(node.getAction(), state);
         print(node.getDefaultCase(), state);
@@ -257,7 +257,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitQualifiedIdentifier(QualifiedIdentifier node, PrinterState state) throws SnacksException {
-        state.println(node);
+        state.println("identifier: " + node);
         return null;
     }
 
@@ -294,20 +294,20 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitStringLiteral(StringLiteral node, PrinterState state) throws SnacksException {
-        state.println('"' + escapeJava(node.getValue()) + '"');
+        value('"' + escapeJava(node.getValue()) + '"', state);
         return null;
     }
 
     @Override
     public Void visitSubImport(SubImport node, PrinterState state) throws SnacksException {
-        state.println(node.getModule());
-        state.println(node.getAlias());
+        state.println("expression: " + node.getExpression());
+        state.println("alias: " + node.getAlias());
         return null;
     }
 
     @Override
     public Void visitSymbolLiteral(SymbolLiteral node, PrinterState state) throws SnacksException {
-        state.println(node.getValue());
+        value(node.getValue(), state);
         return null;
     }
 
@@ -334,7 +334,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitUnaryExpression(UnaryExpression node, PrinterState state) throws SnacksException {
-        state.println(node.getOperator());
+        state.println("operator: " + node.getOperator());
         print(node.getOperand(), state);
         return null;
     }
@@ -342,7 +342,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     @Override
     public Void visitUsing(Using node, PrinterState state) throws SnacksException {
         if (node.getName() != null) {
-            state.println(node.getName());
+            state.println("name: " + node.getName());
         }
         print(node.getExpression(), state);
         return null;
@@ -350,14 +350,14 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitVar(Var node, PrinterState state) throws SnacksException {
-        state.println(node.getName());
+        state.println("name: " + node.getName());
         print(node.getValue(), state);
         return null;
     }
 
     @Override
     public Void visitWildcardImport(WildcardImport node, PrinterState state) throws SnacksException {
-        state.println(node.getModule());
+        state.println("module: " + node.getModule());
         return null;
     }
 
@@ -373,5 +373,9 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
             node.accept(this, state);
             state.end();
         }
+    }
+
+    private void value(Object value, PrinterState state) {
+        state.println("value: " + value);
     }
 }
