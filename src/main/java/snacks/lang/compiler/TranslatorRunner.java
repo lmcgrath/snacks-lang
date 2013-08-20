@@ -30,6 +30,7 @@ public class TranslatorRunner implements CommandLineRunner {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
         Translator translator = new Translator(new SymbolEnvironment());
+        TranslatorState state = translator.createState("cli");
         AstPrinter printer = new AstPrinter();
         String line;
         try {
@@ -38,7 +39,7 @@ public class TranslatorRunner implements CommandLineRunner {
                     if ("quit".equals(line)) {
                         break;
                     } else {
-                        printer.print(translator.translate("test", parser.parse(
+                        printer.print(translator.translate(state, parser.parse(
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         )), out);
                     }

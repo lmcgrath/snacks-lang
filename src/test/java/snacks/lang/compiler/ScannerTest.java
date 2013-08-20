@@ -416,6 +416,11 @@ public class ScannerTest {
         assertThat(scan("=> bananas").nextToken(), hasKind(GOES_TO));
     }
 
+    @Test
+    public void shouldGetThrowaway() throws IOException {
+        assertThat(scan("_").nextToken(), hasKind(THROWAWAY));
+    }
+
     private Scanner scan(String... inputs) throws IOException {
         return new Scanner(new ByteArrayInputStream(join(inputs, '\n').getBytes(Charset.forName("UTF-8"))));
     }

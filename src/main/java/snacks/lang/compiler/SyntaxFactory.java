@@ -156,6 +156,10 @@ public final class SyntaxFactory {
         return new Import(id, alias);
     }
 
+    public static Symbol importWildcard(Symbol id) {
+        return new WildcardImport(id);
+    }
+
     public static Symbol index(Symbol expression, Symbol... arguments) {
         return new IndexExpression(expression, arguments);
     }

@@ -91,6 +91,7 @@ module_expressions
 
 module_expression
     = IMPORT qualified_identifier.id import_alias.a         {: return importId(id, a == null ? id.getLastSegment() : a); :}
+    | IMPORT qualified_identifier.id DOT THROWAWAY          {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s     {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
     | opt_annotations.a IDENTIFIER.id ASSIGN expression.e   {: return a == null ? def(id, e) : annotated(def(id, e), a); :}

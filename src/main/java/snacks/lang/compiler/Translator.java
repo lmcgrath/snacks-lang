@@ -1,8 +1,10 @@
 package snacks.lang.compiler;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
+import static snacks.lang.compiler.AstFactory.locator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,6 +14,7 @@ import beaver.Symbol;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
 import snacks.lang.compiler.ast.DeclaredExpression;
+import snacks.lang.compiler.ast.Locator;
 import snacks.lang.compiler.syntax.*;
 
 public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
@@ -22,11 +25,18 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
         this.environment = environment;
     }
 
-    public Set<AstNode> translate(String module, Symbol node) throws SnacksException {
-        TranslatorState state = new TranslatorState(environment, module);
+    public TranslatorState createState(String module) {
+        return new TranslatorState(environment, module);
+    }
+
+    public Set<AstNode> translate(TranslatorState state, Symbol node) throws SnacksException {
         state.beginCollection();
         translate(node, state);
         return new HashSet<>(state.acceptCollection());
+    }
+
+    public Set<AstNode> translate(String module, Symbol node) throws SnacksException {
+        return translate(createState(module), node);
     }
 
     @Override
@@ -149,7 +159,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitImport(Import node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
+        List<String> segments = identifier.getSegments();
+        Locator locator = locator(join(segments.subList(0, segments.size() - 1), '/'), identifier.getLastSegment());
+        state.addAlias(node.getAlias(), locator);
+        return null;
     }
 
     @Override
@@ -268,6 +282,12 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     @Override
     public AstNode visitVar(Var node, TranslatorState state) throws SnacksException {
         throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitWildcardImport(WildcardImport node, TranslatorState state) throws SnacksException {
+        state.addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
+        return null;
     }
 
     private AstNode translate(Visitable node, TranslatorState state) throws SnacksException {

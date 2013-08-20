@@ -41,6 +41,10 @@ public class QualifiedIdentifier extends Symbol implements Visitable {
             && Objects.equals(segments, ((QualifiedIdentifier) o).segments);
     }
 
+    public List<String> getSegments() {
+        return segments;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(segments);

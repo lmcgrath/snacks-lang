@@ -355,6 +355,12 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
         return null;
     }
 
+    @Override
+    public Void visitWildcardImport(WildcardImport node, PrinterState state) throws SnacksException {
+        state.println(node.getModule());
+        return null;
+    }
+
     private void print(Symbol node, PrinterState state) throws SnacksException {
         if (node != null) {
             print((Visitable) node, state);

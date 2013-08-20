@@ -89,21 +89,27 @@ public class TranslatorTest {
 
     @Test(expected = TypeException.class)
     public void shouldThrowException_whenOperandTypesDontMatchOperator() throws SnacksException {
-        environment.define(reference("test", "oddball", type("Unknown")));
-        translate("example = 2 + oddball");
+        define("oddball", type("Unknown"));
+        translate(
+            "import examples.oddball",
+            "example = 2 + oddball"
+        );
     }
 
     @Test
     public void shouldSelectReferenceByNameAndType() throws SnacksException {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        Set<AstNode> definitions = translate("example = concat 3 'waffles'");
+        Set<AstNode> definitions = translate(
+            "import examples._",
+            "example = concat 3 'waffles'"
+        );
         assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
         assertThat(definitions, defines(declaration("test", "example", apply(
             apply(
-                reference("test", "concat", possibility(
-                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
-                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
+                reference("examples", "concat", possibility(
+                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
+                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))
                 )),
                 constant(3)
             ),
@@ -115,12 +121,15 @@ public class TranslatorTest {
     public void identityFunctionShouldHaveTypeOfArgument() throws SnacksException {
         Type var = environment.createVariable();
         define("identity", func(var, var));
-        translate("example = identity 12");
+        translate(
+            "import examples._",
+            "example = identity 12"
+        );
         assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
     }
 
     private void define(String name, Type type) throws SnacksException {
-        environment.define(reference("test", name, type));
+        environment.define(reference("examples", name, type));
     }
 
     private Set<AstNode> translate(String... inputs) throws SnacksException {

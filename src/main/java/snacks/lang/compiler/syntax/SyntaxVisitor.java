@@ -93,4 +93,6 @@ public interface SyntaxVisitor<R, S> {
     R visitUsing(Using node, S state) throws SnacksException;
 
     R visitVar(Var node, S state) throws SnacksException;
+
+    R visitWildcardImport(WildcardImport node, S state) throws SnacksException;
 }

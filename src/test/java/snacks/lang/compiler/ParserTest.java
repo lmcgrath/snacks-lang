@@ -451,4 +451,11 @@ public class ParserTest {
             def("example", apply(id("+"), literal(2)))
         )));
     }
+
+    @Test
+    public void shouldParseWildcardImport() {
+        assertThat(parse("import example.monkey._"), equalTo(module(
+            importWildcard(qid("example", "monkey"))
+        )));
+    }
 }

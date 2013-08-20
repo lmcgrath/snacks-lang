@@ -137,7 +137,7 @@ public class TypeOperator implements Type {
 
     @Override
     public String toString() {
-        if (parameters.size() == 2) {
+        if (isFunction() && parameters.size() == 2) {
             return "(" + parameters.get(0) + " " + name + " " + parameters.get(1) + ")";
         } else if (parameters.isEmpty()) {
             return name;
