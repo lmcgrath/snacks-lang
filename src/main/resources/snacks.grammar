@@ -278,7 +278,7 @@ function_literal
     ;
 
 function_typespec
-    = DOUBLE_COLON qualified_fword.t {: return type(t); :}
+    = DOUBLE_COLON FWORD.t {: return type(qid(t)); :}
     |
     ;
 

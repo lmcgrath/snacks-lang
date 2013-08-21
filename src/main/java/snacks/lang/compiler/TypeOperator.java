@@ -18,16 +18,16 @@ public class TypeOperator implements Type {
         return new TypeOperator("->", argument, result);
     }
 
-    public static Type type(String name) {
-        return new TypeOperator(name);
-    }
-
     public static Type possibility(Type... possibilities) {
         return possibility(asList(possibilities));
     }
 
     public static Type possibility(Collection<Type> possibilities) {
         return new TypeOperator("?", possibilities);
+    }
+
+    public static Type type(String name) {
+        return new TypeOperator(name);
     }
 
     private final String name;

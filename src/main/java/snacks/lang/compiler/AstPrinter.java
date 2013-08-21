@@ -29,6 +29,13 @@ public class AstPrinter implements AstVisitor<Void, PrinterState> {
     }
 
     @Override
+    public Void visitArgument(Variable node, PrinterState state) throws SnacksException {
+        state.println("name: " + node.getName());
+        state.println("type: " + node.getType());
+        return null;
+    }
+
+    @Override
     public Void visitBooleanConstant(BooleanConstant node, PrinterState state) throws SnacksException {
         value(node.getValue(), state);
         return null;
@@ -48,6 +55,14 @@ public class AstPrinter implements AstVisitor<Void, PrinterState> {
     }
 
     @Override
+    public Void visitFunction(Function node, PrinterState state) throws SnacksException {
+        state.println("type: " + node.getType());
+        state.println("variable: " + node.getVariable());
+        print(node.getExpression(), state);
+        return null;
+    }
+
+    @Override
     public Void visitIntegerConstant(IntegerConstant node, PrinterState state) throws SnacksException {
         value(node.getValue(), state);
         return null;
@@ -55,8 +70,7 @@ public class AstPrinter implements AstVisitor<Void, PrinterState> {
 
     @Override
     public Void visitReference(Reference node, PrinterState state) throws SnacksException {
-        state.println("module: '" + node.getModule() + "'");
-        state.println("name: '" + node.getName() + "'");
+        state.println("locator: '" + node.getLocator() + "'");
         return null;
     }
 

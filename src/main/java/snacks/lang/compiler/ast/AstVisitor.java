@@ -6,11 +6,15 @@ public interface AstVisitor<R, S> {
 
     R visitApply(Apply node, S state) throws SnacksException;
 
+    R visitArgument(Variable node, S state) throws SnacksException;
+
     R visitBooleanConstant(BooleanConstant node, S state) throws SnacksException;
 
     R visitDeclaredExpression(DeclaredExpression node, S state) throws SnacksException;
 
     R visitDoubleConstant(DoubleConstant node, S state) throws SnacksException;
+
+    R visitFunction(Function node, S state) throws SnacksException;
 
     R visitIntegerConstant(IntegerConstant node, S state) throws SnacksException;
 

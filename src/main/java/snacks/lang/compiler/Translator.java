@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
 import static snacks.lang.compiler.AstFactory.locator;
+import static snacks.lang.compiler.AstFactory.var;
 import static snacks.lang.compiler.SyntaxFactory.importId;
 import static snacks.lang.compiler.SyntaxFactory.qid;
 
@@ -14,9 +15,7 @@ import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
 import snacks.lang.SnacksException;
-import snacks.lang.compiler.ast.AstNode;
-import snacks.lang.compiler.ast.DeclaredExpression;
-import snacks.lang.compiler.ast.Locator;
+import snacks.lang.compiler.ast.*;
 import snacks.lang.compiler.syntax.*;
 
 public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
@@ -58,7 +57,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitArgument(Argument node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        return var(node.getName(), translateType(node.getType(), state));
     }
 
     @Override
@@ -151,7 +150,18 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitFunctionLiteral(FunctionLiteral node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        state.enterScope();
+        List<Symbol> arguments = node.getArguments();
+        if (arguments.size() != 1) {
+            throw new UnsupportedOperationException(); // TODO
+        } else {
+            Type result = translateType(node.getType(), state);
+            Variable variable = translateAs(arguments.get(0), state, Variable.class);
+            state.define(variable);
+            AstNode body = translate(node.getBody(), state);
+            state.leaveScope();
+            return new Function(result, variable.getType(), variable.getName(), body);
+        }
     }
 
     @Override
@@ -223,7 +233,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitQualifiedIdentifier(QualifiedIdentifier node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        List<String> segments = node.getSegments();
+        if (segments.size() > 1) {
+            throw new UnsupportedOperationException(); // TODO
+        }
+        return state.reference(segments.get(0));
     }
 
     @Override
@@ -273,7 +287,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitTypeSpec(TypeSpec node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        return translate(node.getType(), state);
     }
 
     @Override
@@ -303,5 +317,13 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     private AstNode translate(Symbol node, TranslatorState state) throws SnacksException {
         return translate((Visitable) node, state);
+    }
+
+    private <T extends AstNode> T translateAs(Symbol node, TranslatorState state, Class<T> type) throws SnacksException {
+        return type.cast(translate(node, state));
+    }
+
+    private Type translateType(Symbol node, TranslatorState state) throws SnacksException {
+        return translate(node, state).getType();
     }
 }

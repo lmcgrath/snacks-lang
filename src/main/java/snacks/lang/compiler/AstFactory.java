@@ -40,16 +40,28 @@ public final class AstFactory {
         return (T) new DeclaredExpression(module, name, body);
     }
 
+    public static AstNode func(Type argument, Type result, String variable, AstNode expression) {
+        return new Function(argument, result, variable, expression);
+    }
+
     public static Locator locator(String module, String name) {
-        return new Locator(module, name);
+        return new DeclarationLocator(module, name);
     }
 
     public static AstNode reference(String name, Type type) {
-        return reference("snacks/lang", name, type);
+        return reference(new VariableLocator(name), type);
     }
 
     public static Reference reference(String module, String name, Type type) {
-        return new Reference(new Locator(module, name), type);
+        return reference(new DeclarationLocator(module, name), type);
+    }
+
+    public static Reference reference(Locator locator, Type type) {
+        return new Reference(locator, type);
+    }
+
+    public static AstNode var(String name, Type type) {
+        return new Variable(name, type);
     }
 
     private AstFactory() {

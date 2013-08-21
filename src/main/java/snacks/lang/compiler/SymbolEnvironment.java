@@ -2,7 +2,7 @@ package snacks.lang.compiler;
 
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isUpperCase;
-import static snacks.lang.compiler.AstFactory.reference;
+import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.TypeOperator.*;
 
 import java.util.*;
@@ -15,6 +15,11 @@ public class SymbolEnvironment {
     private static final Map<String, List<Reference>> builtin = new HashMap<>();
 
     static {
+        op("Integer", INTEGER_TYPE);
+        op("String", STRING_TYPE);
+        op("Boolean", BOOLEAN_TYPE);
+        op("Double", DOUBLE_TYPE);
+
         op("+", func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)));
         op("+", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         op("+", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));

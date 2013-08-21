@@ -2,11 +2,7 @@ package snacks.lang.compiler;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.compiler.AstFactory.apply;
-import static snacks.lang.compiler.AstFactory.constant;
-import static snacks.lang.compiler.AstFactory.declaration;
-import static snacks.lang.compiler.AstFactory.locator;
-import static snacks.lang.compiler.AstFactory.reference;
+import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
 import static snacks.lang.compiler.TypeOperator.*;
@@ -76,7 +72,7 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test", "value", constant("Hello, World!"))));
         assertThat(nodes, defines(declaration("test", "example", apply(
             apply(
-                reference("+", possibility(
+                reference("snacks/lang", "+", possibility(
                     func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
                     func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
                     func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
@@ -159,6 +155,24 @@ public class TranslatorTest {
             "example = id 12"
         );
         assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+    }
+
+    @Test
+    public void shouldTranslateTypedFunction() throws SnacksException {
+        Set<AstNode> definitions = translate("double = (x:Integer):Integer -> x * 2");
+        assertThat(environment.getReference(locator("test", "double")).getType(), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
+        assertThat(definitions.iterator().next(), equalTo(
+            declaration("test", "double", func(INTEGER_TYPE, INTEGER_TYPE, "x", apply(
+                apply(
+                    reference("snacks/lang", "*", possibility(
+                        func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+                        func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
+                    )),
+                    reference("x", INTEGER_TYPE)
+                ),
+                constant(2)
+            )))
+        ));
     }
 
     private void define(String name, Type type) throws SnacksException {

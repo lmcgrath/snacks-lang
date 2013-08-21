@@ -1,29 +1,33 @@
 package snacks.lang.compiler.ast;
 
-import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.Type;
 
-public class Reference implements AstNode {
+public class Variable implements AstNode {
 
-    private final Locator locator;
+    private final String name;
     private final Type type;
 
-    public Reference(Locator locator, Type type) {
-        this.locator = locator;
+    public Variable(String name, Type type) {
+        this.name = name;
         this.type = type;
+    }
+
+    @Override
+    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
+        return visitor.visitArgument(this, state);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof Reference) {
-            Reference other = (Reference) o;
+        } else if (o instanceof Variable) {
+            Variable other = (Variable) o;
             return new EqualsBuilder()
-                .append(locator, other.locator)
+                .append(name, other.name)
                 .append(type, other.type)
                 .isEquals();
         } else {
@@ -32,17 +36,16 @@ public class Reference implements AstNode {
     }
 
     public Locator getLocator() {
-        return locator;
+        return new VariableLocator(name);
     }
 
-    @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitReference(this, state);
+    public String getName() {
+        return name;
     }
 
     @Override
     public Reference getReference() {
-        return this;
+        throw new IllegalStateException();
     }
 
     @Override
@@ -50,8 +53,9 @@ public class Reference implements AstNode {
         return type;
     }
 
-    public List<Type> getPossibleTypes() {
-        return type.getPossibilities();
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type);
     }
 
     @Override
@@ -61,16 +65,11 @@ public class Reference implements AstNode {
 
     @Override
     public boolean isReference() {
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(type, locator);
+        return false;
     }
 
     @Override
     public String toString() {
-        return "(" + locator + ":" + type + ")";
+        return "(" + name + ":" + type + ")";
     }
 }

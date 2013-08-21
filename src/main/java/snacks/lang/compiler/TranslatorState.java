@@ -3,14 +3,10 @@ package snacks.lang.compiler;
 import static java.util.Arrays.asList;
 import static snacks.lang.compiler.AstFactory.apply;
 import static snacks.lang.compiler.AstFactory.locator;
-import static snacks.lang.compiler.TypeOperator.func;
-import static snacks.lang.compiler.TypeOperator.possibility;
 
 import java.util.*;
 import snacks.lang.SnacksException;
-import snacks.lang.compiler.ast.AstNode;
-import snacks.lang.compiler.ast.Locator;
-import snacks.lang.compiler.ast.Reference;
+import snacks.lang.compiler.ast.*;
 
 public class TranslatorState {
 
@@ -53,6 +49,10 @@ public class TranslatorState {
         return environment().createVariable();
     }
 
+    public void define(Variable variable) throws SnacksException {
+        environment().define(new Reference(variable.getLocator(), variable.getType()));
+    }
+
     public void enterScope() {
         environments.push(environment().extend());
     }
@@ -66,7 +66,15 @@ public class TranslatorState {
     }
 
     public Reference reference(String value) throws SnacksException {
-        Locator locator = aliases.containsKey(value) ? aliases.get(value) : findWildcard(value);
+        Locator locator;
+        if (aliases.containsKey(value)) {
+            locator = aliases.get(value);
+        } else {
+            locator = new VariableLocator(value);
+            if (!environment().isDefined(locator)) {
+                locator = findWildcard(value);
+            }
+        }
         return new Reference(locator, environment().typeOf(locator));
     }
 
@@ -156,7 +164,7 @@ public class TranslatorState {
             if (possibilities.isEmpty()) {
                 throw new TypeException("Cannot apply any " + reference + " to " + argumentType);
             } else {
-                return possibility(possibilities);
+                return TypeOperator.possibility(possibilities);
             }
         } else {
             return function.getType();
@@ -186,7 +194,7 @@ public class TranslatorState {
         } else if (possibleResults.size() == 1) {
             return possibleResults.get(0);
         } else {
-            return possibility(possibleResults);
+            return TypeOperator.possibility(possibleResults);
         }
     }
 
@@ -195,7 +203,7 @@ public class TranslatorState {
         for (Type ftype : functionType.getPossibilities()) {
             try {
                 Type resultType = createVariable();
-                environment().unify(func(argumentType, resultType), ftype);
+                environment().unify(TypeOperator.func(argumentType, resultType), ftype);
                 return resultType.expose();
             } catch (TypeException exception) {
                 lastException = exception;
