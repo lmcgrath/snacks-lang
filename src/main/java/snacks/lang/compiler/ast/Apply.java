@@ -37,11 +37,6 @@ public class Apply implements AstNode {
         return visitor.visitApply(this, state);
     }
 
-    @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
     public AstNode getArgument() {
         return argument;
     }
@@ -53,16 +48,6 @@ public class Apply implements AstNode {
     @Override
     public Type getType() {
         return type.expose();
-    }
-
-    @Override
-    public boolean isFunction() {
-        return type.isFunction();
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     @Override

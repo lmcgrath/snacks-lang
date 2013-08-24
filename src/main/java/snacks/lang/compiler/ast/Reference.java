@@ -1,6 +1,5 @@
 package snacks.lang.compiler.ast;
 
-import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
@@ -41,27 +40,8 @@ public class Reference implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        return this;
-    }
-
-    @Override
     public Type getType() {
         return type;
-    }
-
-    public List<Type> getPossibleTypes() {
-        return type.getPossibilities();
-    }
-
-    @Override
-    public boolean isFunction() {
-        return type.isFunction();
-    }
-
-    @Override
-    public boolean isReference() {
-        return true;
     }
 
     @Override

@@ -7,11 +7,5 @@ public interface AstNode {
 
     <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException;
 
-    Reference getReference();
-
     Type getType();
-
-    boolean isFunction();
-
-    boolean isReference();
 }

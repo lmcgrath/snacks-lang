@@ -1,6 +1,6 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.TypeOperator.INTEGER_TYPE;
+import static snacks.lang.compiler.Type.INTEGER_TYPE;
 
 import java.util.Objects;
 import snacks.lang.SnacksException;
@@ -25,23 +25,8 @@ public class IntegerConstant implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
-    @Override
     public Type getType() {
         return INTEGER_TYPE;
-    }
-
-    @Override
-    public boolean isFunction() {
-        return false;
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     public int getValue() {

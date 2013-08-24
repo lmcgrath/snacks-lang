@@ -9,7 +9,6 @@ import static snacks.lang.compiler.AstFactory.var;
 import static snacks.lang.compiler.SyntaxFactory.importId;
 import static snacks.lang.compiler.SyntaxFactory.qid;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,11 +62,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     @Override
     public AstNode visitArgumentsExpression(ArgumentsExpression node, TranslatorState state) throws SnacksException {
         AstNode function = translate(node.getExpression(), state);
-        List<AstNode> arguments = new ArrayList<>();
-        for (Symbol n : node.getArguments()) {
-            arguments.add(translate(n, state));
+        state.beginCollection();
+        for (Symbol argument : node.getArguments()) {
+            state.collect(translate(argument, state));
         }
-        return state.resolve(function, arguments);
+        return state.applyFunction(function, state.acceptCollection());
     }
 
     @Override
@@ -77,7 +76,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
             translate(node.getLeft(), state),
             translate(node.getRight(), state)
         );
-        return state.resolve(function, arguments);
+        return state.applyFunction(function, arguments);
     }
 
     @Override
@@ -324,6 +323,10 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     }
 
     private Type translateType(Symbol node, TranslatorState state) throws SnacksException {
-        return translate(node, state).getType();
+        if (node == null) {
+            return state.createVariable();
+        } else {
+            return translate(node, state).getType();
+        }
     }
 }

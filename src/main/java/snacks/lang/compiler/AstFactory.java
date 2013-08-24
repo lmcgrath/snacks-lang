@@ -1,19 +1,8 @@
 package snacks.lang.compiler;
 
-import java.util.List;
 import snacks.lang.compiler.ast.*;
 
 public final class AstFactory {
-
-    public static AstNode apply(AstNode function, AstNode argument) {
-        Type type = function.getType();
-        if (type.isParameterized()) {
-            List<Type> parameters = type.getParameters();
-            return apply(function, argument, parameters.get(parameters.size() - 1));
-        } else {
-            return apply(function, argument, type);
-        }
-    }
 
     public static AstNode apply(AstNode function, AstNode argument, Type type) {
         return new Apply(function, argument, type);

@@ -1,7 +1,7 @@
 package snacks.lang.compiler.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.compiler.TypeOperator.STRING_TYPE;
+import static snacks.lang.compiler.Type.STRING_TYPE;
 
 import java.util.Objects;
 import snacks.lang.SnacksException;
@@ -26,23 +26,8 @@ public class StringConstant implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
-    @Override
     public Type getType() {
         return STRING_TYPE;
-    }
-
-    @Override
-    public boolean isFunction() {
-        return false;
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     public String getValue() {

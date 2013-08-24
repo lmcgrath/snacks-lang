@@ -47,23 +47,8 @@ public class DeclaredExpression implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
-    @Override
     public Type getType() {
         return body.getType();
-    }
-
-    @Override
-    public boolean isFunction() {
-        return body.isFunction();
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     @Override

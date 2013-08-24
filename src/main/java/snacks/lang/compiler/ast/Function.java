@@ -1,10 +1,11 @@
 package snacks.lang.compiler.ast;
 
+import static snacks.lang.compiler.Type.func;
+
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.Type;
-import snacks.lang.compiler.TypeOperator;
 
 public class Function implements AstNode {
 
@@ -47,13 +48,8 @@ public class Function implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
-    @Override
     public Type getType() {
-        return TypeOperator.func(argument, result);
+        return func(argument, result);
     }
 
     public String getVariable() {
@@ -63,16 +59,6 @@ public class Function implements AstNode {
     @Override
     public int hashCode() {
         return Objects.hash(argument, result, variable, expression);
-    }
-
-    @Override
-    public boolean isFunction() {
-        return true;
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     @Override

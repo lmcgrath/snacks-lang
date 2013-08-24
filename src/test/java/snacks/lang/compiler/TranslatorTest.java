@@ -5,10 +5,12 @@ import static org.junit.Assert.assertThat;
 import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
-import static snacks.lang.compiler.TypeOperator.*;
+import static snacks.lang.compiler.Type.*;
+import static snacks.lang.compiler.Type.set;
 
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
@@ -25,13 +27,13 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() throws SnacksException {
         translate("example = 2 + 2");
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+        assertThat(getType("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() throws SnacksException {
         translate("example = `+` 2");
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(possibility(
+        assertThat(getType("example"), equalTo(set(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(INTEGER_TYPE, INTEGER_TYPE)
@@ -44,23 +46,7 @@ public class TranslatorTest {
             "partial = `+` 2",
             "example = partial 'bananas'"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
-    }
-
-    @Test(expected = OverloadException.class)
-    public void shouldNotOverloadConstantSymbolsOfSameNameAndType() throws SnacksException {
-        translate(
-            "oops = 2 + 3",
-            "oops = 4 - 2"
-        );
-    }
-
-    @Test(expected = OverloadException.class)
-    public void shouldNotOverloadConstantSymbolsOfSameNameAndDifferentType() throws SnacksException {
-        translate(
-            "oops = 2 + 3",
-            "oops = 2 + '2'"
-        );
+        assertThat(getType("example"), equalTo(STRING_TYPE));
     }
 
     @Test
@@ -72,14 +58,16 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test", "value", constant("Hello, World!"))));
         assertThat(nodes, defines(declaration("test", "example", apply(
             apply(
-                reference("snacks/lang", "+", possibility(
-                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
-                    func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
-                )),
-                constant(2)
+                environment.getReference(locator("snacks/lang", "+")),
+                constant(2),
+                set(
+                    func(STRING_TYPE, STRING_TYPE),
+                    func(DOUBLE_TYPE, DOUBLE_TYPE),
+                    func(INTEGER_TYPE, INTEGER_TYPE)
+                )
             ),
-            reference("test", "value", STRING_TYPE)
+            reference("test", "value", STRING_TYPE),
+            STRING_TYPE
         ))));
     }
 
@@ -100,16 +88,21 @@ public class TranslatorTest {
             "import test.example._",
             "example = concat 3 'waffles'"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(STRING_TYPE));
+        assertThat(getType("example"), equalTo(STRING_TYPE));
         assertThat(definitions, defines(declaration("test", "example", apply(
             apply(
-                reference("test/example", "concat", possibility(
+                reference("test/example", "concat", set(
                     func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
                     func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))
                 )),
-                constant(3)
+                constant(3),
+                set(
+                    func(INTEGER_TYPE, INTEGER_TYPE),
+                    func(STRING_TYPE, STRING_TYPE)
+                )
             ),
-            constant("waffles")
+            constant("waffles"),
+            STRING_TYPE
         ))));
     }
 
@@ -121,7 +114,7 @@ public class TranslatorTest {
             "import test.example._",
             "example = identity 12"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+        assertThat(getType("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -132,7 +125,7 @@ public class TranslatorTest {
             "import test.example.identity as id",
             "example = id 12"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+        assertThat(getType("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -143,7 +136,7 @@ public class TranslatorTest {
             "from test.example import identity",
             "example = identity 12"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+        assertThat(getType("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -154,25 +147,33 @@ public class TranslatorTest {
             "from test.example import identity as id",
             "example = id 12"
         );
-        assertThat(environment.getReference(locator("test", "example")).getType(), equalTo(INTEGER_TYPE));
+        assertThat(getType("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldTranslateTypedFunction() throws SnacksException {
-        Set<AstNode> definitions = translate("double = (x:Integer):Integer -> x * 2");
-        assertThat(environment.getReference(locator("test", "double")).getType(), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
-        assertThat(definitions.iterator().next(), equalTo(
-            declaration("test", "double", func(INTEGER_TYPE, INTEGER_TYPE, "x", apply(
-                apply(
-                    reference("snacks/lang", "*", possibility(
-                        func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-                        func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))
-                    )),
-                    reference("x", INTEGER_TYPE)
-                ),
-                constant(2)
-            )))
-        ));
+        translate("double = (x:Integer):Integer -> x * 2");
+        assertThat(getType("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotApplyToDouble() throws SnacksException {
+        translate("double = (x:Integer :: Integer -> x * 2) 2.2");
+    }
+
+    @Ignore
+    @Test
+    public void shouldTranslateUntypedFunction() throws SnacksException {
+        translate("double = (x) -> x * 2");
+        assertThat(getType("double"), equalTo(set(
+            func(INTEGER_TYPE, INTEGER_TYPE),
+            func(DOUBLE_TYPE, DOUBLE_TYPE),
+            func(STRING_TYPE, STRING_TYPE)
+        )));
+    }
+
+    private Type getType(String name) throws SnacksException {
+        return environment.getReference(locator("test", name)).getType();
     }
 
     private void define(String name, Type type) throws SnacksException {

@@ -44,11 +44,6 @@ public class Variable implements AstNode {
     }
 
     @Override
-    public Reference getReference() {
-        throw new IllegalStateException();
-    }
-
-    @Override
     public Type getType() {
         return type;
     }
@@ -56,16 +51,6 @@ public class Variable implements AstNode {
     @Override
     public int hashCode() {
         return Objects.hash(name, type);
-    }
-
-    @Override
-    public boolean isFunction() {
-        return type.isFunction();
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
     }
 
     @Override

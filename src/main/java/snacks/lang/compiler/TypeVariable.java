@@ -1,12 +1,11 @@
 package snacks.lang.compiler;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-public class TypeVariable implements Type {
+public class TypeVariable extends Type {
 
     public static TypeVariable var(String name) {
         return new TypeVariable(name);
@@ -24,6 +23,11 @@ public class TypeVariable implements Type {
     }
 
     @Override
+    public List<Type> decompose() {
+        return state.decompose();
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof TypeVariable && Objects.equals(state, ((TypeVariable) o).state);
     }
@@ -34,8 +38,13 @@ public class TypeVariable implements Type {
     }
 
     @Override
-    public List<Type> getPossibilities() {
-        return state.getPossibilities();
+    public Type genericCopy(SymbolEnvironment environment, Map<Type, Type> mappings) {
+        return environment.genericCopy(this, mappings);
+    }
+
+    @Override
+    public Set<Type> getConstrainedSet() {
+        return state.getConstrainedSet();
     }
 
     @Override
@@ -49,33 +58,13 @@ public class TypeVariable implements Type {
     }
 
     @Override
-    public boolean isApplicableTo(Type type) {
-        return state.isApplicableTo(type);
-    }
-
-    @Override
-    public boolean isFunction() {
-        return state.isFunction();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(state);
     }
 
     @Override
-    public boolean isParameterized() {
-        return false;
-    }
-
-    @Override
-    public boolean isPossibility() {
-        return state.isPossibility();
-    }
-
-    @Override
-    public boolean isVariable() {
-        return true;
+    public Type recompose(Type functionType, SymbolEnvironment environment) {
+        return state.recompose(functionType, environment);
     }
 
     @Override
@@ -83,23 +72,38 @@ public class TypeVariable implements Type {
         return state.getName();
     }
 
+    @Override
+    public boolean unifyLeft(Type other) {
+        if (!equals(other)) {
+            if (occursIn(other)) {
+                return false;
+            } else {
+                bind(other);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean unifyRight(Type other) {
+        return unify(other);
+    }
+
     private interface State {
 
         void bind(Type type);
 
+        List<Type> decompose();
+
         Type expose();
+
+        Set<Type> getConstrainedSet();
 
         String getName();
 
         List<Type> getParameters();
 
-        List<Type> getPossibilities();
-
-        boolean isApplicableTo(Type type);
-
-        boolean isFunction();
-
-        boolean isPossibility();
+        Type recompose(Type functionType, SymbolEnvironment environment);
     }
 
     private static final class BoundState implements State {
@@ -112,7 +116,12 @@ public class TypeVariable implements Type {
 
         @Override
         public void bind(Type type) {
-            throw new IllegalStateException("Type variable already bound to " + this.type);
+            // intentionally empty
+        }
+
+        @Override
+        public List<Type> decompose() {
+            return type.decompose();
         }
 
         @Override
@@ -126,6 +135,11 @@ public class TypeVariable implements Type {
         }
 
         @Override
+        public Set<Type> getConstrainedSet() {
+            return type.getConstrainedSet();
+        }
+
+        @Override
         public String getName() {
             return type.getName();
         }
@@ -136,28 +150,13 @@ public class TypeVariable implements Type {
         }
 
         @Override
-        public List<Type> getPossibilities() {
-            return expose().getPossibilities();
-        }
-
-        @Override
-        public boolean isApplicableTo(Type type) {
-            return expose().isApplicableTo(type);
-        }
-
-        @Override
-        public boolean isFunction() {
-            return expose().isFunction();
-        }
-
-        @Override
-        public boolean isPossibility() {
-            return type.isPossibility();
-        }
-
-        @Override
         public int hashCode() {
             return Objects.hash(type);
+        }
+
+        @Override
+        public Type recompose(Type functionType, SymbolEnvironment environment) {
+            return type;
         }
 
         @Override
@@ -182,6 +181,11 @@ public class TypeVariable implements Type {
         }
 
         @Override
+        public List<Type> decompose() {
+            return asList((Type) parent);
+        }
+
+        @Override
         public boolean equals(Object o) {
             return o instanceof UnboundState && Objects.equals(name, ((UnboundState) o).name);
         }
@@ -189,6 +193,11 @@ public class TypeVariable implements Type {
         @Override
         public Type expose() {
             return parent;
+        }
+
+        @Override
+        public Set<Type> getConstrainedSet() {
+            return new HashSet<>(asList((Type) parent));
         }
 
         @Override
@@ -202,28 +211,18 @@ public class TypeVariable implements Type {
         }
 
         @Override
-        public List<Type> getPossibilities() {
-            return Arrays.<Type>asList(parent);
-        }
-
-        @Override
-        public boolean isApplicableTo(Type type) {
-            return false;
-        }
-
-        @Override
-        public boolean isFunction() {
-            return false;
-        }
-
-        @Override
-        public boolean isPossibility() {
-            return true;
-        }
-
-        @Override
         public int hashCode() {
             return Objects.hash(name);
+        }
+
+        @Override
+        public Type recompose(Type functionType, SymbolEnvironment environment) {
+            int size = functionType.decompose().size();
+            List<Type> variables = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                variables.add(environment.createVariable());
+            }
+            return set(variables);
         }
 
         @Override
