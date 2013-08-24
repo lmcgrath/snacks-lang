@@ -10,9 +10,9 @@ public interface SyntaxVisitor<R, S> {
 
     R visitAnnotation(Annotation node, S state) throws SnacksException;
 
-    R visitArgument(Argument node, S state) throws SnacksException;
+    R visitApplyExpression(ApplyExpression node, S state) throws SnacksException;
 
-    R visitArgumentsExpression(ArgumentsExpression node, S state) throws SnacksException;
+    R visitArgument(Argument node, S state) throws SnacksException;
 
     R visitBinaryExpression(BinaryExpression node, S state) throws SnacksException;
 
@@ -51,6 +51,10 @@ public interface SyntaxVisitor<R, S> {
     R visitIndexExpression(IndexExpression node, S state) throws SnacksException;
 
     R visitIntegerLiteral(IntegerLiteral node, S state) throws SnacksException;
+
+    R visitInvokableLiteral(InvokableLiteral node, S state) throws SnacksException;
+
+    R visitInvokeExpression(InvokeExpression node, S state) throws SnacksException;
 
     R visitIteratorLoop(IteratorLoop node, S state) throws SnacksException;
 

@@ -48,9 +48,7 @@ public abstract class Type {
         return new TypeVariable(name);
     }
 
-    public void bind(Type type) {
-        // intentionally empty
-    }
+    public abstract void bind(Type type);
 
     public abstract List<Type> decompose();
 

@@ -1,12 +1,7 @@
 package snacks.lang.compiler;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
-import static snacks.lang.compiler.AstFactory.apply;
-import static snacks.lang.compiler.AstFactory.constant;
-import static snacks.lang.compiler.AstFactory.declaration;
-import static snacks.lang.compiler.AstFactory.locator;
-import static snacks.lang.compiler.AstFactory.var;
+import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.SyntaxFactory.importId;
 import static snacks.lang.compiler.SyntaxFactory.qid;
 import static snacks.lang.compiler.Type.func;
@@ -56,28 +51,30 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     }
 
     @Override
+    public AstNode visitApplyExpression(ApplyExpression node, TranslatorState state) throws SnacksException {
+        return applyFunction(
+            translate(node.getExpression(), state),
+            translate(node.getArgument(), state),
+            state
+        );
+    }
+
+    @Override
     public AstNode visitArgument(Argument node, TranslatorState state) throws SnacksException {
         return var(node.getName(), translateType(node.getType(), state));
     }
 
     @Override
-    public AstNode visitArgumentsExpression(ArgumentsExpression node, TranslatorState state) throws SnacksException {
-        AstNode function = translate(node.getExpression(), state);
-        state.beginCollection();
-        for (Symbol argument : node.getArguments()) {
-            state.collect(translate(argument, state));
-        }
-        return applyFunction(function, state.acceptCollection(), state);
-    }
-
-    @Override
     public AstNode visitBinaryExpression(BinaryExpression node, TranslatorState state) throws SnacksException {
-        AstNode function = state.reference(node.getOperator());
-        List<AstNode> arguments = asList(
-            translate(node.getLeft(), state),
-            translate(node.getRight(), state)
+        return applyFunction(
+            applyFunction(
+                state.reference(node.getOperator()),
+                translate(node.getLeft(), state),
+                state
+            ),
+            translate(node.getRight(), state),
+            state
         );
-        return applyFunction(function, arguments, state);
     }
 
     @Override
@@ -150,12 +147,17 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitFunctionLiteral(FunctionLiteral node, TranslatorState state) throws SnacksException {
-        List<Symbol> arguments = node.getArguments();
-        if (arguments.size() != 1) {
-            throw new UnsupportedOperationException(); // TODO
-        } else {
-            return applyLambda(node, arguments, state);
+        AstNode function = applyLambda(node, node.getArgument(), state);
+        Symbol typeNode = node.getType();
+        if (typeNode != null) {
+            Type resultType = translateType(typeNode, state);
+            if (!unifyFunctionResult(function.getType(), resultType)) {
+                throw new TypeException(
+                    "Function type " + function.getType() + " not compatible with declared result type " + resultType
+                );
+            }
         }
+        return function;
     }
 
     @Override
@@ -185,6 +187,16 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     @Override
     public AstNode visitIntegerLiteral(IntegerLiteral node, TranslatorState state) throws SnacksException {
         return constant(node.getValue());
+    }
+
+    @Override
+    public AstNode visitInvokableLiteral(InvokableLiteral node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public AstNode visitInvokeExpression(InvokeExpression node, TranslatorState state) throws SnacksException {
+        throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
@@ -305,14 +317,6 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
         return null;
     }
 
-    private AstNode applyFunction(AstNode function, List<AstNode> arguments, TranslatorState state) throws TypeException {
-        AstNode expression = function;
-        for (AstNode argument : arguments) {
-            expression = applyFunction(expression, argument, state);
-        }
-        return expression;
-    }
-
     private AstNode applyFunction(AstNode expression, AstNode argument, TranslatorState state) throws TypeException {
         Type functionType = expression.getType();
         Type argumentType = argument.getType();
@@ -337,9 +341,9 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
         return apply(expression, argument, set(allowedTypes));
     }
 
-    private AstNode applyLambda(FunctionLiteral node, List<Symbol> arguments, TranslatorState state) throws SnacksException {
+    private AstNode applyLambda(FunctionLiteral node, Symbol argument, TranslatorState state) throws SnacksException {
         state.enterScope();
-        Variable variable = translateAs(arguments.get(0), state, Variable.class);
+        Variable variable = translateAs(argument, state, Variable.class);
         state.define(variable);
         state.specialize(variable);
         AstNode body = translate(node.getBody(), state);
@@ -375,6 +379,24 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
             return state.createVariable();
         } else {
             return translate(node, state).getType();
+        }
+    }
+
+    private boolean unifyFunctionResult(Type functionType, Type declaredResultType) throws SnacksException {
+        if (functionType.decompose().size() == 1) {
+            Type actualResultType = getResultType(functionType);
+            return actualResultType.unify(declaredResultType);
+        } else {
+            return false;
+        }
+    }
+
+    private Type getResultType(Type functionType) {
+        List<Type> parameters = functionType.getParameters();
+        if (parameters.isEmpty()) {
+            return functionType;
+        } else {
+            return getResultType(parameters.get(1));
         }
     }
 }

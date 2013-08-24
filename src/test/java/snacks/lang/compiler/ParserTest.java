@@ -97,18 +97,18 @@ public class ParserTest {
 
     @Test
     public void shouldParseMultipleArgumentsExpression() {
-        assertThat(expression("fruits 1 2 3"), equalTo(apply(id("fruits"), literal(1), literal(2), literal(3))));
+        assertThat(expression("fruits 1 2 3"), equalTo(apply(apply(apply(id("fruits"), literal(1)), literal(2)), literal(3))));
     }
 
     @Test
     public void shouldParseParenthesizedArgumentsExpression() {
-        assertThat(expression("fruits(1 2 3)"), equalTo(apply(id("fruits"), literal(1), literal(2), literal(3))));
+        assertThat(expression("fruits(1 2 3)"), equalTo(apply(apply(apply(id("fruits"), literal(1)), literal(2)), literal(3))));
     }
 
     @Test
     public void shouldParseFunction() {
         assertThat(expression("(a b c -> a b c)"), equalTo(
-            func(array(arg("a"), arg("b"), arg("c")), apply(id("a"), id("b"), id("c")))
+            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
         ));
     }
 
@@ -119,14 +119,14 @@ public class ParserTest {
             "    a b c)"
         );
         assertThat(tree, equalTo(
-            func(array(arg("a"), arg("b"), arg("c")), apply(id("a"), id("b"), id("c")))
+            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
         ));
     }
 
     @Test
     public void shouldParseTailedFunction() {
         assertThat(expression("(a b c) -> a b c"), equalTo(
-            func(array(arg("a"), arg("b"), arg("c")), apply(id("a"), id("b"), id("c")))
+            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
         ));
     }
 
@@ -138,20 +138,22 @@ public class ParserTest {
             "    return z",
             "}"
         );
-        assertThat(tree, equalTo(func(
-            array(arg("x"), arg("y"), arg("z")),
-            block(
-                apply(id("print"), id("x"), id("y")),
+        assertThat(tree, equalTo(
+            func(arg("x"), func(arg("y"), func(arg("z"), block(
+                apply(apply(id("print"), id("x")), id("y")),
                 result(id("z"))
-            )
-        )));
+            ))))
+        ));
     }
 
     @Test
     public void shouldParseTypedFunction() {
         assertThat(expression("(a:x b:y :: z -> a b)"), equalTo(func(
-            array(arg("a", type(qid("x"))), arg("b", type(qid("y")))),
-            apply(id("a"), id("b")),
+            arg("a", type(qid("x"))),
+            func(
+                arg("b", type(qid("y"))),
+                apply(id("a"), id("b"))
+            ),
             type(qid("z"))
         )));
     }
@@ -159,8 +161,11 @@ public class ParserTest {
     @Test
     public void shouldParseTypedTailedFunction() {
         assertThat(expression("(a:x b:y):z -> a b"), equalTo(func(
-            array(arg("a", type(qid("x"))), arg("b", type(qid("y")))),
-            apply(id("a"), id("b")),
+            arg("a", type(qid("x"))),
+            func(
+                arg("b", type(qid("y"))),
+                apply(id("a"), id("b"))
+            ),
             type(qid("z"))
         )));
     }
@@ -184,10 +189,13 @@ public class ParserTest {
             "}"
         );
         assertThat(tree, equalTo(func(
-            array(arg("x", type(qid("a"))), arg("y", type(qid("b")))),
-            block(
-                apply(id("print"), id("x")),
-                result(apply(id("x"), id("y")))
+            arg("x", type(qid("a"))),
+            func(
+                arg("y", type(qid("b"))),
+                block(
+                    apply(id("print"), id("x")),
+                    result(apply(id("x"), id("y")))
+                )
             ),
             type(qid("z"))
         )));
@@ -281,13 +289,13 @@ public class ParserTest {
     @Test
     public void shouldParseDeclaration() {
         assertThat(parse("test = a b c"), equalTo(module(
-            def("test", apply(id("a"), id("b"), id("c")))
+            def("test", apply(apply(id("a"), id("b")), id("c")))
         )));
     }
 
     @Test
     public void shouldParseFunctionCalledWithZeroArgs() {
-        assertThat(expression("test()"), equalTo(apply(id("test"))));
+        assertThat(expression("test()"), equalTo(invoke(id("test"))));
     }
 
     @Test
@@ -319,8 +327,8 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", conditional(
-                truthy(id("bananas"), block(apply(id("waffles"), literal(1), literal(2), literal(3)))),
-                truthy(id("toast"), block(apply(id("ducks"), literal(4), literal(5), literal(6)))),
+                truthy(id("bananas"), block(apply(apply(apply(id("waffles"), literal(1)), literal(2)), literal(3)))),
+                truthy(id("toast"), block(apply(apply(apply(id("ducks"), literal(4)), literal(5)), literal(6)))),
                 dcase(block(apply(id("waffles"), id("anyway!"))))
             ))
         )));
@@ -339,11 +347,11 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", begin(
-                block(apply(id("try"), id("something"), id("dangerous"))),
+                block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
                     embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
                 ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
         )));
     }
@@ -364,11 +372,11 @@ public class ParserTest {
                 array(
                     use("try", id("uranium238"))
                 ),
-                block(apply(id("try"), id("something"), id("dangerous"))),
+                block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
                     embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
                 ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
         )));
     }
@@ -389,13 +397,13 @@ public class ParserTest {
             def("test", begin(
                 array(
                     use("try", id("uranium238")),
-                    use("something", binary("+", id("centrifuge"), apply(id("lots"), id("of"), id("electricity"))))
+                    use("something", binary("+", id("centrifuge"), apply(apply(id("lots"), id("of")), id("electricity"))))
                 ),
-                block(apply(id("try"), id("something"), id("dangerous"))),
+                block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
                     embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
                 ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
         )));
     }
@@ -413,11 +421,11 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", begin(
-                block(apply(id("try"), id("something"), id("dangerous"))),
+                block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
                     embrace("oops", type(qid("ouch", "BustedFoot")), block(apply(id("say"), literal("ouch!"))))
                 ),
-                ensure(block(apply(id("perform"), id("some"), id("cleanup"))))
+                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
         )));
     }
@@ -434,12 +442,12 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", begin(
                 array(
-                    using(apply(literal("secret"), id("surveillance"), id("program")))
+                    using(apply(apply(literal("secret"), id("surveillance")), id("program")))
                 ),
-                block(apply(id("try"), id("something"), id("unconstitutional"))),
+                block(apply(apply(id("try"), id("something")), id("unconstitutional"))),
                 array(embrace("problem",
                     type(qid("PoliticalFallout")),
-                    block(apply(id("make"), id("problem"), id("disappear")))
+                    block(apply(apply(id("make"), id("problem")), id("disappear")))
                 ))
             ))
         )));

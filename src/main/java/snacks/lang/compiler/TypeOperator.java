@@ -82,6 +82,11 @@ public class TypeOperator extends Type {
     }
 
     @Override
+    public void bind(Type type) {
+        // intentionally empty
+    }
+
+    @Override
     public List<Type> decompose() {
         return asList((Type) this);
     }

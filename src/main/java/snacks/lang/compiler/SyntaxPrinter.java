@@ -43,18 +43,16 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     }
 
     @Override
-    public Void visitArgument(Argument node, PrinterState state) throws SnacksException {
-        state.println("name: " + node.getName());
-        print(node.getType(), state);
+    public Void visitApplyExpression(ApplyExpression node, PrinterState state) throws SnacksException {
+        print(node.getExpression(), state);
+        print(node.getArgument(), state);
         return null;
     }
 
     @Override
-    public Void visitArgumentsExpression(ArgumentsExpression node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        for (Symbol argument : node.getArguments()) {
-            print(argument, state);
-        }
+    public Void visitArgument(Argument node, PrinterState state) throws SnacksException {
+        state.println("name: " + node.getName());
+        print(node.getType(), state);
         return null;
     }
 
@@ -160,9 +158,7 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
 
     @Override
     public Void visitFunctionLiteral(FunctionLiteral node, PrinterState state) throws SnacksException {
-        for (Symbol argument : node.getArguments()) {
-            print(argument, state);
-        }
+        print(node.getArgument(), state);
         print(node.getType(), state);
         print(node.getBody(), state);
         return null;
@@ -200,6 +196,18 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     @Override
     public Void visitIntegerLiteral(IntegerLiteral node, PrinterState state) throws SnacksException {
         value(node.getValue(), state);
+        return null;
+    }
+
+    @Override
+    public Void visitInvokableLiteral(InvokableLiteral node, PrinterState state) throws SnacksException {
+        value(node.getExpression(), state);
+        return null;
+    }
+
+    @Override
+    public Void visitInvokeExpression(InvokeExpression node, PrinterState state) throws SnacksException {
+        print(node.getExpression(), state);
         return null;
     }
 

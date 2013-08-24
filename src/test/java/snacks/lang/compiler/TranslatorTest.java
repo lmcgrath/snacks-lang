@@ -25,13 +25,13 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() throws SnacksException {
         translate("example = 2 + 2");
-        assertThat(getType("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() throws SnacksException {
         translate("example = `+` 2");
-        assertThat(getType("example"), equalTo(set(
+        assertThat(typeOf("example"), equalTo(set(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(INTEGER_TYPE, INTEGER_TYPE)
@@ -44,7 +44,7 @@ public class TranslatorTest {
             "partial = `+` 2",
             "example = partial 'bananas'"
         );
-        assertThat(getType("example"), equalTo(STRING_TYPE));
+        assertThat(typeOf("example"), equalTo(STRING_TYPE));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TranslatorTest {
             "import test.example._",
             "example = concat 3 'waffles'"
         );
-        assertThat(getType("example"), equalTo(STRING_TYPE));
+        assertThat(typeOf("example"), equalTo(STRING_TYPE));
         assertThat(definitions, defines(declaration("test", "example", apply(
             apply(
                 reference("test/example", "concat", set(
@@ -112,7 +112,7 @@ public class TranslatorTest {
             "import test.example._",
             "example = identity 12"
         );
-        assertThat(getType("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -123,7 +123,7 @@ public class TranslatorTest {
             "import test.example.identity as id",
             "example = id 12"
         );
-        assertThat(getType("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class TranslatorTest {
             "from test.example import identity",
             "example = identity 12"
         );
-        assertThat(getType("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -145,13 +145,13 @@ public class TranslatorTest {
             "from test.example import identity as id",
             "example = id 12"
         );
-        assertThat(getType("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldTranslateTypedFunction() throws SnacksException {
         translate("double = (x:Integer):Integer -> x * 2");
-        assertThat(getType("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
     }
 
     @Test(expected = TypeException.class)
@@ -162,15 +162,36 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateUntypedFunction() throws SnacksException {
         translate("double = (x) -> x * 2");
-        assertThat(getType("double"), equalTo(set(
+        assertThat(typeOf("double"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(STRING_TYPE, STRING_TYPE)
         )));
     }
 
-    private Type getType(String name) throws SnacksException {
-        return environment.getReference(locator("test", name)).getType();
+    @Test
+    public void shouldTranslateUntypedFunctionWithMultipleArguments() throws SnacksException {
+        translate("multiply = (x y) -> x * y");
+        assertThat(typeOf("multiply"), equalTo(typeOf("snacks/lang", "*")));
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotTranslateFunctionWithIncompatibleResultType() throws SnacksException {
+        translate("multiply = (x y):String -> x * y");
+    }
+
+    @Test
+    public void shouldTranslatePartiallyTypedFunction() throws SnacksException {
+        translate("multiply = (x:String y) -> x * y");
+        assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
+    }
+
+    private Type typeOf(String name) throws SnacksException {
+        return typeOf("test", name);
+    }
+
+    private Type typeOf(String module, String name) throws SnacksException {
+        return environment.getReference(locator(module, name)).getType();
     }
 
     private void define(String name, Type type) throws SnacksException {

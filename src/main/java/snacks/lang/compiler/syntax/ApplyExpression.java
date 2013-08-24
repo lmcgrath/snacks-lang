@@ -1,46 +1,42 @@
 package snacks.lang.compiler.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
-import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
 
-public class ArgumentsExpression extends Symbol implements Visitable {
+public class ApplyExpression extends Symbol implements Visitable {
 
     private final Symbol expression;
-    private final List<Symbol> arguments;
+    private final Symbol argument;
 
-    public ArgumentsExpression(Symbol expression, Symbol... arguments) {
+    public ApplyExpression(Symbol expression, Symbol argument) {
         this.expression = expression;
-        this.arguments = asList(arguments);
+        this.argument = argument;
     }
 
     @Override
     public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitArgumentsExpression(this, state);
+        return visitor.visitApplyExpression(this, state);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof ArgumentsExpression) {
-            ArgumentsExpression other = (ArgumentsExpression) o;
+        } else if (o instanceof ApplyExpression) {
+            ApplyExpression other = (ApplyExpression) o;
             return new EqualsBuilder()
                 .append(expression, other.expression)
-                .append(arguments, other.arguments)
+                .append(argument, other.argument)
                 .isEquals();
         } else {
             return false;
         }
     }
 
-    public List<Symbol> getArguments() {
-        return arguments;
+    public Symbol getArgument() {
+        return argument;
     }
 
     public Symbol getExpression() {
@@ -49,11 +45,11 @@ public class ArgumentsExpression extends Symbol implements Visitable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, arguments);
+        return Objects.hash(expression, argument);
     }
 
     @Override
     public String toString() {
-        return expression + "(" + join(arguments, ", ") + ")";
+        return "(" + expression + " " + argument + ")";
     }
 }

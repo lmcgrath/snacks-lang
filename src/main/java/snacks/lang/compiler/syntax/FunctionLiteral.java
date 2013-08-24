@@ -1,10 +1,5 @@
 package snacks.lang.compiler.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -12,12 +7,12 @@ import snacks.lang.SnacksException;
 
 public class FunctionLiteral extends Symbol implements Visitable {
 
-    private final List<Symbol> arguments;
+    private final Symbol argument;
     private final Symbol body;
     private final Symbol type;
 
-    public FunctionLiteral(Symbol[] arguments, Symbol body, Symbol type) {
-        this.arguments = arguments == null ? new ArrayList<Symbol>() : asList(arguments);
+    public FunctionLiteral(Symbol argument, Symbol body, Symbol type) {
+        this.argument = argument;
         this.body = body;
         this.type = type;
     }
@@ -34,7 +29,7 @@ public class FunctionLiteral extends Symbol implements Visitable {
         } else if (o instanceof FunctionLiteral) {
             FunctionLiteral other = (FunctionLiteral) o;
             return new EqualsBuilder()
-                .append(arguments, other.arguments)
+                .append(argument, other.argument)
                 .append(body, other.body)
                 .append(type, other.type)
                 .isEquals();
@@ -43,8 +38,8 @@ public class FunctionLiteral extends Symbol implements Visitable {
         }
     }
 
-    public List<Symbol> getArguments() {
-        return arguments;
+    public Symbol getArgument() {
+        return argument;
     }
 
     public Symbol getBody() {
@@ -57,16 +52,15 @@ public class FunctionLiteral extends Symbol implements Visitable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(arguments, body, type);
+        return Objects.hash(argument, body, type);
     }
 
     @Override
     public String toString() {
-        String head = join(arguments, ", ");
         if (type == null) {
-            return "(" + head + " -> " + body + ")";
+            return "(" + argument + " -> " + body + ")";
         } else {
-            return "(" + head + " :: " + type + " -> " + body + ")";
+            return "(" + argument + " :: " + type + " -> " + body + ")";
         }
     }
 }

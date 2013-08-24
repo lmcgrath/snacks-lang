@@ -186,7 +186,13 @@ expression
 
 prefix_expression
     = postfix_expression
-    | postfix_expression.e arguments.a  {: return apply(e, a); :}
+    | postfix_expression.e arguments.a  {:
+                                            Symbol result = e;
+                                            for (Symbol arg : a) {
+                                                result = apply(result, arg);
+                                            }
+                                            return result;
+                                        :}
     | MINUS prefix_expression.e         {: return unary("-", e); :}
     | PLUS prefix_expression.e          {: return unary("+", e); :}
     | BIT_NOT prefix_expression.e       {: return unary("~", e); :}
@@ -196,8 +202,14 @@ postfix_expression
     = primary_expression
     | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
     | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {: return index(e, a); :}
-    | postfix_expression.e LARG RPAREN                          {: return apply(e); :}
-    | postfix_expression.e LARG arguments.a RPAREN              {: return apply(e, a); :}
+    | postfix_expression.e LARG RPAREN                          {: return invoke(e); :}
+    | postfix_expression.e LARG arguments.a RPAREN              {:
+                                                                    Symbol result = e;
+                                                                    for (Symbol arg : a) {
+                                                                        result = apply(result, arg);
+                                                                    }
+                                                                    return result;
+                                                                :}
     ;
 
 arguments
@@ -270,11 +282,25 @@ sequence
 
 function_literal
     = LFUNC function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN
-        {: return func(a, e, t); :}
+        {:
+            Symbol expression = e;
+            for (int i = a.length - 1; i >= 1; i--) {
+                expression = func(a[i], expression);
+            }
+            expression = func(a[0], expression, t);
+            return expression;
+        :}
     | LFUNC APPLIES_TO expression.e RPAREN
         {: return func(e); :}
     | LFUNC_MULTILINE function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
-        {: return func(a, block(e), t); :}
+        {:
+            Symbol expression = block(e);
+            for (int i = a.length - 1; i >= 1; i--) {
+                expression = func(a[i], expression);
+            }
+            expression = func(a[0], expression, t);
+            return expression;
+        :}
     ;
 
 function_typespec
@@ -283,7 +309,19 @@ function_typespec
     ;
 
 tailed_function
-    = LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e {: return func(a, e, t); :}
+    = LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
+        {:
+            Symbol expression = e;
+            if (a == null) {
+                expression = func(expression);
+            } else {
+                for (int i = a.length - 1; i >= 1; i--) {
+                    expression = func(a[i], expression);
+                }
+                expression = func(a[0], expression, t);
+            }
+            return expression;
+        :}
     ;
 
 opt_function_arguments

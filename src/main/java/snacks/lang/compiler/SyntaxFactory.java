@@ -23,8 +23,12 @@ public final class SyntaxFactory {
         return new Annotation(id, value);
     }
 
-    public static Symbol apply(Symbol function, Symbol... arguments) {
-        return new ArgumentsExpression(function, arguments);
+    public static Symbol invoke(Symbol function) {
+        return new InvokeExpression(function);
+    }
+
+    public static Symbol apply(Symbol function, Symbol argument) {
+        return new ApplyExpression(function, argument);
     }
 
     public static Symbol arg(String name) {
@@ -69,7 +73,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol binary(String operator, Symbol left, Symbol right) {
-        return new BinaryExpression(operator, left, right);
+        return apply(apply(id(operator), left), right);
     }
 
     public static Symbol block(Symbol... elements) {
@@ -125,19 +129,15 @@ public final class SyntaxFactory {
     }
 
     public static Symbol func(Symbol body) {
-        return new FunctionLiteral(new Symbol[0], body, null);
+        return new InvokableLiteral(body);
     }
 
-    public static Symbol func(Symbol body, Symbol type) {
-        return new FunctionLiteral(new Symbol[0], body, type);
+    public static Symbol func(Symbol arg, Symbol body) {
+        return new FunctionLiteral(arg, body, null);
     }
 
-    public static Symbol func(Symbol[] args, Symbol body) {
-        return new FunctionLiteral(args, body, null);
-    }
-
-    public static Symbol func(Symbol[] args, Symbol body, Symbol type) {
-        return new FunctionLiteral(args, body, type);
+    public static Symbol func(Symbol arg, Symbol body, Symbol type) {
+        return new FunctionLiteral(arg, body, type);
     }
 
     public static Symbol hurl(Symbol expression) {
