@@ -6,11 +6,9 @@ import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.CompilerUtil.parse;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
 import static snacks.lang.compiler.Type.*;
-import static snacks.lang.compiler.Type.set;
 
 import java.util.Set;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
@@ -161,7 +159,6 @@ public class TranslatorTest {
         translate("double = (x:Integer :: Integer -> x * 2) 2.2");
     }
 
-    @Ignore
     @Test
     public void shouldTranslateUntypedFunction() throws SnacksException {
         translate("double = (x) -> x * 2");

@@ -38,6 +38,16 @@ public abstract class Type {
         return new TypeOperator(name);
     }
 
+    public static Type var(Type type) {
+        Type var = new TypeVariable("~");
+        var.bind(type);
+        return var;
+    }
+
+    public static Type var(String name) {
+        return new TypeVariable(name);
+    }
+
     public void bind(Type type) {
         // intentionally empty
     }

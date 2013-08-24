@@ -29,8 +29,12 @@ public final class AstFactory {
         return (T) new DeclaredExpression(module, name, body);
     }
 
-    public static AstNode func(Type argument, Type result, String variable, AstNode expression) {
-        return new Function(argument, result, variable, expression);
+    public static AstNode func(String variable, AstNode expression, Type type) {
+        return new Function(variable, expression, type);
+    }
+
+    public static Locator locator(String name) {
+        return new VariableLocator(name);
     }
 
     public static Locator locator(String module, String name) {

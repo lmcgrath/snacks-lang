@@ -59,7 +59,7 @@ public class SymbolEnvironment {
     private final State state;
 
     public SymbolEnvironment() {
-        state = new HeadState(this);
+        state = new HeadState();
         try {
             for (List<Reference> list : builtin.values()) {
                 for (Reference reference : list) {
@@ -167,13 +167,11 @@ public class SymbolEnvironment {
 
     private static final class HeadState implements State {
 
-        private final SymbolEnvironment parent;
         private final Map<Locator, Set<Type>> symbols;
         private final Set<Type> specializedTypes;
         private int nextId = 1;
 
-        public HeadState(SymbolEnvironment parent) {
-            this.parent = parent;
+        public HeadState() {
             this.symbols = new HashMap<>();
             this.specializedTypes = new HashSet<>();
         }

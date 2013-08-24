@@ -1,7 +1,5 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.Type.func;
-
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnacksException;
@@ -9,16 +7,14 @@ import snacks.lang.compiler.Type;
 
 public class Function implements AstNode {
 
-    private final Type argument;
-    private final Type result;
     private final String variable;
     private final AstNode expression;
+    private final Type type;
 
-    public Function(Type argument, Type result, String variable, AstNode expression) {
-        this.argument = argument;
-        this.result = result;
+    public Function(String variable, AstNode expression, Type type) {
         this.variable = variable;
         this.expression = expression;
+        this.type = type;
     }
 
     @Override
@@ -33,10 +29,9 @@ public class Function implements AstNode {
         } else if (o instanceof Function) {
             Function other = (Function) o;
             return new EqualsBuilder()
-                .append(argument, other.argument)
-                .append(result, other.result)
                 .append(variable, other.variable)
                 .append(expression, other.expression)
+                .append(type, other.type)
                 .isEquals();
         } else {
             return false;
@@ -49,7 +44,7 @@ public class Function implements AstNode {
 
     @Override
     public Type getType() {
-        return func(argument, result);
+        return type;
     }
 
     public String getVariable() {
@@ -58,11 +53,11 @@ public class Function implements AstNode {
 
     @Override
     public int hashCode() {
-        return Objects.hash(argument, result, variable, expression);
+        return Objects.hash(variable, expression, type);
     }
 
     @Override
     public String toString() {
-        return "(" + variable + ":" + argument + " :: " + result + " -> " + expression + "";
+        return "(" + variable + " -> " + expression + "):" + type;
     }
 }

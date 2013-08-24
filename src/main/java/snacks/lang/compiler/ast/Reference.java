@@ -41,7 +41,7 @@ public class Reference implements AstNode {
 
     @Override
     public Type getType() {
-        return type;
+        return type.expose();
     }
 
     @Override

@@ -2,16 +2,17 @@ package snacks.lang.compiler;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
+import static snacks.lang.compiler.AstFactory.apply;
 import static snacks.lang.compiler.AstFactory.constant;
 import static snacks.lang.compiler.AstFactory.declaration;
 import static snacks.lang.compiler.AstFactory.locator;
 import static snacks.lang.compiler.AstFactory.var;
 import static snacks.lang.compiler.SyntaxFactory.importId;
 import static snacks.lang.compiler.SyntaxFactory.qid;
+import static snacks.lang.compiler.Type.func;
+import static snacks.lang.compiler.Type.set;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import beaver.Symbol;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.*;
@@ -66,7 +67,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
         for (Symbol argument : node.getArguments()) {
             state.collect(translate(argument, state));
         }
-        return state.applyFunction(function, state.acceptCollection());
+        return applyFunction(function, state.acceptCollection(), state);
     }
 
     @Override
@@ -76,7 +77,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
             translate(node.getLeft(), state),
             translate(node.getRight(), state)
         );
-        return state.applyFunction(function, arguments);
+        return applyFunction(function, arguments, state);
     }
 
     @Override
@@ -149,17 +150,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitFunctionLiteral(FunctionLiteral node, TranslatorState state) throws SnacksException {
-        state.enterScope();
         List<Symbol> arguments = node.getArguments();
         if (arguments.size() != 1) {
             throw new UnsupportedOperationException(); // TODO
         } else {
-            Type result = translateType(node.getType(), state);
-            Variable variable = translateAs(arguments.get(0), state, Variable.class);
-            state.define(variable);
-            AstNode body = translate(node.getBody(), state);
-            state.leaveScope();
-            return new Function(result, variable.getType(), variable.getName(), body);
+            return applyLambda(node, arguments, state);
         }
     }
 
@@ -308,6 +303,59 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     public AstNode visitWildcardImport(WildcardImport node, TranslatorState state) throws SnacksException {
         state.addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
         return null;
+    }
+
+    private AstNode applyFunction(AstNode function, List<AstNode> arguments, TranslatorState state) throws TypeException {
+        AstNode expression = function;
+        for (AstNode argument : arguments) {
+            expression = applyFunction(expression, argument, state);
+        }
+        return expression;
+    }
+
+    private AstNode applyFunction(AstNode expression, AstNode argument, TranslatorState state) throws TypeException {
+        Type functionType = expression.getType();
+        Type argumentType = argument.getType();
+        Type constrainedArgumentType = argumentType.recompose(functionType, state.environment());
+        List<Type> allowedTypes = new ArrayList<>();
+        List<Type> functionTypesQueue = new LinkedList<>(functionType.decompose());
+        for (Type argumentSubType : constrainedArgumentType.decompose()) {
+            List<Type> allowedResultTypes = new ArrayList<>();
+            for (Type functionSubType : functionTypesQueue) {
+                Type resultType = state.createVariable();
+                if (func(argumentSubType, resultType).unify(functionSubType)) {
+                    allowedResultTypes.add(resultType);
+                }
+            }
+            allowedTypes.addAll(allowedResultTypes);
+            functionTypesQueue.remove(0);
+        }
+        if (allowedTypes.isEmpty()) {
+            throw new TypeException("Could not apply function " + functionType + " to argument " + argumentType);
+        }
+        argumentType.bind(constrainedArgumentType);
+        return apply(expression, argument, set(allowedTypes));
+    }
+
+    private AstNode applyLambda(FunctionLiteral node, List<Symbol> arguments, TranslatorState state) throws SnacksException {
+        state.enterScope();
+        Variable variable = translateAs(arguments.get(0), state, Variable.class);
+        state.define(variable);
+        state.specialize(variable);
+        AstNode body = translate(node.getBody(), state);
+        state.leaveScope();
+        List<Type> allowedLambdaTypes = new ArrayList<>();
+        for (Type argumentSubType : variable.getType().decompose()) {
+            state.enterScope();
+            state.define(variable.getLocator(), argumentSubType);
+            state.specialize(variable);
+            Type bodyType = translate(node.getBody(), state).getType();
+            state.leaveScope();
+            for (Type bodySubType : bodyType.decompose()) {
+                allowedLambdaTypes.add(func(argumentSubType, bodySubType));
+            }
+        }
+        return new Function(variable.getName(), body, set(allowedLambdaTypes));
     }
 
     private AstNode translate(Visitable node, TranslatorState state) throws SnacksException {

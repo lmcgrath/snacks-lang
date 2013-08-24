@@ -7,10 +7,6 @@ import java.util.*;
 
 public class TypeVariable extends Type {
 
-    public static TypeVariable var(String name) {
-        return new TypeVariable(name);
-    }
-
     private State state;
 
     public TypeVariable(String name) {
