@@ -1,5 +1,8 @@
 package snacks.lang.compiler;
 
+import static java.util.Arrays.asList;
+
+import java.util.List;
 import snacks.lang.compiler.ast.*;
 
 public final class AstFactory {
@@ -33,6 +36,14 @@ public final class AstFactory {
         return new Function(variable, expression, type);
     }
 
+    public static AstNode instantiable(AstNode body) {
+        return new Instantiable(body);
+    }
+
+    public static AstNode instantiate(AstNode invokable) {
+        return new Instantiate(invokable);
+    }
+
     public static Locator locator(String name) {
         return new VariableLocator(name);
     }
@@ -51,6 +62,18 @@ public final class AstFactory {
 
     public static Reference reference(Locator locator, Type type) {
         return new Reference(locator, type);
+    }
+
+    public static AstNode sequence(AstNode... elements) {
+        return sequence(asList(elements));
+    }
+
+    public static AstNode sequence(List<AstNode> elements) {
+        return new Sequence(elements);
+    }
+
+    public static AstNode var(String name, AstNode value) {
+        return new VariableDeclaration(name, value);
     }
 
     public static AstNode var(String name, Type type) {

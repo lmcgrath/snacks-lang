@@ -23,10 +23,6 @@ public final class SyntaxFactory {
         return new Annotation(id, value);
     }
 
-    public static Symbol invoke(Symbol function) {
-        return new InvokeExpression(function);
-    }
-
     public static Symbol apply(Symbol function, Symbol argument) {
         return new ApplyExpression(function, argument);
     }
@@ -128,10 +124,6 @@ public final class SyntaxFactory {
         return new FromImport(module, subImports);
     }
 
-    public static Symbol func(Symbol body) {
-        return new InvokableLiteral(body);
-    }
-
     public static Symbol func(Symbol arg, Symbol body) {
         return new FunctionLiteral(arg, body, null);
     }
@@ -162,6 +154,14 @@ public final class SyntaxFactory {
 
     public static Symbol index(Symbol expression, Symbol... arguments) {
         return new IndexExpression(expression, arguments);
+    }
+
+    public static Symbol instantiable(Symbol body) {
+        return new InstantiableLiteral(body);
+    }
+
+    public static Symbol instantiation(Symbol function) {
+        return new InstantiationExpression(function);
     }
 
     public static Symbol interpolation(Symbol... elements) {

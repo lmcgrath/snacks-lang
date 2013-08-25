@@ -200,13 +200,13 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     }
 
     @Override
-    public Void visitInvokableLiteral(InvokableLiteral node, PrinterState state) throws SnacksException {
+    public Void visitInstantiableLiteral(InstantiableLiteral node, PrinterState state) throws SnacksException {
         value(node.getExpression(), state);
         return null;
     }
 
     @Override
-    public Void visitInvokeExpression(InvokeExpression node, PrinterState state) throws SnacksException {
+    public Void visitInstantiationExpression(InstantiationExpression node, PrinterState state) throws SnacksException {
         print(node.getExpression(), state);
         return null;
     }

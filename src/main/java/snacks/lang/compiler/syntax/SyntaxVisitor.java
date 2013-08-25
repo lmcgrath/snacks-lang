@@ -52,9 +52,9 @@ public interface SyntaxVisitor<R, S> {
 
     R visitIntegerLiteral(IntegerLiteral node, S state) throws SnacksException;
 
-    R visitInvokableLiteral(InvokableLiteral node, S state) throws SnacksException;
+    R visitInstantiableLiteral(InstantiableLiteral node, S state) throws SnacksException;
 
-    R visitInvokeExpression(InvokeExpression node, S state) throws SnacksException;
+    R visitInstantiationExpression(InstantiationExpression node, S state) throws SnacksException;
 
     R visitIteratorLoop(IteratorLoop node, S state) throws SnacksException;
 

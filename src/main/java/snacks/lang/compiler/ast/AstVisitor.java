@@ -18,7 +18,15 @@ public interface AstVisitor<R, S> {
 
     R visitIntegerConstant(IntegerConstant node, S state) throws SnacksException;
 
+    R visitInvokable(Instantiable node, S state) throws SnacksException;
+
+    R visitInvoke(Instantiate instantiate, S state) throws SnacksException;
+
     R visitReference(Reference node, S state) throws SnacksException;
 
+    R visitSequence(Sequence node, S state) throws SnacksException;
+
     R visitStringConstant(StringConstant node, S state) throws SnacksException;
+
+    R visitVariableDeclaration(VariableDeclaration node, S state) throws SnacksException;
 }

@@ -79,7 +79,15 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitBlock(Block node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        List<AstNode> elements = new ArrayList<>();
+        for (Symbol element : node.getElements()) {
+            elements.add(translate(element, state));
+        }
+        if (elements.size() == 1) {
+            return elements.get(0);
+        } else {
+            return sequence(elements);
+        }
     }
 
     @Override
@@ -190,13 +198,13 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     }
 
     @Override
-    public AstNode visitInvokableLiteral(InvokableLiteral node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+    public AstNode visitInstantiableLiteral(InstantiableLiteral node, TranslatorState state) throws SnacksException {
+        return instantiable(translate(node.getExpression(), state));
     }
 
     @Override
-    public AstNode visitInvokeExpression(InvokeExpression node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+    public AstNode visitInstantiationExpression(InstantiationExpression node, TranslatorState state) throws SnacksException {
+        return instantiate(translate(node.getExpression(), state));
     }
 
     @Override
@@ -303,7 +311,14 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitVar(Var node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        Type defVarType = state.createVariable();
+        state.define(locator(node.getName()), defVarType);
+        state.specialize(defVarType);
+        AstNode value = translate(node.getValue(), state);
+        Type defActualType = value.getType();
+        defVarType.unify(defActualType);
+        state.generify(defVarType);
+        return var(node.getName(), value);
     }
 
     @Override
@@ -340,14 +355,14 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
         state.enterScope();
         Variable variable = translateAs(argument, state, Variable.class);
         state.define(variable);
-        state.specialize(variable);
+        state.specialize(variable.getType());
         AstNode body = translate(node.getBody(), state);
         state.leaveScope();
         List<Type> allowedLambdaTypes = new ArrayList<>();
         for (Type argumentSubType : variable.getType().decompose()) {
             state.enterScope();
             state.define(variable.getLocator(), argumentSubType);
-            state.specialize(variable);
+            state.specialize(variable.getType());
             Type bodyType = translate(node.getBody(), state).getType();
             state.leaveScope();
             for (Type bodySubType : bodyType.decompose()) {

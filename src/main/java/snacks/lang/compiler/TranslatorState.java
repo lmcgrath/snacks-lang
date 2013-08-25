@@ -60,6 +60,10 @@ public class TranslatorState {
         environments.push(environment().extend());
     }
 
+    public void generify(Type type) {
+        environment().generify(type);
+    }
+
     public String getModule() {
         return module;
     }
@@ -81,8 +85,8 @@ public class TranslatorState {
         return new Reference(locator, environment().typeOf(locator));
     }
 
-    public void specialize(Variable variable) throws SnacksException {
-        environment().specialize(variable.getType());
+    public void specialize(Type type) throws SnacksException {
+        environment().specialize(type);
     }
 
     private Locator findWildcard(String value) throws UndefinedSymbolException {

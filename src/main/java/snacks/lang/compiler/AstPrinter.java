@@ -69,14 +69,41 @@ public class AstPrinter implements AstVisitor<Void, PrinterState> {
     }
 
     @Override
+    public Void visitInvokable(Instantiable node, PrinterState state) throws SnacksException {
+        print(node.getBody(), state);
+        return null;
+    }
+
+    @Override
+    public Void visitInvoke(Instantiate instantiate, PrinterState state) throws SnacksException {
+        print(instantiate.getInvokable(), state);
+        return null;
+    }
+
+    @Override
     public Void visitReference(Reference node, PrinterState state) throws SnacksException {
         state.println("locator: '" + node.getLocator() + "'");
         return null;
     }
 
     @Override
+    public Void visitSequence(Sequence sequence, PrinterState state) throws SnacksException {
+        for (AstNode element : sequence.getElements()) {
+            print(element, state);
+        }
+        return null;
+    }
+
+    @Override
     public Void visitStringConstant(StringConstant node, PrinterState state) throws SnacksException {
         value("\"" + escapeJava(node.getValue()) + "\"", state);
+        return null;
+    }
+
+    @Override
+    public Void visitVariableDeclaration(VariableDeclaration node, PrinterState state) throws SnacksException {
+        value("name: " + node.getName(), state);
+        print(node.getValue(), state);
         return null;
     }
 

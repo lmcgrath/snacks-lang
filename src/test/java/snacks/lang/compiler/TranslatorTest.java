@@ -209,6 +209,12 @@ public class TranslatorTest {
         translate("negative = (x:String) -> -x");
     }
 
+    @Test
+    public void shouldTranslateVar() throws SnacksException {
+        translate("waffles = { var test = 2; test }()");
+        assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
+    }
+
     private Type typeOf(String name) throws SnacksException {
         return typeOf("test", name);
     }

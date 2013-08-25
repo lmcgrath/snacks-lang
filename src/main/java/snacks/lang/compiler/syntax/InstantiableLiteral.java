@@ -4,22 +4,22 @@ import java.util.Objects;
 import beaver.Symbol;
 import snacks.lang.SnacksException;
 
-public class InvokeExpression extends Symbol implements Visitable {
+public class InstantiableLiteral extends Symbol implements Visitable {
 
     private final Symbol expression;
 
-    public InvokeExpression(Symbol expression) {
+    public InstantiableLiteral(Symbol expression) {
         this.expression = expression;
     }
 
     @Override
     public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitInvokeExpression(this, state);
+        return visitor.visitInstantiableLiteral(this, state);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof InvokeExpression && Objects.equals(expression, ((InvokeExpression) o).expression);
+        return o == this || o instanceof InstantiableLiteral && Objects.equals(expression, ((InstantiableLiteral) o).expression);
     }
 
     public Symbol getExpression() {
@@ -33,6 +33,6 @@ public class InvokeExpression extends Symbol implements Visitable {
 
     @Override
     public String toString() {
-        return "(invoke " + expression.toString() + ")";
+        return "(-> " + expression.toString() + ")";
     }
 }

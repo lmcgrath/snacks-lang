@@ -172,12 +172,12 @@ public class ParserTest {
 
     @Test
     public void shouldParseFunctionWithNoArgs() {
-        assertThat(expression("(-> a b)"), equalTo(func(apply(id("a"), id("b")))));
+        assertThat(expression("(-> a b)"), equalTo(instantiable(apply(id("a"), id("b")))));
     }
 
     @Test
     public void shouldParseTailedFunctionWithNoArgs() {
-        assertThat(expression("() -> a b"), equalTo(func(apply(id("a"), id("b")))));
+        assertThat(expression("() -> a b"), equalTo(instantiable(apply(id("a"), id("b")))));
     }
 
     @Test
@@ -219,7 +219,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseEmptyBlock() {
-        assertThat(expression("{}"), equalTo(func(block())));
+        assertThat(expression("{}"), equalTo(instantiable(block())));
     }
 
     @Test
@@ -295,7 +295,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseFunctionCalledWithZeroArgs() {
-        assertThat(expression("test()"), equalTo(invoke(id("test"))));
+        assertThat(expression("test()"), equalTo(instantiation(id("test"))));
     }
 
     @Test
@@ -307,7 +307,7 @@ public class ParserTest {
             "}"
         );
         assertThat(tree, equalTo(module(
-            def("test", func(block(
+            def("test", instantiable(block(
                 var("waffles", id("bananas")),
                 apply(id("say"), id("waffles"))
             )))
