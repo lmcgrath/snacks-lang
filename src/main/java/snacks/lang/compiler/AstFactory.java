@@ -64,6 +64,10 @@ public final class AstFactory {
         return new Reference(locator, type);
     }
 
+    public static Result result(AstNode value) {
+        return new Result(value);
+    }
+
     public static AstNode sequence(AstNode... elements) {
         return sequence(asList(elements));
     }

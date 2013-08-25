@@ -87,6 +87,12 @@ public class AstPrinter implements AstVisitor<Void, PrinterState> {
     }
 
     @Override
+    public Void visitResult(Result result, PrinterState state) throws SnacksException {
+        print(result.getValue(), state);
+        return null;
+    }
+
+    @Override
     public Void visitSequence(Sequence sequence, PrinterState state) throws SnacksException {
         for (AstNode element : sequence.getElements()) {
             print(element, state);

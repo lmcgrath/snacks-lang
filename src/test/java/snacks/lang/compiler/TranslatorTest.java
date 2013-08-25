@@ -211,7 +211,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateVar() throws SnacksException {
-        translate("waffles = { var test = 2; test }()");
+        translate("waffles = { var test = 2; return test; }()");
         assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
     }
 

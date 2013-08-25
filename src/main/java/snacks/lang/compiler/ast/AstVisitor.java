@@ -24,6 +24,8 @@ public interface AstVisitor<R, S> {
 
     R visitReference(Reference node, S state) throws SnacksException;
 
+    R visitResult(Result result, S state) throws SnacksException;
+
     R visitSequence(Sequence node, S state) throws SnacksException;
 
     R visitStringConstant(StringConstant node, S state) throws SnacksException;

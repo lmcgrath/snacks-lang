@@ -12,6 +12,7 @@ import beaver.Symbol;
 import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.*;
 import snacks.lang.compiler.syntax.*;
+import snacks.lang.compiler.syntax.Result;
 
 public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
@@ -261,7 +262,7 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
 
     @Override
     public AstNode visitResult(Result node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
+        return result(translate(node.getExpression(), state));
     }
 
     @Override
