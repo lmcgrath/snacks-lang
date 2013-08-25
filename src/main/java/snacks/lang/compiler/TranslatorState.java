@@ -73,12 +73,11 @@ public class TranslatorState {
     }
 
     public Reference reference(String value) throws SnacksException {
-        Locator locator;
-        if (aliases.containsKey(value)) {
-            locator = aliases.get(value);
-        } else {
-            locator = new VariableLocator(value);
-            if (!environment().isDefined(locator)) {
+        Locator locator = new VariableLocator(value);
+        if (!environment().isDefined(locator)) {
+            if (aliases.containsKey(value)) {
+                locator = aliases.get(value);
+            } else {
                 locator = findWildcard(value);
             }
         }

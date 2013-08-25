@@ -221,6 +221,18 @@ public class TranslatorTest {
         assertThat(typeOf("answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
     }
 
+    @Test
+    public void variableShouldOverrideSymbolInParentScope() throws SnacksException {
+        translate(
+            "waffles = 24",
+            "example = {",
+            "    var waffles = 'I\\'m in ur scope'",
+            "    return waffles",
+            "}"
+        );
+        assertThat(typeOf("example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
+    }
+
     private Type typeOf(String name) throws SnacksException {
         return typeOf("test", name);
     }

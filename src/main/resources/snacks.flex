@@ -267,6 +267,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                             return token(QUOTE);
                         }
                     }
+    "\\'"           { string.append('\''); }
     {StringCharacter}
                     { gatherString(); }
 }

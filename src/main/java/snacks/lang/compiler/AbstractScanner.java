@@ -16,7 +16,7 @@ public abstract class AbstractScanner extends beaver.Scanner implements AutoClos
 
     private final Deque<Integer> braces = new ArrayDeque<>();
     private final Deque<Integer> states = new ArrayDeque<>();
-    private final StringBuilder string = new StringBuilder();
+    protected final StringBuilder string = new StringBuilder();
     protected String source = "NULL";
 
     public AbstractScanner() {

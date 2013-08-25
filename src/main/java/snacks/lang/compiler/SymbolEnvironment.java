@@ -290,16 +290,15 @@ public class SymbolEnvironment {
 
         @Override
         public Type typeOf(Locator locator) throws SnacksException {
-            Set<Type> types = new HashSet<>();
             if (isDefinedLocally(locator)) {
+                Set<Type> types = new HashSet<>();
                 for (Type type : symbols.get(locator)) {
                     types.add(type);
                 }
+                return set(types);
+            } else {
+                return parent.typeOf(locator);
             }
-            if (parent.isDefined(locator)) {
-                types.addAll(parent.typeOf(locator).decompose());
-            }
-            return set(types);
         }
 
         private boolean isDefinedLocally(Locator locator) {

@@ -81,9 +81,11 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     @Override
     public AstNode visitBlock(Block node, TranslatorState state) throws SnacksException {
         List<AstNode> elements = new ArrayList<>();
+        state.enterScope();
         for (Symbol element : node.getElements()) {
             elements.add(translate(element, state));
         }
+        state.leaveScope();
         if (elements.size() == 1) {
             return elements.get(0);
         } else {
