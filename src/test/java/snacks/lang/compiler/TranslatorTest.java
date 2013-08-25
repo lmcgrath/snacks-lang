@@ -215,6 +215,12 @@ public class TranslatorTest {
         assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
     }
 
+    @Test
+    public void shouldTranslateInstantiable() throws SnacksException {
+        translate("answer = () -> 42");
+        assertThat(typeOf("answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
+    }
+
     private Type typeOf(String name) throws SnacksException {
         return typeOf("test", name);
     }
