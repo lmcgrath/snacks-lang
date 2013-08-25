@@ -297,11 +297,6 @@ public class Translator implements SyntaxVisitor<AstNode, TranslatorState> {
     }
 
     @Override
-    public AstNode visitUnaryExpression(UnaryExpression node, TranslatorState state) throws SnacksException {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
     public AstNode visitUsing(Using node, TranslatorState state) throws SnacksException {
         throw new UnsupportedOperationException(); // TODO
     }

@@ -265,7 +265,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol unary(String operator, Symbol operand) {
-        return new UnaryExpression(operator, operand);
+        return apply(id(operator), operand);
     }
 
     public static Symbol use(String var, Symbol value) {

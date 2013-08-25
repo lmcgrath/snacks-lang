@@ -47,6 +47,12 @@ public class SymbolEnvironment {
         op("/", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
 
         op("%", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+
+        op("unary+", func(INTEGER_TYPE, INTEGER_TYPE));
+        op("unary+", func(DOUBLE_TYPE, DOUBLE_TYPE));
+        op("unary-", func(INTEGER_TYPE, INTEGER_TYPE));
+        op("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
+        op("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
     }
 
     private static void op(String operator, Type type) {

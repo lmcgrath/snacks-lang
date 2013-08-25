@@ -186,6 +186,29 @@ public class TranslatorTest {
         assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
     }
 
+    @Test
+    public void shouldTranslateUnaryPlus() throws SnacksException {
+        translate("positive = (x) -> +x");
+        assertThat(typeOf("positive"), equalTo(set(
+            func(INTEGER_TYPE, INTEGER_TYPE),
+            func(DOUBLE_TYPE, DOUBLE_TYPE)
+        )));
+    }
+
+    @Test
+    public void shouldTranslateUnaryMinus() throws SnacksException {
+        translate("negative = (x) -> -x");
+        assertThat(typeOf("negative"), equalTo(set(
+            func(INTEGER_TYPE, INTEGER_TYPE),
+            func(DOUBLE_TYPE, DOUBLE_TYPE)
+        )));
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotTranslateNegativeString() throws SnacksException {
+        translate("negative = (x:String) -> -x");
+    }
+
     private Type typeOf(String name) throws SnacksException {
         return typeOf("test", name);
     }

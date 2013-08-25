@@ -341,13 +341,6 @@ public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
     }
 
     @Override
-    public Void visitUnaryExpression(UnaryExpression node, PrinterState state) throws SnacksException {
-        state.println("operator: " + node.getOperator());
-        print(node.getOperand(), state);
-        return null;
-    }
-
-    @Override
     public Void visitUsing(Using node, PrinterState state) throws SnacksException {
         if (node.getName() != null) {
             state.println("name: " + node.getName());

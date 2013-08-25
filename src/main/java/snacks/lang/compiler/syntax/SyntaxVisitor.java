@@ -92,8 +92,6 @@ public interface SyntaxVisitor<R, S> {
 
     R visitTypeSpec(TypeSpec node, S state) throws SnacksException;
 
-    R visitUnaryExpression(UnaryExpression node, S state) throws SnacksException;
-
     R visitUsing(Using node, S state) throws SnacksException;
 
     R visitVar(Var node, S state) throws SnacksException;

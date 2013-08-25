@@ -193,9 +193,9 @@ prefix_expression
                                             }
                                             return result;
                                         :}
-    | MINUS prefix_expression.e         {: return unary("-", e); :}
-    | PLUS prefix_expression.e          {: return unary("+", e); :}
-    | BIT_NOT prefix_expression.e       {: return unary("~", e); :}
+    | MINUS prefix_expression.e         {: return unary("unary-", e); :}
+    | PLUS prefix_expression.e          {: return unary("unary+", e); :}
+    | BIT_NOT prefix_expression.e       {: return unary("unary~", e); :}
     ;
 
 postfix_expression
