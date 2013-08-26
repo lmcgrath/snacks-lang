@@ -1,6 +1,6 @@
 package snacks.lang;
 
-public class Say {
+public class say {
 
     public void apply(String value) {
         System.out.println(value);

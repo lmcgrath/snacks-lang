@@ -37,11 +37,11 @@ public final class AstFactory {
     }
 
     public static AstNode instantiable(AstNode body) {
-        return new Instantiable(body);
+        return new VoidFunction(body);
     }
 
     public static AstNode instantiate(AstNode instantiable) {
-        return new Instantiate(instantiable);
+        return new VoidApply(instantiable);
     }
 
     public static Locator locator(String name) {

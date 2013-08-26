@@ -244,6 +244,16 @@ public class TranslatorTest {
         assertThat(typeOf("example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
     }
 
+    @Test
+    public void mainShouldBeVoidToVoid() {
+        translate(
+            environment,
+            "speak = () -> say 'Woof'",
+            "main = () -> speak()"
+        );
+        assertThat(typeOf("main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
+    }
+
     private Type typeOf(String name) {
         return typeOf("test", name);
     }

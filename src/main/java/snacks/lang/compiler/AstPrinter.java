@@ -68,13 +68,13 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visitInstantiable(Instantiable node) {
+    public void visitVoidFunction(VoidFunction node) {
         print(node.getBody());
     }
 
     @Override
-    public void visitInstantiate(Instantiate instantiate) {
-        print(instantiate.getInvokable());
+    public void visitVoidApply(VoidApply node) {
+        print(node.getInstantiable());
     }
 
     @Override

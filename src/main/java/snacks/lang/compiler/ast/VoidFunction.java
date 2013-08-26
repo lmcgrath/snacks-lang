@@ -5,22 +5,22 @@ import static snacks.lang.compiler.ast.Type.func;
 
 import java.util.Objects;
 
-public class Instantiable implements AstNode {
+public class VoidFunction implements AstNode {
 
     private final AstNode body;
 
-    public Instantiable(AstNode body) {
+    public VoidFunction(AstNode body) {
         this.body = body;
     }
 
     @Override
     public void accept(AstVisitor visitor) {
-        visitor.visitInstantiable(this);
+        visitor.visitVoidFunction(this);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof Instantiable && Objects.equals(body, ((Instantiable) o).body);
+        return o == this || o instanceof VoidFunction && Objects.equals(body, ((VoidFunction) o).body);
     }
 
     public AstNode getBody() {
@@ -39,6 +39,6 @@ public class Instantiable implements AstNode {
 
     @Override
     public String toString() {
-        return "(" + body + ")()";
+        return "(() -> " + body + ")";
     }
 }

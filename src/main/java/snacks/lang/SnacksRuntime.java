@@ -12,23 +12,17 @@ import com.headius.invokebinder.Binder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 
+@SuppressWarnings("unused")
 public class SnacksRuntime {
 
-    public static final Handle APPLY_BOOTSTRAP = new Handle(
+    public static final Handle BOOTSTRAP = new Handle(
         Opcodes.H_INVOKESTATIC,
         p(SnacksRuntime.class),
-        "reference",
+        "bootstrap",
         sig(CallSite.class, Lookup.class, String.class, MethodType.class)
     );
 
-    public static final Handle REFERENCE_BOOTSTRAP = new Handle(
-        Opcodes.H_INVOKESTATIC,
-        p(SnacksRuntime.class),
-        "reference",
-        sig(CallSite.class, Lookup.class, String.class, MethodType.class)
-    );
-
-    public static CallSite apply(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
+    public static CallSite bootstrap(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
         MutableCallSite callSite = new MutableCallSite(type);
         MethodHandle send = Binder.from(type)
             .insert(0)
@@ -37,21 +31,20 @@ public class SnacksRuntime {
         return callSite;
     }
 
-    public static CallSite reference(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
-        MutableCallSite callSite = new MutableCallSite(type);
-        MethodHandle send = Binder.from(type)
-            .insert(0)
-            .invokeStatic(lookup, SnacksRuntime.class, name);
-        callSite.setTarget(send);
-        return callSite;
-    }
-
-    public static Object apply(Object function, Object argument) throws Exception {
-        ((Say) function).apply(argument.toString());
+    public static Object apply(Object function, Object argument) {
+        ((say) function).apply(argument.toString());
         return null;
     }
 
-    public static Object reference(String module, String name) throws Exception {
-        return new Say();
+    public static Object invoke(Invokable invokable) throws ReflectiveOperationException {
+        return invokable.invoke();
+    }
+
+    public static Object reference(String module, String name) throws ReflectiveOperationException {
+        if ("say".equals(name)) {
+            return new say();
+        } else {
+            return SnacksRuntime.class.getClassLoader().loadClass(name).newInstance();
+        }
     }
 }

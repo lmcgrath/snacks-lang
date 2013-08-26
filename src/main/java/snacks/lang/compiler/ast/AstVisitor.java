@@ -18,10 +18,6 @@ public interface AstVisitor {
 
     void visitIntegerConstant(IntegerConstant node);
 
-    void visitInstantiable(Instantiable node);
-
-    void visitInstantiate(Instantiate instantiate);
-
     void visitReference(Reference node);
 
     void visitResult(Result node);
@@ -33,4 +29,8 @@ public interface AstVisitor {
     void visitVariableDeclaration(VariableDeclaration node);
 
     void visitVariableLocator(VariableLocator locator);
+
+    void visitVoidApply(VoidApply node);
+
+    void visitVoidFunction(VoidFunction node);
 }

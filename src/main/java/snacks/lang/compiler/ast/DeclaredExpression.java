@@ -35,6 +35,10 @@ public class DeclaredExpression implements AstNode {
         return body;
     }
 
+    public String getModule() {
+        return module;
+    }
+
     public String getName() {
         return name;
     }

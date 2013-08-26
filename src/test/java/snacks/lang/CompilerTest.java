@@ -1,16 +1,21 @@
 package snacks.lang;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static snacks.lang.compiler.CompilerUtil.translate;
 
-import java.io.PrintStream;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CompilerTest {
 
+    @Rule
+    public final OutResource out;
     private Compiler compiler;
+
+    public CompilerTest() {
+        out = new OutResource();
+    }
 
     @Before
     public void setUp() {
@@ -18,15 +23,23 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayHello() throws CompileException {
-        PrintStream systemOut = System.out;
-        PrintStream out = mock(PrintStream.class);
-        try {
-            System.setOut(out);
-            compiler.compile(translate("main = () -> say 'Hello World!'")).run();
-            verify(out).println("Hello World!");
-        } finally {
-            System.setOut(systemOut);
-        }
+    public void shouldSayHello() throws Exception {
+        ClassLoader loader = compiler.compile(translate("main = () -> say 'Hello World!'"));
+        ((Runnable) loader.loadClass("Snacks").newInstance()).run();
+        verifyOut("Hello World!");
+    }
+
+    @Test
+    public void shouldSayReference() throws Exception {
+        ClassLoader loader = compiler.compile(translate(
+            "speak = () -> say 'Woof'",
+            "main = () -> speak()"
+        ));
+        ((Runnable) loader.loadClass("Snacks").newInstance()).run();
+        verifyOut("Woof");
+    }
+
+    private void verifyOut(String line) {
+        verify(out.getStream()).println(line);
     }
 }
