@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 
 public class SetLiteral extends Symbol implements Visitable {
 
@@ -25,7 +24,7 @@ public class SetLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitSetLiteral(this);
     }
 

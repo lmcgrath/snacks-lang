@@ -1,8 +1,5 @@
 package snacks.lang.compiler.ast;
 
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
-
 public class Instantiate implements AstNode {
 
     private final AstNode invokable;
@@ -12,7 +9,7 @@ public class Instantiate implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitInstantiate(this);
     }
 

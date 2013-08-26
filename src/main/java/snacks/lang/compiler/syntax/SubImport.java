@@ -3,7 +3,6 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.SnacksException;
 
 public class SubImport extends Symbol implements Visitable {
 
@@ -16,7 +15,7 @@ public class SubImport extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitSubImport(this);
     }
 

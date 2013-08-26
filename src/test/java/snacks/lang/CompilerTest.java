@@ -1,4 +1,4 @@
-package snacks.lang.compiler;
+package snacks.lang;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -7,7 +7,6 @@ import static snacks.lang.compiler.CompilerUtil.translate;
 import java.io.PrintStream;
 import org.junit.Before;
 import org.junit.Test;
-import snacks.lang.SnacksException;
 
 public class CompilerTest {
 
@@ -19,7 +18,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayHello() throws SnacksException {
+    public void shouldSayHello() throws CompileException {
         PrintStream systemOut = System.out;
         PrintStream out = mock(PrintStream.class);
         try {

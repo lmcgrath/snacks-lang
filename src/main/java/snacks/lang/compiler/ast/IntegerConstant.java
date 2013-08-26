@@ -1,10 +1,8 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.Type.INTEGER_TYPE;
+import static snacks.lang.compiler.ast.Type.INTEGER_TYPE;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
 
 public class IntegerConstant implements AstNode {
 
@@ -20,7 +18,7 @@ public class IntegerConstant implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitIntegerConstant(this);
     }
 

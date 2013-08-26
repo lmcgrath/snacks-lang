@@ -1,11 +1,9 @@
 package snacks.lang.compiler.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.compiler.Type.STRING_TYPE;
+import static snacks.lang.compiler.ast.Type.STRING_TYPE;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
 
 public class StringConstant implements AstNode {
 
@@ -21,7 +19,7 @@ public class StringConstant implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitStringConstant(this);
     }
 

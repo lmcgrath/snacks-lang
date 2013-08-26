@@ -1,12 +1,8 @@
-package snacks.lang.compiler;
+package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.AstFactory.reference;
-import static snacks.lang.compiler.Type.*;
+import static snacks.lang.compiler.ast.Type.*;
 
 import java.util.*;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.ast.Locator;
-import snacks.lang.compiler.ast.Reference;
 
 public class SymbolEnvironment {
 
@@ -61,21 +57,17 @@ public class SymbolEnvironment {
         if (!builtin.containsKey(name)) {
             builtin.put(name, new ArrayList<Reference>());
         }
-        builtin.get(name).add(reference("snacks/lang", name, type));
+        builtin.get(name).add(new Reference(new DeclarationLocator("snacks/lang", name), type));
     }
 
     private final State state;
 
     public SymbolEnvironment() {
         state = new HeadState();
-        try {
-            for (List<Reference> list : builtin.values()) {
-                for (Reference reference : list) {
-                    state.define(reference);
-                }
+        for (List<Reference> list : builtin.values()) {
+            for (Reference reference : list) {
+                state.define(reference);
             }
-        } catch (SnacksException exception) {
-            throw new RuntimeException(exception);
         }
     }
 
@@ -87,7 +79,7 @@ public class SymbolEnvironment {
         return state.createVariable();
     }
 
-    public void define(Reference reference) throws SnacksException {
+    public void define(Reference reference) {
         state.define(reference);
     }
 
@@ -126,7 +118,7 @@ public class SymbolEnvironment {
         state.generify(type);
     }
 
-    public Reference getReference(Locator locator) throws SnacksException {
+    public Reference getReference(Locator locator) {
         return state.getReference(locator);
     }
 
@@ -138,7 +130,7 @@ public class SymbolEnvironment {
         state.specialize(type);
     }
 
-    public Type typeOf(Locator locator) throws SnacksException {
+    public Type typeOf(Locator locator) {
         return genericCopy(state.typeOf(locator), new HashMap<Type, Type>());
     }
 
@@ -158,11 +150,11 @@ public class SymbolEnvironment {
 
         Type createVariable();
 
-        void define(Reference reference) throws SnacksException;
+        void define(Reference reference);
 
         void generify(Type type);
 
-        Reference getReference(Locator locator) throws SnacksException;
+        Reference getReference(Locator locator);
 
         Set<Type> getSpecializedTypes();
 
@@ -170,7 +162,7 @@ public class SymbolEnvironment {
 
         void specialize(Type type);
 
-        Type typeOf(Locator locator) throws SnacksException;
+        Type typeOf(Locator locator);
     }
 
     private static final class HeadState implements State {
@@ -190,7 +182,7 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public void define(Reference reference) throws SnacksException {
+        public void define(Reference reference) {
             if (!symbols.containsKey(reference.getLocator())) {
                 symbols.put(reference.getLocator(), new HashSet<Type>());
             }
@@ -203,8 +195,8 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public Reference getReference(Locator locator) throws SnacksException {
-            return reference(locator, typeOf(locator));
+        public Reference getReference(Locator locator) {
+            return new Reference(locator, typeOf(locator));
         }
 
         @Override
@@ -223,7 +215,7 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public Type typeOf(Locator locator) throws SnacksException {
+        public Type typeOf(Locator locator) {
             if (isDefined(locator)) {
                 return set(symbols.get(locator));
             } else {
@@ -250,7 +242,7 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public void define(Reference reference) throws SnacksException {
+        public void define(Reference reference) {
             if (!symbols.containsKey(reference.getLocator())) {
                 symbols.put(reference.getLocator(), new HashSet<Type>());
             }
@@ -264,11 +256,11 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public Reference getReference(Locator locator) throws SnacksException {
+        public Reference getReference(Locator locator) {
             if (parent.isDefined(locator)) {
                 return parent.getReference(locator);
             } else {
-                return reference(locator, set(symbols.get(locator)));
+                return new Reference(locator, set(symbols.get(locator)));
             }
         }
 
@@ -291,7 +283,7 @@ public class SymbolEnvironment {
         }
 
         @Override
-        public Type typeOf(Locator locator) throws SnacksException {
+        public Type typeOf(Locator locator) {
             if (isDefinedLocally(locator)) {
                 Set<Type> types = new HashSet<>();
                 for (Type type : symbols.get(locator)) {

@@ -1,7 +1,6 @@
 package snacks.lang.compiler.ast;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
 
 public class VariableLocator implements Locator {
 
@@ -12,7 +11,7 @@ public class VariableLocator implements Locator {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitVariableLocator(this);
     }
 

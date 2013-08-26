@@ -2,12 +2,11 @@ package snacks.lang.compiler.syntax;
 
 import java.util.Objects;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 
 public class NothingLiteral extends Symbol implements Visitable {
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitNothingLiteral(this);
     }
 

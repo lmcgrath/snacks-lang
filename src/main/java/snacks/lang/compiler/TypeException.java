@@ -1,8 +1,6 @@
 package snacks.lang.compiler;
 
-import snacks.lang.SnacksException;
-
-public class TypeException extends SnacksException {
+public class TypeException extends RuntimeException {
 
     public TypeException(String message) {
         super(message);

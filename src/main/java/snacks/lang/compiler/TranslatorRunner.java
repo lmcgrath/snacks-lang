@@ -6,8 +6,8 @@ import static java.lang.System.out;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
-import snacks.lang.SnacksException;
 import snacks.lang.cli.CommandLineRunner;
+import snacks.lang.compiler.ast.SymbolEnvironment;
 
 public class TranslatorRunner implements CommandLineRunner {
 
@@ -42,7 +42,7 @@ public class TranslatorRunner implements CommandLineRunner {
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         )));
                     }
-                } catch (SnacksException | ScannerException exception) {
+                } catch (ScannerException exception) {
                     exception.printStackTrace(out);
                 }
                 out.print(">>> ");

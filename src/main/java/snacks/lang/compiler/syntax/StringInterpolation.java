@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 
 public class StringInterpolation extends Symbol implements Visitable {
 
@@ -16,7 +15,7 @@ public class StringInterpolation extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitStringInterpolation(this);
     }
 

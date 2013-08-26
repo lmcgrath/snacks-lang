@@ -1,61 +1,26 @@
-package snacks.lang.compiler;
+package snacks.lang;
 
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static snacks.lang.compiler.Type.VOID_TYPE;
-import static snacks.lang.compiler.Type.result;
+import static snacks.lang.compiler.ast.Type.VOID_TYPE;
+import static snacks.lang.compiler.ast.Type.result;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.invoke.CallSite;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.invoke.MethodType;
-import java.lang.invoke.MutableCallSite;
 import java.util.Set;
-import com.headius.invokebinder.Binder;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Opcodes;
-import snacks.lang.Expression;
-import snacks.lang.SnacksException;
+import snacks.lang.compiler.ast.Type;
 import snacks.lang.compiler.ast.*;
 
 public class Compiler implements AstVisitor {
 
-    private static final Handle REFERENCE_BOOSTRAP = new Handle(
-        Opcodes.H_INVOKESTATIC,
-        p(Compiler.class),
-        "reference",
-        sig(CallSite.class, Lookup.class, String.class, MethodType.class)
-    );
-
-    public static CallSite reference(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
-        MutableCallSite callSite = new MutableCallSite(type);
-        MethodHandle send = Binder.from(type)
-            .insert(0, lookup, callSite)
-            .invokeStatic(lookup, Compiler.class, name);
-        callSite.setTarget(send);
-        return callSite;
-    }
-
-    public static Expression reference(Lookup lookup, MutableCallSite callSite, String module, String name) throws Exception {
-        return new Expression() {
-            @Override
-            public String apply(String argument) {
-                System.out.println(argument);
-                return argument;
-            }
-        };
-    }
-
     private JiteClass jiteClass;
     private CodeBlock codeBlock;
 
-    public Runnable compile(final Set<AstNode> declarations) throws SnacksException {
+    public Runnable compile(final Set<AstNode> declarations) throws CompileException {
         jiteClass = new JiteClass("Snacks", p(Object.class), new String[] { p(Runnable.class) });
         jiteClass.defineDefaultConstructor();
         for (AstNode declaration : declarations) {
@@ -76,35 +41,35 @@ public class Compiler implements AstVisitor {
             }.defineClass("Snacks", bytes);
             return (Runnable) cls.newInstance();
         } catch (ReflectiveOperationException | IOException exception) {
-            throw new SnacksException(exception);
+            throw new CompileException(exception);
         }
     }
 
     @Override
-    public void visitApply(Apply node) throws SnacksException {
+    public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
         codeBlock.invokevirtual(p(Expression.class), "apply", sig(String.class, String.class));
     }
 
     @Override
-    public void visitArgument(Variable node) throws SnacksException {
+    public void visitArgument(Variable node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitBooleanConstant(BooleanConstant node) throws SnacksException {
+    public void visitBooleanConstant(BooleanConstant node) {
         codeBlock.ldc(node.getValue());
     }
 
     @Override
-    public void visitDeclarationLocator(DeclarationLocator locator) throws SnacksException {
+    public void visitDeclarationLocator(DeclarationLocator locator) {
         codeBlock.ldc(locator.getModule());
         codeBlock.ldc(locator.getName());
     }
 
     @Override
-    public void visitDeclaredExpression(final DeclaredExpression node) throws SnacksException {
+    public void visitDeclaredExpression(final DeclaredExpression node) {
         final Type type = node.getType();
         if (isFunction(type)) {
             jiteClass.defineMethod(node.getName(), ACC_PUBLIC, sig(void.class), new CodeBlock() {{
@@ -120,66 +85,66 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitDoubleConstant(DoubleConstant node) throws SnacksException {
+    public void visitDoubleConstant(DoubleConstant node) {
         codeBlock.ldc(node.getValue());
     }
 
     @Override
-    public void visitFunction(Function node) throws SnacksException {
+    public void visitFunction(Function node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitInstantiable(Instantiable node) throws SnacksException {
+    public void visitInstantiable(Instantiable node) {
         compile(node.getBody());
     }
 
     @Override
-    public void visitInstantiate(Instantiate instantiate) throws SnacksException {
+    public void visitInstantiate(Instantiate instantiate) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitIntegerConstant(IntegerConstant node) throws SnacksException {
+    public void visitIntegerConstant(IntegerConstant node) {
         codeBlock.ldc(node.getValue());
     }
 
     @Override
-    public void visitReference(Reference node) throws SnacksException {
+    public void visitReference(Reference node) {
         compile(node.getLocator());
-        codeBlock.invokedynamic("reference", sig(Expression.class, String.class, String.class), REFERENCE_BOOSTRAP);
+        codeBlock.invokedynamic("reference", sig(Expression.class, String.class, String.class), SnacksRuntime.REFERENCE_BOOTSTRAP);
     }
 
     @Override
-    public void visitResult(Result node) throws SnacksException {
+    public void visitResult(Result node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitSequence(Sequence node) throws SnacksException {
+    public void visitSequence(Sequence node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitStringConstant(StringConstant node) throws SnacksException {
+    public void visitStringConstant(StringConstant node) {
         codeBlock.ldc(node.getValue());
     }
 
     @Override
-    public void visitVariableDeclaration(VariableDeclaration node) throws SnacksException {
+    public void visitVariableDeclaration(VariableDeclaration node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitVariableLocator(VariableLocator locator) throws SnacksException {
+    public void visitVariableLocator(VariableLocator locator) {
         throw new UnsupportedOperationException(); // TODO
     }
 
-    private void compile(AstNode node) throws SnacksException {
+    private void compile(AstNode node) {
         node.accept(this);
     }
 
-    private void compile(Locator locator) throws SnacksException {
+    private void compile(Locator locator) {
         locator.accept(this);
     }
 

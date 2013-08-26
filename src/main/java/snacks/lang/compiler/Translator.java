@@ -5,11 +5,10 @@ import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.SyntaxFactory.importId;
 import static snacks.lang.compiler.SyntaxFactory.qid;
-import static snacks.lang.compiler.Type.*;
+import static snacks.lang.compiler.ast.Type.*;
 
 import java.util.*;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.*;
 import snacks.lang.compiler.syntax.*;
 import snacks.lang.compiler.syntax.Result;
@@ -56,11 +55,11 @@ public class Translator implements SyntaxVisitor {
         return environment().createVariable();
     }
 
-    public void define(Variable variable) throws SnacksException {
+    public void define(Variable variable) {
         define(variable.getLocator(), variable.getType());
     }
 
-    public void define(Locator locator, Type type) throws SnacksException {
+    public void define(Locator locator, Type type) {
         environment().define(new Reference(locator, type));
     }
 
@@ -84,7 +83,7 @@ public class Translator implements SyntaxVisitor {
         environments.pop();
     }
 
-    public Reference reference(String value) throws SnacksException {
+    public Reference reference(String value) {
         Locator locator = new VariableLocator(value);
         if (!environment().isDefined(locator)) {
             if (aliases.containsKey(value)) {
@@ -96,39 +95,39 @@ public class Translator implements SyntaxVisitor {
         return new Reference(locator, environment().typeOf(locator));
     }
 
-    public void register(String name, Type type) throws SnacksException {
+    public void register(String name, Type type) {
         Locator locator = locator(module, name);
         addAlias(name, locator);
         environment().define(new Reference(locator, type));
     }
 
-    public void specialize(Type type) throws SnacksException {
+    public void specialize(Type type) {
         environment().specialize(type);
     }
 
-    public Set<AstNode> translateModule(Symbol node) throws SnacksException {
+    public Set<AstNode> translateModule(Symbol node) {
         beginCollection();
         translate(node);
         return new HashSet<>(acceptCollection());
     }
 
     @Override
-    public void visitAccessExpression(AccessExpression node) throws SnacksException {
+    public void visitAccessExpression(AccessExpression node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitAnnotated(Annotated node) throws SnacksException {
+    public void visitAnnotated(Annotated node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitAnnotation(Annotation node) throws SnacksException {
+    public void visitAnnotation(Annotation node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitApplyExpression(ApplyExpression node) throws SnacksException {
+    public void visitApplyExpression(ApplyExpression node) {
         result = applyFunction(
             translate(node.getExpression()),
             translate(node.getArgument())
@@ -136,12 +135,12 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitArgument(Argument node) throws SnacksException {
+    public void visitArgument(Argument node) {
         result = var(node.getName(), translateType(node.getType()));
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression node) throws SnacksException {
+    public void visitBinaryExpression(BinaryExpression node) {
         result = applyFunction(
             applyFunction(
                 reference(node.getOperator()),
@@ -152,7 +151,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitBlock(Block node) throws SnacksException {
+    public void visitBlock(Block node) {
         List<AstNode> elements = new ArrayList<>();
         enterScope();
         for (Symbol element : node.getElements()) {
@@ -167,59 +166,59 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitBooleanLiteral(BooleanLiteral node) throws SnacksException {
+    public void visitBooleanLiteral(BooleanLiteral node) {
         result = constant(node.getValue());
     }
 
     @Override
-    public void visitCharacterLiteral(CharacterLiteral node) throws SnacksException {
+    public void visitCharacterLiteral(CharacterLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitConditional(Conditional node) throws SnacksException {
+    public void visitConditional(Conditional node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitDeclaration(Declaration node) throws SnacksException {
+    public void visitDeclaration(Declaration node) {
         DeclaredExpression declaration = declaration(getModule(), node.getName(), translate(node.getBody()));
         register(declaration.getName(), declaration.getType());
         collect(declaration);
     }
 
     @Override
-    public void visitDefaultCase(DefaultCase node) throws SnacksException {
+    public void visitDefaultCase(DefaultCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitDoubleLiteral(DoubleLiteral node) throws SnacksException {
+    public void visitDoubleLiteral(DoubleLiteral node) {
         result = constant(node.getValue());
     }
 
     @Override
-    public void visitEmbraceCase(EmbraceCase node) throws SnacksException {
+    public void visitEmbraceCase(EmbraceCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitEnsureCase(EnsureCase node) throws SnacksException {
+    public void visitEnsureCase(EnsureCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitExceptional(Exceptional node) throws SnacksException {
+    public void visitExceptional(Exceptional node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitFalsyCase(FalsyCase node) throws SnacksException {
+    public void visitFalsyCase(FalsyCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitFromImport(FromImport node) throws SnacksException {
+    public void visitFromImport(FromImport node) {
         QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
         for (Symbol s : node.getSubImports()) {
             SubImport sub = (SubImport) s;
@@ -228,7 +227,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitFunctionLiteral(FunctionLiteral node) throws SnacksException {
+    public void visitFunctionLiteral(FunctionLiteral node) {
         AstNode function = applyLambda(node, node.getArgument());
         Symbol typeNode = node.getType();
         if (typeNode != null) {
@@ -243,17 +242,17 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitHurl(Hurl node) throws SnacksException {
+    public void visitHurl(Hurl node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitIdentifier(Identifier node) throws SnacksException {
+    public void visitIdentifier(Identifier node) {
         result = reference(node.getValue());
     }
 
     @Override
-    public void visitImport(Import node) throws SnacksException {
+    public void visitImport(Import node) {
         QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
         List<String> segments = identifier.getSegments();
         Locator locator = locator(join(segments.subList(0, segments.size() - 1), '/'), identifier.getLastSegment());
@@ -261,64 +260,64 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitIndexExpression(IndexExpression node) throws SnacksException {
+    public void visitIndexExpression(IndexExpression node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitInstantiableLiteral(InstantiableLiteral node) throws SnacksException {
+    public void visitInstantiableLiteral(InstantiableLiteral node) {
         result = instantiable(translate(node.getExpression()));
     }
 
     @Override
-    public void visitInstantiationExpression(InstantiationExpression node) throws SnacksException {
+    public void visitInstantiationExpression(InstantiationExpression node) {
         result = instantiate(translate(node.getExpression()));
     }
 
     @Override
-    public void visitIntegerLiteral(IntegerLiteral node) throws SnacksException {
+    public void visitIntegerLiteral(IntegerLiteral node) {
         result = constant(node.getValue());
     }
 
     @Override
-    public void visitIteratorLoop(IteratorLoop node) throws SnacksException {
+    public void visitIteratorLoop(IteratorLoop node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitListLiteral(ListLiteral node) throws SnacksException {
+    public void visitListLiteral(ListLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitLoop(Loop node) throws SnacksException {
+    public void visitLoop(Loop node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitMapEntry(MapEntry node) throws SnacksException {
+    public void visitMapEntry(MapEntry node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitMapLiteral(MapLiteral node) throws SnacksException {
+    public void visitMapLiteral(MapLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitModule(Module node) throws SnacksException {
+    public void visitModule(Module node) {
         for (Symbol element : node.getElements()) {
             translate(element);
         }
     }
 
     @Override
-    public void visitNothingLiteral(NothingLiteral node) throws SnacksException {
+    public void visitNothingLiteral(NothingLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitQualifiedIdentifier(QualifiedIdentifier node) throws SnacksException {
+    public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         List<String> segments = node.getSegments();
         if (segments.size() > 1) {
             throw new UnsupportedOperationException(); // TODO
@@ -327,62 +326,62 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitRegexLiteral(RegexLiteral node) throws SnacksException {
+    public void visitRegexLiteral(RegexLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitResult(Result node) throws SnacksException {
+    public void visitResult(Result node) {
         result = result(translate(node.getExpression()));
     }
 
     @Override
-    public void visitSetLiteral(SetLiteral node) throws SnacksException {
+    public void visitSetLiteral(SetLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitStringInterpolation(StringInterpolation node) throws SnacksException {
+    public void visitStringInterpolation(StringInterpolation node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitStringLiteral(StringLiteral node) throws SnacksException {
+    public void visitStringLiteral(StringLiteral node) {
         result = constant(node.getValue());
     }
 
     @Override
-    public void visitSubImport(SubImport node) throws SnacksException {
+    public void visitSubImport(SubImport node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitSymbolLiteral(SymbolLiteral node) throws SnacksException {
+    public void visitSymbolLiteral(SymbolLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitTruthyCase(TruthyCase node) throws SnacksException {
+    public void visitTruthyCase(TruthyCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitTupleLiteral(TupleLiteral node) throws SnacksException {
+    public void visitTupleLiteral(TupleLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitTypeSpec(TypeSpec node) throws SnacksException {
+    public void visitTypeSpec(TypeSpec node) {
         result = translate(node.getType());
     }
 
     @Override
-    public void visitUsing(Using node) throws SnacksException {
+    public void visitUsing(Using node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
-    public void visitVar(Var node) throws SnacksException {
+    public void visitVar(Var node) {
         Type defVarType = createVariable();
         define(locator(node.getName()), defVarType);
         specialize(defVarType);
@@ -394,7 +393,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitWildcardImport(WildcardImport node) throws SnacksException {
+    public void visitWildcardImport(WildcardImport node) {
         addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
     }
 
@@ -422,7 +421,7 @@ public class Translator implements SyntaxVisitor {
         return apply(expression, argument, set(allowedTypes));
     }
 
-    private AstNode applyLambda(FunctionLiteral node, Symbol argument) throws SnacksException {
+    private AstNode applyLambda(FunctionLiteral node, Symbol argument) {
         enterScope();
         Variable variable = translateAs(argument, Variable.class);
         define(variable);
@@ -443,7 +442,7 @@ public class Translator implements SyntaxVisitor {
         return new Function(variable.getName(), body, set(allowedLambdaTypes));
     }
 
-    private Locator findWildcard(String value) throws UndefinedSymbolException {
+    private Locator findWildcard(String value) {
         for (String module : wildcardImports) {
             if (environment().isDefined(locator(module, value))) {
                 return locator(module, value);
@@ -452,20 +451,20 @@ public class Translator implements SyntaxVisitor {
         throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
     }
 
-    private AstNode translate(Visitable node) throws SnacksException {
+    private AstNode translate(Visitable node) {
         node.accept(this);
         return result;
     }
 
-    private AstNode translate(Symbol node) throws SnacksException {
+    private AstNode translate(Symbol node) {
         return translate((Visitable) node);
     }
 
-    private <T extends AstNode> T translateAs(Symbol node, Class<T> type) throws SnacksException {
+    private <T extends AstNode> T translateAs(Symbol node, Class<T> type) {
         return type.cast(translate(node));
     }
 
-    private Type translateType(Symbol node) throws SnacksException {
+    private Type translateType(Symbol node) {
         if (node == null) {
             return createVariable();
         } else {
@@ -473,7 +472,7 @@ public class Translator implements SyntaxVisitor {
         }
     }
 
-    private boolean unifyFunctionResult(Type functionType, Type declaredResultType) throws SnacksException {
+    private boolean unifyFunctionResult(Type functionType, Type declaredResultType) {
         if (functionType.decompose().size() == 1) {
             Type actualResultType = result(functionType);
             return actualResultType.unify(declaredResultType);

@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.io.PrintStream;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 import snacks.lang.compiler.syntax.*;
 import snacks.lang.util.PrinterState;
 
@@ -18,21 +17,17 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     public void print(Object node) {
-        try {
-            print((Symbol) node);
-        } catch (SnacksException exception) {
-            state.print(exception);
-        }
+        print((Symbol) node);
     }
 
     @Override
-    public void visitAccessExpression(AccessExpression node) throws SnacksException {
+    public void visitAccessExpression(AccessExpression node) {
         print(node.getExpression());
         state.println("property: " + node.getProperty());
     }
 
     @Override
-    public void visitAnnotated(Annotated node) throws SnacksException {
+    public void visitAnnotated(Annotated node) {
         print(node.getExpression());
         for (Symbol annotation : node.getAnnotations()) {
             print(annotation);
@@ -40,56 +35,56 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitAnnotation(Annotation node) throws SnacksException {
+    public void visitAnnotation(Annotation node) {
         print(node.getName());
         print(node.getValue());
     }
 
     @Override
-    public void visitApplyExpression(ApplyExpression node) throws SnacksException {
+    public void visitApplyExpression(ApplyExpression node) {
         print(node.getExpression());
         print(node.getArgument());
     }
 
     @Override
-    public void visitArgument(Argument node) throws SnacksException {
+    public void visitArgument(Argument node) {
         state.println("name: " + node.getName());
         print(node.getType());
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression node) throws SnacksException {
+    public void visitBinaryExpression(BinaryExpression node) {
         state.println("operator: " + node.getOperator());
         print(node.getLeft());
         print(node.getRight());
     }
 
     @Override
-    public void visitBlock(Block node) throws SnacksException {
+    public void visitBlock(Block node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitBooleanLiteral(BooleanLiteral node) throws SnacksException {
+    public void visitBooleanLiteral(BooleanLiteral node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitCharacterLiteral(CharacterLiteral node) throws SnacksException {
+    public void visitCharacterLiteral(CharacterLiteral node) {
         value("'" + node.getValue() + "'");
     }
 
     @Override
-    public void visitConditional(Conditional node) throws SnacksException {
+    public void visitConditional(Conditional node) {
         for (Symbol element : node.getCases()) {
             print(element);
         }
     }
 
     @Override
-    public void visitDeclaration(Declaration node) throws SnacksException {
+    public void visitDeclaration(Declaration node) {
         state.begin(node);
         state.println("name: " + node.getName());
         print(node.getBody());
@@ -97,29 +92,29 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitDefaultCase(DefaultCase node) throws SnacksException {
+    public void visitDefaultCase(DefaultCase node) {
         print(node.getExpression());
     }
 
     @Override
-    public void visitDoubleLiteral(DoubleLiteral node) throws SnacksException {
+    public void visitDoubleLiteral(DoubleLiteral node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitEmbraceCase(EmbraceCase node) throws SnacksException {
+    public void visitEmbraceCase(EmbraceCase node) {
         state.println("argument: " + node.getArgument());
         print(node.getType());
         print(node.getExpression());
     }
 
     @Override
-    public void visitEnsureCase(EnsureCase node) throws SnacksException {
+    public void visitEnsureCase(EnsureCase node) {
         print(node.getExpression());
     }
 
     @Override
-    public void visitExceptional(Exceptional node) throws SnacksException {
+    public void visitExceptional(Exceptional node) {
         for (Symbol useCase : node.getUseCases()) {
             print(useCase);
         }
@@ -131,13 +126,13 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitFalsyCase(FalsyCase node) throws SnacksException {
+    public void visitFalsyCase(FalsyCase node) {
         print(node.getCondition());
         print(node.getExpression());
     }
 
     @Override
-    public void visitFromImport(FromImport node) throws SnacksException {
+    public void visitFromImport(FromImport node) {
         state.println("module: " + node.getModule());
         for (Symbol subImport : node.getSubImports()) {
             print(subImport);
@@ -145,54 +140,54 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitFunctionLiteral(FunctionLiteral node) throws SnacksException {
+    public void visitFunctionLiteral(FunctionLiteral node) {
         print(node.getArgument());
         print(node.getType());
         print(node.getBody());
     }
 
     @Override
-    public void visitHurl(Hurl node) throws SnacksException {
+    public void visitHurl(Hurl node) {
         state.begin(node);
         print(node.getExpression());
         state.end();
     }
 
     @Override
-    public void visitIdentifier(Identifier node) throws SnacksException {
+    public void visitIdentifier(Identifier node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitImport(Import node) throws SnacksException {
+    public void visitImport(Import node) {
         state.println("module: " + node.getModule());
         state.println("alias: " + node.getAlias());
     }
 
     @Override
-    public void visitIndexExpression(IndexExpression node) throws SnacksException {
+    public void visitIndexExpression(IndexExpression node) {
         for (Symbol argument : node.getArguments()) {
             print(argument);
         }
     }
 
     @Override
-    public void visitIntegerLiteral(IntegerLiteral node) throws SnacksException {
+    public void visitIntegerLiteral(IntegerLiteral node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitInstantiableLiteral(InstantiableLiteral node) throws SnacksException {
+    public void visitInstantiableLiteral(InstantiableLiteral node) {
         value(node.getExpression());
     }
 
     @Override
-    public void visitInstantiationExpression(InstantiationExpression node) throws SnacksException {
+    public void visitInstantiationExpression(InstantiationExpression node) {
         print(node.getExpression());
     }
 
     @Override
-    public void visitIteratorLoop(IteratorLoop node) throws SnacksException {
+    public void visitIteratorLoop(IteratorLoop node) {
         state.println("variable: " + node.getVariable());
         print(node.getExpression());
         print(node.getAction());
@@ -200,49 +195,49 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitListLiteral(ListLiteral node) throws SnacksException {
+    public void visitListLiteral(ListLiteral node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitLoop(Loop node) throws SnacksException {
+    public void visitLoop(Loop node) {
         print(node.getLoopCase());
         print(node.getDefaultCase());
     }
 
     @Override
-    public void visitMapEntry(MapEntry node) throws SnacksException {
+    public void visitMapEntry(MapEntry node) {
         print(node.getKey());
         print(node.getValue());
     }
 
     @Override
-    public void visitMapLiteral(MapLiteral node) throws SnacksException {
+    public void visitMapLiteral(MapLiteral node) {
         for (Symbol entry : node.getEntries()) {
             print(entry);
         }
     }
 
     @Override
-    public void visitModule(Module node) throws SnacksException {
+    public void visitModule(Module node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitNothingLiteral(NothingLiteral node) throws SnacksException {
+    public void visitNothingLiteral(NothingLiteral node) {
     }
 
     @Override
-    public void visitQualifiedIdentifier(QualifiedIdentifier node) throws SnacksException {
+    public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         state.println("identifier: " + node);
     }
 
     @Override
-    public void visitRegexLiteral(RegexLiteral node) throws SnacksException {
+    public void visitRegexLiteral(RegexLiteral node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
@@ -250,60 +245,60 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitResult(Result node) throws SnacksException {
+    public void visitResult(Result node) {
         print(node.getExpression());
     }
 
     @Override
-    public void visitSetLiteral(SetLiteral node) throws SnacksException {
+    public void visitSetLiteral(SetLiteral node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitStringInterpolation(StringInterpolation node) throws SnacksException {
+    public void visitStringInterpolation(StringInterpolation node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitStringLiteral(StringLiteral node) throws SnacksException {
+    public void visitStringLiteral(StringLiteral node) {
         value('"' + escapeJava(node.getValue()) + '"');
     }
 
     @Override
-    public void visitSubImport(SubImport node) throws SnacksException {
+    public void visitSubImport(SubImport node) {
         state.println("expression: " + node.getExpression());
         state.println("alias: " + node.getAlias());
     }
 
     @Override
-    public void visitSymbolLiteral(SymbolLiteral node) throws SnacksException {
+    public void visitSymbolLiteral(SymbolLiteral node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitTruthyCase(TruthyCase node) throws SnacksException {
+    public void visitTruthyCase(TruthyCase node) {
         print(node.getCondition());
         print(node.getExpression());
     }
 
     @Override
-    public void visitTupleLiteral(TupleLiteral node) throws SnacksException {
+    public void visitTupleLiteral(TupleLiteral node) {
         for (Symbol element : node.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitTypeSpec(TypeSpec node) throws SnacksException {
+    public void visitTypeSpec(TypeSpec node) {
         print(node.getType());
     }
 
     @Override
-    public void visitUsing(Using node) throws SnacksException {
+    public void visitUsing(Using node) {
         if (node.getName() != null) {
             state.println("name: " + node.getName());
         }
@@ -311,23 +306,23 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitVar(Var node) throws SnacksException {
+    public void visitVar(Var node) {
         state.println("name: " + node.getName());
         print(node.getValue());
     }
 
     @Override
-    public void visitWildcardImport(WildcardImport node) throws SnacksException {
+    public void visitWildcardImport(WildcardImport node) {
         state.println("module: " + node.getModule());
     }
 
-    private void print(Symbol node) throws SnacksException {
+    private void print(Symbol node) {
         if (node != null) {
             print((Visitable) node);
         }
     }
 
-    private void print(Visitable node) throws SnacksException {
+    private void print(Visitable node) {
         if (node != null) {
             state.begin(node);
             node.accept(this);

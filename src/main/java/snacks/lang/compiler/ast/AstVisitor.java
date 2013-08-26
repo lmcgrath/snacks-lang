@@ -1,38 +1,36 @@
 package snacks.lang.compiler.ast;
 
-import snacks.lang.SnacksException;
-
 public interface AstVisitor {
 
-    void visitApply(Apply node) throws SnacksException;
+    void visitApply(Apply node);
 
-    void visitArgument(Variable node) throws SnacksException;
+    void visitArgument(Variable node);
 
-    void visitBooleanConstant(BooleanConstant node) throws SnacksException;
+    void visitBooleanConstant(BooleanConstant node);
 
-    void visitDeclarationLocator(DeclarationLocator locator) throws SnacksException;
+    void visitDeclarationLocator(DeclarationLocator locator);
 
-    void visitDeclaredExpression(DeclaredExpression node) throws SnacksException;
+    void visitDeclaredExpression(DeclaredExpression node);
 
-    void visitDoubleConstant(DoubleConstant node) throws SnacksException;
+    void visitDoubleConstant(DoubleConstant node);
 
-    void visitFunction(Function node) throws SnacksException;
+    void visitFunction(Function node);
 
-    void visitIntegerConstant(IntegerConstant node) throws SnacksException;
+    void visitIntegerConstant(IntegerConstant node);
 
-    void visitInstantiable(Instantiable node) throws SnacksException;
+    void visitInstantiable(Instantiable node);
 
-    void visitInstantiate(Instantiate instantiate) throws SnacksException;
+    void visitInstantiate(Instantiate instantiate);
 
-    void visitReference(Reference node) throws SnacksException;
+    void visitReference(Reference node);
 
-    void visitResult(Result node) throws SnacksException;
+    void visitResult(Result node);
 
-    void visitSequence(Sequence node) throws SnacksException;
+    void visitSequence(Sequence node);
 
-    void visitStringConstant(StringConstant node) throws SnacksException;
+    void visitStringConstant(StringConstant node);
 
-    void visitVariableDeclaration(VariableDeclaration node) throws SnacksException;
+    void visitVariableDeclaration(VariableDeclaration node);
 
-    void visitVariableLocator(VariableLocator locator) throws SnacksException;
+    void visitVariableLocator(VariableLocator locator);
 }

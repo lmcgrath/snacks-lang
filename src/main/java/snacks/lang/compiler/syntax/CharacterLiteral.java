@@ -4,7 +4,6 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.util.Objects;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 
 public class CharacterLiteral extends Symbol implements Visitable {
 
@@ -15,7 +14,7 @@ public class CharacterLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitCharacterLiteral(this);
     }
 

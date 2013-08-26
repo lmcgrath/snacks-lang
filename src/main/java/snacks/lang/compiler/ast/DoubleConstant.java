@@ -1,10 +1,8 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.Type.DOUBLE_TYPE;
+import static snacks.lang.compiler.ast.Type.DOUBLE_TYPE;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
 
 public class DoubleConstant implements AstNode {
 
@@ -15,7 +13,7 @@ public class DoubleConstant implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitDoubleConstant(this);
     }
 

@@ -8,7 +8,6 @@ import java.util.Objects;
 import beaver.Symbol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import snacks.lang.SnacksException;
 
 public class QualifiedIdentifier extends Symbol implements Visitable {
 
@@ -30,7 +29,7 @@ public class QualifiedIdentifier extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitQualifiedIdentifier(this);
     }
 

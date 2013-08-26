@@ -5,13 +5,15 @@ import static org.junit.Assert.assertThat;
 import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.CompilerUtil.translate;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
-import static snacks.lang.compiler.Type.*;
+import static snacks.lang.compiler.ast.Type.*;
+import static snacks.lang.compiler.ast.Type.func;
 
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
-import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.AstNode;
+import snacks.lang.compiler.ast.SymbolEnvironment;
+import snacks.lang.compiler.ast.Type;
 
 public class TranslatorTest {
 
@@ -23,13 +25,13 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldResolveTypeOfPlusWithIntegers() throws SnacksException {
+    public void shouldResolveTypeOfPlusWithIntegers() {
         translate(environment, "example = 2 + 2");
         assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
-    public void shouldResolveTypeOfPlusWithInteger() throws SnacksException {
+    public void shouldResolveTypeOfPlusWithInteger() {
         translate(environment, "example = `+` 2");
         assertThat(typeOf("example"), equalTo(set(
             func(STRING_TYPE, STRING_TYPE),
@@ -39,7 +41,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldResolveTypeOfExpressionUsingPossibleTypes() throws SnacksException {
+    public void shouldResolveTypeOfExpressionUsingPossibleTypes() {
         translate(
             environment,
             "partial = `+` 2",
@@ -49,7 +51,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldTranslateTwoPlusString() throws SnacksException {
+    public void shouldTranslateTwoPlusString() {
         Set<AstNode> nodes = translate(
             environment,
             "value = 'Hello, World!'",
@@ -72,7 +74,7 @@ public class TranslatorTest {
     }
 
     @Test(expected = TypeException.class)
-    public void shouldThrowException_whenOperandTypesDontMatchOperator() throws SnacksException {
+    public void shouldThrowException_whenOperandTypesDontMatchOperator() {
         define("oddball", type("Unknown"));
         translate(
             environment,
@@ -82,7 +84,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldSelectReferenceByNameAndType() throws SnacksException {
+    public void shouldSelectReferenceByNameAndType() {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
         Set<AstNode> definitions = translate(
@@ -109,7 +111,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void identityFunctionShouldHaveTypeOfArgument() throws SnacksException {
+    public void identityFunctionShouldHaveTypeOfArgument() {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
@@ -121,7 +123,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldBeAbleToAliasImport() throws SnacksException {
+    public void shouldBeAbleToAliasImport() {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
@@ -133,7 +135,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldBeAbleToImportUsingFrom() throws SnacksException {
+    public void shouldBeAbleToImportUsingFrom() {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
@@ -145,7 +147,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldBeAbleToAliasImportUsingFrom() throws SnacksException {
+    public void shouldBeAbleToAliasImportUsingFrom() {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
@@ -157,18 +159,18 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldTranslateTypedFunction() throws SnacksException {
+    public void shouldTranslateTypedFunction() {
         translate(environment, "double = (x:Integer):Integer -> x * 2");
         assertThat(typeOf("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
     }
 
     @Test(expected = TypeException.class)
-    public void shouldNotApplyToDouble() throws SnacksException {
+    public void shouldNotApplyToDouble() {
         translate(environment, "double = (x:Integer :: Integer -> x * 2) 2.2");
     }
 
     @Test
-    public void shouldTranslateUntypedFunction() throws SnacksException {
+    public void shouldTranslateUntypedFunction() {
         translate(environment, "double = (x) -> x * 2");
         assertThat(typeOf("double"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
@@ -178,24 +180,24 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldTranslateUntypedFunctionWithMultipleArguments() throws SnacksException {
+    public void shouldTranslateUntypedFunctionWithMultipleArguments() {
         translate(environment, "multiply = (x y) -> x * y");
         assertThat(typeOf("multiply"), equalTo(typeOf("snacks/lang", "*")));
     }
 
     @Test(expected = TypeException.class)
-    public void shouldNotTranslateFunctionWithIncompatibleResultType() throws SnacksException {
+    public void shouldNotTranslateFunctionWithIncompatibleResultType() {
         translate(environment, "multiply = (x y):String -> x * y");
     }
 
     @Test
-    public void shouldTranslatePartiallyTypedFunction() throws SnacksException {
+    public void shouldTranslatePartiallyTypedFunction() {
         translate(environment, "multiply = (x:String y) -> x * y");
         assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
     }
 
     @Test
-    public void shouldTranslateUnaryPlus() throws SnacksException {
+    public void shouldTranslateUnaryPlus() {
         translate(environment, "positive = (x) -> +x");
         assertThat(typeOf("positive"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
@@ -204,7 +206,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldTranslateUnaryMinus() throws SnacksException {
+    public void shouldTranslateUnaryMinus() {
         translate(environment, "negative = (x) -> -x");
         assertThat(typeOf("negative"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
@@ -213,24 +215,24 @@ public class TranslatorTest {
     }
 
     @Test(expected = TypeException.class)
-    public void shouldNotTranslateNegativeString() throws SnacksException {
+    public void shouldNotTranslateNegativeString() {
         translate(environment, "negative = (x:String) -> -x");
     }
 
     @Test
-    public void shouldTranslateVar() throws SnacksException {
+    public void shouldTranslateVar() {
         translate(environment, "waffles = { var test = 2; return test; }()");
         assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
     }
 
     @Test
-    public void shouldTranslateInstantiable() throws SnacksException {
+    public void shouldTranslateInstantiable() {
         translate(environment, "answer = () -> 42");
         assertThat(typeOf("answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
     }
 
     @Test
-    public void variableShouldOverrideSymbolInParentScope() throws SnacksException {
+    public void variableShouldOverrideSymbolInParentScope() {
         translate(
             environment,
             "waffles = 24",
@@ -242,15 +244,15 @@ public class TranslatorTest {
         assertThat(typeOf("example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
     }
 
-    private Type typeOf(String name) throws SnacksException {
+    private Type typeOf(String name) {
         return typeOf("test", name);
     }
 
-    private Type typeOf(String module, String name) throws SnacksException {
+    private Type typeOf(String module, String name) {
         return environment.getReference(locator(module, name)).getType();
     }
 
-    private void define(String name, Type type) throws SnacksException {
+    private void define(String name, Type type) {
         environment.define(reference("test/example", name, type));
     }
 }

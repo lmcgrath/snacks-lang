@@ -1,11 +1,9 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.Type.VOID_TYPE;
-import static snacks.lang.compiler.Type.func;
+import static snacks.lang.compiler.ast.Type.VOID_TYPE;
+import static snacks.lang.compiler.ast.Type.func;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
 
 public class Instantiable implements AstNode {
 
@@ -16,7 +14,7 @@ public class Instantiable implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitInstantiable(this);
     }
 

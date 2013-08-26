@@ -4,7 +4,6 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.io.PrintStream;
 import java.util.Set;
-import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.*;
 import snacks.lang.util.PrinterState;
 
@@ -17,105 +16,101 @@ public class AstPrinter implements AstVisitor {
     }
 
     public void print(Set<AstNode> nodes) {
-        try {
-            for (AstNode node : nodes) {
-                print(node);
-            }
-        } catch (SnacksException exception) {
-            state.print(exception);
+        for (AstNode node : nodes) {
+            print(node);
         }
     }
 
     @Override
-    public void visitApply(Apply node) throws SnacksException {
+    public void visitApply(Apply node) {
         print(node.getFunction());
         print(node.getArgument());
     }
 
     @Override
-    public void visitArgument(Variable node) throws SnacksException {
+    public void visitArgument(Variable node) {
         state.println("name: " + node.getName());
         state.println("type: " + node.getType());
     }
 
     @Override
-    public void visitBooleanConstant(BooleanConstant node) throws SnacksException {
+    public void visitBooleanConstant(BooleanConstant node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitDeclarationLocator(DeclarationLocator locator) throws SnacksException {
+    public void visitDeclarationLocator(DeclarationLocator locator) {
         value("module: " + locator.getModule());
         value("name: " + locator.getName());
     }
 
     @Override
-    public void visitDeclaredExpression(DeclaredExpression node) throws SnacksException {
+    public void visitDeclaredExpression(DeclaredExpression node) {
         state.println("name: '" + node.getName() + "'");
         print(node.getBody());
     }
 
     @Override
-    public void visitDoubleConstant(DoubleConstant node) throws SnacksException {
+    public void visitDoubleConstant(DoubleConstant node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitFunction(Function node) throws SnacksException {
+    public void visitFunction(Function node) {
         state.println("type: " + node.getType());
         state.println("variable: " + node.getVariable());
         print(node.getExpression());
     }
 
     @Override
-    public void visitIntegerConstant(IntegerConstant node) throws SnacksException {
+    public void visitIntegerConstant(IntegerConstant node) {
         value(node.getValue());
     }
 
     @Override
-    public void visitInstantiable(Instantiable node) throws SnacksException {
+    public void visitInstantiable(Instantiable node) {
         print(node.getBody());
     }
 
     @Override
-    public void visitInstantiate(Instantiate instantiate) throws SnacksException {
+    public void visitInstantiate(Instantiate instantiate) {
         print(instantiate.getInvokable());
     }
 
     @Override
-    public void visitReference(Reference node) throws SnacksException {
+    public void visitReference(Reference node) {
         state.println("locator: '" + node.getLocator() + "'");
     }
 
     @Override
-    public void visitResult(Result node) throws SnacksException {
+    public void visitResult(Result node) {
         print(node.getValue());
     }
 
     @Override
-    public void visitSequence(Sequence sequence) throws SnacksException {
+    public void visitSequence(Sequence sequence) {
         for (AstNode element : sequence.getElements()) {
             print(element);
         }
     }
 
     @Override
-    public void visitStringConstant(StringConstant node) throws SnacksException {
+    public void visitStringConstant(StringConstant node) {
         value("\"" + escapeJava(node.getValue()) + "\"");
     }
 
     @Override
-    public void visitVariableDeclaration(VariableDeclaration node) throws SnacksException {
+    public void visitVariableDeclaration(VariableDeclaration node) {
         value("name: " + node.getName());
         print(node.getValue());
     }
 
     @Override
-    public void visitVariableLocator(VariableLocator locator) throws SnacksException {
+    public void visitVariableLocator(VariableLocator locator) {
         value("name: " + locator.getName());
     }
 
-    private void print(AstNode node) throws SnacksException {
+    private void print(AstNode node) {
         state.begin(node);
         state.println("type: " + node.getType());
         node.accept(this);

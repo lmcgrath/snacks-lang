@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.SnacksException;
 
 public class FromImport extends Symbol implements Visitable {
 
@@ -20,7 +19,7 @@ public class FromImport extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitFromImport(this);
     }
 

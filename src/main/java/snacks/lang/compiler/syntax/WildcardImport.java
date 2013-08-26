@@ -2,7 +2,6 @@ package snacks.lang.compiler.syntax;
 
 import java.util.Objects;
 import beaver.Symbol;
-import snacks.lang.SnacksException;
 
 public class WildcardImport extends Symbol implements Visitable {
 
@@ -13,7 +12,7 @@ public class WildcardImport extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitWildcardImport(this);
     }
 

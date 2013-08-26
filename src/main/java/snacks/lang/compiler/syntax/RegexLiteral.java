@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.Set;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.SnacksException;
 
 public class RegexLiteral extends Symbol implements Visitable {
 
@@ -18,7 +17,7 @@ public class RegexLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) throws SnacksException {
+    public void accept(SyntaxVisitor visitor) {
         visitor.visitRegexLiteral(this);
     }
 

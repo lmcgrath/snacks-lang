@@ -3,13 +3,10 @@
 %package "snacks.lang.compiler";
 %class "Parser";
 %import "java.io.IOException",
-        "java.util.List",
         "java.util.Set",
-        "snacks.lang.SnacksException",
         "snacks.lang.compiler.syntax.*",
         "static snacks.lang.compiler.SyntaxFactory.*",
-        "static java.util.Arrays.*",
-        "static java.util.Collections.*";
+        "static java.util.Arrays.*";
 
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
@@ -24,19 +21,19 @@
 %init {: report = new ParserEvents(); :};
 
 %embed {:
-    public Symbol parse(Scanner input) throws SnacksException {
+    public Symbol parse(Scanner input) {
         try {
             return (Symbol) super.parse(input);
         } catch (IOException | Parser.Exception exception) {
-            throw new SnacksException(exception);
+            throw new ParseException(exception);
         }
     }
 
-    public Symbol parse(Scanner input, short altGoal) throws SnacksException {
+    public Symbol parse(Scanner input, short altGoal) {
         try {
             return (Symbol) super.parse(input, altGoal);
         } catch (IOException | Parser.Exception exception) {
-            throw new SnacksException(exception);
+            throw new ParseException(exception);
         }
     }
 :};

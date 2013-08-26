@@ -1,8 +1,6 @@
 package snacks.lang.compiler.ast;
 
 import java.util.Objects;
-import snacks.lang.SnacksException;
-import snacks.lang.compiler.Type;
 
 public class Result implements AstNode {
 
@@ -13,7 +11,7 @@ public class Result implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) throws SnacksException {
+    public void accept(AstVisitor visitor) {
         visitor.visitResult(this);
     }
 
