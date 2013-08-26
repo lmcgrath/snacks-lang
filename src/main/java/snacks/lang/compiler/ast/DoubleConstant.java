@@ -15,8 +15,8 @@ public class DoubleConstant implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitDoubleConstant(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitDoubleConstant(this);
     }
 
     @Override

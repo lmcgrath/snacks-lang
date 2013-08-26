@@ -16,8 +16,8 @@ public class TruthyCase extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitTruthyCase(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitTruthyCase(this);
     }
 
     @Override

@@ -9,374 +9,333 @@ import snacks.lang.SnacksException;
 import snacks.lang.compiler.syntax.*;
 import snacks.lang.util.PrinterState;
 
-public class SyntaxPrinter implements SyntaxVisitor<Void, PrinterState> {
+public class SyntaxPrinter implements SyntaxVisitor {
 
-    public void print(Object node, PrintStream out) {
+    private final PrinterState state;
+
+    public SyntaxPrinter(PrintStream out) {
+        state = new PrinterState(out);
+    }
+
+    public void print(Object node) {
         try {
-            print((Symbol) node, new PrinterState(out));
+            print((Symbol) node);
         } catch (SnacksException exception) {
-            exception.printStackTrace(out);
+            state.print(exception);
         }
     }
 
     @Override
-    public Void visitAccessExpression(AccessExpression node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
+    public void visitAccessExpression(AccessExpression node) throws SnacksException {
+        print(node.getExpression());
         state.println("property: " + node.getProperty());
-        return null;
     }
 
     @Override
-    public Void visitAnnotated(Annotated node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
+    public void visitAnnotated(Annotated node) throws SnacksException {
+        print(node.getExpression());
         for (Symbol annotation : node.getAnnotations()) {
-            print(annotation, state);
+            print(annotation);
         }
-        return null;
     }
 
     @Override
-    public Void visitAnnotation(Annotation node, PrinterState state) throws SnacksException {
-        print(node.getName(), state);
-        print(node.getValue(), state);
-        return null;
+    public void visitAnnotation(Annotation node) throws SnacksException {
+        print(node.getName());
+        print(node.getValue());
     }
 
     @Override
-    public Void visitApplyExpression(ApplyExpression node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        print(node.getArgument(), state);
-        return null;
+    public void visitApplyExpression(ApplyExpression node) throws SnacksException {
+        print(node.getExpression());
+        print(node.getArgument());
     }
 
     @Override
-    public Void visitArgument(Argument node, PrinterState state) throws SnacksException {
+    public void visitArgument(Argument node) throws SnacksException {
         state.println("name: " + node.getName());
-        print(node.getType(), state);
-        return null;
+        print(node.getType());
     }
 
     @Override
-    public Void visitBinaryExpression(BinaryExpression node, PrinterState state) throws SnacksException {
+    public void visitBinaryExpression(BinaryExpression node) throws SnacksException {
         state.println("operator: " + node.getOperator());
-        print(node.getLeft(), state);
-        print(node.getRight(), state);
-        return null;
+        print(node.getLeft());
+        print(node.getRight());
     }
 
     @Override
-    public Void visitBlock(Block node, PrinterState state) throws SnacksException {
+    public void visitBlock(Block node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitBooleanLiteral(BooleanLiteral node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitBooleanLiteral(BooleanLiteral node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitCharacterLiteral(CharacterLiteral node, PrinterState state) throws SnacksException {
-        value("'" + node.getValue() + "'", state);
-        return null;
+    public void visitCharacterLiteral(CharacterLiteral node) throws SnacksException {
+        value("'" + node.getValue() + "'");
     }
 
     @Override
-    public Void visitConditional(Conditional node, PrinterState state) throws SnacksException {
+    public void visitConditional(Conditional node) throws SnacksException {
         for (Symbol element : node.getCases()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitDeclaration(Declaration node, PrinterState state) throws SnacksException {
+    public void visitDeclaration(Declaration node) throws SnacksException {
         state.begin(node);
         state.println("name: " + node.getName());
-        print(node.getBody(), state);
+        print(node.getBody());
         state.end();
-        return null;
     }
 
     @Override
-    public Void visitDefaultCase(DefaultCase node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        return null;
+    public void visitDefaultCase(DefaultCase node) throws SnacksException {
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitDoubleLiteral(DoubleLiteral node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitDoubleLiteral(DoubleLiteral node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitEmbraceCase(EmbraceCase node, PrinterState state) throws SnacksException {
+    public void visitEmbraceCase(EmbraceCase node) throws SnacksException {
         state.println("argument: " + node.getArgument());
-        print(node.getType(), state);
-        print(node.getExpression(), state);
-        return null;
+        print(node.getType());
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitEnsureCase(EnsureCase node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        return null;
+    public void visitEnsureCase(EnsureCase node) throws SnacksException {
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitExceptional(Exceptional node, PrinterState state) throws SnacksException {
+    public void visitExceptional(Exceptional node) throws SnacksException {
         for (Symbol useCase : node.getUseCases()) {
-            print(useCase, state);
+            print(useCase);
         }
-        print(node.getExpression(), state);
+        print(node.getExpression());
         for (Symbol embraceCase : node.getEmbraceCases()) {
-            print(embraceCase, state);
+            print(embraceCase);
         }
-        print(node.getEnsureCase(), state);
-        return null;
+        print(node.getEnsureCase());
     }
 
     @Override
-    public Void visitFalsyCase(FalsyCase node, PrinterState state) throws SnacksException {
-        print(node.getCondition(), state);
-        print(node.getExpression(), state);
-        return null;
+    public void visitFalsyCase(FalsyCase node) throws SnacksException {
+        print(node.getCondition());
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitFromImport(FromImport node, PrinterState state) throws SnacksException {
+    public void visitFromImport(FromImport node) throws SnacksException {
         state.println("module: " + node.getModule());
         for (Symbol subImport : node.getSubImports()) {
-            print(subImport, state);
+            print(subImport);
         }
-        return null;
     }
 
     @Override
-    public Void visitFunctionLiteral(FunctionLiteral node, PrinterState state) throws SnacksException {
-        print(node.getArgument(), state);
-        print(node.getType(), state);
-        print(node.getBody(), state);
-        return null;
+    public void visitFunctionLiteral(FunctionLiteral node) throws SnacksException {
+        print(node.getArgument());
+        print(node.getType());
+        print(node.getBody());
     }
 
     @Override
-    public Void visitHurl(Hurl node, PrinterState state) throws SnacksException {
+    public void visitHurl(Hurl node) throws SnacksException {
         state.begin(node);
-        print(node.getExpression(), state);
+        print(node.getExpression());
         state.end();
-        return null;
     }
 
     @Override
-    public Void visitIdentifier(Identifier node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitIdentifier(Identifier node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitImport(Import node, PrinterState state) throws SnacksException {
+    public void visitImport(Import node) throws SnacksException {
         state.println("module: " + node.getModule());
         state.println("alias: " + node.getAlias());
-        return null;
     }
 
     @Override
-    public Void visitIndexExpression(IndexExpression node, PrinterState state) throws SnacksException {
+    public void visitIndexExpression(IndexExpression node) throws SnacksException {
         for (Symbol argument : node.getArguments()) {
-            print(argument, state);
+            print(argument);
         }
-        return null;
     }
 
     @Override
-    public Void visitIntegerLiteral(IntegerLiteral node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitIntegerLiteral(IntegerLiteral node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitInstantiableLiteral(InstantiableLiteral node, PrinterState state) throws SnacksException {
-        value(node.getExpression(), state);
-        return null;
+    public void visitInstantiableLiteral(InstantiableLiteral node) throws SnacksException {
+        value(node.getExpression());
     }
 
     @Override
-    public Void visitInstantiationExpression(InstantiationExpression node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        return null;
+    public void visitInstantiationExpression(InstantiationExpression node) throws SnacksException {
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitIteratorLoop(IteratorLoop node, PrinterState state) throws SnacksException {
+    public void visitIteratorLoop(IteratorLoop node) throws SnacksException {
         state.println("variable: " + node.getVariable());
-        print(node.getExpression(), state);
-        print(node.getAction(), state);
-        print(node.getDefaultCase(), state);
-        return null;
+        print(node.getExpression());
+        print(node.getAction());
+        print(node.getDefaultCase());
     }
 
     @Override
-    public Void visitListLiteral(ListLiteral node, PrinterState state) throws SnacksException {
+    public void visitListLiteral(ListLiteral node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitLoop(Loop node, PrinterState state) throws SnacksException {
-        print(node.getLoopCase(), state);
-        print(node.getDefaultCase(), state);
-        return null;
+    public void visitLoop(Loop node) throws SnacksException {
+        print(node.getLoopCase());
+        print(node.getDefaultCase());
     }
 
     @Override
-    public Void visitMapEntry(MapEntry node, PrinterState state) throws SnacksException {
-        print(node.getKey(), state);
-        print(node.getValue(), state);
-        return null;
+    public void visitMapEntry(MapEntry node) throws SnacksException {
+        print(node.getKey());
+        print(node.getValue());
     }
 
     @Override
-    public Void visitMapLiteral(MapLiteral node, PrinterState state) throws SnacksException {
+    public void visitMapLiteral(MapLiteral node) throws SnacksException {
         for (Symbol entry : node.getEntries()) {
-            print(entry, state);
+            print(entry);
         }
-        return null;
     }
 
     @Override
-    public Void visitModule(Module node, PrinterState state) throws SnacksException {
+    public void visitModule(Module node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitNothingLiteral(NothingLiteral node, PrinterState state) throws SnacksException {
-        return null;
+    public void visitNothingLiteral(NothingLiteral node) throws SnacksException {
     }
 
     @Override
-    public Void visitQualifiedIdentifier(QualifiedIdentifier node, PrinterState state) throws SnacksException {
+    public void visitQualifiedIdentifier(QualifiedIdentifier node) throws SnacksException {
         state.println("identifier: " + node);
-        return null;
     }
 
     @Override
-    public Void visitRegexLiteral(RegexLiteral node, PrinterState state) throws SnacksException {
+    public void visitRegexLiteral(RegexLiteral node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
         state.println("options: [" + join(node.getOptions(), ", ") + "]");
-        return null;
     }
 
     @Override
-    public Void visitResult(Result node, PrinterState state) throws SnacksException {
-        print(node.getExpression(), state);
-        return null;
+    public void visitResult(Result node) throws SnacksException {
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitSetLiteral(SetLiteral node, PrinterState state) throws SnacksException {
+    public void visitSetLiteral(SetLiteral node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitStringInterpolation(StringInterpolation node, PrinterState state) throws SnacksException {
+    public void visitStringInterpolation(StringInterpolation node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitStringLiteral(StringLiteral node, PrinterState state) throws SnacksException {
-        value('"' + escapeJava(node.getValue()) + '"', state);
-        return null;
+    public void visitStringLiteral(StringLiteral node) throws SnacksException {
+        value('"' + escapeJava(node.getValue()) + '"');
     }
 
     @Override
-    public Void visitSubImport(SubImport node, PrinterState state) throws SnacksException {
+    public void visitSubImport(SubImport node) throws SnacksException {
         state.println("expression: " + node.getExpression());
         state.println("alias: " + node.getAlias());
-        return null;
     }
 
     @Override
-    public Void visitSymbolLiteral(SymbolLiteral node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitSymbolLiteral(SymbolLiteral node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitTruthyCase(TruthyCase node, PrinterState state) throws SnacksException {
-        print(node.getCondition(), state);
-        print(node.getExpression(), state);
-        return null;
+    public void visitTruthyCase(TruthyCase node) throws SnacksException {
+        print(node.getCondition());
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitTupleLiteral(TupleLiteral node, PrinterState state) throws SnacksException {
+    public void visitTupleLiteral(TupleLiteral node) throws SnacksException {
         for (Symbol element : node.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitTypeSpec(TypeSpec node, PrinterState state) throws SnacksException {
-        print(node.getType(), state);
-        return null;
+    public void visitTypeSpec(TypeSpec node) throws SnacksException {
+        print(node.getType());
     }
 
     @Override
-    public Void visitUsing(Using node, PrinterState state) throws SnacksException {
+    public void visitUsing(Using node) throws SnacksException {
         if (node.getName() != null) {
             state.println("name: " + node.getName());
         }
-        print(node.getExpression(), state);
-        return null;
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitVar(Var node, PrinterState state) throws SnacksException {
+    public void visitVar(Var node) throws SnacksException {
         state.println("name: " + node.getName());
-        print(node.getValue(), state);
-        return null;
+        print(node.getValue());
     }
 
     @Override
-    public Void visitWildcardImport(WildcardImport node, PrinterState state) throws SnacksException {
+    public void visitWildcardImport(WildcardImport node) throws SnacksException {
         state.println("module: " + node.getModule());
-        return null;
     }
 
-    private void print(Symbol node, PrinterState state) throws SnacksException {
+    private void print(Symbol node) throws SnacksException {
         if (node != null) {
-            print((Visitable) node, state);
+            print((Visitable) node);
         }
     }
 
-    private void print(Visitable node, PrinterState state) throws SnacksException {
+    private void print(Visitable node) throws SnacksException {
         if (node != null) {
             state.begin(node);
-            node.accept(this, state);
+            node.accept(this);
             state.end();
         }
     }
 
-    private void value(Object value, PrinterState state) {
+    private void value(Object value) {
         state.println("value: " + value);
     }
 }

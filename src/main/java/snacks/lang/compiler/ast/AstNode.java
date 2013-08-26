@@ -5,7 +5,7 @@ import snacks.lang.compiler.Type;
 
 public interface AstNode {
 
-    <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException;
+    void accept(AstVisitor visitor) throws SnacksException;
 
     Type getType();
 }

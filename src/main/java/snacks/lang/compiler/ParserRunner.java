@@ -29,7 +29,7 @@ public class ParserRunner implements CommandLineRunner {
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
-        SyntaxPrinter printer = new SyntaxPrinter();
+        SyntaxPrinter printer = new SyntaxPrinter(out);
         String line;
         try {
             while (null != (line = reader.readLine())) {
@@ -39,7 +39,7 @@ public class ParserRunner implements CommandLineRunner {
                     } else {
                         printer.print(parser.parse(
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
-                        ), out);
+                        ));
                     }
                 } catch (SnacksException | ScannerException exception) {
                     exception.printStackTrace(out);

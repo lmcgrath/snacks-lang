@@ -2,6 +2,7 @@ package snacks.lang.compiler.ast;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.SnacksException;
 
 public class DeclarationLocator implements Locator {
 
@@ -11,6 +12,11 @@ public class DeclarationLocator implements Locator {
     public DeclarationLocator(String module, String name) {
         this.module = module;
         this.name = name;
+    }
+
+    @Override
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitDeclarationLocator(this);
     }
 
     @Override
@@ -26,6 +32,14 @@ public class DeclarationLocator implements Locator {
         } else {
             return false;
         }
+    }
+
+    public String getModule() {
+        return module;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

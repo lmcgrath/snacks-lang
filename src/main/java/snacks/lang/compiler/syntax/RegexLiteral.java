@@ -18,8 +18,8 @@ public class RegexLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitRegexLiteral(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitRegexLiteral(this);
     }
 
     @Override

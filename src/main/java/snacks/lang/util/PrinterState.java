@@ -26,6 +26,10 @@ public class PrinterState {
         dedent();
     }
 
+    public void print(Throwable exception) {
+        exception.printStackTrace(out);
+    }
+
     public void println(Object value) {
         out.print(getIndent());
         out.println(" " + value);

@@ -35,8 +35,8 @@ public class Reference implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitReference(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitReference(this);
     }
 
     @Override

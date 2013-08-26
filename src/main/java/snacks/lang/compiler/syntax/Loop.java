@@ -16,8 +16,8 @@ public class Loop extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitLoop(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitLoop(this);
     }
 
     @Override

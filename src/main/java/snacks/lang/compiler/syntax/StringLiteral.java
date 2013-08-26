@@ -15,8 +15,8 @@ public class StringLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitStringLiteral(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitStringLiteral(this);
     }
 
     @Override

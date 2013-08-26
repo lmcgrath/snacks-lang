@@ -12,8 +12,8 @@ public class Instantiate implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitInvoke(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitInstantiate(this);
     }
 
     public AstNode getInvokable() {

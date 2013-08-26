@@ -8,119 +8,121 @@ import snacks.lang.SnacksException;
 import snacks.lang.compiler.ast.*;
 import snacks.lang.util.PrinterState;
 
-public class AstPrinter implements AstVisitor<Void, PrinterState> {
+public class AstPrinter implements AstVisitor {
 
-    public void print(Set<AstNode> nodes, PrintStream out) {
-        PrinterState state = new PrinterState(out);
+    private final PrinterState state;
+
+    public AstPrinter(PrintStream out) {
+        state = new PrinterState(out);
+    }
+
+    public void print(Set<AstNode> nodes) {
         try {
             for (AstNode node : nodes) {
-                print(node, state);
+                print(node);
             }
         } catch (SnacksException exception) {
-            exception.printStackTrace(out);
+            state.print(exception);
         }
     }
 
     @Override
-    public Void visitApply(Apply node, PrinterState state) throws SnacksException {
-        print(node.getFunction(), state);
-        print(node.getArgument(), state);
-        return null;
+    public void visitApply(Apply node) throws SnacksException {
+        print(node.getFunction());
+        print(node.getArgument());
     }
 
     @Override
-    public Void visitArgument(Variable node, PrinterState state) throws SnacksException {
+    public void visitArgument(Variable node) throws SnacksException {
         state.println("name: " + node.getName());
         state.println("type: " + node.getType());
-        return null;
     }
 
     @Override
-    public Void visitBooleanConstant(BooleanConstant node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitBooleanConstant(BooleanConstant node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitDeclaredExpression(DeclaredExpression node, PrinterState state) throws SnacksException {
+    public void visitDeclarationLocator(DeclarationLocator locator) throws SnacksException {
+        value("module: " + locator.getModule());
+        value("name: " + locator.getName());
+    }
+
+    @Override
+    public void visitDeclaredExpression(DeclaredExpression node) throws SnacksException {
         state.println("name: '" + node.getName() + "'");
-        print(node.getBody(), state);
-        return null;
+        print(node.getBody());
     }
 
     @Override
-    public Void visitDoubleConstant(DoubleConstant node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitDoubleConstant(DoubleConstant node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitFunction(Function node, PrinterState state) throws SnacksException {
+    public void visitFunction(Function node) throws SnacksException {
         state.println("type: " + node.getType());
         state.println("variable: " + node.getVariable());
-        print(node.getExpression(), state);
-        return null;
+        print(node.getExpression());
     }
 
     @Override
-    public Void visitIntegerConstant(IntegerConstant node, PrinterState state) throws SnacksException {
-        value(node.getValue(), state);
-        return null;
+    public void visitIntegerConstant(IntegerConstant node) throws SnacksException {
+        value(node.getValue());
     }
 
     @Override
-    public Void visitInvokable(Instantiable node, PrinterState state) throws SnacksException {
-        print(node.getBody(), state);
-        return null;
+    public void visitInstantiable(Instantiable node) throws SnacksException {
+        print(node.getBody());
     }
 
     @Override
-    public Void visitInvoke(Instantiate instantiate, PrinterState state) throws SnacksException {
-        print(instantiate.getInvokable(), state);
-        return null;
+    public void visitInstantiate(Instantiate instantiate) throws SnacksException {
+        print(instantiate.getInvokable());
     }
 
     @Override
-    public Void visitReference(Reference node, PrinterState state) throws SnacksException {
+    public void visitReference(Reference node) throws SnacksException {
         state.println("locator: '" + node.getLocator() + "'");
-        return null;
     }
 
     @Override
-    public Void visitResult(Result result, PrinterState state) throws SnacksException {
-        print(result.getValue(), state);
-        return null;
+    public void visitResult(Result node) throws SnacksException {
+        print(node.getValue());
     }
 
     @Override
-    public Void visitSequence(Sequence sequence, PrinterState state) throws SnacksException {
+    public void visitSequence(Sequence sequence) throws SnacksException {
         for (AstNode element : sequence.getElements()) {
-            print(element, state);
+            print(element);
         }
-        return null;
     }
 
     @Override
-    public Void visitStringConstant(StringConstant node, PrinterState state) throws SnacksException {
-        value("\"" + escapeJava(node.getValue()) + "\"", state);
-        return null;
+    public void visitStringConstant(StringConstant node) throws SnacksException {
+        value("\"" + escapeJava(node.getValue()) + "\"");
     }
 
     @Override
-    public Void visitVariableDeclaration(VariableDeclaration node, PrinterState state) throws SnacksException {
-        value("name: " + node.getName(), state);
-        print(node.getValue(), state);
-        return null;
+    public void visitVariableDeclaration(VariableDeclaration node) throws SnacksException {
+        value("name: " + node.getName());
+        print(node.getValue());
     }
 
-    private void print(AstNode node, PrinterState state) throws SnacksException {
+    @Override
+    public void visitVariableLocator(VariableLocator locator) throws SnacksException {
+        value("name: " + locator.getName());
+    }
+
+    private void print(AstNode node) throws SnacksException {
         state.begin(node);
         state.println("type: " + node.getType());
-        node.accept(this, state);
+        node.accept(this);
         state.end();
     }
 
-    private void value(Object value, PrinterState state) {
+    private void value(Object value) {
         state.println("value: " + value);
     }
 }

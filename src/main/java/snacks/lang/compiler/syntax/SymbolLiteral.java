@@ -13,8 +13,8 @@ public class SymbolLiteral extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitSymbolLiteral(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitSymbolLiteral(this);
     }
 
     @Override

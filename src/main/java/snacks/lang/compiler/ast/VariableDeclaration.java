@@ -16,8 +16,8 @@ public class VariableDeclaration implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitVariableDeclaration(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitVariableDeclaration(this);
     }
 
     @Override

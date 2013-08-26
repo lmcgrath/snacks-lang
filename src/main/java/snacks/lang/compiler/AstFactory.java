@@ -40,8 +40,8 @@ public final class AstFactory {
         return new Instantiable(body);
     }
 
-    public static AstNode instantiate(AstNode invokable) {
-        return new Instantiate(invokable);
+    public static AstNode instantiate(AstNode instantiable) {
+        return new Instantiate(instantiable);
     }
 
     public static Locator locator(String name) {

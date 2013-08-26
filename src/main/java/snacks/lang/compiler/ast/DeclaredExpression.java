@@ -42,8 +42,8 @@ public class DeclaredExpression implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitDeclaredExpression(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitDeclaredExpression(this);
     }
 
     @Override

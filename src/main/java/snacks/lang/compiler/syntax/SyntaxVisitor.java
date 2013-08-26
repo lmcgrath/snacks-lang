@@ -2,99 +2,99 @@ package snacks.lang.compiler.syntax;
 
 import snacks.lang.SnacksException;
 
-public interface SyntaxVisitor<R, S> {
+public interface SyntaxVisitor {
 
-    R visitAccessExpression(AccessExpression node, S state) throws SnacksException;
+    void visitAccessExpression(AccessExpression node) throws SnacksException;
 
-    R visitAnnotated(Annotated node, S state) throws SnacksException;
+    void visitAnnotated(Annotated node) throws SnacksException;
 
-    R visitAnnotation(Annotation node, S state) throws SnacksException;
+    void visitAnnotation(Annotation node) throws SnacksException;
 
-    R visitApplyExpression(ApplyExpression node, S state) throws SnacksException;
+    void visitApplyExpression(ApplyExpression node) throws SnacksException;
 
-    R visitArgument(Argument node, S state) throws SnacksException;
+    void visitArgument(Argument node) throws SnacksException;
 
-    R visitBinaryExpression(BinaryExpression node, S state) throws SnacksException;
+    void visitBinaryExpression(BinaryExpression node) throws SnacksException;
 
-    R visitBlock(Block node, S state) throws SnacksException;
+    void visitBlock(Block node) throws SnacksException;
 
-    R visitBooleanLiteral(BooleanLiteral node, S state) throws SnacksException;
+    void visitBooleanLiteral(BooleanLiteral node) throws SnacksException;
 
-    R visitCharacterLiteral(CharacterLiteral node, S state) throws SnacksException;
+    void visitCharacterLiteral(CharacterLiteral node) throws SnacksException;
 
-    R visitConditional(Conditional node, S state) throws SnacksException;
+    void visitConditional(Conditional node) throws SnacksException;
 
-    R visitDeclaration(Declaration node, S state) throws SnacksException;
+    void visitDeclaration(Declaration node) throws SnacksException;
 
-    R visitDefaultCase(DefaultCase node, S state) throws SnacksException;
+    void visitDefaultCase(DefaultCase node) throws SnacksException;
 
-    R visitDoubleLiteral(DoubleLiteral node, S state) throws SnacksException;
+    void visitDoubleLiteral(DoubleLiteral node) throws SnacksException;
 
-    R visitEmbraceCase(EmbraceCase node, S state) throws SnacksException;
+    void visitEmbraceCase(EmbraceCase node) throws SnacksException;
 
-    R visitEnsureCase(EnsureCase node, S state) throws SnacksException;
+    void visitEnsureCase(EnsureCase node) throws SnacksException;
 
-    R visitExceptional(Exceptional node, S state) throws SnacksException;
+    void visitExceptional(Exceptional node) throws SnacksException;
 
-    R visitFalsyCase(FalsyCase node, S state) throws SnacksException;
+    void visitFalsyCase(FalsyCase node) throws SnacksException;
 
-    R visitFromImport(FromImport node, S state) throws SnacksException;
+    void visitFromImport(FromImport node) throws SnacksException;
 
-    R visitFunctionLiteral(FunctionLiteral node, S state) throws SnacksException;
+    void visitFunctionLiteral(FunctionLiteral node) throws SnacksException;
 
-    R visitHurl(Hurl node, S state) throws SnacksException;
+    void visitHurl(Hurl node) throws SnacksException;
 
-    R visitIdentifier(Identifier node, S state) throws SnacksException;
+    void visitIdentifier(Identifier node) throws SnacksException;
 
-    R visitImport(Import node, S state) throws SnacksException;
+    void visitImport(Import node) throws SnacksException;
 
-    R visitIndexExpression(IndexExpression node, S state) throws SnacksException;
+    void visitIndexExpression(IndexExpression node) throws SnacksException;
 
-    R visitIntegerLiteral(IntegerLiteral node, S state) throws SnacksException;
+    void visitIntegerLiteral(IntegerLiteral node) throws SnacksException;
 
-    R visitInstantiableLiteral(InstantiableLiteral node, S state) throws SnacksException;
+    void visitInstantiableLiteral(InstantiableLiteral node) throws SnacksException;
 
-    R visitInstantiationExpression(InstantiationExpression node, S state) throws SnacksException;
+    void visitInstantiationExpression(InstantiationExpression node) throws SnacksException;
 
-    R visitIteratorLoop(IteratorLoop node, S state) throws SnacksException;
+    void visitIteratorLoop(IteratorLoop node) throws SnacksException;
 
-    R visitListLiteral(ListLiteral node, S state) throws SnacksException;
+    void visitListLiteral(ListLiteral node) throws SnacksException;
 
-    R visitLoop(Loop node, S state) throws SnacksException;
+    void visitLoop(Loop node) throws SnacksException;
 
-    R visitMapEntry(MapEntry node, S state) throws SnacksException;
+    void visitMapEntry(MapEntry node) throws SnacksException;
 
-    R visitMapLiteral(MapLiteral node, S state) throws SnacksException;
+    void visitMapLiteral(MapLiteral node) throws SnacksException;
 
-    R visitModule(Module node, S state) throws SnacksException;
+    void visitModule(Module node) throws SnacksException;
 
-    R visitNothingLiteral(NothingLiteral node, S state) throws SnacksException;
+    void visitNothingLiteral(NothingLiteral node) throws SnacksException;
 
-    R visitQualifiedIdentifier(QualifiedIdentifier node, S state) throws SnacksException;
+    void visitQualifiedIdentifier(QualifiedIdentifier node) throws SnacksException;
 
-    R visitRegexLiteral(RegexLiteral node, S state) throws SnacksException;
+    void visitRegexLiteral(RegexLiteral node) throws SnacksException;
 
-    R visitResult(Result node, S state) throws SnacksException;
+    void visitResult(Result node) throws SnacksException;
 
-    R visitSetLiteral(SetLiteral node, S state) throws SnacksException;
+    void visitSetLiteral(SetLiteral node) throws SnacksException;
 
-    R visitStringInterpolation(StringInterpolation node, S state) throws SnacksException;
+    void visitStringInterpolation(StringInterpolation node) throws SnacksException;
 
-    R visitStringLiteral(StringLiteral node, S state) throws SnacksException;
+    void visitStringLiteral(StringLiteral node) throws SnacksException;
 
-    R visitSubImport(SubImport node, S state) throws SnacksException;
+    void visitSubImport(SubImport node) throws SnacksException;
 
-    R visitSymbolLiteral(SymbolLiteral node, S state) throws SnacksException;
+    void visitSymbolLiteral(SymbolLiteral node) throws SnacksException;
 
-    R visitTruthyCase(TruthyCase node, S state) throws SnacksException;
+    void visitTruthyCase(TruthyCase node) throws SnacksException;
 
-    R visitTupleLiteral(TupleLiteral node, S state) throws SnacksException;
+    void visitTupleLiteral(TupleLiteral node) throws SnacksException;
 
-    R visitTypeSpec(TypeSpec node, S state) throws SnacksException;
+    void visitTypeSpec(TypeSpec node) throws SnacksException;
 
-    R visitUsing(Using node, S state) throws SnacksException;
+    void visitUsing(Using node) throws SnacksException;
 
-    R visitVar(Var node, S state) throws SnacksException;
+    void visitVar(Var node) throws SnacksException;
 
-    R visitWildcardImport(WildcardImport node, S state) throws SnacksException;
+    void visitWildcardImport(WildcardImport node) throws SnacksException;
 }

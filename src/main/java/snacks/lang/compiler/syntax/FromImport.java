@@ -20,8 +20,8 @@ public class FromImport extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitFromImport(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitFromImport(this);
     }
 
     @Override

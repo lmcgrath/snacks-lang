@@ -19,6 +19,15 @@ public abstract class Type {
         return new TypeOperator("->", argument, result);
     }
 
+    public static Type result(Type functionType) {
+        List<Type> parameters = functionType.getParameters();
+        if (parameters.isEmpty()) {
+            return functionType;
+        } else {
+            return result(parameters.get(1));
+        }
+    }
+
     public static Type set(Type... possibilities) {
         return new TypeSet(asList(possibilities));
     }

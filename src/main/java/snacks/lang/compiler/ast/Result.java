@@ -13,8 +13,8 @@ public class Result implements AstNode {
     }
 
     @Override
-    public <R, S> R accept(AstVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitResult(this, state);
+    public void accept(AstVisitor visitor) throws SnacksException {
+        visitor.visitResult(this);
     }
 
     @Override

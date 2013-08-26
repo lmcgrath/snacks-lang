@@ -29,9 +29,8 @@ public class TranslatorRunner implements CommandLineRunner {
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
-        Translator translator = new Translator(new SymbolEnvironment());
-        TranslatorState state = translator.createState("cli");
-        AstPrinter printer = new AstPrinter();
+        Translator translator = new Translator(new SymbolEnvironment(), "cli");
+        AstPrinter printer = new AstPrinter(out);
         String line;
         try {
             while (null != (line = reader.readLine())) {
@@ -39,9 +38,9 @@ public class TranslatorRunner implements CommandLineRunner {
                     if ("quit".equals(line)) {
                         break;
                     } else {
-                        printer.print(translator.translate(state, parser.parse(
+                        printer.print(translator.translateModule(parser.parse(
                             new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
-                        )), out);
+                        )));
                     }
                 } catch (SnacksException | ScannerException exception) {
                     exception.printStackTrace(out);

@@ -13,53 +13,55 @@ public class SymbolEnvironment {
     private static final Map<String, List<Reference>> builtin = new HashMap<>();
 
     static {
-        op("Integer", INTEGER_TYPE);
-        op("String", STRING_TYPE);
-        op("Boolean", BOOLEAN_TYPE);
-        op("Double", DOUBLE_TYPE);
+        def("Integer", INTEGER_TYPE);
+        def("String", STRING_TYPE);
+        def("Boolean", BOOLEAN_TYPE);
+        def("Double", DOUBLE_TYPE);
 
-        op("+", func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        op("+", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        op("+", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        op("+", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("+", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        op("+", func(DOUBLE_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        op("+", func(STRING_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        op("+", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
-        op("+", func(STRING_TYPE, func(DOUBLE_TYPE, STRING_TYPE)));
-        op("+", func(STRING_TYPE, func(BOOLEAN_TYPE, STRING_TYPE)));
+        def("+", func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)));
+        def("+", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+        def("+", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
+        def("+", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("+", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
+        def("+", func(DOUBLE_TYPE, func(STRING_TYPE, STRING_TYPE)));
+        def("+", func(STRING_TYPE, func(STRING_TYPE, STRING_TYPE)));
+        def("+", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
+        def("+", func(STRING_TYPE, func(DOUBLE_TYPE, STRING_TYPE)));
+        def("+", func(STRING_TYPE, func(BOOLEAN_TYPE, STRING_TYPE)));
 
-        op("-", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        op("-", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("-", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("-", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
+        def("-", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+        def("-", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("-", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("-", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
 
-        op("*", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        op("*", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("*", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("*", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        op("*", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
+        def("*", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+        def("*", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("*", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("*", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
+        def("*", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
 
-        op("/", func(INTEGER_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        op("/", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("/", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        op("/", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
+        def("/", func(INTEGER_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
+        def("/", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("/", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
+        def("/", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
 
-        op("%", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
+        def("%", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
 
-        op("unary+", func(INTEGER_TYPE, INTEGER_TYPE));
-        op("unary+", func(DOUBLE_TYPE, DOUBLE_TYPE));
-        op("unary-", func(INTEGER_TYPE, INTEGER_TYPE));
-        op("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
-        op("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
+        def("unary+", func(INTEGER_TYPE, INTEGER_TYPE));
+        def("unary+", func(DOUBLE_TYPE, DOUBLE_TYPE));
+        def("unary-", func(INTEGER_TYPE, INTEGER_TYPE));
+        def("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
+        def("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
+
+        def("say", func(STRING_TYPE, VOID_TYPE));
     }
 
-    private static void op(String operator, Type type) {
-        if (!builtin.containsKey(operator)) {
-            builtin.put(operator, new ArrayList<Reference>());
+    private static void def(String name, Type type) {
+        if (!builtin.containsKey(name)) {
+            builtin.put(name, new ArrayList<Reference>());
         }
-        builtin.get(operator).add(reference("snacks/lang", operator, type));
+        builtin.get(name).add(reference("snacks/lang", name, type));
     }
 
     private final State state;

@@ -13,8 +13,8 @@ public class InstantiationExpression extends Symbol implements Visitable {
     }
 
     @Override
-    public <R, S> R accept(SyntaxVisitor<R, S> visitor, S state) throws SnacksException {
-        return visitor.visitInstantiationExpression(this, state);
+    public void accept(SyntaxVisitor visitor) throws SnacksException {
+        visitor.visitInstantiationExpression(this);
     }
 
     @Override

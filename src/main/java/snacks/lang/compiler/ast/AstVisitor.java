@@ -2,33 +2,37 @@ package snacks.lang.compiler.ast;
 
 import snacks.lang.SnacksException;
 
-public interface AstVisitor<R, S> {
+public interface AstVisitor {
 
-    R visitApply(Apply node, S state) throws SnacksException;
+    void visitApply(Apply node) throws SnacksException;
 
-    R visitArgument(Variable node, S state) throws SnacksException;
+    void visitArgument(Variable node) throws SnacksException;
 
-    R visitBooleanConstant(BooleanConstant node, S state) throws SnacksException;
+    void visitBooleanConstant(BooleanConstant node) throws SnacksException;
 
-    R visitDeclaredExpression(DeclaredExpression node, S state) throws SnacksException;
+    void visitDeclarationLocator(DeclarationLocator locator) throws SnacksException;
 
-    R visitDoubleConstant(DoubleConstant node, S state) throws SnacksException;
+    void visitDeclaredExpression(DeclaredExpression node) throws SnacksException;
 
-    R visitFunction(Function node, S state) throws SnacksException;
+    void visitDoubleConstant(DoubleConstant node) throws SnacksException;
 
-    R visitIntegerConstant(IntegerConstant node, S state) throws SnacksException;
+    void visitFunction(Function node) throws SnacksException;
 
-    R visitInvokable(Instantiable node, S state) throws SnacksException;
+    void visitIntegerConstant(IntegerConstant node) throws SnacksException;
 
-    R visitInvoke(Instantiate instantiate, S state) throws SnacksException;
+    void visitInstantiable(Instantiable node) throws SnacksException;
 
-    R visitReference(Reference node, S state) throws SnacksException;
+    void visitInstantiate(Instantiate instantiate) throws SnacksException;
 
-    R visitResult(Result result, S state) throws SnacksException;
+    void visitReference(Reference node) throws SnacksException;
 
-    R visitSequence(Sequence node, S state) throws SnacksException;
+    void visitResult(Result node) throws SnacksException;
 
-    R visitStringConstant(StringConstant node, S state) throws SnacksException;
+    void visitSequence(Sequence node) throws SnacksException;
 
-    R visitVariableDeclaration(VariableDeclaration node, S state) throws SnacksException;
+    void visitStringConstant(StringConstant node) throws SnacksException;
+
+    void visitVariableDeclaration(VariableDeclaration node) throws SnacksException;
+
+    void visitVariableLocator(VariableLocator locator) throws SnacksException;
 }
