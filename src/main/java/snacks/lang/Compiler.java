@@ -3,6 +3,8 @@ package snacks.lang;
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static snacks.lang.SnacksRuntime.APPLY_BOOTSTRAP;
+import static snacks.lang.SnacksRuntime.REFERENCE_BOOTSTRAP;
 import static snacks.lang.compiler.ast.Type.VOID_TYPE;
 import static snacks.lang.compiler.ast.Type.result;
 
@@ -12,7 +14,6 @@ import java.util.Set;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
-import snacks.lang.compiler.ast.Type;
 import snacks.lang.compiler.ast.*;
 
 public class Compiler implements AstVisitor {
@@ -49,7 +50,7 @@ public class Compiler implements AstVisitor {
     public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
-        codeBlock.invokevirtual(p(Expression.class), "apply", sig(Expression.class, Expression.class));
+        codeBlock.invokedynamic("apply", sig(Object.class, Object.class, Object.class), APPLY_BOOTSTRAP);
     }
 
     @Override
@@ -112,7 +113,7 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitReference(Reference node) {
         compile(node.getLocator());
-        codeBlock.invokedynamic("reference", sig(Expression.class, String.class, String.class), SnacksRuntime.REFERENCE_BOOTSTRAP);
+        codeBlock.invokedynamic("reference", sig(Object.class, String.class, String.class), REFERENCE_BOOTSTRAP);
     }
 
     @Override
@@ -127,10 +128,7 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitStringConstant(StringConstant node) {
-        codeBlock.newobj(p(SnacksString.class));
-        codeBlock.dup();
         codeBlock.ldc(node.getValue());
-        codeBlock.invokespecial(p(SnacksString.class), "<init>", sig(void.class, String.class));
     }
 
     @Override
