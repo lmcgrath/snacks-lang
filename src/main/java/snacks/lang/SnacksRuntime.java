@@ -33,8 +33,8 @@ public class SnacksRuntime {
     public static Expression reference(String module, String name) throws Exception {
         return new Expression() {
             @Override
-            public String apply(String argument) {
-                System.out.println(argument);
+            public Expression apply(Expression argument) {
+                System.out.println(((SnacksString) argument).getValue());
                 return argument;
             }
         };

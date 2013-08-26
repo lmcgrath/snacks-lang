@@ -49,7 +49,7 @@ public class Compiler implements AstVisitor {
     public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
-        codeBlock.invokevirtual(p(Expression.class), "apply", sig(String.class, String.class));
+        codeBlock.invokevirtual(p(Expression.class), "apply", sig(Expression.class, Expression.class));
     }
 
     @Override
@@ -127,7 +127,10 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitStringConstant(StringConstant node) {
+        codeBlock.newobj(p(SnacksString.class));
+        codeBlock.dup();
         codeBlock.ldc(node.getValue());
+        codeBlock.invokespecial(p(SnacksString.class), "<init>", sig(void.class, String.class));
     }
 
     @Override
