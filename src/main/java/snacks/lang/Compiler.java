@@ -9,7 +9,7 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static snacks.lang.compiler.ast.Type.isFunction;
 import static snacks.lang.compiler.ast.Type.isInstantiable;
-import static snacks.lang.compiler.ast.Type.isValuable;
+import static snacks.lang.compiler.ast.Type.isValue;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,6 +18,8 @@ import java.util.*;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.compiler.ast.*;
 
 public class Compiler implements AstVisitor {
@@ -90,7 +92,9 @@ public class Compiler implements AstVisitor {
         jiteClass.defineDefaultConstructor();
         jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
         block.getstatic(className, "instance", ci(Object.class));
-        if (isValuable(node.getType())) {
+        LabelNode returnValue = new LabelNode(new Label());
+        block.ifnonnull(returnValue);
+        if (isValue(node.getType())) {
             compile(node.getBody());
         } else {
             block.newobj(className);
@@ -98,10 +102,11 @@ public class Compiler implements AstVisitor {
             block.invokespecial(className, "<init>", sig(void.class));
         }
         block.putstatic(className, "instance", ci(Object.class));
+        block.label(returnValue);
         block.getstatic(className, "instance", ci(Object.class));
         block.areturn();
         jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
-        if (!isValuable(node.getType())) {
+        if (!isValue(node.getType())) {
             compile(node.getBody());
         }
         acceptClass();

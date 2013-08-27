@@ -31,7 +31,7 @@ public abstract class Type {
         return isFunction(type) && VOID_TYPE == type.getParameters().get(0);
     }
 
-    public static boolean isValuable(Type type) {
+    public static boolean isValue(Type type) {
         return !type.getName().startsWith("#") && type.getParameters().isEmpty();
     }
 
