@@ -1,9 +1,8 @@
 package snacks.lang;
 
-import static me.qmx.jitescript.util.CodegenUtils.c;
-import static me.qmx.jitescript.util.CodegenUtils.ci;
-import static me.qmx.jitescript.util.CodegenUtils.p;
-import static me.qmx.jitescript.util.CodegenUtils.sig;
+import static java.util.Arrays.asList;
+import static me.qmx.jitescript.util.CodegenUtils.*;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
@@ -25,18 +24,18 @@ import snacks.lang.compiler.ast.*;
 public class Compiler implements AstVisitor {
 
     private static final Map<String, String> names = new HashMap<>();
-
     static {
         names.put("*", "Multiply");
         names.put("+", "Plus");
     }
-
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
+    private int closures;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
+        closures = 0;
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -85,27 +84,10 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitDeclaredExpression(final DeclaredExpression node) {
-        String className = node.getModule() + "/" + javafy(node.getName());
-        JiteClass jiteClass = beginClass(className, interfacesFor(node.getType()));
-        CodeBlock block = beginBlock();
+    public void visitDeclaredExpression(DeclaredExpression node) {
+        JiteClass jiteClass = beginClass(node.getModule() + "/" + javafy(node.getName()), interfacesFor(node.getType()));
         jiteClass.defineDefaultConstructor();
-        jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
-        block.getstatic(className, "instance", ci(Object.class));
-        LabelNode returnValue = new LabelNode(new Label());
-        block.ifnonnull(returnValue);
-        if (isValue(node.getType())) {
-            compile(node.getBody());
-        } else {
-            block.newobj(className);
-            block.dup();
-            block.invokespecial(className, "<init>", sig(void.class));
-        }
-        block.putstatic(className, "instance", ci(Object.class));
-        block.label(returnValue);
-        block.getstatic(className, "instance", ci(Object.class));
-        block.areturn();
-        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
+        defineInstantiator(node, jiteClass);
         if (isFunction(node.getType())) {
             compile(node.getBody());
         }
@@ -119,11 +101,31 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitFunction(Function node) {
-        JiteClass jiteClass = jiteClass();
         CodeBlock block = beginBlock();
-        compile(node.getBody());
-        block.areturn();
-        jiteClass.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+        JiteClass parent = jiteClass();
+        List<String> fields = getFields();
+        if (beginClosure(node.getVariable())) {
+            JiteClass closure = jiteClass();
+            CodeBlock innerBlock = beginBlock();
+            String className = closure.getClassName();
+            compile(node.getBody());
+            innerBlock.areturn();
+            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+            block.newobj(className);
+            block.dup();
+            for (String field : fields) {
+                block.aload(0);
+                block.getfield(parent.getClassName(), field, ci(Object.class));
+            }
+            block.aload(1);
+            block.invokespecial(className, "<init>", sig(params(void.class, Object.class, getFields().size())));
+            block.areturn();
+            acceptClosure();
+        } else {
+            compile(node.getBody());
+            block.areturn();
+            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+        }
     }
 
     @Override
@@ -160,7 +162,12 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitVariableLocator(VariableLocator locator) {
-        block().aload(1);
+        if (isField(locator.getName())) {
+            block().aload(0);
+            block().getfield(jiteClass().getClassName(), locator.getName(), ci(Object.class));
+        } else {
+            block().aload(1);
+        }
     }
 
     @Override
@@ -185,17 +192,50 @@ public class Compiler implements AstVisitor {
         acceptedClasses.add(states.pop().getJiteClass());
     }
 
+    private boolean acceptClosure() {
+        if (inClosure()) {
+            acceptClass();
+            closures--;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private CodeBlock beginBlock() {
         return state().beginBlock();
     }
 
     private JiteClass beginClass(String name, List<String> interfaces) {
-        return beginClass(new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()])));
+        JiteClass jiteClass = new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        states.push(new State(jiteClass));
+        return jiteClass;
+    }
+
+    private JiteClass beginClass(String name, List<String> interfaces, String variable, List<String> fields) {
+        JiteClass jiteClass = new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        states.push(new State(jiteClass, variable, fields));
+        return jiteClass;
     }
 
     private JiteClass beginClass(JiteClass jiteClass) {
         states.push(new State(jiteClass));
         return jiteClass;
+    }
+
+    private boolean beginClosure(String variable) {
+        if (inClosure()) {
+            List<String> fields = extendFields();
+            beginClass(generateName(), asList(p(Applicable.class)), variable, fields);
+            defineClosureFields(fields);
+            defineClosureConstructor(fields);
+            closures++;
+            return true;
+        } else {
+            state().setVariable(variable);
+            closures++;
+            return false;
+        }
     }
 
     private CodeBlock block() {
@@ -210,6 +250,64 @@ public class Compiler implements AstVisitor {
         locator.accept(this);
     }
 
+    private void defineClosureConstructor(final List<String> fields) {
+        String signature = sig(params(void.class, Object.class, fields.size()));
+        jiteClass().defineMethod("<init>", ACC_PUBLIC, signature, new CodeBlock() {{
+            aload(0);
+            invokespecial(p(Object.class), "<init>", sig(void.class));
+            int i = 1;
+            for (String field : fields) {
+                aload(0);
+                aload(i++);
+                putfield(jiteClass().getClassName(), field, ci(Object.class));
+            }
+            voidreturn();
+        }});
+    }
+
+    private void defineClosureFields(List<String> fields) {
+        JiteClass jiteClass = jiteClass();
+        for (String field : fields) {
+            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
+        }
+    }
+
+    private void defineInstantiator(DeclaredExpression node, JiteClass jiteClass) {
+        CodeBlock block = beginBlock();
+        LabelNode returnValue = new LabelNode(new Label());
+        jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
+        block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        block.ifnonnull(returnValue);
+        if (isValue(node.getType())) {
+            compile(node.getBody());
+        } else {
+            block.newobj(jiteClass.getClassName());
+            block.dup();
+            block.invokespecial(jiteClass.getClassName(), "<init>", sig(void.class));
+        }
+        block.putstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        block.label(returnValue);
+        block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        block.areturn();
+        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
+    }
+
+    private List<String> extendFields() {
+        return state().extendFields();
+    }
+
+    private String generateName() {
+        return jiteClass().getClassName() + "_" + state().nextId();
+    }
+
+    private List<String> getFields() {
+        return state().getFields();
+    }
+
+    private boolean inClosure() {
+        return closures > 0;
+    }
+
     private List<String> interfacesFor(Type type) {
         List<String> interfaces = new ArrayList<>();
         if (isInstantiable(type)) {
@@ -218,6 +316,10 @@ public class Compiler implements AstVisitor {
             interfaces.add(p(Applicable.class));
         }
         return interfaces;
+    }
+
+    private boolean isField(String name) {
+        return state().isField(name);
     }
 
     private String javafy(String name) {
@@ -236,13 +338,33 @@ public class Compiler implements AstVisitor {
         return states.peek();
     }
 
+    private static final class SnacksLoader extends ClassLoader {
+
+        public SnacksLoader(ClassLoader parent) {
+            super(parent);
+        }
+
+        public Class defineClass(String name, byte[] bytes) {
+            return super.defineClass(name, bytes, 0, bytes.length);
+        }
+    }
+
     private static final class State {
 
         private final JiteClass jiteClass;
         private final Deque<CodeBlock> blocks;
+        private final List<String> fields;
+        private String variable;
+        private int sequence;
 
         public State(JiteClass jiteClass) {
+            this(jiteClass, null, new ArrayList<String>());
+        }
+
+        public State(JiteClass jiteClass, String variable, List<String> fields) {
             this.jiteClass = jiteClass;
+            this.variable = variable;
+            this.fields = new ArrayList<>(fields);
             this.blocks = new ArrayDeque<>();
         }
 
@@ -259,38 +381,31 @@ public class Compiler implements AstVisitor {
             return blocks.peek();
         }
 
+        public List<String> extendFields() {
+            List<String> fields = new ArrayList<>();
+            fields.addAll(this.fields);
+            fields.add(variable);
+            return fields;
+        }
+
+        public List<String> getFields() {
+            return fields;
+        }
+
         public JiteClass getJiteClass() {
             return jiteClass;
         }
-    }
 
-    private static final class Block {
-
-        private final CodeBlock block;
-        private final String variable;
-
-        public Block(CodeBlock block) {
-            this(block, null);
+        public boolean isField(String name) {
+            return fields.contains(name);
         }
 
-        public Block(CodeBlock block, String variable) {
-            this.block = block;
+        public int nextId() {
+            return sequence++;
+        }
+
+        public void setVariable(String variable) {
             this.variable = variable;
-        }
-
-        public boolean isVariable(String variable) {
-            return Objects.equals(this.variable, variable);
-        }
-    }
-
-    private static final class SnacksLoader extends ClassLoader {
-
-        public SnacksLoader(ClassLoader parent) {
-            super(parent);
-        }
-
-        public Class defineClass(String name, byte[] bytes) {
-            return super.defineClass(name, bytes, 0, bytes.length);
         }
     }
 }

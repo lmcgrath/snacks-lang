@@ -61,6 +61,33 @@ public class CompilerTest {
         verifyOut("8");
     }
 
+    @Test
+    public void shouldSayMultiplyWithTwoArguments() throws Exception {
+        run(
+            "multiply = (x y) -> x * y",
+            "main = () -> say $ multiply 3 5"
+        );
+        verifyOut("15");
+    }
+
+    @Test
+    public void shouldSayTripleWithThreeArguments() throws Exception {
+        run(
+            "triple = (x:Integer y:Integer z:Integer) -> x * y * z", // TODO fix type inference
+            "main = () -> say $ triple 9 3 348"
+        );
+        verifyOut("9396");
+    }
+
+    @Test
+    public void shouldSayQuadrupleWithFourArguments() throws Exception {
+        run(
+            "quadruple = (w:Integer x:Integer y:Integer z:Integer) -> w * x * y * z", // TODO fix type inference
+            "main = () -> say $ quadruple 3 3 3 3"
+        );
+        verifyOut("81");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
