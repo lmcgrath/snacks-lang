@@ -13,14 +13,14 @@ public class Multiply implements Applicable {
 
     @Override
     public Object apply(Object argument) {
-        return new closure((Integer) argument);
+        return new Closure((Integer) argument);
     }
 
-    private class closure implements Applicable {
+    private class Closure implements Applicable {
 
         private final int value;
 
-        public closure(int value) {
+        public Closure(int value) {
             this.value = value;
         }
 

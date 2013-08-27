@@ -24,15 +24,15 @@ public abstract class Type {
     }
 
     public static boolean isFunction(Type type) {
-        return "->".equals(type.getName());
+        return "->".equals(type.decompose().get(0).getName());
     }
 
     public static boolean isInstantiable(Type type) {
-        return isFunction(type) && VOID_TYPE == type.getParameters().get(0);
+        return isFunction(type) && VOID_TYPE == type.decompose().get(0).getParameters().get(0);
     }
 
     public static boolean isValue(Type type) {
-        return !type.getName().startsWith("#") && type.getParameters().isEmpty();
+        return !isFunction(type);
     }
 
     public static Type result(Type functionType) {

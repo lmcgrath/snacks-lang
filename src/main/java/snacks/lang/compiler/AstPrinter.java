@@ -59,7 +59,7 @@ public class AstPrinter implements AstVisitor {
     public void visitFunction(Function node) {
         state.println("type: " + node.getType());
         state.println("variable: " + node.getVariable());
-        print(node.getExpression());
+        print(node.getBody());
     }
 
     @Override

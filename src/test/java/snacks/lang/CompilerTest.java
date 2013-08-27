@@ -52,6 +52,15 @@ public class CompilerTest {
         verifyOut("4");
     }
 
+    @Test
+    public void shouldSayMultiplyFunction() throws Exception {
+        run(
+            "multiply = (x) -> x * 2",
+            "main = () -> say $ multiply 4"
+        );
+        verifyOut("8");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }

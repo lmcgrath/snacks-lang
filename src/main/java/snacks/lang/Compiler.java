@@ -106,7 +106,7 @@ public class Compiler implements AstVisitor {
         block.getstatic(className, "instance", ci(Object.class));
         block.areturn();
         jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
-        if (!isValue(node.getType())) {
+        if (isFunction(node.getType())) {
             compile(node.getBody());
         }
         acceptClass();
@@ -119,7 +119,11 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitFunction(Function node) {
-        throw new UnsupportedOperationException(); // TODO
+        JiteClass jiteClass = jiteClass();
+        CodeBlock block = beginBlock();
+        compile(node.getBody());
+        block.areturn();
+        jiteClass.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
     }
 
     @Override
@@ -156,7 +160,7 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitVariableLocator(VariableLocator locator) {
-        throw new UnsupportedOperationException(); // TODO
+        block().aload(1);
     }
 
     @Override
@@ -257,6 +261,25 @@ public class Compiler implements AstVisitor {
 
         public JiteClass getJiteClass() {
             return jiteClass;
+        }
+    }
+
+    private static final class Block {
+
+        private final CodeBlock block;
+        private final String variable;
+
+        public Block(CodeBlock block) {
+            this(block, null);
+        }
+
+        public Block(CodeBlock block, String variable) {
+            this.block = block;
+            this.variable = variable;
+        }
+
+        public boolean isVariable(String variable) {
+            return Objects.equals(this.variable, variable);
         }
     }
 

@@ -6,12 +6,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class Function implements AstNode {
 
     private final String variable;
-    private final AstNode expression;
+    private final AstNode body;
     private final Type type;
 
-    public Function(String variable, AstNode expression, Type type) {
+    public Function(String variable, AstNode body, Type type) {
         this.variable = variable;
-        this.expression = expression;
+        this.body = body;
         this.type = type;
     }
 
@@ -28,7 +28,7 @@ public class Function implements AstNode {
             Function other = (Function) o;
             return new EqualsBuilder()
                 .append(variable, other.variable)
-                .append(expression, other.expression)
+                .append(body, other.body)
                 .append(type, other.type)
                 .isEquals();
         } else {
@@ -36,8 +36,8 @@ public class Function implements AstNode {
         }
     }
 
-    public AstNode getExpression() {
-        return expression;
+    public AstNode getBody() {
+        return body;
     }
 
     @Override
@@ -51,11 +51,11 @@ public class Function implements AstNode {
 
     @Override
     public int hashCode() {
-        return Objects.hash(variable, expression, type);
+        return Objects.hash(variable, body, type);
     }
 
     @Override
     public String toString() {
-        return "(" + variable + " -> " + expression + "):" + type;
+        return "(" + variable + " -> " + body + "):" + type;
     }
 }
