@@ -238,11 +238,6 @@ public class Compiler implements AstVisitor {
         return jiteClass;
     }
 
-    private JiteClass beginClass(JiteClass jiteClass) {
-        states.push(new State(jiteClass));
-        return jiteClass;
-    }
-
     private boolean beginClosure(String variable) {
         if (inClosure()) {
             List<String> fields = extendFields();

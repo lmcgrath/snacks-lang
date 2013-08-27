@@ -151,6 +151,30 @@ public class CompilerTest {
         verify(out.getStream(), never()).println("can't touch this");
     }
 
+    @Test
+    public void shouldReturnClosureFromFunction() throws Exception {
+        run(
+            "closure = { x ->",
+            "    (y) -> x * y",
+            "}",
+            "main = () -> say $ closure 2 3"
+        );
+        verifyOut("6");
+    }
+
+    @Test
+    public void shouldPassFunctionIntoFunction() throws Exception {
+        run(
+            "operate = (op) -> op 2 4",
+            "main = {",
+            "    say $ operate `+`",
+            "    say $ operate `*`",
+            "}"
+        );
+        verifyOut("6");
+        verifyOut("8");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
