@@ -24,19 +24,36 @@ public class CompilerTest {
 
     @Test
     public void shouldSayHello() throws Exception {
-        ClassLoader loader = compiler.compile(translate("main = () -> say 'Hello World!'"));
-        ((Runnable) loader.loadClass("Snacks").newInstance()).run();
+        run("main = () -> say 'Hello World!'");
         verifyOut("Hello World!");
     }
 
     @Test
-    public void shouldSayReference() throws Exception {
-        ClassLoader loader = compiler.compile(translate(
+    public void shouldSpeakThroughReference() throws Exception {
+        run(
             "speak = () -> say 'Woof'",
             "main = () -> speak()"
-        ));
-        ((Runnable) loader.loadClass("Snacks").newInstance()).run();
+        );
         verifyOut("Woof");
+    }
+
+    @Test
+    public void shouldMultiplyInteger() throws Exception {
+        run("main = () -> say $ 2 * 3");
+        verifyOut("6");
+    }
+
+    @Test
+    public void shouldSayConstantReference() throws Exception {
+        run(
+            "bananas = 2 + 2",
+            "main = () -> say bananas"
+        );
+        verifyOut("4");
+    }
+
+    private void run(String... inputs) throws Exception {
+        ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
 
     private void verifyOut(String line) {

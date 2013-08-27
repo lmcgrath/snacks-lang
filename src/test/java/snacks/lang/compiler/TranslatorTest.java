@@ -12,7 +12,6 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import snacks.lang.compiler.ast.AstNode;
-import snacks.lang.compiler.ast.SymbolEnvironment;
 import snacks.lang.compiler.ast.Type;
 
 public class TranslatorTest {

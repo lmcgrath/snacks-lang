@@ -1,12 +1,17 @@
 package snacks.lang;
 
 import static me.qmx.jitescript.util.CodegenUtils.c;
+import static me.qmx.jitescript.util.CodegenUtils.ci;
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static snacks.lang.SnacksRuntime.BOOTSTRAP;
-import static snacks.lang.compiler.ast.Type.VOID_TYPE;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static snacks.lang.compiler.ast.Type.isFunction;
+import static snacks.lang.compiler.ast.Type.isInstantiable;
+import static snacks.lang.compiler.ast.Type.isValuable;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -17,32 +22,35 @@ import snacks.lang.compiler.ast.*;
 
 public class Compiler implements AstVisitor {
 
-    private static boolean isInstantiable(Type type) {
-        return "->".equals(type.getName()) && VOID_TYPE == type.getParameters().get(0);
+    private static final Map<String, String> names = new HashMap<>();
+
+    static {
+        names.put("*", "Multiply");
+        names.put("+", "Plus");
     }
 
     private final List<JiteClass> acceptedClasses;
-    private final Deque<JiteClass> jiteClasses;
-    private final Deque<CodeBlock> blocks;
-    private String reference;
+    private final Deque<State> states;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
-        jiteClasses = new ArrayDeque<>();
-        blocks = new ArrayDeque<>();
+        states = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
-        defineRunnable();
         for (AstNode declaration : declarations) {
             compile(declaration);
         }
         SnacksLoader loader = new SnacksLoader(getClass().getClassLoader());
         for (JiteClass jiteClass : acceptedClasses) {
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
-            try (FileOutputStream output = new FileOutputStream(jiteClass.getClassName() + ".class")) {
-                output.write(bytes);
-                loader.defineClass(c(jiteClass.getClassName()), bytes);
+            loader.defineClass(c(jiteClass.getClassName()), bytes);
+            try {
+                File file = new File(jiteClass.getClassName() + ".class");
+                file.getParentFile().mkdirs();
+                try (FileOutputStream output = new FileOutputStream(file)) {
+                    output.write(bytes);
+                }
             } catch (IOException exception) {
                 throw new CompileException(exception);
             }
@@ -54,7 +62,7 @@ public class Compiler implements AstVisitor {
     public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
-        block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
+        block().invokeinterface(p(Applicable.class), "apply", sig(Object.class, Object.class));
     }
 
     @Override
@@ -69,22 +77,33 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitDeclarationLocator(DeclarationLocator locator) {
-        reference = locator.getModule() + "/" + locator.getName();
+        CodeBlock block = block();
+        String reference = locator.getModule() + "/" + javafy(locator.getName());
+        block.invokestatic(reference, "instance", sig(Object.class));
     }
 
     @Override
-    public void visitDeclaredExpression(DeclaredExpression node) {
-        List<String> interfaces = new ArrayList<>();
-        if (isInstantiable(node.getType())) {
-            interfaces.add(p(Invokable.class));
-        }
-        JiteClass jiteClass = beginClass(new JiteClass(
-            node.getModule() + "/" + node.getName(),
-            p(Object.class),
-            interfaces.toArray(new String[interfaces.size()])
-        ));
+    public void visitDeclaredExpression(final DeclaredExpression node) {
+        String className = node.getModule() + "/" + javafy(node.getName());
+        JiteClass jiteClass = beginClass(className, interfacesFor(node.getType()));
+        CodeBlock block = beginBlock();
         jiteClass.defineDefaultConstructor();
-        compile(node.getBody());
+        jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
+        block.getstatic(className, "instance", ci(Object.class));
+        if (isValuable(node.getType())) {
+            compile(node.getBody());
+        } else {
+            block.newobj(className);
+            block.dup();
+            block.invokespecial(className, "<init>", sig(void.class));
+        }
+        block.putstatic(className, "instance", ci(Object.class));
+        block.getstatic(className, "instance", ci(Object.class));
+        block.areturn();
+        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
+        if (!isValuable(node.getType())) {
+            compile(node.getBody());
+        }
         acceptClass();
     }
 
@@ -100,16 +119,14 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitIntegerConstant(IntegerConstant node) {
+        CodeBlock block = block();
         block().ldc(node.getValue());
+        block.invokestatic(p(Integer.class), "valueOf", sig(Integer.class, int.class));
     }
 
     @Override
     public void visitReference(Reference node) {
         compile(node.getLocator());
-        CodeBlock block = block();
-        block.newobj(reference);
-        block.dup();
-        block.invokespecial(reference, "<init>", sig(void.class));
     }
 
     @Override
@@ -140,7 +157,7 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitVoidApply(VoidApply node) {
         compile(node.getInstantiable());
-        block().invokedynamic("invoke", sig(Object.class, Invokable.class), BOOTSTRAP);
+        block().invokeinterface(p(Invokable.class), "invoke", sig(Object.class));
     }
 
     @Override
@@ -152,26 +169,28 @@ public class Compiler implements AstVisitor {
     }
 
     private CodeBlock acceptBlock() {
-        return blocks.pop();
+        return state().acceptBlock();
     }
 
     private void acceptClass() {
-        acceptedClasses.add(jiteClasses.pop());
+        acceptedClasses.add(states.pop().getJiteClass());
     }
 
     private CodeBlock beginBlock() {
-        CodeBlock block = new CodeBlock();
-        blocks.push(block);
-        return block;
+        return state().beginBlock();
+    }
+
+    private JiteClass beginClass(String name, List<String> interfaces) {
+        return beginClass(new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()])));
     }
 
     private JiteClass beginClass(JiteClass jiteClass) {
-        jiteClasses.push(jiteClass);
+        states.push(new State(jiteClass));
         return jiteClass;
     }
 
     private CodeBlock block() {
-        return blocks.peek();
+        return state().block();
     }
 
     private void compile(AstNode node) {
@@ -182,21 +201,58 @@ public class Compiler implements AstVisitor {
         locator.accept(this);
     }
 
-    private void defineRunnable() {
-        JiteClass jiteClass = beginClass(new JiteClass("Snacks", p(Object.class), new String[] { p(Runnable.class) }));
-        jiteClass.defineDefaultConstructor();
-        jiteClass.defineMethod("run", ACC_PUBLIC, sig(void.class), new CodeBlock() {{
-            newobj("test/main");
-            dup();
-            invokespecial("test/main", "<init>", sig(void.class));
-            invokevirtual("test/main", "invoke", sig(Object.class));
-            voidreturn();
-        }});
-        acceptClass();
+    private List<String> interfacesFor(Type type) {
+        List<String> interfaces = new ArrayList<>();
+        if (isInstantiable(type)) {
+            interfaces.add(p(Invokable.class));
+        } else if (isFunction(type)) {
+            interfaces.add(p(Applicable.class));
+        }
+        return interfaces;
+    }
+
+    private String javafy(String name) {
+        if (names.containsKey(name)) {
+            return names.get(name);
+        } else {
+            return name.substring(0, 1).toUpperCase() + name.substring(1);
+        }
     }
 
     private JiteClass jiteClass() {
-        return jiteClasses.peek();
+        return state().jiteClass;
+    }
+
+    private State state() {
+        return states.peek();
+    }
+
+    private static final class State {
+
+        private final JiteClass jiteClass;
+        private final Deque<CodeBlock> blocks;
+
+        public State(JiteClass jiteClass) {
+            this.jiteClass = jiteClass;
+            this.blocks = new ArrayDeque<>();
+        }
+
+        public CodeBlock acceptBlock() {
+            return blocks.pop();
+        }
+
+        public CodeBlock beginBlock() {
+            blocks.push(new CodeBlock());
+            return block();
+        }
+
+        public CodeBlock block() {
+            return blocks.peek();
+        }
+
+        public JiteClass getJiteClass() {
+            return jiteClass;
+        }
     }
 
     private static final class SnacksLoader extends ClassLoader {

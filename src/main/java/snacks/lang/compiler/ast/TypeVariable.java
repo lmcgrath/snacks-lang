@@ -34,8 +34,8 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public Type genericCopy(SymbolEnvironment environment, Map<Type, Type> mappings) {
-        return environment.genericCopy(this, mappings);
+    public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
+        return types.genericCopy(this, mappings);
     }
 
     @Override
@@ -59,8 +59,8 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public Type recompose(Type functionType, SymbolEnvironment environment) {
-        return state.recompose(functionType, environment);
+    public Type recompose(Type functionType, TypeFactory types) {
+        return state.recompose(functionType, types);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class TypeVariable extends Type {
 
         List<Type> getParameters();
 
-        Type recompose(Type functionType, SymbolEnvironment environment);
+        Type recompose(Type functionType, TypeFactory environment);
     }
 
     private static final class BoundState implements State {
@@ -151,7 +151,7 @@ public class TypeVariable extends Type {
         }
 
         @Override
-        public Type recompose(Type functionType, SymbolEnvironment environment) {
+        public Type recompose(Type functionType, TypeFactory environment) {
             return type;
         }
 
@@ -212,7 +212,7 @@ public class TypeVariable extends Type {
         }
 
         @Override
-        public Type recompose(Type functionType, SymbolEnvironment environment) {
+        public Type recompose(Type functionType, TypeFactory environment) {
             int size = functionType.decompose().size();
             List<Type> variables = new ArrayList<>();
             for (int i = 0; i < size; i++) {

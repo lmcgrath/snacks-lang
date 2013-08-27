@@ -21,8 +21,8 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public Type genericCopy(SymbolEnvironment environment, Map<Type, Type> mappings) {
-        return environment.genericCopy(this, mappings);
+    public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
+        return types.genericCopy(this, mappings);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public Type recompose(Type functionType, SymbolEnvironment environment) {
+    public Type recompose(Type functionType, TypeFactory types) {
         return this;
     }
 

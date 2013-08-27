@@ -1,10 +1,11 @@
-package snacks.lang.compiler.ast;
+package snacks.lang.compiler;
 
 import static snacks.lang.compiler.ast.Type.*;
 
 import java.util.*;
+import snacks.lang.compiler.ast.*;
 
-public class SymbolEnvironment {
+public class SymbolEnvironment implements TypeFactory {
 
     private static final Map<String, List<Reference>> builtin = new HashMap<>();
 
@@ -50,7 +51,8 @@ public class SymbolEnvironment {
         def("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
         def("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
 
-        def("say", func(STRING_TYPE, VOID_TYPE));
+        def("say", func(var("T"), VOID_TYPE));
+        def("string", func(var("T"), STRING_TYPE));
     }
 
     private static void def(String name, Type type) {
@@ -75,6 +77,7 @@ public class SymbolEnvironment {
         state = new TailState(parent);
     }
 
+    @Override
     public Type createVariable() {
         return state.createVariable();
     }
@@ -87,6 +90,7 @@ public class SymbolEnvironment {
         return new SymbolEnvironment(this);
     }
 
+    @Override
     public Type genericCopy(TypeSet type, Map<Type, Type> mappings) {
         List<Type> types = new ArrayList<>();
         for (Type t : type.getConstrainedSet()) {
@@ -95,6 +99,7 @@ public class SymbolEnvironment {
         return new TypeSet(types);
     }
 
+    @Override
     public Type genericCopy(TypeVariable type, Map<Type, Type> mappings) {
         if (isGeneric(type)) {
             if (!mappings.containsKey(type)) {
@@ -106,6 +111,7 @@ public class SymbolEnvironment {
         }
     }
 
+    @Override
     public Type genericCopy(TypeOperator type, Map<Type, Type> mappings) {
         List<Type> parameters = new ArrayList<>();
         for (Type parameter : type.getParameters()) {

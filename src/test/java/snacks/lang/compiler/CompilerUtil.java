@@ -8,7 +8,6 @@ import java.util.Set;
 import beaver.Symbol;
 import snacks.lang.compiler.Parser.AltGoals;
 import snacks.lang.compiler.ast.AstNode;
-import snacks.lang.compiler.ast.SymbolEnvironment;
 
 public final class CompilerUtil {
 

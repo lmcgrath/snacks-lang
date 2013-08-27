@@ -7,7 +7,6 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
 import snacks.lang.cli.CommandLineRunner;
-import snacks.lang.compiler.ast.SymbolEnvironment;
 
 public class TranslatorRunner implements CommandLineRunner {
 

@@ -31,20 +31,11 @@ public class SnacksRuntime {
         return callSite;
     }
 
-    public static Object apply(Object function, Object argument) {
-        ((say) function).apply(argument.toString());
-        return null;
+    public static Object apply(Applicable function, Object argument) {
+        return function.apply(argument);
     }
 
     public static Object invoke(Invokable invokable) throws ReflectiveOperationException {
         return invokable.invoke();
-    }
-
-    public static Object reference(String module, String name) throws ReflectiveOperationException {
-        if ("say".equals(name)) {
-            return new say();
-        } else {
-            return SnacksRuntime.class.getClassLoader().loadClass(name).newInstance();
-        }
     }
 }

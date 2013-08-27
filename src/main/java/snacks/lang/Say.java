@@ -1,8 +1,18 @@
 package snacks.lang;
 
-public class say {
+public class Say implements Applicable {
 
-    public void apply(String value) {
-        System.out.println(value);
+    private static Say instance;
+
+    public static Object instance() {
+        if (instance == null) {
+            instance = new Say();
+        }
+        return instance;
+    }
+
+    public Object apply(Object value) {
+        System.out.println(value.toString());
+        return null;
     }
 }

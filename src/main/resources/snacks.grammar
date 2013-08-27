@@ -177,7 +177,7 @@ expression
     | expression.l OR expression.r                  {: return binary("or", l, r); :}
     | expression.l RANGE expression.r               {: return binary("..", l, r); :}
     | expression.l XRANGE expression.r              {: return binary("...", l, r); :}
-    | expression.l APPLY expression.r               {: return binary("$", l, r); :}
+    | expression.l APPLY expression.r               {: return apply(l, r); :}
     | expression.l ASSIGN expression.r              {: return binary("=", l, r); :}
     ;
 

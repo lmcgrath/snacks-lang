@@ -19,6 +19,22 @@ public abstract class Type {
         return new TypeOperator("->", argument, result);
     }
 
+    public static Type argument(Type type) {
+        return type.getParameters().get(0);
+    }
+
+    public static boolean isFunction(Type type) {
+        return "->".equals(type.getName());
+    }
+
+    public static boolean isInstantiable(Type type) {
+        return isFunction(type) && VOID_TYPE == type.getParameters().get(0);
+    }
+
+    public static boolean isValuable(Type type) {
+        return !type.getName().startsWith("#") && type.getParameters().isEmpty();
+    }
+
     public static Type result(Type functionType) {
         List<Type> parameters = functionType.getParameters();
         if (parameters.isEmpty()) {
@@ -64,7 +80,7 @@ public abstract class Type {
 
     public abstract Type expose();
 
-    public abstract Type genericCopy(SymbolEnvironment environment, Map<Type, Type> mappings);
+    public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
 
     public abstract Set<Type> getConstrainedSet();
 
@@ -87,7 +103,7 @@ public abstract class Type {
         return actualVariable.equals(actualType) || occursIn(actualType.getParameters());
     }
 
-    public abstract Type recompose(Type functionType, SymbolEnvironment environment);
+    public abstract Type recompose(Type functionType, TypeFactory types);
 
     public boolean unify(Type other) {
         Type left = expose();
