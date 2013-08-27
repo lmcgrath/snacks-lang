@@ -1,9 +1,9 @@
 package snacks.lang.compiler;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.compiler.AstFactory.*;
-import static snacks.lang.compiler.CompilerUtil.translate;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
 import static snacks.lang.compiler.ast.Type.*;
 import static snacks.lang.compiler.ast.Type.func;
@@ -25,13 +25,13 @@ public class TranslatorTest {
 
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() {
-        translate(environment, "example = 2 + 2");
+        translate("example = 2 + 2");
         assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() {
-        translate(environment, "example = `+` 2");
+        translate("example = `+` 2");
         assertThat(typeOf("example"), equalTo(set(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
@@ -42,7 +42,6 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfExpressionUsingPossibleTypes() {
         translate(
-            environment,
             "partial = `+` 2",
             "example = partial 'bananas'"
         );
@@ -52,7 +51,6 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateTwoPlusString() {
         Set<AstNode> nodes = translate(
-            environment,
             "value = 'Hello, World!'",
             "example = 2 + value"
         );
@@ -76,7 +74,6 @@ public class TranslatorTest {
     public void shouldThrowException_whenOperandTypesDontMatchOperator() {
         define("oddball", type("Unknown"));
         translate(
-            environment,
             "import test.example.oddball",
             "example = 2 + oddball"
         );
@@ -87,7 +84,6 @@ public class TranslatorTest {
         define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
         define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
         Set<AstNode> definitions = translate(
-            environment,
             "import test.example._",
             "example = concat 3 'waffles'"
         );
@@ -114,7 +110,6 @@ public class TranslatorTest {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
-            environment,
             "import test.example._",
             "example = identity 12"
         );
@@ -126,7 +121,6 @@ public class TranslatorTest {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
-            environment,
             "import test.example.identity as id",
             "example = id 12"
         );
@@ -138,7 +132,6 @@ public class TranslatorTest {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
-            environment,
             "from test.example import identity",
             "example = identity 12"
         );
@@ -150,7 +143,6 @@ public class TranslatorTest {
         Type var = environment.createVariable();
         define("identity", func(var, var));
         translate(
-            environment,
             "from test.example import identity as id",
             "example = id 12"
         );
@@ -159,18 +151,18 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateTypedFunction() {
-        translate(environment, "double = (x:Integer):Integer -> x * 2");
+        translate("double = (x:Integer):Integer -> x * 2");
         assertThat(typeOf("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
     }
 
     @Test(expected = TypeException.class)
     public void shouldNotApplyToDouble() {
-        translate(environment, "double = (x:Integer :: Integer -> x * 2) 2.2");
+        translate("double = (x:Integer :: Integer -> x * 2) 2.2");
     }
 
     @Test
     public void shouldTranslateUntypedFunction() {
-        translate(environment, "double = (x) -> x * 2");
+        translate("double = (x) -> x * 2");
         assertThat(typeOf("double"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
@@ -180,24 +172,24 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateUntypedFunctionWithMultipleArguments() {
-        translate(environment, "multiply = (x y) -> x * y");
+        translate("multiply = (x y) -> x * y");
         assertThat(typeOf("multiply"), equalTo(typeOf("snacks/lang", "*")));
     }
 
     @Test(expected = TypeException.class)
     public void shouldNotTranslateFunctionWithIncompatibleResultType() {
-        translate(environment, "multiply = (x y):String -> x * y");
+        translate("multiply = (x y):String -> x * y");
     }
 
     @Test
     public void shouldTranslatePartiallyTypedFunction() {
-        translate(environment, "multiply = (x:String y) -> x * y");
+        translate("multiply = (x:String y) -> x * y");
         assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
     }
 
     @Test
     public void shouldTranslateUnaryPlus() {
-        translate(environment, "positive = (x) -> +x");
+        translate("positive = (x) -> +x");
         assertThat(typeOf("positive"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE)
@@ -206,7 +198,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateUnaryMinus() {
-        translate(environment, "negative = (x) -> -x");
+        translate("negative = (x) -> -x");
         assertThat(typeOf("negative"), equalTo(set(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE)
@@ -215,25 +207,24 @@ public class TranslatorTest {
 
     @Test(expected = TypeException.class)
     public void shouldNotTranslateNegativeString() {
-        translate(environment, "negative = (x:String) -> -x");
+        translate("negative = (x:String) -> -x");
     }
 
     @Test
     public void shouldTranslateVar() {
-        translate(environment, "waffles = { var test = 2; return test; }()");
+        translate("waffles = { var test = 2; return test; }()");
         assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldTranslateInstantiable() {
-        translate(environment, "answer = () -> 42");
+        translate("answer = () -> 42");
         assertThat(typeOf("answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
     }
 
     @Test
     public void variableShouldOverrideSymbolInParentScope() {
         translate(
-            environment,
             "waffles = 24",
             "example = {",
             "    var waffles = 'I\\'m in ur scope'",
@@ -246,11 +237,16 @@ public class TranslatorTest {
     @Test
     public void mainShouldBeVoidToVoid() {
         translate(
-            environment,
             "speak = () -> say 'Woof'",
             "main = () -> speak()"
         );
         assertThat(typeOf("main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
+    }
+
+    @Test
+    public void shouldTranslateUntypedThreeArgFunction() {
+        translate("volume = (x y z) -> x * y * z");
+        assertThat(typeOf("volume").decompose(), hasSize(9));
     }
 
     private Type typeOf(String name) {
@@ -263,5 +259,9 @@ public class TranslatorTest {
 
     private void define(String name, Type type) {
         environment.define(reference("test/example", name, type));
+    }
+
+    private Set<AstNode> translate(String... inputs) {
+        return CompilerUtil.translate(environment, inputs);
     }
 }

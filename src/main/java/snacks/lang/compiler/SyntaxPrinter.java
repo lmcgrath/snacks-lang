@@ -53,13 +53,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression node) {
-        state.println("operator: " + node.getOperator());
-        print(node.getLeft());
-        print(node.getRight());
-    }
-
-    @Override
     public void visitBlock(Block node) {
         for (Symbol element : node.getElements()) {
             print(element);

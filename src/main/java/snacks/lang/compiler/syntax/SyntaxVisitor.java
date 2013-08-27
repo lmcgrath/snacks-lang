@@ -12,8 +12,6 @@ public interface SyntaxVisitor {
 
     void visitArgument(Argument node);
 
-    void visitBinaryExpression(BinaryExpression node);
-
     void visitBlock(Block node);
 
     void visitBooleanLiteral(BooleanLiteral node);

@@ -73,7 +73,7 @@ public class CompilerTest {
     @Test
     public void shouldSayTripleWithThreeArguments() throws Exception {
         run(
-            "triple = (x:Integer y:Integer z:Integer) -> x * y * z", // TODO fix type inference
+            "triple = (x y z) -> x * y * z",
             "main = () -> say $ triple 9 3 348"
         );
         verifyOut("9396");
@@ -82,7 +82,7 @@ public class CompilerTest {
     @Test
     public void shouldSayQuadrupleWithFourArguments() throws Exception {
         run(
-            "quadruple = (w:Integer x:Integer y:Integer z:Integer) -> w * x * y * z", // TODO fix type inference
+            "quadruple = (w x y z) -> w * x * y * z",
             "main = () -> say $ quadruple 3 3 3 3"
         );
         verifyOut("81");

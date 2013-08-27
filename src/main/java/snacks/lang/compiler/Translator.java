@@ -20,6 +20,7 @@ public class Translator implements SyntaxVisitor {
     private final Deque<List<AstNode>> collections;
     private final Map<String, Locator> aliases;
     private final List<String> wildcardImports;
+    private final List<String> typeErrors;
     private AstNode result;
 
     public Translator(SymbolEnvironment environment, String module) {
@@ -27,6 +28,7 @@ public class Translator implements SyntaxVisitor {
         this.environments = new ArrayDeque<>(asList(environment));
         this.collections = new ArrayDeque<>();
         this.aliases = new HashMap<>();
+        this.typeErrors = new ArrayList<>();
         this.wildcardImports = new ArrayList<>();
         this.wildcardImports.add("snacks/lang");
     }
@@ -140,17 +142,6 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression node) {
-        result = applyFunction(
-            applyFunction(
-                reference(node.getOperator()),
-                translate(node.getLeft())
-            ),
-            translate(node.getRight())
-        );
-    }
-
-    @Override
     public void visitBlock(Block node) {
         List<AstNode> elements = new ArrayList<>();
         enterScope();
@@ -182,7 +173,11 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitDeclaration(Declaration node) {
+        typeErrors.clear();
         DeclaredExpression declaration = declaration(getModule(), node.getName(), translate(node.getBody()));
+        if (declaration.getType().decompose().isEmpty()) {
+            throw new TypeException(join(typeErrors, "; "));
+        }
         register(declaration.getName(), declaration.getType());
         collect(declaration);
     }
@@ -415,7 +410,7 @@ public class Translator implements SyntaxVisitor {
             functionTypesQueue.remove(0);
         }
         if (allowedTypes.isEmpty()) {
-            throw new TypeException("Could not apply function " + functionType + " to argument " + argumentType);
+            typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);
         }
         argumentType.bind(constrainedArgumentType);
         return apply(expression, argument, set(allowedTypes));
