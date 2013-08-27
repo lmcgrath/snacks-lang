@@ -88,6 +88,43 @@ public class CompilerTest {
         verifyOut("81");
     }
 
+    @Test
+    public void shouldCompileBlock() throws Exception {
+        run(
+            "main = {",
+            "    say 'Hello'",
+            "    say 'World!'",
+            "}"
+        );
+        verifyOut("Hello");
+        verifyOut("World!");
+    }
+
+    @Test
+    public void shouldReferenceBlock() throws Exception {
+        run(
+            "waffles = {",
+            "    say $ 2 + 3",
+            "    say $ 4 * 5",
+            "}",
+            "main = () -> waffles()"
+        );
+        verifyOut("5");
+        verifyOut("20");
+    }
+
+    @Test
+    public void shouldStoreVariables() throws Exception {
+        run(
+            "main = {",
+            "    var x = 12",
+            "    var y = 3",
+            "    say $ x * y",
+            "}"
+        );
+        verifyOut("36");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }

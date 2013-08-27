@@ -407,7 +407,11 @@ public class Translator implements SyntaxVisitor {
                 }
             }
             allowedTypes.addAll(allowedResultTypes);
-            functionTypesQueue.remove(0);
+            if (functionTypesQueue.isEmpty()) {
+                break;
+            } else {
+                functionTypesQueue.remove(0);
+            }
         }
         if (allowedTypes.isEmpty()) {
             typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);

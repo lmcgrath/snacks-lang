@@ -31,6 +31,7 @@ public class Compiler implements AstVisitor {
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
     private int closures;
+    private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
@@ -147,7 +148,15 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitSequence(Sequence node) {
-        throw new UnsupportedOperationException(); // TODO
+        List<AstNode> elements = node.getElements();
+        for (int i = 0; i < elements.size() - 1; i++) {
+            popValue = true;
+            compile(elements.get(i));
+            if (popValue) {
+                block().pop();
+            }
+        }
+        compile(elements.get(elements.size() - 1));
     }
 
     @Override
@@ -157,7 +166,9 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitVariableDeclaration(VariableDeclaration node) {
-        throw new UnsupportedOperationException(); // TODO
+        compile(node.getValue());
+        block().astore(getVariable(node.getName()));
+        popValue = false;
     }
 
     @Override
@@ -165,6 +176,8 @@ public class Compiler implements AstVisitor {
         if (isField(locator.getName())) {
             block().aload(0);
             block().getfield(jiteClass().getClassName(), locator.getName(), ci(Object.class));
+        } else if (isVariable(locator.getName())) {
+            block().aload(getVariable(locator.getName()));
         } else {
             block().aload(1);
         }
@@ -304,6 +317,10 @@ public class Compiler implements AstVisitor {
         return state().getFields();
     }
 
+    private int getVariable(String name) {
+        return state().getVariable(name);
+    }
+
     private boolean inClosure() {
         return closures > 0;
     }
@@ -320,6 +337,10 @@ public class Compiler implements AstVisitor {
 
     private boolean isField(String name) {
         return state().isField(name);
+    }
+
+    private boolean isVariable(String name) {
+        return state().isVariable(name);
     }
 
     private String javafy(String name) {
@@ -352,7 +373,7 @@ public class Compiler implements AstVisitor {
     private static final class State {
 
         private final JiteClass jiteClass;
-        private final Deque<CodeBlock> blocks;
+        private final Deque<BlockState> blocks;
         private final List<String> fields;
         private String variable;
         private int sequence;
@@ -369,16 +390,16 @@ public class Compiler implements AstVisitor {
         }
 
         public CodeBlock acceptBlock() {
-            return blocks.pop();
+            return blocks.pop().getBlock();
         }
 
         public CodeBlock beginBlock() {
-            blocks.push(new CodeBlock());
+            blocks.push(new BlockState(new CodeBlock()));
             return block();
         }
 
         public CodeBlock block() {
-            return blocks.peek();
+            return blocks.peek().getBlock();
         }
 
         public List<String> extendFields() {
@@ -396,8 +417,16 @@ public class Compiler implements AstVisitor {
             return jiteClass;
         }
 
+        public int getVariable(String name) {
+            return blocks.peek().getVariable(name);
+        }
+
         public boolean isField(String name) {
             return fields.contains(name);
+        }
+
+        public boolean isVariable(String name) {
+            return blocks.peek().isVariable(name);
         }
 
         public int nextId() {
@@ -406,6 +435,32 @@ public class Compiler implements AstVisitor {
 
         public void setVariable(String variable) {
             this.variable = variable;
+        }
+    }
+
+    private static final class BlockState {
+
+        private final CodeBlock block;
+        private final Map<String, Integer> variables;
+
+        public BlockState(CodeBlock block) {
+            this.block = block;
+            this.variables = new HashMap<>();
+        }
+
+        public CodeBlock getBlock() {
+            return block;
+        }
+
+        public int getVariable(String name) {
+            if (!isVariable(name)) {
+                variables.put(name, variables.size() + 2);
+            }
+            return variables.get(name);
+        }
+
+        public boolean isVariable(String name) {
+            return variables.containsKey(name);
         }
     }
 }
