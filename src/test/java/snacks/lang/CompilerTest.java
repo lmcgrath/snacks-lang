@@ -1,5 +1,6 @@
 package snacks.lang;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static snacks.lang.compiler.CompilerUtil.translate;
 
@@ -123,6 +124,31 @@ public class CompilerTest {
             "}"
         );
         verifyOut("36");
+    }
+
+    @Test
+    public void shouldReturnVariables() throws Exception {
+        run(
+            "triple = { x ->",
+            "    var y = 3",
+            "    return x * y",
+            "}",
+            "main = () -> say $ triple 12"
+        );
+        verifyOut("36");
+    }
+
+    @Test
+    public void shouldAllowDeadCodeAfterReturn() throws Exception {
+        run(
+            "triple = { x ->",
+            "    var y = 3",
+            "    return x * y",
+            "    say 'can\\'t touch this'",
+            "}",
+            "main = () -> say $ triple 12"
+        );
+        verify(out.getStream(), never()).println("can't touch this");
     }
 
     private void run(String... inputs) throws Exception {

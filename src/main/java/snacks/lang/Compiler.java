@@ -120,11 +120,15 @@ public class Compiler implements AstVisitor {
             }
             block.aload(1);
             block.invokespecial(className, "<init>", sig(params(void.class, Object.class, getFields().size())));
-            block.areturn();
+            if (!block.returns()) {
+                block.areturn();
+            }
             acceptClosure();
         } else {
             compile(node.getBody());
-            block.areturn();
+            if (!block.returns()) {
+                block.areturn();
+            }
             jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
         }
     }
@@ -143,7 +147,8 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitResult(Result node) {
-        throw new UnsupportedOperationException(); // TODO
+        compile(node.getValue());
+        block().areturn();
     }
 
     @Override
@@ -193,7 +198,9 @@ public class Compiler implements AstVisitor {
     public void visitVoidFunction(VoidFunction node) {
         beginBlock();
         compile(node.getBody());
-        block().areturn();
+        if (!block().returns()) {
+            block().areturn();
+        }
         jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
     }
 
