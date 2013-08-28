@@ -49,8 +49,7 @@ public class TypeSet extends Type {
         return types.genericCopy(this, mappings);
     }
 
-    @Override
-    public Set<Type> getConstrainedSet() {
+    public Set<Type> getMembers() {
         return types;
     }
 

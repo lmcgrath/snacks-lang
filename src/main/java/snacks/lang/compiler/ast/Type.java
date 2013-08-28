@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class Type {
 
@@ -81,8 +80,6 @@ public abstract class Type {
     public abstract Type expose();
 
     public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
-
-    public abstract Set<Type> getConstrainedSet();
 
     public abstract String getName();
 

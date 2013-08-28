@@ -39,11 +39,6 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public Set<Type> getConstrainedSet() {
-        return state.getConstrainedSet();
-    }
-
-    @Override
     public String getName() {
         return state.getName();
     }
@@ -93,8 +88,6 @@ public class TypeVariable extends Type {
 
         Type expose();
 
-        Set<Type> getConstrainedSet();
-
         String getName();
 
         List<Type> getParameters();
@@ -128,11 +121,6 @@ public class TypeVariable extends Type {
         @Override
         public Type expose() {
             return type.expose();
-        }
-
-        @Override
-        public Set<Type> getConstrainedSet() {
-            return type.getConstrainedSet();
         }
 
         @Override
@@ -189,11 +177,6 @@ public class TypeVariable extends Type {
         @Override
         public Type expose() {
             return parent;
-        }
-
-        @Override
-        public Set<Type> getConstrainedSet() {
-            return new HashSet<>(asList((Type) parent));
         }
 
         @Override

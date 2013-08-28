@@ -55,11 +55,6 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public Set<Type> getConstrainedSet() {
-        throw new IllegalStateException("No constraints on TypeOperator!");
-    }
-
-    @Override
     public List<Type> getParameters() {
         return parameters;
     }

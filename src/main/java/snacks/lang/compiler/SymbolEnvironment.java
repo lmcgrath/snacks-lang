@@ -93,8 +93,8 @@ public class SymbolEnvironment implements TypeFactory {
     @Override
     public Type genericCopy(TypeSet type, Map<Type, Type> mappings) {
         List<Type> types = new ArrayList<>();
-        for (Type t : type.getConstrainedSet()) {
-            types.add(genericCopy(t, mappings));
+        for (Type member : type.getMembers()) {
+            types.add(genericCopy(member, mappings));
         }
         return new TypeSet(types);
     }
