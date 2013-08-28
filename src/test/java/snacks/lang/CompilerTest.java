@@ -148,18 +148,20 @@ public class CompilerTest {
             "}",
             "main = () -> say $ triple 12"
         );
-        verify(out.getStream(), never()).println("can't touch this");
+        verifyOut("36");
+        verifyNever("can't touch this");
     }
 
     @Test
     public void shouldReturnClosureFromFunction() throws Exception {
         run(
             "closure = { x ->",
-            "    (y) -> x * y",
+            "    var z = x + 1",
+            "    (y) -> z * y",
             "}",
-            "main = () -> say $ closure 2 3"
+            "main = () -> say $ closure 4 31"
         );
-        verifyOut("6");
+        verifyOut("155");
     }
 
     @Test
@@ -181,5 +183,9 @@ public class CompilerTest {
 
     private void verifyOut(String line) {
         verify(out.getStream()).println(line);
+    }
+
+    private void verifyNever(String line) {
+        verify(out.getStream(), never()).println(line);
     }
 }

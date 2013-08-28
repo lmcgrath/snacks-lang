@@ -24,10 +24,12 @@ import snacks.lang.compiler.ast.*;
 public class Compiler implements AstVisitor {
 
     private static final Map<String, String> names = new HashMap<>();
+
     static {
         names.put("*", "Multiply");
         names.put("+", "Plus");
     }
+
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
     private int closures;
@@ -102,34 +104,23 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitFunction(Function node) {
-        CodeBlock block = beginBlock();
+        Map<String, Integer> variables = inClosure() ? getVariables() : new HashMap<String, Integer>();
         JiteClass parent = jiteClass();
         List<String> fields = getFields();
-        if (beginClosure(node.getVariable())) {
-            JiteClass closure = jiteClass();
-            CodeBlock innerBlock = beginBlock();
-            String className = closure.getClassName();
-            compile(node.getBody());
-            innerBlock.areturn();
-            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
-            block.newobj(className);
-            block.dup();
-            for (String field : fields) {
-                block.aload(0);
-                block.getfield(parent.getClassName(), field, ci(Object.class));
-            }
-            block.aload(1);
-            block.invokespecial(className, "<init>", sig(params(void.class, Object.class, getFields().size())));
-            if (!block.returns()) {
-                block.areturn();
-            }
+        CodeBlock parentBlock = null;
+        if (inClosure()) {
+            parentBlock = block();
+        }
+        if (beginClosure(node.getVariable(), variables)) {
+            compileClosure(node, parent, parentBlock, fields, variables);
             acceptClosure();
         } else {
+            CodeBlock block = beginBlock();
             compile(node.getBody());
+            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
             if (!block.returns()) {
                 block.areturn();
             }
-            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
         }
     }
 
@@ -238,9 +229,11 @@ public class Compiler implements AstVisitor {
         return jiteClass;
     }
 
-    private boolean beginClosure(String variable) {
+    private boolean beginClosure(String variable, Map<String, Integer> variables) {
         if (inClosure()) {
-            List<String> fields = extendFields();
+            List<String> fields = new ArrayList<>();
+            fields.addAll(variables.keySet());
+            fields.addAll(extendFields());
             beginClass(generateName(), asList(p(Applicable.class)), variable, fields);
             defineClosureFields(fields);
             defineClosureConstructor(fields);
@@ -263,6 +256,26 @@ public class Compiler implements AstVisitor {
 
     private void compile(Locator locator) {
         locator.accept(this);
+    }
+
+    private void compileClosure(Function node, JiteClass parentClass, CodeBlock parentBlock, List<String> fields, Map<String, Integer> variables) {
+        JiteClass closure = jiteClass();
+        CodeBlock innerBlock = beginBlock();
+        String className = closure.getClassName();
+        compile(node.getBody());
+        innerBlock.areturn();
+        closure.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+        parentBlock.newobj(className);
+        parentBlock.dup();
+        for (String field : fields) {
+            parentBlock.aload(0);
+            parentBlock.getfield(parentClass.getClassName(), field, ci(Object.class));
+        }
+        for (String variable : variables.keySet()) {
+            parentBlock.aload(variables.get(variable));
+        }
+        parentBlock.aload(1);
+        parentBlock.invokespecial(className, "<init>", sig(params(void.class, Object.class, getFields().size())));
     }
 
     private void defineClosureConstructor(final List<String> fields) {
@@ -321,6 +334,10 @@ public class Compiler implements AstVisitor {
 
     private int getVariable(String name) {
         return state().getVariable(name);
+    }
+
+    private Map<String, Integer> getVariables() {
+        return state().getVariables();
     }
 
     private boolean inClosure() {
@@ -423,6 +440,10 @@ public class Compiler implements AstVisitor {
             return blocks.peek().getVariable(name);
         }
 
+        public Map<String, Integer> getVariables() {
+            return blocks.peek().getVariables();
+        }
+
         public boolean isField(String name) {
             return fields.contains(name);
         }
@@ -447,7 +468,7 @@ public class Compiler implements AstVisitor {
 
         public BlockState(CodeBlock block) {
             this.block = block;
-            this.variables = new HashMap<>();
+            this.variables = new LinkedHashMap<>();
         }
 
         public CodeBlock getBlock() {
@@ -459,6 +480,10 @@ public class Compiler implements AstVisitor {
                 variables.put(name, variables.size() + 2);
             }
             return variables.get(name);
+        }
+
+        public Map<String, Integer> getVariables() {
+            return variables;
         }
 
         public boolean isVariable(String name) {
