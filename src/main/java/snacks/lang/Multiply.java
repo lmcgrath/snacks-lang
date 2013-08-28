@@ -30,3 +30,4 @@ public class Multiply implements Applicable {
         }
     }
 }
+
