@@ -177,6 +177,18 @@ public class CompilerTest {
         verifyOut("8");
     }
 
+    @Test
+    public void shouldConcatenateStrings() throws Exception {
+        run("main = () -> say $ 'Hello ' + 'World!'");
+        verifyOut("Hello World!");
+    }
+
+    @Test
+    public void shouldConcatenateStringToInteger() throws Exception {
+        run("main = () -> say $ 'Answer = ' + 4 + 2");
+        verifyOut("Answer = 42");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
