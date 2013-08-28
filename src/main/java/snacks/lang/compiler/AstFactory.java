@@ -81,7 +81,7 @@ public final class AstFactory {
     }
 
     public static AstNode var(String name, Type type) {
-        return new Variable(name, type);
+        return new DeclaredArgument(name, type);
     }
 
     private AstFactory() {

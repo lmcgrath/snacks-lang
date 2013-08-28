@@ -4,11 +4,11 @@ public interface AstVisitor {
 
     void visitApply(Apply node);
 
-    void visitArgument(Variable node);
-
     void visitBooleanConstant(BooleanConstant node);
 
     void visitDeclarationLocator(DeclarationLocator locator);
+
+    void visitDeclaredArgument(DeclaredArgument node);
 
     void visitDeclaredExpression(DeclaredExpression node);
 

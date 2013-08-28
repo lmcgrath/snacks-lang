@@ -57,8 +57,8 @@ public class Translator implements SyntaxVisitor {
         return environment().createVariable();
     }
 
-    public void define(Variable variable) {
-        define(variable.getLocator(), variable.getType());
+    public void define(DeclaredArgument argument) {
+        define(argument.getLocator(), argument.getType());
     }
 
     public void define(Locator locator, Type type) {
@@ -420,25 +420,25 @@ public class Translator implements SyntaxVisitor {
         return apply(expression, argument, set(allowedTypes));
     }
 
-    private AstNode applyLambda(FunctionLiteral node, Symbol argument) {
+    private AstNode applyLambda(FunctionLiteral functionNode, Symbol argumentNode) {
         enterScope();
-        Variable variable = translateAs(argument, Variable.class);
-        define(variable);
-        specialize(variable.getType());
-        AstNode body = translate(node.getBody());
+        DeclaredArgument argument = translateAs(argumentNode, DeclaredArgument.class);
+        define(argument);
+        specialize(argument.getType());
+        AstNode body = translate(functionNode.getBody());
         leaveScope();
         List<Type> allowedLambdaTypes = new ArrayList<>();
-        for (Type argumentSubType : variable.getType().decompose()) {
+        for (Type argumentSubType : argument.getType().decompose()) {
             enterScope();
-            define(variable.getLocator(), argumentSubType);
-            specialize(variable.getType());
-            Type bodyType = translate(node.getBody()).getType();
+            define(argument.getLocator(), argumentSubType);
+            specialize(argument.getType());
+            Type bodyType = translate(functionNode.getBody()).getType();
             leaveScope();
             for (Type bodySubType : bodyType.decompose()) {
                 allowedLambdaTypes.add(func(argumentSubType, bodySubType));
             }
         }
-        return new Function(variable.getName(), body, set(allowedLambdaTypes));
+        return new Function(argument.getName(), body, set(allowedLambdaTypes));
     }
 
     private Locator findWildcard(String value) {

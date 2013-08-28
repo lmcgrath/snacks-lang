@@ -28,12 +28,6 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visitArgument(Variable node) {
-        state.println("name: " + node.getName());
-        state.println("type: " + node.getType());
-    }
-
-    @Override
     public void visitBooleanConstant(BooleanConstant node) {
         value(node.getValue());
     }
@@ -42,6 +36,12 @@ public class AstPrinter implements AstVisitor {
     public void visitDeclarationLocator(DeclarationLocator locator) {
         value("module: " + locator.getModule());
         value("name: " + locator.getName());
+    }
+
+    @Override
+    public void visitDeclaredArgument(DeclaredArgument node) {
+        state.println("name: " + node.getName());
+        state.println("type: " + node.getType());
     }
 
     @Override

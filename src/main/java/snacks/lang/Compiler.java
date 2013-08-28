@@ -49,17 +49,22 @@ public class Compiler implements AstVisitor {
         for (JiteClass jiteClass : acceptedClasses) {
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
             loader.defineClass(c(jiteClass.getClassName()), bytes);
-            try {
-                File file = new File(jiteClass.getClassName() + ".class");
-                file.getParentFile().mkdirs();
-                try (FileOutputStream output = new FileOutputStream(file)) {
-                    output.write(bytes);
-                }
-            } catch (IOException exception) {
-                throw new CompileException(exception);
-            }
+            writeClass(new File(jiteClass.getClassName() + ".class"), bytes);
         }
         return loader;
+    }
+
+    private void writeClass(File file, byte[] bytes) throws CompileException {
+        try {
+            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
+                throw new IOException("Failed to mkdirs: " + file.getParentFile());
+            }
+            try (FileOutputStream output = new FileOutputStream(file)) {
+                output.write(bytes);
+            }
+        } catch (IOException exception) {
+            throw new CompileException(exception);
+        }
     }
 
     @Override
@@ -67,11 +72,6 @@ public class Compiler implements AstVisitor {
         compile(node.getFunction());
         compile(node.getArgument());
         block().invokeinterface(p(Applicable.class), "apply", sig(Object.class, Object.class));
-    }
-
-    @Override
-    public void visitArgument(Variable node) {
-        throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
@@ -84,6 +84,11 @@ public class Compiler implements AstVisitor {
         CodeBlock block = block();
         String reference = locator.getModule() + "/" + javafy(locator.getName());
         block.invokestatic(reference, "instance", sig(Object.class));
+    }
+
+    @Override
+    public void visitDeclaredArgument(DeclaredArgument node) {
+        throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
