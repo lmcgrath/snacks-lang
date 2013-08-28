@@ -22,6 +22,7 @@ public class Translator implements SyntaxVisitor {
     private final List<String> wildcardImports;
     private final List<String> typeErrors;
     private AstNode result;
+    private int functionLevel;
 
     public Translator(SymbolEnvironment environment, String module) {
         this.module = module;
@@ -55,10 +56,6 @@ public class Translator implements SyntaxVisitor {
 
     public Type createVariable() {
         return environment().createVariable();
-    }
-
-    public void define(DeclaredArgument argument) {
-        define(argument.getLocator(), argument.getType());
     }
 
     public void define(Locator locator, Type type) {
@@ -130,15 +127,17 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitApplyExpression(ApplyExpression node) {
-        result = applyFunction(
-            translate(node.getExpression()),
-            translate(node.getArgument())
-        );
+        AstNode function = translate(node.getExpression());
+        AstNode argument = translate(node.getArgument());
+        result = apply(function, argument, inferenceResultType(function.getType(), argument.getType()));
     }
 
     @Override
     public void visitArgument(Argument node) {
-        result = var(node.getName(), translateType(node.getType()));
+        DeclaredArgument argument = new DeclaredArgument(node.getName(), translateType(node.getType()));
+        define(argument.getLocator(), argument.getType());
+        specialize(argument.getType());
+        result = argument;
     }
 
     @Override
@@ -223,16 +222,8 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitFunctionLiteral(FunctionLiteral node) {
-        AstNode function = applyLambda(node, node.getArgument());
-        Symbol typeNode = node.getType();
-        if (typeNode != null) {
-            Type resultType = translateType(typeNode);
-            if (!unifyFunctionResult(function.getType(), resultType)) {
-                throw new TypeException(
-                    "Function type " + function.getType() + " not compatible with declared result type " + resultType
-                );
-            }
-        }
+        AstNode function = translateFunction(node);
+        validateResultType(node, function);
         result = function;
     }
 
@@ -392,9 +383,44 @@ public class Translator implements SyntaxVisitor {
         addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
     }
 
-    private AstNode applyFunction(AstNode expression, AstNode argument) throws TypeException {
-        Type functionType = expression.getType();
-        Type argumentType = argument.getType();
+    private AstNode acceptFunction(DeclaredArgument argument, AstNode body, Type functionType) {
+        if (functionLevel == 1) {
+            return func(argument.getName(), body, functionType);
+        } else {
+            functionLevel--;
+            return closure(argument.getName(), body, functionType);
+        }
+    }
+
+    private void beginFunction() {
+        functionLevel++;
+    }
+
+    private Locator findWildcard(String value) {
+        for (String module : wildcardImports) {
+            if (environment().isDefined(locator(module, value))) {
+                return locator(module, value);
+            }
+        }
+        throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
+    }
+
+    private Type inferenceFunctionType(FunctionLiteral functionNode, DeclaredArgument argument) {
+        List<Type> allowedTypes = new ArrayList<>();
+        for (Type argumentSubType : argument.getType().decompose()) {
+            enterScope();
+            define(argument.getLocator(), argumentSubType);
+            specialize(argument.getType());
+            Type bodyType = translate(functionNode.getBody()).getType();
+            leaveScope();
+            for (Type bodySubType : bodyType.decompose()) {
+                allowedTypes.add(func(argumentSubType, bodySubType));
+            }
+        }
+        return set(allowedTypes);
+    }
+
+    private Type inferenceResultType(Type functionType, Type argumentType) {
         Type constrainedArgumentType = argumentType.recompose(functionType, environment());
         List<Type> allowedTypes = new ArrayList<>();
         List<Type> functionTypesQueue = new LinkedList<>(functionType.decompose());
@@ -417,37 +443,7 @@ public class Translator implements SyntaxVisitor {
             typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);
         }
         argumentType.bind(constrainedArgumentType);
-        return apply(expression, argument, set(allowedTypes));
-    }
-
-    private AstNode applyLambda(FunctionLiteral functionNode, Symbol argumentNode) {
-        enterScope();
-        DeclaredArgument argument = translateAs(argumentNode, DeclaredArgument.class);
-        define(argument);
-        specialize(argument.getType());
-        AstNode body = translate(functionNode.getBody());
-        leaveScope();
-        List<Type> allowedLambdaTypes = new ArrayList<>();
-        for (Type argumentSubType : argument.getType().decompose()) {
-            enterScope();
-            define(argument.getLocator(), argumentSubType);
-            specialize(argument.getType());
-            Type bodyType = translate(functionNode.getBody()).getType();
-            leaveScope();
-            for (Type bodySubType : bodyType.decompose()) {
-                allowedLambdaTypes.add(func(argumentSubType, bodySubType));
-            }
-        }
-        return new Function(argument.getName(), body, set(allowedLambdaTypes));
-    }
-
-    private Locator findWildcard(String value) {
-        for (String module : wildcardImports) {
-            if (environment().isDefined(locator(module, value))) {
-                return locator(module, value);
-            }
-        }
-        throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
+        return set(allowedTypes);
     }
 
     private AstNode translate(Visitable node) {
@@ -459,8 +455,14 @@ public class Translator implements SyntaxVisitor {
         return translate((Visitable) node);
     }
 
-    private <T extends AstNode> T translateAs(Symbol node, Class<T> type) {
-        return type.cast(translate(node));
+    private AstNode translateFunction(FunctionLiteral node) {
+        beginFunction();
+        enterScope();
+        DeclaredArgument argument = (DeclaredArgument) translate(node.getArgument());
+        AstNode body = translate(node.getBody());
+        leaveScope();
+        Type functionType = inferenceFunctionType(node, argument);
+        return acceptFunction(argument, body, functionType);
     }
 
     private Type translateType(Symbol node) {
@@ -477,6 +479,17 @@ public class Translator implements SyntaxVisitor {
             return actualResultType.unify(declaredResultType);
         } else {
             return false;
+        }
+    }
+
+    private void validateResultType(FunctionLiteral node, AstNode function) {
+        if (node.getType() != null) {
+            Type resultType = translateType(node.getType());
+            if (!unifyFunctionResult(function.getType(), resultType)) {
+                throw new TypeException(
+                    "Function type " + function.getType() + " not compatible with declared result type " + resultType
+                );
+            }
         }
     }
 }

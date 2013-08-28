@@ -11,6 +11,10 @@ public final class AstFactory {
         return new Apply(function, argument, type);
     }
 
+    public static AstNode closure(String variable, AstNode expression, Type type) {
+        return new Closure(variable, expression, type);
+    }
+
     public static AstNode constant(boolean value) {
         return new BooleanConstant(value);
     }

@@ -6,6 +6,8 @@ public interface AstVisitor {
 
     void visitBooleanConstant(BooleanConstant node);
 
+    void visitClosure(Closure node);
+
     void visitDeclarationLocator(DeclarationLocator locator);
 
     void visitDeclaredArgument(DeclaredArgument node);

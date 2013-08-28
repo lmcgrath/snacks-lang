@@ -32,13 +32,11 @@ public class Compiler implements AstVisitor {
 
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
-    private int closures;
     private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
-        closures = 0;
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -54,19 +52,6 @@ public class Compiler implements AstVisitor {
         return loader;
     }
 
-    private void writeClass(File file, byte[] bytes) throws CompileException {
-        try {
-            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
-                throw new IOException("Failed to mkdirs: " + file.getParentFile());
-            }
-            try (FileOutputStream output = new FileOutputStream(file)) {
-                output.write(bytes);
-            }
-        } catch (IOException exception) {
-            throw new CompileException(exception);
-        }
-    }
-
     @Override
     public void visitApply(Apply node) {
         compile(node.getFunction());
@@ -77,6 +62,17 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitBooleanConstant(BooleanConstant node) {
         block().ldc(node.getValue());
+    }
+
+    @Override
+    public void visitClosure(Closure node) {
+        String closureName = generateClosureName();
+        Map<String, Integer> variables = getVariables();
+        List<String> closureFields = new ArrayList<>();
+        closureFields.addAll(variables.keySet());
+        closureFields.addAll(extendFields());
+        compileClosure(closureName, node, node.getVariable(), closureFields);
+        compileClosureInitializer(variables, closureFields, closureName);
     }
 
     @Override
@@ -95,7 +91,7 @@ public class Compiler implements AstVisitor {
     public void visitDeclaredExpression(DeclaredExpression node) {
         JiteClass jiteClass = beginClass(node.getModule() + "/" + javafy(node.getName()), interfacesFor(node.getType()));
         jiteClass.defineDefaultConstructor();
-        defineInstantiator(node, jiteClass);
+        compileInstantiator(node, jiteClass);
         if (isFunction(node.getType())) {
             compile(node.getBody());
         }
@@ -109,23 +105,12 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitFunction(Function node) {
-        Map<String, Integer> variables = inClosure() ? getVariables() : new HashMap<String, Integer>();
-        JiteClass parent = jiteClass();
-        List<String> fields = getFields();
-        CodeBlock parentBlock = null;
-        if (inClosure()) {
-            parentBlock = block();
-        }
-        if (beginClosure(node.getVariable(), variables)) {
-            compileClosure(node, parent, parentBlock, fields, variables);
-            acceptClosure();
-        } else {
-            CodeBlock block = beginBlock();
-            compile(node.getBody());
-            jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
-            if (!block.returns()) {
-                block.areturn();
-            }
+        CodeBlock block = beginBlock();
+        state().setVariable(node.getVariable());
+        compile(node.getBody());
+        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+        if (!block.returns()) {
+            block.areturn();
         }
     }
 
@@ -208,16 +193,6 @@ public class Compiler implements AstVisitor {
         acceptedClasses.add(states.pop().getJiteClass());
     }
 
-    private boolean acceptClosure() {
-        if (inClosure()) {
-            acceptClass();
-            closures--;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private CodeBlock beginBlock() {
         return state().beginBlock();
     }
@@ -234,23 +209,6 @@ public class Compiler implements AstVisitor {
         return jiteClass;
     }
 
-    private boolean beginClosure(String variable, Map<String, Integer> variables) {
-        if (inClosure()) {
-            List<String> fields = new ArrayList<>();
-            fields.addAll(variables.keySet());
-            fields.addAll(extendFields());
-            beginClass(generateName(), asList(p(Applicable.class)), variable, fields);
-            defineClosureFields(fields);
-            defineClosureConstructor(fields);
-            closures++;
-            return true;
-        } else {
-            state().setVariable(variable);
-            closures++;
-            return false;
-        }
-    }
-
     private CodeBlock block() {
         return state().block();
     }
@@ -263,16 +221,54 @@ public class Compiler implements AstVisitor {
         locator.accept(this);
     }
 
-    private void compileClosure(Function node, JiteClass parentClass, CodeBlock parentBlock, List<String> fields, Map<String, Integer> variables) {
-        JiteClass closure = jiteClass();
-        CodeBlock innerBlock = beginBlock();
-        String className = closure.getClassName();
+    private String compileClosure(String closureName, Closure node, String variable, List<String> closureFields) {
+        beginClass(closureName, asList(p(Applicable.class)), variable, closureFields);
+        compileClosureFields(closureFields);
+        compileClosureConstructor(closureFields);
+        compileClosureBody(node);
+        acceptClass();
+        return closureName;
+    }
+
+    private void compileClosureBody(Closure node) {
+        JiteClass closureClass = jiteClass();
+        CodeBlock closureBlock = beginBlock();
         compile(node.getBody());
-        innerBlock.areturn();
-        closure.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
-        parentBlock.newobj(className);
-        parentBlock.dup();
+        if (!closureBlock.returns()) {
+            closureBlock.areturn();
+        }
+        closureClass.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+    }
+
+    private void compileClosureConstructor(final List<String> fields) {
+        String signature = sig(params(void.class, Object.class, fields.size()));
+        CodeBlock block = beginBlock();
+        block.aload(0);
+        block.invokespecial(p(Object.class), "<init>", sig(void.class));
+        int i = 1;
         for (String field : fields) {
+            block.aload(0);
+            block.aload(i++);
+            block.putfield(jiteClass().getClassName(), field, ci(Object.class));
+        }
+        block.voidreturn();
+        jiteClass().defineMethod("<init>", ACC_PUBLIC, signature, acceptBlock());
+    }
+
+    private void compileClosureFields(List<String> fields) {
+        JiteClass jiteClass = jiteClass();
+        for (String field : fields) {
+            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
+        }
+    }
+
+    private void compileClosureInitializer(Map<String, Integer> variables, List<String> closureFields, String closureName) {
+        JiteClass parentClass = jiteClass();
+        CodeBlock parentBlock = block();
+        List<String> parentFields = getFields();
+        parentBlock.newobj(closureName);
+        parentBlock.dup();
+        for (String field : parentFields) {
             parentBlock.aload(0);
             parentBlock.getfield(parentClass.getClassName(), field, ci(Object.class));
         }
@@ -280,32 +276,10 @@ public class Compiler implements AstVisitor {
             parentBlock.aload(variables.get(variable));
         }
         parentBlock.aload(1);
-        parentBlock.invokespecial(className, "<init>", sig(params(void.class, Object.class, getFields().size())));
+        parentBlock.invokespecial(closureName, "<init>", sig(params(void.class, Object.class, closureFields.size())));
     }
 
-    private void defineClosureConstructor(final List<String> fields) {
-        String signature = sig(params(void.class, Object.class, fields.size()));
-        jiteClass().defineMethod("<init>", ACC_PUBLIC, signature, new CodeBlock() {{
-            aload(0);
-            invokespecial(p(Object.class), "<init>", sig(void.class));
-            int i = 1;
-            for (String field : fields) {
-                aload(0);
-                aload(i++);
-                putfield(jiteClass().getClassName(), field, ci(Object.class));
-            }
-            voidreturn();
-        }});
-    }
-
-    private void defineClosureFields(List<String> fields) {
-        JiteClass jiteClass = jiteClass();
-        for (String field : fields) {
-            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
-        }
-    }
-
-    private void defineInstantiator(DeclaredExpression node, JiteClass jiteClass) {
+    private void compileInstantiator(DeclaredExpression node, JiteClass jiteClass) {
         CodeBlock block = beginBlock();
         LabelNode returnValue = new LabelNode(new Label());
         jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
@@ -329,7 +303,7 @@ public class Compiler implements AstVisitor {
         return state().extendFields();
     }
 
-    private String generateName() {
+    private String generateClosureName() {
         return jiteClass().getClassName() + "_" + state().nextId();
     }
 
@@ -343,10 +317,6 @@ public class Compiler implements AstVisitor {
 
     private Map<String, Integer> getVariables() {
         return state().getVariables();
-    }
-
-    private boolean inClosure() {
-        return closures > 0;
     }
 
     private List<String> interfacesFor(Type type) {
@@ -381,6 +351,49 @@ public class Compiler implements AstVisitor {
 
     private State state() {
         return states.peek();
+    }
+
+    private void writeClass(File file, byte[] bytes) throws CompileException {
+        try {
+            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
+                throw new IOException("Failed to mkdirs: " + file.getParentFile());
+            }
+            try (FileOutputStream output = new FileOutputStream(file)) {
+                output.write(bytes);
+            }
+        } catch (IOException exception) {
+            throw new CompileException(exception);
+        }
+    }
+
+    private static final class BlockState {
+
+        private final CodeBlock block;
+        private final Map<String, Integer> variables;
+
+        public BlockState(CodeBlock block) {
+            this.block = block;
+            this.variables = new LinkedHashMap<>();
+        }
+
+        public CodeBlock getBlock() {
+            return block;
+        }
+
+        public int getVariable(String name) {
+            if (!isVariable(name)) {
+                variables.put(name, variables.size() + 2);
+            }
+            return variables.get(name);
+        }
+
+        public Map<String, Integer> getVariables() {
+            return variables;
+        }
+
+        public boolean isVariable(String name) {
+            return variables.containsKey(name);
+        }
     }
 
     private static final class SnacksLoader extends ClassLoader {
@@ -463,36 +476,6 @@ public class Compiler implements AstVisitor {
 
         public void setVariable(String variable) {
             this.variable = variable;
-        }
-    }
-
-    private static final class BlockState {
-
-        private final CodeBlock block;
-        private final Map<String, Integer> variables;
-
-        public BlockState(CodeBlock block) {
-            this.block = block;
-            this.variables = new LinkedHashMap<>();
-        }
-
-        public CodeBlock getBlock() {
-            return block;
-        }
-
-        public int getVariable(String name) {
-            if (!isVariable(name)) {
-                variables.put(name, variables.size() + 2);
-            }
-            return variables.get(name);
-        }
-
-        public Map<String, Integer> getVariables() {
-            return variables;
-        }
-
-        public boolean isVariable(String name) {
-            return variables.containsKey(name);
         }
     }
 }

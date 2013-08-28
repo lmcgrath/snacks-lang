@@ -33,6 +33,13 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
+    public void visitClosure(Closure node) {
+        state.println("type: " + node.getType());
+        state.println("variable: " + node.getVariable());
+        print(node.getBody());
+    }
+
+    @Override
     public void visitDeclarationLocator(DeclarationLocator locator) {
         value("module: " + locator.getModule());
         value("name: " + locator.getName());
