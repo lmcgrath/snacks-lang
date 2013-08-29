@@ -24,17 +24,22 @@ public class SnacksRuntime {
     public static CallSite bootstrap(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
         MutableCallSite callSite = new MutableCallSite(type);
         MethodHandle send = Binder.from(type)
-            .insert(0, lookup, callSite)
+            .insert(0, lookup)
             .invokeStatic(lookup, SnacksRuntime.class, name);
         callSite.setTarget(send);
         return callSite;
     }
 
-    public static Object apply(Lookup lookup, MutableCallSite callSite, Object function, Object argument) throws Throwable {
-        MethodHandle target;
-        target = Binder.from(Object.class, Object.class, Object.class)
-            .cast(Object.class, function.getClass(), argument.getClass())
-            .invokeVirtual(lookup, "apply");
-        return target.invoke(function, argument);
+    public static Object apply(Lookup lookup, Object function, Object argument) throws Throwable {
+        return methodHandleFor(lookup, function, argument).invoke(function, argument);
+    }
+
+    private static MethodHandle methodHandleFor(Lookup lookup, Object function, Object argument) throws Throwable {
+        Binder binder = Binder.from(Object.class, Object.class, Object.class);
+        try {
+            return binder.cast(Object.class, function.getClass(), argument.getClass()).invokeVirtual(lookup, "apply");
+        } catch (ReflectiveOperationException exception) {
+            return binder.cast(Object.class, function.getClass(), Object.class).invokeVirtual(lookup, "apply");
+        }
     }
 }

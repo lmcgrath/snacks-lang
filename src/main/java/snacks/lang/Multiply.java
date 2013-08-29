@@ -1,6 +1,6 @@
 package snacks.lang;
 
-public class Multiply implements Applicable {
+public class Multiply {
 
     private static Multiply instance;
 
@@ -11,22 +11,66 @@ public class Multiply implements Applicable {
         return instance;
     }
 
-    @Override
-    public Object apply(Object argument) {
-        return new Closure((Integer) argument);
+    public Object apply(Double left) {
+        return new DoubleClosure(left);
     }
 
-    private class Closure implements Applicable {
+    public Object apply(Integer left) {
+        return new IntegerClosure(left);
+    }
 
-        private final int value;
+    public Object apply(String left) {
+        return new StringClosure(left);
+    }
 
-        public Closure(int value) {
-            this.value = value;
+    public static final class DoubleClosure {
+
+        private final Double left;
+
+        public DoubleClosure(Double left) {
+            this.left = left;
         }
 
-        @Override
-        public Object apply(Object argument) {
-            return value * (Integer) argument;
+        public Object apply(Integer right) {
+            return left * right;
+        }
+
+        public Object apply(Double right) {
+            return left * right;
+        }
+    }
+
+    public static final class IntegerClosure {
+
+        private final Integer left;
+
+        public IntegerClosure(Integer left) {
+            this.left = left;
+        }
+
+        public Object apply(Integer right) {
+            return left * right;
+        }
+
+        public Object apply(Double right) {
+            return left * right;
+        }
+    }
+
+    public static final class StringClosure {
+
+        private final String left;
+
+        public StringClosure(String left) {
+            this.left = left;
+        }
+
+        public Object apply(Integer right) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < right; i++) {
+                builder.append(left);
+            }
+            return builder.toString();
         }
     }
 }

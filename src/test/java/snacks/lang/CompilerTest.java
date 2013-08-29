@@ -41,7 +41,7 @@ public class CompilerTest {
     @Test
     public void shouldMultiplyInteger() throws Exception {
         run("main = () -> say $ 2 * 3");
-        verifyOut("6");
+        verifyOut(6);
     }
 
     @Test
@@ -50,7 +50,7 @@ public class CompilerTest {
             "bananas = 2 + 2",
             "main = () -> say bananas"
         );
-        verifyOut("4");
+        verifyOut(4);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class CompilerTest {
             "multiply = (x) -> x * 2",
             "main = () -> say $ multiply 4"
         );
-        verifyOut("8");
+        verifyOut(8);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class CompilerTest {
             "multiply = (x y) -> x * y",
             "main = () -> say $ multiply 3 5"
         );
-        verifyOut("15");
+        verifyOut(15);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class CompilerTest {
             "triple = (x y z) -> x * y * z",
             "main = () -> say $ triple 9 3 348"
         );
-        verifyOut("9396");
+        verifyOut(9396);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class CompilerTest {
             "quadruple = (w x y z) -> w * x * y * z",
             "main = () -> say $ quadruple 3 3 3 3"
         );
-        verifyOut("81");
+        verifyOut(81);
     }
 
     @Test
@@ -110,8 +110,8 @@ public class CompilerTest {
             "}",
             "main = () -> waffles()"
         );
-        verifyOut("5");
-        verifyOut("20");
+        verifyOut(5);
+        verifyOut(20);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class CompilerTest {
             "    say $ x * y",
             "}"
         );
-        verifyOut("36");
+        verifyOut(36);
     }
 
     @Test
@@ -135,7 +135,7 @@ public class CompilerTest {
             "}",
             "main = () -> say $ triple 12"
         );
-        verifyOut("36");
+        verifyOut(36);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class CompilerTest {
             "}",
             "main = () -> say $ triple 12"
         );
-        verifyOut("36");
+        verifyOut(36);
         verifyNever("can't touch this");
     }
 
@@ -161,7 +161,7 @@ public class CompilerTest {
             "}",
             "main = () -> say $ closure 4 31"
         );
-        verifyOut("155");
+        verifyOut(155);
     }
 
     @Test
@@ -196,8 +196,8 @@ public class CompilerTest {
             "    say $ operate `*`",
             "}"
         );
-        verifyOut("6");
-        verifyOut("8");
+        verifyOut(6);
+        verifyOut(8);
     }
 
     @Test
@@ -214,6 +214,10 @@ public class CompilerTest {
 
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
+    }
+
+    private void verifyOut(int value) {
+        verify(out.getStream()).println(value);
     }
 
     private void verifyOut(String line) {

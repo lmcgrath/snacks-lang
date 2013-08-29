@@ -5,7 +5,8 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static snacks.lang.compiler.ast.Type.isFunction;
+import static snacks.lang.SnacksRuntime.BOOTSTRAP;
+import static snacks.lang.compiler.ast.Type.argument;
 import static snacks.lang.compiler.ast.Type.isInstantiable;
 
 import java.io.File;
@@ -54,7 +55,7 @@ public class Compiler implements AstVisitor {
     public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
-        block().invokeinterface(p(Applicable.class), "apply", sig(Object.class, Object.class));
+        block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
     }
 
     @Override
@@ -67,7 +68,7 @@ public class Compiler implements AstVisitor {
         state().setFields(node.getEnvironment());
         defineClosureFields(node);
         defineClosureConstructor(node);
-        defineClosureBody(node);
+        compileApply(node.getBody(), node.getType());
     }
 
     @Override
@@ -125,12 +126,7 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitFunction(Function node) {
         defineFunctionInitializer();
-        CodeBlock block = beginBlock();
-        compile(node.getBody());
-        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
-        if (!block.returns()) {
-            block.areturn();
-        }
+        compileApply(node.getBody(), node.getType());
     }
 
     @Override
@@ -228,14 +224,19 @@ public class Compiler implements AstVisitor {
         locator.accept(this);
     }
 
-    private void defineClosureBody(Closure node) {
-        JiteClass closureClass = jiteClass();
-        CodeBlock closureBlock = beginBlock();
-        compile(node.getBody());
-        if (!closureBlock.returns()) {
-            closureBlock.areturn();
+    private void compileApply(AstNode body, Type type) {
+        Set<Class<?>> compiledTypes = new HashSet<>();
+        for (Type subType : type.decompose()) {
+            Class<?> argumentType = typeOf(argument(subType));
+            if (compiledTypes.add(argumentType)) {
+                CodeBlock block = beginBlock();
+                compile(body);
+                if (!block.returns()) {
+                    block.areturn();
+                }
+                jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, argumentType), acceptBlock());
+            }
         }
-        closureClass.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
     }
 
     private void defineClosureConstructor(Closure closure) {
@@ -286,8 +287,6 @@ public class Compiler implements AstVisitor {
         List<String> interfaces = new ArrayList<>();
         if (isInstantiable(type)) {
             interfaces.add(p(Invokable.class));
-        } else if (isFunction(type)) {
-            interfaces.add(p(Applicable.class));
         }
         return interfaces;
     }
@@ -325,6 +324,15 @@ public class Compiler implements AstVisitor {
 
     private State state() {
         return states.peek();
+    }
+
+    private Class<?> typeOf(Type argument) {
+        switch (argument.getName()) {
+            case "String": return String.class;
+            case "Integer": return Integer.class;
+            case "Double": return Double.class;
+            default: return Object.class;
+        }
     }
 
     private void writeClass(File file, byte[] bytes) throws CompileException {

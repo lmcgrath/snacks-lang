@@ -1,6 +1,8 @@
 package snacks.lang;
 
-public class Say implements Applicable {
+import static java.lang.System.out;
+
+public class Say {
 
     private static Say instance;
 
@@ -11,13 +13,28 @@ public class Say implements Applicable {
         return instance;
     }
 
+    public Object apply(Boolean value) {
+        out.println(value.booleanValue());
+        return null;
+    }
+
+    public Object apply(Double value) {
+        out.println(value.doubleValue());
+        return null;
+    }
+
+    public Object apply(Integer value) {
+        out.println(value.intValue());
+        return null;
+    }
+
     public Object apply(String value) {
-        System.out.println(value);
+        out.println(value);
         return null;
     }
 
     public Object apply(Object value) {
-        System.out.println(value.toString());
+        out.println(value);
         return null;
     }
 }

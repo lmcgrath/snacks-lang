@@ -1,9 +1,7 @@
 package snacks.lang;
 
-public class Plus implements Applicable {
+public class Plus {
 
-    private static final Operations stringOps = new StringOperations();
-    private static final Operations integerOps = new IntegerOperations();
     private static Plus instance;
 
     public static Object instance() {
@@ -13,90 +11,99 @@ public class Plus implements Applicable {
         return instance;
     }
 
-    @Override
-    public Object apply(Object argument) {
-        return new Closure(argument);
+    public Object apply(Boolean left) {
+        return new BooleanClosure(left);
     }
 
-    private static final class Closure implements Applicable {
+    public Object apply(Double left) {
+        return new DoubleClosure(left);
+    }
 
-        private final Object left;
+    public Object apply(Integer left) {
+        return new IntegerClosure(left);
+    }
 
-        public Closure(Object left) {
+    public Object apply(String left) {
+        return new StringClosure(left);
+    }
+
+    public static final class BooleanClosure {
+
+        private final Boolean left;
+
+        public BooleanClosure(Boolean left) {
             this.left = left;
         }
 
-        @Override
-        public Object apply(Object right) {
-            return operations(left).combine(operations(right)).add(left, right);
+        public Object apply(String right) {
+            return left + right;
         }
     }
 
-    private static Operations operations(Object operand) {
-        Class operandClass = operand.getClass();
-        if (operandClass == Integer.class) {
-            return integerOps;
-        } else if (operandClass == String.class) {
-            return stringOps;
-        } else {
-            return integerOps;
+    public static final class DoubleClosure {
+
+        private final Double left;
+
+        public DoubleClosure(Double left) {
+            this.left = left;
+        }
+
+        public Object apply(Double right) {
+            return left + right;
+        }
+
+        public Object apply(Integer right) {
+            return left + right;
+        }
+
+        public Object apply(String right) {
+            return left + right;
         }
     }
 
-    private interface Operations {
+    public static final class IntegerClosure {
 
-        Object add(Object left, Object right);
+        private final Integer left;
 
-        Operations combine(Operations other);
-
-        Operations with(IntegerOperations other);
-
-        Operations with(StringOperations other);
-    }
-
-    private static final class IntegerOperations implements Operations {
-
-        @Override
-        public Object add(Object left, Object right) {
-            return (Integer) left + (Integer) right;
+        public IntegerClosure(Integer left) {
+            this.left = left;
         }
 
-        @Override
-        public Operations combine(Operations other) {
-            return other.with(this);
+        public Object apply(Double right) {
+            return left + right;
         }
 
-        @Override
-        public Operations with(IntegerOperations other) {
-            return this;
+        public Object apply(Integer right) {
+            return left + right;
         }
 
-        @Override
-        public Operations with(StringOperations other) {
-            return stringOps;
+        public Object apply(String right) {
+            return left + right;
         }
     }
 
-    private static final class StringOperations implements Operations {
+    public static final class StringClosure {
 
-        @Override
-        public Object add(Object left, Object right) {
-            return String.valueOf(left) + right;
+        private final String left;
+
+        public StringClosure(String left) {
+            this.left = left;
         }
 
-        @Override
-        public Operations combine(Operations other) {
-            return other.with(this);
+        public Object apply(Boolean right) {
+            return left + right;
         }
 
-        @Override
-        public Operations with(IntegerOperations other) {
-            return this;
+        public Object apply(Double right) {
+            return left + right;
         }
 
-        @Override
-        public Operations with(StringOperations other) {
-            return this;
+        public Object apply(Integer right) {
+            return left + right;
+        }
+
+        public Object apply(String right) {
+            return left + right;
         }
     }
 }
