@@ -12,7 +12,6 @@ import com.headius.invokebinder.Binder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 
-@SuppressWarnings("unused")
 public class SnacksRuntime {
 
     public static final Handle BOOTSTRAP = new Handle(
@@ -25,17 +24,17 @@ public class SnacksRuntime {
     public static CallSite bootstrap(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
         MutableCallSite callSite = new MutableCallSite(type);
         MethodHandle send = Binder.from(type)
-            .insert(0)
+            .insert(0, lookup, callSite)
             .invokeStatic(lookup, SnacksRuntime.class, name);
         callSite.setTarget(send);
         return callSite;
     }
 
-    public static Object apply(Applicable function, Object argument) {
-        return function.apply(argument);
-    }
-
-    public static Object invoke(Invokable invokable) throws ReflectiveOperationException {
-        return invokable.invoke();
+    public static Object apply(Lookup lookup, MutableCallSite callSite, Object function, Object argument) throws Throwable {
+        MethodHandle target;
+        target = Binder.from(Object.class, Object.class, Object.class)
+            .cast(Object.class, function.getClass(), argument.getClass())
+            .invokeVirtual(lookup, "apply");
+        return target.invoke(function, argument);
     }
 }

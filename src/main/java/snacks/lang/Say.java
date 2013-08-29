@@ -11,6 +11,11 @@ public class Say implements Applicable {
         return instance;
     }
 
+    public Object apply(String value) {
+        System.out.println(value);
+        return null;
+    }
+
     public Object apply(Object value) {
         System.out.println(value.toString());
         return null;

@@ -6,6 +6,7 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static snacks.lang.SnacksRuntime.BOOTSTRAP;
 import static snacks.lang.compiler.ast.Type.isFunction;
 import static snacks.lang.compiler.ast.Type.isInstantiable;
 import static snacks.lang.compiler.ast.Type.isValue;
@@ -56,7 +57,7 @@ public class Compiler implements AstVisitor {
     public void visitApply(Apply node) {
         compile(node.getFunction());
         compile(node.getArgument());
-        block().invokeinterface(p(Applicable.class), "apply", sig(Object.class, Object.class));
+        block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
     }
 
     @Override
