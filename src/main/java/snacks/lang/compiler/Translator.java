@@ -17,25 +17,23 @@ public class Translator implements SyntaxVisitor {
 
     private final String module;
     private final Deque<SymbolEnvironment> environments;
-    private final Deque<List<AstNode>> collections;
+    private final Set<AstNode> declarations;
     private final Map<String, Locator> aliases;
     private final List<String> wildcardImports;
     private final List<String> typeErrors;
+    private final Map<Symbol, Locator> names;
     private AstNode result;
     private int functionLevel;
+    private NameSequence currentName;
 
     public Translator(SymbolEnvironment environment, String module) {
         this.module = module;
         this.environments = new ArrayDeque<>(asList(environment));
-        this.collections = new ArrayDeque<>();
+        this.declarations = new HashSet<>();
         this.aliases = new HashMap<>();
         this.typeErrors = new ArrayList<>();
-        this.wildcardImports = new ArrayList<>();
-        this.wildcardImports.add("snacks/lang");
-    }
-
-    public List<AstNode> acceptCollection() {
-        return collections.pop();
+        this.names = new IdentityHashMap<>();
+        this.wildcardImports = new ArrayList<>(asList("snacks/lang"));
     }
 
     public void addAlias(String alias, Locator locator) {
@@ -44,14 +42,6 @@ public class Translator implements SyntaxVisitor {
 
     public void addWildcardImport(String wildcardImport) {
         wildcardImports.add(wildcardImport);
-    }
-
-    public void beginCollection() {
-        collections.push(new ArrayList<AstNode>());
-    }
-
-    public void collect(AstNode node) {
-        collections.peek().add(node);
     }
 
     public Type createVariable() {
@@ -105,9 +95,8 @@ public class Translator implements SyntaxVisitor {
     }
 
     public Set<AstNode> translateModule(Symbol node) {
-        beginCollection();
         translate(node);
-        return new HashSet<>(acceptCollection());
+        return new HashSet<>(declarations);
     }
 
     @Override
@@ -173,12 +162,17 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitDeclaration(Declaration node) {
         typeErrors.clear();
-        DeclaredExpression declaration = declaration(getModule(), node.getName(), translate(node.getBody()));
+        reserveName(node.getName());
+        AstNode body = translate(node.getBody());
+        if (!body.isInvokable()) {
+            body = expression(body);
+        }
+        DeclaredExpression declaration = declaration(getModule(), node.getName(), body);
         if (declaration.getType().decompose().isEmpty()) {
             throw new TypeException(join(typeErrors, "; "));
         }
         register(declaration.getName(), declaration.getType());
-        collect(declaration);
+        declarations.add(declaration);
     }
 
     @Override
@@ -252,12 +246,12 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitInstantiableLiteral(InstantiableLiteral node) {
-        result = instantiable(translate(node.getExpression()));
+        result = invokable(translate(node.getExpression()));
     }
 
     @Override
     public void visitInstantiationExpression(InstantiationExpression node) {
-        result = instantiate(translate(node.getExpression()));
+        result = invoke(translate(node.getExpression()));
     }
 
     @Override
@@ -383,12 +377,22 @@ public class Translator implements SyntaxVisitor {
         addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
     }
 
-    private AstNode acceptFunction(DeclaredArgument argument, AstNode body, Type functionType) {
+    private AstNode acceptFunction(FunctionLiteral node, DeclaredArgument argument, AstNode body, Type functionType) {
         if (functionLevel == 1) {
             return func(argument.getName(), body, functionType);
         } else {
             functionLevel--;
-            return closure(argument.getName(), body, functionType);
+            Locator locator = names.get(node);
+            if (locator == null) {
+                String name = generateName();
+                Collection<String> environment = environment().getVariables();
+                register(name, functionType);
+                declarations.add(declaration(module, name, closure(argument.getName(), environment, body, functionType)));
+                locator = new ClosureLocator(module, name, environment);
+                names.put(node, locator);
+            }
+            register(locator.getName(), functionType);
+            return new Reference(locator, functionType);
         }
     }
 
@@ -403,6 +407,10 @@ public class Translator implements SyntaxVisitor {
             }
         }
         throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
+    }
+
+    private String generateName() {
+        return currentName.generateName();
     }
 
     private Type inferenceFunctionType(FunctionLiteral functionNode, DeclaredArgument argument) {
@@ -442,8 +450,12 @@ public class Translator implements SyntaxVisitor {
         if (allowedTypes.isEmpty()) {
             typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);
         }
-        argumentType.bind(constrainedArgumentType);
+        argumentType.bind(set(constrainedArgumentType.decompose()));
         return set(allowedTypes);
+    }
+
+    private void reserveName(String name) {
+        currentName = new NameSequence(name);
     }
 
     private AstNode translate(Visitable node) {
@@ -462,7 +474,7 @@ public class Translator implements SyntaxVisitor {
         AstNode body = translate(node.getBody());
         leaveScope();
         Type functionType = inferenceFunctionType(node, argument);
-        return acceptFunction(argument, body, functionType);
+        return acceptFunction(node, argument, body, functionType);
     }
 
     private Type translateType(Symbol node) {
@@ -490,6 +502,24 @@ public class Translator implements SyntaxVisitor {
                     "Function type " + function.getType() + " not compatible with declared result type " + resultType
                 );
             }
+        }
+    }
+
+    private static final class NameSequence {
+
+        private final String name;
+        private int nextId;
+
+        public NameSequence(String name) {
+            this.name = name;
+        }
+
+        public String generateName() {
+            return name + "_" + nextId++;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }

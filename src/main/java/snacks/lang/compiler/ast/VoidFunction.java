@@ -33,6 +33,11 @@ public class VoidFunction implements AstNode {
     }
 
     @Override
+    public boolean isInvokable() {
+        return true;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(body);
     }

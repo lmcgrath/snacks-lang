@@ -5,4 +5,6 @@ public interface AstNode {
     void accept(AstVisitor visitor);
 
     Type getType();
+
+    boolean isInvokable();
 }

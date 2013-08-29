@@ -8,13 +8,17 @@ public interface AstVisitor {
 
     void visitClosure(Closure node);
 
-    void visitDeclarationLocator(DeclarationLocator locator);
+    void visitClosureLocator(ClosureLocator locator);
+
+    void visitDeclarationLocator(ExpressionLocator locator);
 
     void visitDeclaredArgument(DeclaredArgument node);
 
     void visitDeclaredExpression(DeclaredExpression node);
 
     void visitDoubleConstant(DoubleConstant node);
+
+    void visitExpressionConstant(ExpressionConstant node);
 
     void visitFunction(Function node);
 

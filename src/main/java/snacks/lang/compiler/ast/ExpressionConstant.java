@@ -1,30 +1,28 @@
 package snacks.lang.compiler.ast;
 
-import static snacks.lang.compiler.ast.Type.DOUBLE_TYPE;
-
 import java.util.Objects;
 
-public class BooleanConstant implements AstNode {
+public class ExpressionConstant implements AstNode {
 
-    private final boolean value;
+    private final AstNode value;
 
-    public BooleanConstant(boolean value) {
+    public ExpressionConstant(AstNode value) {
         this.value = value;
     }
 
     @Override
     public void accept(AstVisitor visitor) {
-        visitor.visitBooleanConstant(this);
+        visitor.visitExpressionConstant(this);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof BooleanConstant && value == ((BooleanConstant) o).value;
+        return o == this || o instanceof ExpressionConstant && Objects.equals(value, ((ExpressionConstant) o).value);
     }
 
     @Override
     public Type getType() {
-        return DOUBLE_TYPE;
+        return value.getType();
     }
 
     @Override
@@ -32,7 +30,7 @@ public class BooleanConstant implements AstNode {
         return false;
     }
 
-    public boolean getValue() {
+    public AstNode getValue() {
         return value;
     }
 
@@ -43,6 +41,6 @@ public class BooleanConstant implements AstNode {
 
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return "(constant " + value + ")";
     }
 }

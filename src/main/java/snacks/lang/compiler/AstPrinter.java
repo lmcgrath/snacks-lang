@@ -40,7 +40,14 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visitDeclarationLocator(DeclarationLocator locator) {
+    public void visitClosureLocator(ClosureLocator locator) {
+        state.println("module: " + locator.getModule());
+        state.println("name: " + locator.getName());
+        state.println("environment: " + locator.getEnvironment());
+    }
+
+    @Override
+    public void visitDeclarationLocator(ExpressionLocator locator) {
         value("module: " + locator.getModule());
         value("name: " + locator.getName());
     }
@@ -60,6 +67,11 @@ public class AstPrinter implements AstVisitor {
     @Override
     public void visitDoubleConstant(DoubleConstant node) {
         value(node.getValue());
+    }
+
+    @Override
+    public void visitExpressionConstant(ExpressionConstant node) {
+        print(node.getValue());
     }
 
     @Override

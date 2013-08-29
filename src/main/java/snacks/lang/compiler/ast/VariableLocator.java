@@ -16,10 +16,16 @@ public class VariableLocator implements Locator {
     }
 
     @Override
+    public boolean isVariable() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o == this || o instanceof VariableLocator && Objects.equals(name, ((VariableLocator) o).name);
     }
 
+    @Override
     public String getName() {
         return name;
     }

@@ -54,6 +54,11 @@ public class DeclaredExpression implements AstNode {
     }
 
     @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(module, name, body);
     }

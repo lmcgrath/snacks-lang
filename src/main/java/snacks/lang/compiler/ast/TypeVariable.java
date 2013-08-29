@@ -60,7 +60,7 @@ public class TypeVariable extends Type {
 
     @Override
     public String toString() {
-        return state.getName();
+        return state.toString();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class TypeVariable extends Type {
 
         @Override
         public String toString() {
-            return type.toString();
+            return "<var " + type.toString() + ">";
         }
     }
 
@@ -206,7 +206,7 @@ public class TypeVariable extends Type {
 
         @Override
         public String toString() {
-            return name;
+            return "<var " + name + ">";
         }
     }
 }

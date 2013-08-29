@@ -45,6 +45,11 @@ public class Function implements AstNode {
         return type;
     }
 
+    @Override
+    public boolean isInvokable() {
+        return true;
+    }
+
     public String getVariable() {
         return variable;
     }

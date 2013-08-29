@@ -47,6 +47,11 @@ public class DeclaredArgument implements AstNode {
     }
 
     @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(name, type);
     }

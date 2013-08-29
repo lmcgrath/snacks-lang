@@ -2,6 +2,7 @@ package snacks.lang.compiler;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collection;
 import java.util.List;
 import snacks.lang.compiler.ast.*;
 
@@ -11,8 +12,12 @@ public final class AstFactory {
         return new Apply(function, argument, type);
     }
 
-    public static AstNode closure(String variable, AstNode expression, Type type) {
-        return new Closure(variable, expression, type);
+    public static AstNode closure(String variable, Collection<String> environment, AstNode expression, Type type) {
+        return new Closure(variable, environment, expression, type);
+    }
+
+    public static AstNode expression(AstNode value) {
+        return new ExpressionConstant(value);
     }
 
     public static AstNode constant(boolean value) {
@@ -40,12 +45,12 @@ public final class AstFactory {
         return new Function(variable, expression, type);
     }
 
-    public static AstNode instantiable(AstNode body) {
+    public static AstNode invokable(AstNode body) {
         return new VoidFunction(body);
     }
 
-    public static AstNode instantiate(AstNode instantiable) {
-        return new VoidApply(instantiable);
+    public static AstNode invoke(AstNode invokable) {
+        return new VoidApply(invokable);
     }
 
     public static Locator locator(String name) {
@@ -53,7 +58,7 @@ public final class AstFactory {
     }
 
     public static Locator locator(String module, String name) {
-        return new DeclarationLocator(module, name);
+        return new ExpressionLocator(module, name);
     }
 
     public static AstNode reference(String name, Type type) {
@@ -61,7 +66,7 @@ public final class AstFactory {
     }
 
     public static Reference reference(String module, String name, Type type) {
-        return reference(new DeclarationLocator(module, name), type);
+        return reference(new ExpressionLocator(module, name), type);
     }
 
     public static Reference reference(Locator locator, Type type) {

@@ -23,6 +23,11 @@ public class VoidApply implements AstNode {
     }
 
     @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
+    @Override
     public String toString() {
         return invokable + "()";
     }

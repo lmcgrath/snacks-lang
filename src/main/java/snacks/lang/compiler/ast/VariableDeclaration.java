@@ -42,6 +42,11 @@ public class VariableDeclaration implements AstNode {
         return value.getType();
     }
 
+    @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
     public AstNode getValue() {
         return value;
     }

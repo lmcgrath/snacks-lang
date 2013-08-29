@@ -27,6 +27,11 @@ public class IntegerConstant implements AstNode {
         return INTEGER_TYPE;
     }
 
+    @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
     public int getValue() {
         return value;
     }

@@ -1,5 +1,7 @@
 package snacks.lang.compiler;
 
+import static snacks.lang.compiler.AstFactory.locator;
+import static snacks.lang.compiler.AstFactory.reference;
 import static snacks.lang.compiler.ast.Type.*;
 
 import java.util.*;
@@ -59,7 +61,7 @@ public class SymbolEnvironment implements TypeFactory {
         if (!builtin.containsKey(name)) {
             builtin.put(name, new ArrayList<Reference>());
         }
-        builtin.get(name).add(new Reference(new DeclarationLocator("snacks/lang", name), type));
+        builtin.get(name).add(reference(locator("snacks/lang", name), type));
     }
 
     private final State state;
@@ -96,7 +98,7 @@ public class SymbolEnvironment implements TypeFactory {
         for (Type member : type.getMembers()) {
             types.add(genericCopy(member, mappings));
         }
-        return new TypeSet(types);
+        return set(types);
     }
 
     @Override
@@ -117,7 +119,7 @@ public class SymbolEnvironment implements TypeFactory {
         for (Type parameter : type.getParameters()) {
             parameters.add(genericCopy(parameter, mappings));
         }
-        return new TypeOperator(type.getName(), parameters);
+        return type(type.getName(), parameters);
     }
 
     public void generify(Type type) {
@@ -126,6 +128,10 @@ public class SymbolEnvironment implements TypeFactory {
 
     public Reference getReference(Locator locator) {
         return state.getReference(locator);
+    }
+
+    public Collection<String> getVariables() {
+        return state.getVariables();
     }
 
     public boolean isDefined(Locator locator) {
@@ -164,6 +170,8 @@ public class SymbolEnvironment implements TypeFactory {
 
         Set<Type> getSpecializedTypes();
 
+        Collection<String> getVariables();
+
         boolean isDefined(Locator locator);
 
         void specialize(Type type);
@@ -184,7 +192,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public Type createVariable() {
-            return new TypeVariable("#" + nextId++);
+            return var("#" + nextId++);
         }
 
         @Override
@@ -202,12 +210,23 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public Reference getReference(Locator locator) {
-            return new Reference(locator, typeOf(locator));
+            return reference(locator, typeOf(locator));
         }
 
         @Override
         public Set<Type> getSpecializedTypes() {
             return new HashSet<>(specializedTypes);
+        }
+
+        @Override
+        public Collection<String> getVariables() {
+            Set<String> variables = new TreeSet<>();
+            for (Locator locator : symbols.keySet()) {
+                if (locator.isVariable()) {
+                    variables.add(locator.getName());
+                }
+            }
+            return variables;
         }
 
         @Override
@@ -266,7 +285,7 @@ public class SymbolEnvironment implements TypeFactory {
             if (parent.isDefined(locator)) {
                 return parent.getReference(locator);
             } else {
-                return new Reference(locator, set(symbols.get(locator)));
+                return reference(locator, set(symbols.get(locator)));
             }
         }
 
@@ -276,6 +295,18 @@ public class SymbolEnvironment implements TypeFactory {
             specifics.addAll(this.specialized);
             specifics.addAll(parent.getSpecializedTypes());
             return specifics;
+        }
+
+        @Override
+        public Collection<String> getVariables() {
+            Set<String> variables = new TreeSet<>();
+            variables.addAll(parent.getVariables());
+            for (Locator locator : symbols.keySet()) {
+                if (locator.isVariable()) {
+                    variables.add(locator.getName());
+                }
+            }
+            return variables;
         }
 
         @Override

@@ -27,6 +27,11 @@ public class DoubleConstant implements AstNode {
         return DOUBLE_TYPE;
     }
 
+    @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
     public double getValue() {
         return value;
     }

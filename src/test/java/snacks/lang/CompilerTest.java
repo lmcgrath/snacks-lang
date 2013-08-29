@@ -165,6 +165,29 @@ public class CompilerTest {
     }
 
     @Test
+    public void shouldReferenceVariablesInParentScopes() throws Exception {
+        run(
+            "closure = { x ->",
+            "    var y = x * 2",
+            "    var z = x + 1",
+            "    return { w ->",
+            "        var v = w + 3",
+            "        return { u ->",
+            "            'x = ' + x +",
+            "            '; y = ' + y +",
+            "            '; z = ' + z +",
+            "            '; w = ' + w +",
+            "            '; v = ' + v +",
+            "            '; u = ' + u",
+            "        }",
+            "    }",
+            "}",
+            "main = () -> say $ closure 5 8 12"
+        );
+        verifyOut("x = 5; y = 10; z = 6; w = 8; v = 11; u = 12");
+    }
+
+    @Test
     public void shouldPassFunctionIntoFunction() throws Exception {
         run(
             "operate = (op) -> op 2 4",

@@ -30,10 +30,6 @@ public abstract class Type {
         return isFunction(type) && VOID_TYPE == type.decompose().get(0).getParameters().get(0);
     }
 
-    public static boolean isValue(Type type) {
-        return !isFunction(type);
-    }
-
     public static Type result(Type functionType) {
         List<Type> parameters = functionType.getParameters();
         if (parameters.isEmpty()) {
@@ -61,6 +57,10 @@ public abstract class Type {
 
     public static Type type(String name) {
         return new TypeOperator(name);
+    }
+
+    public static Type type(String name, Collection<Type> parameters) {
+        return new TypeOperator(name, parameters);
     }
 
     public static Type var(Type type) {

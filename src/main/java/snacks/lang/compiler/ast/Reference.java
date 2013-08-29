@@ -14,6 +14,11 @@ public class Reference implements AstNode {
     }
 
     @Override
+    public void accept(AstVisitor visitor) {
+        visitor.visitReference(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -33,13 +38,13 @@ public class Reference implements AstNode {
     }
 
     @Override
-    public void accept(AstVisitor visitor) {
-        visitor.visitReference(this);
+    public Type getType() {
+        return type.expose();
     }
 
     @Override
-    public Type getType() {
-        return type.expose();
+    public boolean isInvokable() {
+        return false;
     }
 
     @Override

@@ -28,6 +28,11 @@ public class StringConstant implements AstNode {
         return STRING_TYPE;
     }
 
+    @Override
+    public boolean isInvokable() {
+        return false;
+    }
+
     public String getValue() {
         return value;
     }

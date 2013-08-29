@@ -6,7 +6,6 @@ import static org.junit.Assert.assertThat;
 import static snacks.lang.compiler.AstFactory.*;
 import static snacks.lang.compiler.TranslatorMatcher.defines;
 import static snacks.lang.compiler.ast.Type.*;
-import static snacks.lang.compiler.ast.Type.func;
 
 import java.util.Set;
 import org.junit.Before;
@@ -54,8 +53,8 @@ public class TranslatorTest {
             "value = 'Hello, World!'",
             "example = 2 + value"
         );
-        assertThat(nodes, defines(declaration("test", "value", constant("Hello, World!"))));
-        assertThat(nodes, defines(declaration("test", "example", apply(
+        assertThat(nodes, defines(declaration("test", "value", expression(constant("Hello, World!")))));
+        assertThat(nodes, defines(declaration("test", "example", expression(apply(
             apply(
                 environment.getReference(locator("snacks/lang", "+")),
                 constant(2),
@@ -67,7 +66,7 @@ public class TranslatorTest {
             ),
             reference("test", "value", STRING_TYPE),
             STRING_TYPE
-        ))));
+        )))));
     }
 
     @Test(expected = TypeException.class)
@@ -88,7 +87,7 @@ public class TranslatorTest {
             "example = concat 3 'waffles'"
         );
         assertThat(typeOf("example"), equalTo(STRING_TYPE));
-        assertThat(definitions, defines(declaration("test", "example", apply(
+        assertThat(definitions, defines(declaration("test", "example", expression(apply(
             apply(
                 reference("test/example", "concat", set(
                     func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
@@ -102,7 +101,7 @@ public class TranslatorTest {
             ),
             constant("waffles"),
             STRING_TYPE
-        ))));
+        )))));
     }
 
     @Test
