@@ -4,27 +4,27 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class TruthyCase extends Symbol implements Visitable {
+public class ConditionCase extends Symbol implements Visitable {
 
     private final Symbol condition;
     private final Symbol expression;
 
-    public TruthyCase(Symbol condition, Symbol expression) {
+    public ConditionCase(Symbol condition, Symbol expression) {
         this.condition = condition;
         this.expression = expression;
     }
 
     @Override
     public void accept(SyntaxVisitor visitor) {
-        visitor.visitTruthyCase(this);
+        visitor.visitConditionCase(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof TruthyCase) {
-            TruthyCase other = (TruthyCase) o;
+        } else if (o instanceof ConditionCase) {
+            ConditionCase other = (ConditionCase) o;
             return new EqualsBuilder()
                 .append(condition, other.condition)
                 .append(expression, other.expression)

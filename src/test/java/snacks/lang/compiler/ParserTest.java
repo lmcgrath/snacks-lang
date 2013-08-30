@@ -327,8 +327,8 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", conditional(
-                truthy(id("bananas"), block(apply(apply(apply(id("waffles"), literal(1)), literal(2)), literal(3)))),
-                truthy(id("toast"), block(apply(apply(apply(id("ducks"), literal(4)), literal(5)), literal(6)))),
+                condition(id("bananas"), block(apply(apply(apply(id("waffles"), literal(1)), literal(2)), literal(3)))),
+                condition(id("toast"), block(apply(apply(apply(id("ducks"), literal(4)), literal(5)), literal(6)))),
                 dcase(block(apply(id("waffles"), id("anyway!"))))
             ))
         )));

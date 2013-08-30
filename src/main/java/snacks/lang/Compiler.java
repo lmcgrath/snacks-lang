@@ -53,11 +53,13 @@ public class Compiler implements AstVisitor {
 
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
+    private final Deque<LabelNode> labels;
     private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
+        labels = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -153,6 +155,28 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
+    public void visitGuardCase(GuardCase node) {
+        CodeBlock block = block();
+        LabelNode skipLabel = new LabelNode();
+        compile(node.getCondition());
+        block().ldc(true);
+        block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
+        block.if_acmpne(skipLabel);
+        compile(node.getExpression());
+        block.go_to(labels.peek());
+        block.label(skipLabel);
+    }
+
+    @Override
+    public void visitGuardCases(GuardCases node) {
+        labels.push(new LabelNode());
+        for (AstNode guard : node.getCases()) {
+            compile(guard);
+        }
+        block().label(labels.pop());
+    }
+
+    @Override
     public void visitIntegerConstant(IntegerConstant node) {
         CodeBlock block = block();
         block().ldc(node.getValue());
@@ -162,6 +186,22 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitReference(Reference node) {
         compile(node.getLocator());
+    }
+
+    @Override
+    public void visitReferencesEqual(ReferencesEqual node) {
+        compile(node.getLeft());
+        compile(node.getRight());
+        LabelNode skipLabel = new LabelNode();
+        LabelNode endLabel = new LabelNode();
+        CodeBlock block = block();
+        block.if_acmpne(skipLabel);
+        block.ldc(true);
+        block.go_to(endLabel);
+        block.label(skipLabel);
+        block.ldc(false);
+        block.label(endLabel);
+        block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
     }
 
     @Override

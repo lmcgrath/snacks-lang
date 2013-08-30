@@ -240,6 +240,28 @@ public class CompilerTest {
         run("main = () -> True + True");
     }
 
+    @Test
+    public void shouldCompileConditional() throws Exception {
+        run(
+            "booleanizer = (name value) ->",
+            "    if value then",
+            "        say \"#{name} is true!\"",
+            "    else if value is 'oranges' then",
+            "        say 'We have oranges!'",
+            "    else",
+            "        say \"#{name} is false!\"",
+            "    end",
+            "main = {",
+            "    booleanizer 'waffles' True",
+            "    booleanizer 'bananas' False",
+            "    booleanizer 'monkeys' 'oranges'",
+            "}"
+        );
+        verifyOut("waffles is true!");
+        verifyOut("bananas is false!");
+        verifyOut("We have oranges!");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }

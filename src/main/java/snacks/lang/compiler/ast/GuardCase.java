@@ -1,30 +1,29 @@
-package snacks.lang.compiler.syntax;
+package snacks.lang.compiler.ast;
 
 import java.util.Objects;
-import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class FalsyCase extends Symbol implements Visitable {
+public class GuardCase implements AstNode {
 
-    private final Symbol condition;
-    private final Symbol expression;
+    private final AstNode condition;
+    private final AstNode expression;
 
-    public FalsyCase(Symbol condition, Symbol expression) {
+    public GuardCase(AstNode condition, AstNode expression) {
         this.condition = condition;
         this.expression = expression;
     }
 
     @Override
-    public void accept(SyntaxVisitor visitor) {
-        visitor.visitFalsyCase(this);
+    public void accept(AstVisitor visitor) {
+        visitor.visitGuardCase(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof FalsyCase) {
-            FalsyCase other = (FalsyCase) o;
+        } else if (o instanceof GuardCase) {
+            GuardCase other = (GuardCase) o;
             return new EqualsBuilder()
                 .append(condition, other.condition)
                 .append(expression, other.expression)
@@ -34,12 +33,17 @@ public class FalsyCase extends Symbol implements Visitable {
         }
     }
 
-    public Symbol getCondition() {
+    public AstNode getCondition() {
         return condition;
     }
 
-    public Symbol getExpression() {
+    public AstNode getExpression() {
         return expression;
+    }
+
+    @Override
+    public Type getType() {
+        return expression.getType();
     }
 
     @Override
@@ -48,7 +52,7 @@ public class FalsyCase extends Symbol implements Visitable {
     }
 
     @Override
-    public String toString() {
-        return "(unless " + condition + " then " + expression + ")";
+    public boolean isInvokable() {
+        return false;
     }
 }

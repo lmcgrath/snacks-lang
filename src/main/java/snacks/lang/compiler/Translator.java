@@ -155,8 +155,18 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConditionCase(ConditionCase node) {
+        result = guard(translate(node.getCondition()), translate(node.getExpression()));
+    }
+
+    @Override
     public void visitConditional(Conditional node) {
-        throw new UnsupportedOperationException(); // TODO
+        List<AstNode> cases = new ArrayList<>();
+        for (Symbol n : node.getCases()) {
+            translate(n);
+            cases.add(result);
+        }
+        result = guards(cases);
     }
 
     @Override
@@ -177,7 +187,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitDefaultCase(DefaultCase node) {
-        throw new UnsupportedOperationException(); // TODO
+        result = translate(node.getExpression());
     }
 
     @Override
@@ -197,11 +207,6 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitExceptional(Exceptional node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitFalsyCase(FalsyCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
@@ -252,6 +257,11 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitInvocation(Invocation node) {
         result = invoke(translate(node.getExpression()));
+    }
+
+    @Override
+    public void visitIsExpression(IsExpression node) {
+        result = is(translate(node.getLeft()), translate(node.getRight()));
     }
 
     @Override
@@ -334,11 +344,6 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitSymbolLiteral(SymbolLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitTruthyCase(TruthyCase node) {
         throw new UnsupportedOperationException(); // TODO
     }
 

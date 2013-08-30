@@ -16,10 +16,6 @@ public final class AstFactory {
         return new Closure(variable, environment, expression, type);
     }
 
-    public static AstNode expression(AstNode value) {
-        return new ExpressionConstant(value);
-    }
-
     public static AstNode constant(boolean value) {
         return new BooleanConstant(value);
     }
@@ -41,8 +37,20 @@ public final class AstFactory {
         return (T) new DeclaredExpression(module, name, body);
     }
 
+    public static AstNode expression(AstNode value) {
+        return new ExpressionConstant(value);
+    }
+
     public static AstNode func(String variable, AstNode expression, Type type) {
         return new Function(variable, expression, type);
+    }
+
+    public static AstNode guard(AstNode condition, AstNode expression) {
+        return new GuardCase(condition, expression);
+    }
+
+    public static AstNode guards(Collection<AstNode> cases) {
+        return new GuardCases(cases);
     }
 
     public static AstNode invokable(AstNode body) {
@@ -51,6 +59,10 @@ public final class AstFactory {
 
     public static AstNode invoke(AstNode invokable) {
         return new VoidApply(invokable);
+    }
+
+    public static AstNode is(AstNode left, AstNode right) {
+        return new ReferencesEqual(left, right);
     }
 
     public static Locator locator(String name) {

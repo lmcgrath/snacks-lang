@@ -76,6 +76,10 @@ public final class SyntaxFactory {
         return new Block(elements);
     }
 
+    public static Symbol condition(Symbol condition, Symbol expression) {
+        return new ConditionCase(condition, expression);
+    }
+
     public static Symbol conditional(Symbol... cases) {
         return new Conditional(asList(cases));
     }
@@ -116,10 +120,6 @@ public final class SyntaxFactory {
         return new MapEntry(key, value);
     }
 
-    public static Symbol falsy(Symbol condition, Symbol expression) {
-        return new FalsyCase(condition, expression);
-    }
-
     public static Symbol from(Symbol module, Symbol... subImports) {
         return new FromImport(module, subImports);
     }
@@ -156,12 +156,16 @@ public final class SyntaxFactory {
         return new IndexExpression(expression, arguments);
     }
 
+    public static Symbol invocation(Symbol function) {
+        return new Invocation(function);
+    }
+
     public static Symbol invokable(Symbol body) {
         return new InvokableLiteral(body);
     }
 
-    public static Symbol invocation(Symbol function) {
-        return new Invocation(function);
+    public static Symbol is(Symbol left, Symbol right) {
+        return new IsExpression(left, right);
     }
 
     public static Symbol list(Symbol... elements) {
@@ -242,10 +246,6 @@ public final class SyntaxFactory {
 
     public static Symbol symbol(String name) {
         return new SymbolLiteral(name);
-    }
-
-    public static Symbol truthy(Symbol condition, Symbol expression) {
-        return new TruthyCase(condition, expression);
     }
 
     public static Symbol tuple(Symbol... elements) {

@@ -22,9 +22,15 @@ public interface AstVisitor {
 
     void visitFunction(Function node);
 
+    void visitGuardCase(GuardCase node);
+
+    void visitGuardCases(GuardCases node);
+
     void visitIntegerConstant(IntegerConstant node);
 
     void visitReference(Reference node);
+
+    void visitReferencesEqual(ReferencesEqual node);
 
     void visitResult(Result node);
 

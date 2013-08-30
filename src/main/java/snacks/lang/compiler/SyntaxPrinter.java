@@ -119,12 +119,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitFalsyCase(FalsyCase node) {
-        print(node.getCondition());
-        print(node.getExpression());
-    }
-
-    @Override
     public void visitFromImport(FromImport node) {
         state.println("module: " + node.getModule());
         for (Symbol subImport : node.getSubImports()) {
@@ -177,6 +171,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitInvocation(Invocation node) {
         print(node.getExpression());
+    }
+
+    @Override
+    public void visitIsExpression(IsExpression node) {
+        print(node.getLeft());
+        print(node.getRight());
     }
 
     @Override
@@ -266,7 +266,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitTruthyCase(TruthyCase node) {
+    public void visitConditionCase(ConditionCase node) {
         print(node.getCondition());
         print(node.getExpression());
     }

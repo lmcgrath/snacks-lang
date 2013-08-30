@@ -141,8 +141,8 @@ statement
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
     | HURL expression.e                                                 {: return hurl(e); :}
     | RETURN expression.e                                               {: return result(e); :}
-    | WHILE expression.c DO sequence.e default_case.d END               {: return loop(truthy(c, block(e)), d); :}
-    | UNTIL expression.c DO sequence.e default_case.d END               {: return loop(falsy(c, block(e)), d); :}
+    | WHILE expression.c DO sequence.e default_case.d END               {: return loop(condition(c, block(e)), d); :}
+    | UNTIL expression.c DO sequence.e default_case.d END               {: return loop(condition(unary("not", c), block(e)), d); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
     ;
 
@@ -162,8 +162,8 @@ expression
     | expression.l LSHIFT expression.r              {: return binary("<<", l, r); :}
     | expression.l RSHIFT expression.r              {: return binary(">>", l, r); :}
     | expression.l URSHIFT expression.r             {: return binary(">>>", l, r); :}
-    | expression.l IS expression.r                  {: return binary("is", l, r); :}
-    | expression.l IS_NOT expression.r              {: return unary("not", binary("is", l, r)); :}
+    | expression.l IS expression.r                  {: return is(l, r); :}
+    | expression.l IS_NOT expression.r              {: return unary("not", is(l, r)); :}
     | expression.l EQUALS expression.r              {: return binary("==", l, r); :}
     | expression.l NOT_EQUALS expression.r          {: return unary("not", binary("==", l, r)); :}
     | expression.l GREATER_THAN expression.r        {: return binary(">", l, r); :}
@@ -333,8 +333,8 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c THEN sequence.e term*     {: return truthy(c, block(e)); :}
-    | UNLESS expression.c THEN sequence.e term* {: return falsy(c, block(e)); :}
+    = IF expression.c THEN sequence.e term*     {: return condition(c, block(e)); :}
+    | UNLESS expression.c THEN sequence.e term* {: return condition(unary("not", c), block(e)); :}
     ;
 
 alternative_cases
@@ -343,8 +343,8 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c THEN sequence.e term*        {: return truthy(c, block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return falsy(c, block(e)); :}
+    = ELSE_IF expression.c THEN sequence.e term*        {: return condition(c, block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return condition(unary("not", c), block(e)); :}
     ;
 
 default_case

@@ -47,6 +47,13 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
+    public void visitGuardCases(GuardCases node) {
+        for (AstNode n : node.getCases()) {
+            print(n);
+        }
+    }
+
+    @Override
     public void visitDeclarationLocator(ExpressionLocator locator) {
         value("module: " + locator.getModule());
         value("name: " + locator.getName());
@@ -82,6 +89,12 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
+    public void visitGuardCase(GuardCase node) {
+        print(node.getCondition());
+        print(node.getExpression());
+    }
+
+    @Override
     public void visitIntegerConstant(IntegerConstant node) {
         value(node.getValue());
     }
@@ -99,6 +112,12 @@ public class AstPrinter implements AstVisitor {
     @Override
     public void visitReference(Reference node) {
         state.println("locator: '" + node.getLocator() + "'");
+    }
+
+    @Override
+    public void visitReferencesEqual(ReferencesEqual node) {
+        print(node.getLeft());
+        print(node.getRight());
     }
 
     @Override
