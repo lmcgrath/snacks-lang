@@ -138,11 +138,14 @@ qualified_identifier
 
 statement
     = expression
-    | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
-    | HURL expression.e                                                 {: return hurl(e); :}
-    | RETURN expression.e                                               {: return result(e); :}
-    | WHILE expression.c DO sequence.e default_case.d END               {: return loop(condition(c, block(e)), d); :}
-    | UNTIL expression.c DO sequence.e default_case.d END               {: return loop(condition(unary("not", c), block(e)), d); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e                      {: return var(v, e); :}
+    | HURL expression.e                                         {: return hurl(e); :}
+    | RETURN expression.e                                       {: return result(e); :}
+    | WHILE expression.c NEWLINE+ sequence.e default_case.d END {: return loop(condition(c, block(e)), d); :}
+    | WHILE expression.c DO sequence.e default_case.d END       {: return loop(condition(c, block(e)), d); :}
+    | UNTIL expression.c NEWLINE+ sequence.e default_case.d END {: return loop(condition(unary("not", c), block(e)), d); :}
+    | UNTIL expression.c DO sequence.e default_case.d END       {: return loop(condition(unary("not", c), block(e)), d); :}
+    | FOR IDENTIFIER.v IN expression.e NEWLINE+ sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
     ;
 
@@ -333,8 +336,10 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c THEN sequence.e term*     {: return condition(c, block(e)); :}
-    | UNLESS expression.c THEN sequence.e term* {: return condition(unary("not", c), block(e)); :}
+    = IF expression.c NEWLINE+ sequence.e term*     {: return condition(c, block(e)); :}
+    | IF expression.c THEN sequence.e term*         {: return condition(c, block(e)); :}
+    | UNLESS expression.c NEWLINE+ sequence.e term* {: return condition(unary("not", c), block(e)); :}
+    | UNLESS expression.c THEN sequence.e term*     {: return condition(unary("not", c), block(e)); :}
     ;
 
 alternative_cases
@@ -343,8 +348,10 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c THEN sequence.e term*        {: return condition(c, block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return condition(unary("not", c), block(e)); :}
+    = ELSE_IF expression.c NEWLINE+ sequence.e term*        {: return condition(c, block(e)); :}
+    | ELSE_IF expression.c THEN sequence.e term*            {: return condition(c, block(e)); :}
+    | ELSE_UNLESS expression.c NEWLINE+ sequence.e term*    {: return condition(unary("not", c), block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e term*        {: return condition(unary("not", c), block(e)); :}
     ;
 
 default_case

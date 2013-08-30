@@ -244,9 +244,9 @@ public class CompilerTest {
     public void shouldCompileConditional() throws Exception {
         run(
             "booleanizer = (name value) ->",
-            "    if value then",
+            "    if value",
             "        say \"#{name} is true!\"",
-            "    else if value is 'oranges' then",
+            "    else if value is 'oranges'",
             "        say 'We have oranges!'",
             "    else",
             "        say \"#{name} is false!\"",
