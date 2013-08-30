@@ -230,6 +230,7 @@ primary_expression
     | SYMBOL.s                      {: return symbol(s); :}
     | LPAREN expression.e RPAREN    {: return e; :}
     | QUOTE STRING.val QUOTE        {: return literal(val); :}
+    | QUOTE QUOTE                   {: return literal(""); :}
     | function_literal
     | map_literal
     | list_literal
