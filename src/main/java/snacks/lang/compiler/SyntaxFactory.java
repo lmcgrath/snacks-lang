@@ -164,10 +164,6 @@ public final class SyntaxFactory {
         return new Invocation(function);
     }
 
-    public static Symbol interpolation(Symbol... elements) {
-        return new StringInterpolation(elements);
-    }
-
     public static Symbol list(Symbol... elements) {
         return new ListLiteral(elements);
     }

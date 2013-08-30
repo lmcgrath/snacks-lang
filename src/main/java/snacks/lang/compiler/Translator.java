@@ -323,11 +323,6 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitStringInterpolation(StringInterpolation node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
     public void visitStringLiteral(StringLiteral node) {
         result = constant(node.getValue());
     }

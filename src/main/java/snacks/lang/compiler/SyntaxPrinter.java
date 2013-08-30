@@ -250,13 +250,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitStringInterpolation(StringInterpolation node) {
-        for (Symbol element : node.getElements()) {
-            print(element);
-        }
-    }
-
-    @Override
     public void visitStringLiteral(StringLiteral node) {
         value('"' + escapeJava(node.getValue()) + '"');
     }

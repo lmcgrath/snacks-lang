@@ -172,19 +172,25 @@ public class CompilerTest {
             "    var z = x + 1",
             "    return { w ->",
             "        var v = w + 3",
-            "        return { u ->",
-            "            'x = ' + x +",
-            "            '; y = ' + y +",
-            "            '; z = ' + z +",
-            "            '; w = ' + w +",
-            "            '; v = ' + v +",
-            "            '; u = ' + u",
-            "        }",
+            "        return (u) -> \"x = #{x}; y = #{y}; z = #{z}; w = #{w}; v = #{v}; u = #{u}\"",
             "    }",
             "}",
             "main = () -> say $ closure 5 8 12"
         );
         verifyOut("x = 5; y = 10; z = 6; w = 8; v = 11; u = 12");
+    }
+
+    @Test
+    public void shouldCompileMultiLineString() throws Exception {
+        run(
+            "value = 'waffles ' * 3",
+            "multiline = \"\"\"",
+            "I like",
+            " #{value}and bananas",
+            "\"\"\"",
+            "main = () -> say multiline"
+        );
+        verifyOut("I like\n waffles waffles waffles and bananas\n");
     }
 
     @Test

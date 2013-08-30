@@ -74,8 +74,6 @@ public interface SyntaxVisitor {
 
     void visitSetLiteral(SetLiteral node);
 
-    void visitStringInterpolation(StringInterpolation node);
-
     void visitStringLiteral(StringLiteral node);
 
     void visitSubImport(SubImport node);

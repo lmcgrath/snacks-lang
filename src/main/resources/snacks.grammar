@@ -239,9 +239,9 @@ primary_expression
     | block
     | conditional
     | exceptional
-    | DQUOTE interpolation_list.e DQUOTE                    {: return interpolation(e); :}
+    | DQUOTE interpolation_list.e DQUOTE                    {: return e; :}
     | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return literal(val); :}
-    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return interpolation(e); :}
+    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return e; :}
     | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
     ;
 
@@ -431,8 +431,8 @@ qualified_fword
     ;
 
 interpolation_list
-    = interpolation
-    | interpolation_list interpolation
+    = interpolation.e                       {: return apply(id("stringy"), e); :}
+    | interpolation_list.es interpolation.e {: return apply(apply(id("concat"), es), apply(id("stringy"), e)); :}
     ;
 
 interpolation
