@@ -38,8 +38,12 @@ public class SnacksRuntime {
         Binder binder = Binder.from(Object.class, Object.class, Object.class);
         try {
             return binder.cast(Object.class, function.getClass(), argument.getClass()).invokeVirtual(lookup, "apply");
-        } catch (ReflectiveOperationException exception) {
-            return binder.cast(Object.class, function.getClass(), Object.class).invokeVirtual(lookup, "apply");
+        } catch (ReflectiveOperationException firstException) {
+            try {
+                return binder.cast(Object.class, function.getClass(), Object.class).invokeVirtual(lookup, "apply");
+            } catch (ReflectiveOperationException secondException) {
+                throw firstException;
+            }
         }
     }
 }

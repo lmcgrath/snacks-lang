@@ -235,6 +235,11 @@ public class CompilerTest {
         verifyOut("waffles waffles waffles ");
     }
 
+    @Test(expected = NoSuchMethodException.class)
+    public void shouldNotAddBooleanToBoolean() throws Exception {
+        run("main = () -> True + True");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }

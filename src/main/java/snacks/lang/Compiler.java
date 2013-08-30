@@ -83,6 +83,7 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitBooleanConstant(BooleanConstant node) {
         block().ldc(node.getValue());
+        block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
     }
 
     @Override
