@@ -6,7 +6,6 @@ import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static snacks.lang.SnacksRuntime.BOOTSTRAP;
-import static snacks.lang.compiler.ast.Type.argument;
 import static snacks.lang.compiler.ast.Type.isInstantiable;
 
 import java.io.File;
@@ -22,11 +21,34 @@ import snacks.lang.compiler.ast.*;
 
 public class Compiler implements AstVisitor {
 
-    private static final Map<String, String> names = new HashMap<>();
+    private static final Map<String, String> replacements;
 
     static {
-        names.put("*", "Multiply");
-        names.put("+", "Plus");
+        replacements = new LinkedHashMap<>();
+        replacements.put("?", "$Query");
+        replacements.put("!", "$Bang");
+        replacements.put("+", "$Plus");
+        replacements.put("**", "$Exponent");
+        replacements.put("*", "$Multiply");
+        replacements.put("/", "$Divide");
+        replacements.put("%", "$Modulo");
+        replacements.put("unary+", "$Positive");
+        replacements.put("unary-", "$Negative");
+        replacements.put("unary~", "$BitNot");
+        replacements.put("&", "$BitAnd");
+        replacements.put("|", "$BitOr");
+        replacements.put("^", "$BitXor");
+        replacements.put("[]", "$Index");
+        replacements.put("...", "$XRange");
+        replacements.put("..", "$Range");
+        replacements.put("==", "$Equals");
+        replacements.put("<<", "$LShift");
+        replacements.put(">>>", "$URShift");
+        replacements.put(">>", "$RShift");
+        replacements.put("<=", "$LessThanEquals");
+        replacements.put(">=", "$GreaterThanEquals");
+        replacements.put("<", "$LessThan");
+        replacements.put(">", "$GreaterThan");
     }
 
     private final List<JiteClass> acceptedClasses;
@@ -68,13 +90,13 @@ public class Compiler implements AstVisitor {
         state().setFields(node.getEnvironment());
         defineClosureFields(node);
         defineClosureConstructor(node);
-        compileApply(node.getBody(), node.getType());
+        compileApply(node.getBody());
     }
 
     @Override
     public void visitClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
-        String className = locator.getModule() + "/" + javafy(locator.getName());
+        String className = javaClass(locator);
         block.newobj(className);
         block.dup();
         for (String variable : locator.getEnvironment()) {
@@ -86,8 +108,8 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitDeclarationLocator(ExpressionLocator locator) {
         CodeBlock block = block();
-        String reference = locator.getModule() + "/" + javafy(locator.getName());
-        block.invokestatic(reference, "instance", sig(Object.class));
+        String className = javaClass(locator);
+        block.invokestatic(className, "instance", sig(Object.class));
     }
 
     @Override
@@ -97,7 +119,7 @@ public class Compiler implements AstVisitor {
 
     @Override
     public void visitDeclaredExpression(DeclaredExpression node) {
-        beginClass(node.getModule() + "/" + javafy(node.getName()), interfacesFor(node.getType()));
+        beginClass(javaClass(node), interfacesFor(node.getType()));
         compile(node.getBody());
         acceptClass();
     }
@@ -126,7 +148,7 @@ public class Compiler implements AstVisitor {
     @Override
     public void visitFunction(Function node) {
         defineFunctionInitializer();
-        compileApply(node.getBody(), node.getType());
+        compileApply(node.getBody());
     }
 
     @Override
@@ -224,19 +246,13 @@ public class Compiler implements AstVisitor {
         locator.accept(this);
     }
 
-    private void compileApply(AstNode body, Type type) {
-        Set<Class<?>> compiledTypes = new HashSet<>();
-        for (Type subType : type.decompose()) {
-            Class<?> argumentType = typeOf(argument(subType));
-            if (compiledTypes.add(argumentType)) {
-                CodeBlock block = beginBlock();
-                compile(body);
-                if (!block.returns()) {
-                    block.areturn();
-                }
-                jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, argumentType), acceptBlock());
-            }
+    private void compileApply(AstNode body) {
+        CodeBlock block = beginBlock();
+        compile(body);
+        if (!block.returns()) {
+            block.areturn();
         }
+        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
     }
 
     private void defineClosureConstructor(Closure closure) {
@@ -299,12 +315,36 @@ public class Compiler implements AstVisitor {
         return state().isVariable(name);
     }
 
+    private String javaClass(DeclaredExpression expression) {
+        return javaClass(expression.getModule(), expression.getName());
+    }
+
+    private String javaClass(ExpressionLocator locator) {
+        return javaClass(locator.getModule(), locator.getName());
+    }
+
+    private String javaClass(ClosureLocator locator) {
+        return javaClass(locator.getModule(), locator.getName());
+    }
+
+    private String javaClass(String module, String name) {
+        return module + "/" + javafy(name);
+    }
+
     private String javafy(String name) {
-        if (names.containsKey(name)) {
-            return names.get(name);
+        String javafiedName;
+        if ("?".equals(name)) {
+            javafiedName = "$Coalesce";
         } else {
-            return name.substring(0, 1).toUpperCase() + name.substring(1);
+            javafiedName = name.substring(0, 1).toUpperCase() + name.substring(1);
+            for (String replacement : replacements.keySet()) {
+                javafiedName = javafiedName.replace(replacement, replacements.get(replacement));
+            }
         }
+        if (javafiedName.startsWith("$")) {
+            javafiedName = "Op" + javafiedName;
+        }
+        return javafiedName;
     }
 
     private JiteClass jiteClass() {
@@ -324,15 +364,6 @@ public class Compiler implements AstVisitor {
 
     private State state() {
         return states.peek();
-    }
-
-    private Class<?> typeOf(Type argument) {
-        switch (argument.getName()) {
-            case "String": return String.class;
-            case "Integer": return Integer.class;
-            case "Double": return Double.class;
-            default: return Object.class;
-        }
     }
 
     private void writeClass(File file, byte[] bytes) throws CompileException {

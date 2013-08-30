@@ -362,10 +362,12 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitVar(Var node) {
+        functionLevel++; // TODO hack
+        AstNode value = translate(node.getValue());
+        functionLevel--; // TODO hack
         Type defVarType = createVariable();
         define(locator(node.getName()), defVarType);
         specialize(defVarType);
-        AstNode value = translate(node.getValue());
         Type defActualType = value.getType();
         defVarType.unify(defActualType);
         generify(defVarType);

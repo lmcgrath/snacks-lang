@@ -1,12 +1,12 @@
 package snacks.lang;
 
-public class Plus {
+public class Op$Plus {
 
-    private static Plus instance;
+    private static Op$Plus instance;
 
     public static Object instance() {
         if (instance == null) {
-            instance = new Plus();
+            instance = new Op$Plus();
         }
         return instance;
     }

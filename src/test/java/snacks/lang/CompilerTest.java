@@ -201,6 +201,17 @@ public class CompilerTest {
     }
 
     @Test
+    public void shouldOverridePlus() throws Exception {
+        run(
+            "main = {",
+            "    var `+` = (x y) -> 'sneaky ninja (='",
+            "    say $ 3 + 24",
+            "}"
+        );
+        verifyOut("sneaky ninja (=");
+    }
+
+    @Test
     public void shouldConcatenateStrings() throws Exception {
         run("main = () -> say $ 'Hello ' + 'World!'");
         verifyOut("Hello World!");

@@ -1,12 +1,12 @@
 package snacks.lang;
 
-public class Multiply {
+public class Op$Multiply {
 
-    private static Multiply instance;
+    private static Op$Multiply instance;
 
     public static Object instance() {
         if (instance == null) {
-            instance = new Multiply();
+            instance = new Op$Multiply();
         }
         return instance;
     }
