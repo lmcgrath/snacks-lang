@@ -79,32 +79,6 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldSelectReferenceByNameAndType() {
-        define("concat", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        define("concat", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        Set<AstNode> definitions = translate(
-            "import test.example._",
-            "example = concat 3 'waffles'"
-        );
-        assertThat(typeOf("example"), equalTo(STRING_TYPE));
-        assertThat(definitions, defines(declaration("test", "example", expression(apply(
-            apply(
-                reference("test/example", "concat", set(
-                    func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
-                    func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE))
-                )),
-                constant(3),
-                set(
-                    func(INTEGER_TYPE, INTEGER_TYPE),
-                    func(STRING_TYPE, STRING_TYPE)
-                )
-            ),
-            constant("waffles"),
-            STRING_TYPE
-        )))));
-    }
-
-    @Test
     public void identityFunctionShouldHaveTypeOfArgument() {
         Type var = environment.createVariable();
         define("identity", func(var, var));
