@@ -105,7 +105,7 @@ public class CompilerTest {
     public void shouldReferenceBlock() throws Exception {
         run(
             "waffles = {",
-            "    say $ 2 + 3",
+            "    say $ (x y -> x + y) 2 3",
             "    say $ 4 * 5",
             "}",
             "main = () -> waffles()"
