@@ -48,9 +48,9 @@ public interface SyntaxVisitor {
 
     void visitIntegerLiteral(IntegerLiteral node);
 
-    void visitInstantiableLiteral(InstantiableLiteral node);
+    void visitInvokableLiteral(InvokableLiteral node);
 
-    void visitInstantiationExpression(InstantiationExpression node);
+    void visitInvocation(Invocation node);
 
     void visitIteratorLoop(IteratorLoop node);
 

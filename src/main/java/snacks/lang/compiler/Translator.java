@@ -245,18 +245,20 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitInstantiableLiteral(InstantiableLiteral node) {
-        result = invokable(translate(node.getExpression()));
+    public void visitIntegerLiteral(IntegerLiteral node) {
+        result = constant(node.getValue());
     }
 
     @Override
-    public void visitInstantiationExpression(InstantiationExpression node) {
+    public void visitInvocation(Invocation node) {
         result = invoke(translate(node.getExpression()));
     }
 
     @Override
-    public void visitIntegerLiteral(IntegerLiteral node) {
-        result = constant(node.getValue());
+    public void visitInvokableLiteral(InvokableLiteral node) {
+        beginFunction();
+        result = invokable(translate(node.getExpression()));
+        leaveFunction();
     }
 
     @Override
@@ -362,9 +364,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitVar(Var node) {
-        functionLevel++; // TODO hack
         AstNode value = translate(node.getValue());
-        functionLevel--; // TODO hack
         Type defVarType = createVariable();
         define(locator(node.getName()), defVarType);
         specialize(defVarType);
@@ -383,7 +383,7 @@ public class Translator implements SyntaxVisitor {
         if (functionLevel == 1) {
             return func(argument.getName(), body, functionType);
         } else {
-            functionLevel--;
+            leaveFunction();
             Locator locator = names.get(node);
             if (locator == null) {
                 String name = generateName();
@@ -454,6 +454,10 @@ public class Translator implements SyntaxVisitor {
         }
         argumentType.bind(set(constrainedArgumentType.decompose()));
         return set(allowedTypes);
+    }
+
+    private void leaveFunction() {
+        functionLevel--;
     }
 
     private void reserveName(String name) {

@@ -3,22 +3,22 @@ package snacks.lang.compiler.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class InstantiableLiteral extends Symbol implements Visitable {
+public class InvokableLiteral extends Symbol implements Visitable {
 
     private final Symbol expression;
 
-    public InstantiableLiteral(Symbol expression) {
+    public InvokableLiteral(Symbol expression) {
         this.expression = expression;
     }
 
     @Override
     public void accept(SyntaxVisitor visitor) {
-        visitor.visitInstantiableLiteral(this);
+        visitor.visitInvokableLiteral(this);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof InstantiableLiteral && Objects.equals(expression, ((InstantiableLiteral) o).expression);
+        return o == this || o instanceof InvokableLiteral && Objects.equals(expression, ((InvokableLiteral) o).expression);
     }
 
     public Symbol getExpression() {

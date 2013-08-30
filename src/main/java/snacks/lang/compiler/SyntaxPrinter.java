@@ -170,12 +170,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitInstantiableLiteral(InstantiableLiteral node) {
+    public void visitInvokableLiteral(InvokableLiteral node) {
         value(node.getExpression());
     }
 
     @Override
-    public void visitInstantiationExpression(InstantiationExpression node) {
+    public void visitInvocation(Invocation node) {
         print(node.getExpression());
     }
 

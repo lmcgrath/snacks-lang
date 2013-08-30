@@ -156,12 +156,12 @@ public final class SyntaxFactory {
         return new IndexExpression(expression, arguments);
     }
 
-    public static Symbol instantiable(Symbol body) {
-        return new InstantiableLiteral(body);
+    public static Symbol invokable(Symbol body) {
+        return new InvokableLiteral(body);
     }
 
-    public static Symbol instantiation(Symbol function) {
-        return new InstantiationExpression(function);
+    public static Symbol invocation(Symbol function) {
+        return new Invocation(function);
     }
 
     public static Symbol interpolation(Symbol... elements) {

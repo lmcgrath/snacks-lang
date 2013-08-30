@@ -199,7 +199,7 @@ postfix_expression
     = primary_expression
     | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
     | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {: return index(e, a); :}
-    | postfix_expression.e LARG RPAREN                          {: return instantiation(e); :}
+    | postfix_expression.e LARG RPAREN                          {: return invocation(e); :}
     | postfix_expression.e LARG arguments.a RPAREN              {:
                                                                     Symbol result = e;
                                                                     for (Symbol arg : a) {
@@ -268,8 +268,8 @@ map_literal
     ;
 
 block
-    = LCURLY term* RCURLY               {: return instantiable(block()); :}
-    | LCURLY sequence.e term* RCURLY    {: return instantiable(block(e)); :}
+    = LCURLY term* RCURLY               {: return invokable(block()); :}
+    | LCURLY sequence.e term* RCURLY    {: return invokable(block(e)); :}
     ;
 
 sequence
@@ -288,7 +288,7 @@ function_literal
             return expression;
         :}
     | LFUNC APPLIES_TO expression.e RPAREN
-        {: return instantiable(e); :}
+        {: return invokable(e); :}
     | LFUNC_MULTILINE function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
         {:
             Symbol expression = block(e);
@@ -310,7 +310,7 @@ tailed_function
         {:
             Symbol expression = e;
             if (a == null) {
-                expression = instantiable(expression);
+                expression = invokable(expression);
             } else {
                 for (int i = a.length - 1; i >= 1; i--) {
                     expression = func(a[i], expression);
