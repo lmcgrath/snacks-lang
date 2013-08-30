@@ -223,6 +223,12 @@ public class CompilerTest {
         verifyOut("Answer = 42");
     }
 
+    @Test
+    public void shouldMultiplyString() throws Exception {
+        run("main = () -> say $ 'waffles ' * 3");
+        verifyOut("waffles waffles waffles ");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
