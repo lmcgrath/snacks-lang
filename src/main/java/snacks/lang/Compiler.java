@@ -6,7 +6,7 @@ import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static snacks.lang.SnacksRuntime.BOOTSTRAP;
-import static snacks.lang.compiler.ast.Type.isInstantiable;
+import static snacks.lang.ast.Type.isInstantiable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,9 +17,9 @@ import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
-import snacks.lang.compiler.ast.*;
+import snacks.lang.ast.*;
 
-public class Compiler implements AstVisitor {
+public class Compiler implements Generator, Reducer {
 
     private static final Map<String, String> replacements;
 
@@ -64,7 +64,7 @@ public class Compiler implements AstVisitor {
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
         for (AstNode declaration : declarations) {
-            compile(declaration);
+            generate(declaration);
         }
         SnacksLoader loader = new SnacksLoader(getClass().getClassLoader());
         for (JiteClass jiteClass : acceptedClasses) {
@@ -76,28 +76,35 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitApply(Apply node) {
-        compile(node.getFunction());
-        compile(node.getArgument());
+    public void generateApply(Apply node) {
+        generate(node.getFunction());
+        generate(node.getArgument());
         block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
     }
 
     @Override
-    public void visitBooleanConstant(BooleanConstant node) {
+    public void generateAssign(Assign node) {
+        generate(node.getRight());
+        reduce(node.getLeft());
+        popValue = false;
+    }
+
+    @Override
+    public void generateBooleanConstant(BooleanConstant node) {
         block().ldc(node.getValue());
         block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
     }
 
     @Override
-    public void visitClosure(Closure node) {
+    public void generateClosure(Closure node) {
         state().setFields(node.getEnvironment());
         defineClosureFields(node);
         defineClosureConstructor(node);
-        compileApply(node.getBody());
+        generateApply(node.getBody());
     }
 
     @Override
-    public void visitClosureLocator(ClosureLocator locator) {
+    public void generateClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
         String className = javaClass(locator);
         block.newobj(className);
@@ -109,38 +116,38 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitDeclarationLocator(ExpressionLocator locator) {
+    public void generateDeclarationLocator(DeclarationLocator locator) {
         CodeBlock block = block();
         String className = javaClass(locator);
         block.invokestatic(className, "instance", sig(Object.class));
     }
 
     @Override
-    public void visitDeclaredArgument(DeclaredArgument node) {
+    public void generateDeclaredArgument(DeclaredArgument node) {
         // intentionally empty
     }
 
     @Override
-    public void visitDeclaredExpression(DeclaredExpression node) {
+    public void generateDeclaredExpression(DeclaredExpression node) {
         beginClass(javaClass(node), interfacesFor(node.getType()));
-        compile(node.getBody());
+        generate(node.getBody());
         acceptClass();
     }
 
     @Override
-    public void visitDoubleConstant(DoubleConstant node) {
+    public void generateDoubleConstant(DoubleConstant node) {
         block().ldc(node.getValue());
     }
 
     @Override
-    public void visitExpressionConstant(ExpressionConstant node) {
+    public void generateExpressionConstant(ExpressionConstant node) {
         CodeBlock block = beginBlock();
         LabelNode returnValue = new LabelNode(new Label());
         JiteClass jiteClass = jiteClass();
         jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
         block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
         block.ifnonnull(returnValue);
-        compile(node.getValue());
+        generate(node.getValue());
         block.putstatic(jiteClass.getClassName(), "instance", ci(Object.class));
         block.label(returnValue);
         block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
@@ -149,49 +156,49 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitFunction(Function node) {
+    public void generateFunction(Function node) {
         defineFunctionInitializer();
-        compileApply(node.getBody());
+        generateApply(node.getBody());
     }
 
     @Override
-    public void visitGuardCase(GuardCase node) {
+    public void generateGuardCase(GuardCase node) {
         CodeBlock block = block();
         LabelNode skipLabel = new LabelNode();
-        compile(node.getCondition());
+        generate(node.getCondition());
         block().ldc(true);
         block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
         block.if_acmpne(skipLabel);
-        compile(node.getExpression());
+        generate(node.getExpression());
         block.go_to(labels.peek());
         block.label(skipLabel);
     }
 
     @Override
-    public void visitGuardCases(GuardCases node) {
+    public void generateGuardCases(GuardCases node) {
         labels.push(new LabelNode());
         for (AstNode guard : node.getCases()) {
-            compile(guard);
+            generate(guard);
         }
         block().label(labels.pop());
     }
 
     @Override
-    public void visitIntegerConstant(IntegerConstant node) {
+    public void generateIntegerConstant(IntegerConstant node) {
         CodeBlock block = block();
         block().ldc(node.getValue());
         block.invokestatic(p(Integer.class), "valueOf", sig(Integer.class, int.class));
     }
 
     @Override
-    public void visitReference(Reference node) {
-        compile(node.getLocator());
+    public void generateReference(Reference node) {
+        generate(node.getLocator());
     }
 
     @Override
-    public void visitReferencesEqual(ReferencesEqual node) {
-        compile(node.getLeft());
-        compile(node.getRight());
+    public void generateReferencesEqual(ReferencesEqual node) {
+        generate(node.getLeft());
+        generate(node.getRight());
         LabelNode skipLabel = new LabelNode();
         LabelNode endLabel = new LabelNode();
         CodeBlock block = block();
@@ -205,56 +212,70 @@ public class Compiler implements AstVisitor {
     }
 
     @Override
-    public void visitResult(Result node) {
-        compile(node.getValue());
+    public void generateResult(Result node) {
+        generate(node.getValue());
         block().areturn();
     }
 
     @Override
-    public void visitSequence(Sequence node) {
+    public void generateSequence(Sequence node) {
         List<AstNode> elements = node.getElements();
         for (int i = 0; i < elements.size() - 1; i++) {
             popValue = true;
-            compile(elements.get(i));
+            generate(elements.get(i));
             if (popValue) {
                 block().pop();
             }
         }
-        compile(elements.get(elements.size() - 1));
+        generate(elements.get(elements.size() - 1));
     }
 
     @Override
-    public void visitStringConstant(StringConstant node) {
+    public void generateStringConstant(StringConstant node) {
         block().ldc(node.getValue());
     }
 
     @Override
-    public void visitVariableDeclaration(VariableDeclaration node) {
-        compile(node.getValue());
-        block().astore(getVariable(node.getName()));
+    public void generateVariableDeclaration(VariableDeclaration node) {
+        getVariable(node.getName());
         popValue = false;
     }
 
     @Override
-    public void visitVariableLocator(VariableLocator locator) {
+    public void generateVariableLocator(VariableLocator locator) {
         loadVariable(locator.getName());
     }
 
     @Override
-    public void visitVoidApply(VoidApply node) {
-        compile(node.getInstantiable());
+    public void generateVoidApply(VoidApply node) {
+        generate(node.getInstantiable());
         block().invokeinterface(p(Invokable.class), "invoke", sig(Object.class));
     }
 
     @Override
-    public void visitVoidFunction(VoidFunction node) {
+    public void generateVoidFunction(VoidFunction node) {
         defineFunctionInitializer();
         beginBlock();
-        compile(node.getBody());
+        generate(node.getBody());
         if (!block().returns()) {
             block().areturn();
         }
         jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
+    }
+
+    @Override
+    public void reduceReference(Reference node) {
+        reduce(node.getLocator());
+    }
+
+    @Override
+    public void reduceVariableDeclaration(VariableDeclaration node) {
+        block().astore(getVariable(node.getName()));
+    }
+
+    @Override
+    public void reduceVariableLocator(VariableLocator node) {
+        block().astore(getVariable(node.getName()));
     }
 
     private CodeBlock acceptBlock() {
@@ -277,23 +298,6 @@ public class Compiler implements AstVisitor {
 
     private CodeBlock block() {
         return state().block();
-    }
-
-    private void compile(AstNode node) {
-        node.accept(this);
-    }
-
-    private void compile(Locator locator) {
-        locator.accept(this);
-    }
-
-    private void compileApply(AstNode body) {
-        CodeBlock block = beginBlock();
-        compile(body);
-        if (!block.returns()) {
-            block.areturn();
-        }
-        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
     }
 
     private void defineClosureConstructor(Closure closure) {
@@ -336,6 +340,23 @@ public class Compiler implements AstVisitor {
         jiteClass.defineDefaultConstructor();
     }
 
+    private void generate(AstNode node) {
+        node.generate(this);
+    }
+
+    private void generate(Locator locator) {
+        locator.generate(this);
+    }
+
+    private void generateApply(AstNode body) {
+        CodeBlock block = beginBlock();
+        generate(body);
+        if (!block.returns()) {
+            block.areturn();
+        }
+        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+    }
+
     private int getVariable(String name) {
         return state().getVariable(name);
     }
@@ -360,7 +381,7 @@ public class Compiler implements AstVisitor {
         return javaClass(expression.getModule(), expression.getName());
     }
 
-    private String javaClass(ExpressionLocator locator) {
+    private String javaClass(DeclarationLocator locator) {
         return javaClass(locator.getModule(), locator.getName());
     }
 
@@ -401,6 +422,14 @@ public class Compiler implements AstVisitor {
         } else {
             block().aload(1);
         }
+    }
+
+    private void reduce(AstNode node) {
+        node.reduce(this);
+    }
+
+    private void reduce(Locator locator) {
+        locator.reduce(this);
     }
 
     private State state() {

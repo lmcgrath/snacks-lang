@@ -1,11 +1,11 @@
 %goal module_declaration;
 %goal expression;
-%package "snacks.lang.compiler";
+%package "snacks.lang.parser";
 %class "Parser";
 %import "java.io.IOException",
         "java.util.Set",
-        "snacks.lang.compiler.syntax.*",
-        "static snacks.lang.compiler.SyntaxFactory.*",
+        "snacks.lang.parser.syntax.*",
+        "static snacks.lang.parser.syntax.SyntaxFactory.*",
         "static java.util.Arrays.*";
 
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
@@ -15,7 +15,8 @@
     DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
     APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON,
-    LFUNC, LFUNC_MULTILINE
+    LFUNC, LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
+    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -52,7 +53,8 @@
 %left OR;
 %left RANGE, XRANGE;
 %right APPLY;
-%right ASSIGN;
+%right ASSIGN, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
+    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN;
 
 %typeof IDENTIFIER = "String";
 %typeof FWORD = "String";
@@ -138,6 +140,7 @@ qualified_identifier
 
 statement
     = expression
+    | VAR IDENTIFIER.v                                          {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                      {: return var(v, e); :}
     | HURL expression.e                                         {: return hurl(e); :}
     | RETURN expression.e                                       {: return result(e); :}
@@ -181,7 +184,20 @@ expression
     | expression.l RANGE expression.r               {: return binary("..", l, r); :}
     | expression.l XRANGE expression.r              {: return binary("...", l, r); :}
     | expression.l APPLY expression.r               {: return apply(l, r); :}
-    | expression.l ASSIGN expression.r              {: return binary("=", l, r); :}
+    | expression.l ASSIGN expression.r              {: return assign(l, r); :}
+    | expression.l EXPONENT_ASSIGN expression.r     {: return assign(l, binary("**", l, r)); :}
+    | expression.l MULTIPLY_ASSIGN expression.r     {: return assign(l, binary("*", l, r)); :}
+    | expression.l DIVIDE_ASSIGN expression.r       {: return assign(l, binary("/", l, r)); :}
+    | expression.l MODULO_ASSIGN expression.r       {: return assign(l, binary("%", l, r)); :}
+    | expression.l PLUS_ASSIGN expression.r         {: return assign(l, binary("+", l, r)); :}
+    | expression.l MINUS_ASSIGN expression.r        {: return assign(l, binary("-", l, r)); :}
+    | expression.l BIT_AND_ASSIGN expression.r      {: return assign(l, binary("&", l, r)); :}
+    | expression.l BIT_OR_ASSIGN expression.r       {: return assign(l, binary("|", l, r)); :}
+    | expression.l BIT_XOR_ASSIGN expression.r      {: return assign(l, binary("^", l, r)); :}
+    | expression.l COALESCE_ASSIGN expression.r     {: return assign(l, binary("?", l, r)); :}
+    | expression.l LSHIFT_ASSIGN expression.r       {: return assign(l, binary("<<", l, r)); :}
+    | expression.l RSHIFT_ASSIGN expression.r       {: return assign(l, binary(">>", l, r)); :}
+    | expression.l URSHIFT_ASSIGN expression.r      {: return assign(l, binary(">>>", l, r)); :}
     ;
 
 prefix_expression

@@ -1,5 +1,5 @@
 ext.scannerSpec = file("${projectDir}/src/main/resources/snacks.flex")
-ext.scannerClass = file("${projectDir}/src/generated/java/snacks/lang/compiler/Scanner.java")
+ext.scannerClass = file("${projectDir}/src/generated/java/snacks/lang/parser/Scanner.java")
 
 configurations {
     jflex

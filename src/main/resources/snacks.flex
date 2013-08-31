@@ -1,11 +1,11 @@
-package snacks.lang.compiler;
+package snacks.lang.parser;
 
 import static java.lang.Character.*;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.countMatches;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
-import static snacks.lang.compiler.Terminals.*;
+import static snacks.lang.parser.Terminals.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,25 +177,38 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "=>"            { detectNewLine(); return token(GOES_TO); }
     "="             { detectNewLine(); return token(ASSIGN); }
     "<="            { detectNewLine(); return token(LESS_THAN_EQUALS); }
+    "<<="           { detectNewLine(); return token(LSHIFT_ASSIGN); }
     "<<"            { detectNewLine(); return token(LSHIFT); }
     "<"             { detectNewLine(); return token(LESS_THAN); }
     ">="            { detectNewLine(); return token(GREATER_THAN_EQUALS); }
+    ">>="           { detectNewLine(); return token(RSHIFT_ASSIGN); }
     ">>"            { detectNewLine(); return token(RSHIFT); }
+    ">>>="          { detectNewLine(); return token(URSHIFT_ASSIGN); }
     ">>>"           { detectNewLine(); return token(URSHIFT); }
     ">"             { detectNewLine(); return token(GREATER_THAN); }
     "->"            { detectNewLine(); return token(APPLIES_TO); }
     "..."           { detectNewLine(); return token(XRANGE); }
     ".."            { detectNewLine(); return token(RANGE); }
     "."             { detectNewLine(); return token(DOT); }
+    "**="           { detectNewLine(); return token(EXPONENT_ASSIGN); }
     "**"            { detectNewLine(); return token(EXPONENT); }
+    "*="            { detectNewLine(); return token(MULTIPLY_ASSIGN); }
     "*"             { detectNewLine(); return token(MULTIPLY); }
+    "/="            { detectNewLine(); return token(DIVIDE_ASSIGN); }
     "/"             { detectNewLine(); return token(DIVIDE); }
+    "%="            { detectNewLine(); return token(MODULO_ASSIGN); }
     "%"             { detectNewLine(); return token(MODULO); }
+    "+="            { detectNewLine(); return token(PLUS_ASSIGN); }
     "+"             { detectNewLine(); return token(PLUS); }
+    "-="            { detectNewLine(); return token(MINUS_ASSIGN); }
     "-"             { detectNewLine(); return token(MINUS); }
+    "&="            { detectNewLine(); return token(BIT_AND_ASSIGN); }
     "&"             { detectNewLine(); return token(BIT_AND); }
+    "|="            { detectNewLine(); return token(BIT_OR_ASSIGN); }
     "|"             { detectNewLine(); return token(BIT_OR); }
+    "^="            { detectNewLine(); return token(BIT_XOR_ASSIGN); }
     "^"             { detectNewLine(); return token(BIT_XOR); }
+    "?="            { detectNewLine(); return token(COALESCE_ASSIGN); }
     "?"             { detectNewLine(); return token(COALESCE); }
     "("             { detectFunction(); yypushback(1); }
     ")"             { detectSelector(); return token(RPAREN); }

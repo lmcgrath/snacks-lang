@@ -2,7 +2,7 @@ package snacks.lang;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static snacks.lang.compiler.CompilerUtil.translate;
+import static snacks.lang.parser.CompilerUtil.translate;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -260,6 +260,20 @@ public class CompilerTest {
         verifyOut("waffles is true!");
         verifyOut("bananas is false!");
         verifyOut("We have oranges!");
+    }
+
+    @Test
+    public void shouldCompileVariableReassignment() throws Exception {
+        run(
+            "main = {",
+            "    var x = 'apples'",
+            "    var y",
+            "    x = 'waffles'",
+            "    y = 'bananas'",
+            "    say \"#{x} and #{y}\"",
+            "}"
+        );
+        verifyOut("waffles and bananas");
     }
 
     private void run(String... inputs) throws Exception {

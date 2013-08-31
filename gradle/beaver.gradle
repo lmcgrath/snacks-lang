@@ -1,7 +1,7 @@
 ext.grammarSpec = file("${projectDir}/src/main/resources/snacks.grammar")
 ext.parserClasses = files(
-    "${generatedDir}/snacks/lang/compiler/Parser.java",
-    "${generatedDir}/snacks/lang/compiler/Terminals.java"
+    "${generatedDir}/snacks/lang/parser/Parser.java",
+    "${generatedDir}/snacks/lang/parser/Terminals.java"
 )
 
 configurations {
