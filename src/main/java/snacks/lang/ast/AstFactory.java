@@ -23,6 +23,10 @@ public final class AstFactory {
         return new BooleanConstant(value);
     }
 
+    public static AstNode constant(char value) {
+        return new CharacterConstant(value);
+    }
+
     public static AstNode constant(double value) {
         return new DoubleConstant(value);
     }
@@ -35,9 +39,8 @@ public final class AstFactory {
         return new StringConstant(value);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends AstNode> T declaration(String module, String name, AstNode body) {
-        return (T) new DeclaredExpression(module, name, body);
+    public static DeclaredExpression declaration(String module, String name, AstNode body) {
+        return new DeclaredExpression(module, name, body);
     }
 
     public static AstNode expression(AstNode value) {
@@ -76,7 +79,7 @@ public final class AstFactory {
         return new DeclarationLocator(module, name);
     }
 
-    public static AstNode reference(String name, Type type) {
+    public static Reference reference(String name, Type type) {
         return reference(new VariableLocator(name), type);
     }
 
@@ -88,7 +91,7 @@ public final class AstFactory {
         return new Reference(locator, type);
     }
 
-    public static Result result(AstNode value) {
+    public static AstNode result(AstNode value) {
         return new Result(value);
     }
 
@@ -98,6 +101,10 @@ public final class AstFactory {
 
     public static AstNode sequence(List<AstNode> elements) {
         return new Sequence(elements);
+    }
+
+    public static AstNode symbol(String name) {
+        return new SymbolConstant(name);
     }
 
     public static AstNode var(String name) {

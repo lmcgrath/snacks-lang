@@ -236,6 +236,12 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
+    public void generateSymbol(SymbolConstant node) {
+        block().ldc(node.getName());
+        block().invokestatic(p(Symbol.class), "valueOf", sig(Symbol.class, String.class));
+    }
+
+    @Override
     public void generateVariableDeclaration(VariableDeclaration node) {
         getVariable(node.getName());
         popValue = false;
@@ -261,6 +267,12 @@ public class Compiler implements Generator, Reducer {
             block().areturn();
         }
         jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
+    }
+
+    @Override
+    public void visitCharacterConstant(CharacterConstant node) {
+        block().ldc(node.getValue());
+        block().invokestatic(p(Character.class), "valueOf", sig(Character.class, char.class));
     }
 
     @Override

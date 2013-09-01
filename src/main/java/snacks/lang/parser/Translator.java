@@ -100,21 +100,6 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitAccessExpression(AccessExpression node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitAnnotated(Annotated node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitAnnotation(Annotation node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
     public void visitApplyExpression(ApplyExpression node) {
         AstNode function = translate(node.getExpression());
         AstNode argument = translate(node.getArgument());
@@ -165,7 +150,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitCharacterLiteral(CharacterLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
+        result = constant(node.getValue());
     }
 
     @Override
@@ -197,11 +182,6 @@ public class Translator implements SyntaxVisitor {
         }
         register(declaration.getName(), declaration.getType());
         declarations.add(declaration);
-    }
-
-    @Override
-    public void visitDefaultCase(DefaultCase node) {
-        result = translate(node.getExpression());
     }
 
     @Override
@@ -256,11 +236,6 @@ public class Translator implements SyntaxVisitor {
         List<String> segments = identifier.getSegments();
         Locator locator = locator(join(segments.subList(0, segments.size() - 1), '/'), identifier.getLastSegment());
         addAlias(node.getAlias(), locator);
-    }
-
-    @Override
-    public void visitIndexExpression(IndexExpression node) {
-        throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
@@ -358,7 +333,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitSymbolLiteral(SymbolLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
+        result = symbol(node.getValue());
     }
 
     @Override
@@ -398,25 +373,6 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitWildcardImport(WildcardImport node) {
         addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
-    }
-
-    private AstNode acceptFunction(FunctionLiteral node, DeclaredArgument argument, AstNode body, Type functionType) {
-        if (functionLevel == 1) {
-            return func(argument.getName(), body, functionType);
-        } else {
-            leaveFunction();
-            Locator locator = names.get(node);
-            if (locator == null) {
-                String name = generateName();
-                Collection<String> environment = environment().getVariables();
-                register(name, functionType);
-                declarations.add(declaration(module, name, closure(argument.getName(), environment, body, functionType)));
-                locator = new ClosureLocator(module, name, environment);
-                names.put(node, locator);
-            }
-            register(locator.getName(), functionType);
-            return new Reference(locator, functionType);
-        }
     }
 
     private void beginFunction() {
@@ -498,10 +454,25 @@ public class Translator implements SyntaxVisitor {
         beginFunction();
         enterScope();
         DeclaredArgument argument = (DeclaredArgument) translate(node.getArgument());
+        String name = generateName();
         AstNode body = translate(node.getBody());
         leaveScope();
         Type functionType = inferenceFunctionType(node, argument);
-        return acceptFunction(node, argument, body, functionType);
+        if (functionLevel > 1) {
+            leaveFunction();
+            Locator locator = names.get(node);
+            if (locator == null) {
+                Collection<String> environment = environment().getVariables();
+                register(name, functionType);
+                declarations.add(declaration(module, name, closure(argument.getName(), environment, body, functionType)));
+                locator = new ClosureLocator(module, name, environment);
+                names.put(node, locator);
+            }
+            register(locator.getName(), functionType);
+            return new Reference(locator, functionType);
+        } else {
+            return func(argument.getName(), body, functionType);
+        }
     }
 
     private Type translateType(Symbol node) {

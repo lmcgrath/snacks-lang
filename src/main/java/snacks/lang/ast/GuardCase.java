@@ -14,11 +14,6 @@ public class GuardCase extends AstNode {
     }
 
     @Override
-    public void print(AstPrinter printer) {
-        printer.printGuardCase(this);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -33,17 +28,17 @@ public class GuardCase extends AstNode {
         }
     }
 
+    @Override
+    public void generate(Generator generator) {
+        generator.generateGuardCase(this);
+    }
+
     public AstNode getCondition() {
         return condition;
     }
 
     public AstNode getExpression() {
         return expression;
-    }
-
-    @Override
-    public void generate(Generator generator) {
-        generator.generateGuardCase(this);
     }
 
     @Override
@@ -54,5 +49,10 @@ public class GuardCase extends AstNode {
     @Override
     public int hashCode() {
         return Objects.hash(condition, expression);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printGuardCase(this);
     }
 }

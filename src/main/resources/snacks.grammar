@@ -14,8 +14,8 @@
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
     DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
-    APPLIES_TO, THROWAWAY, APPLY, COMMA, AT, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON,
-    LFUNC, LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
+    APPLIES_TO, THROWAWAY, APPLY, COMMA, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC,
+    LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
     BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN
 ;
 
@@ -69,8 +69,6 @@
 %typeof function_argument = "Argument";
 %typeof import_alias = "String";
 %typeof sub_import = "SubImport";
-%typeof annotation = "Annotation";
-%typeof opt_annotations = "Symbol[]";
 %typeof suffix_typespec = "TypeSpec";
 %typeof function_typespec = "TypeSpec";
 %typeof opt_function_arguments = "Symbol[]";
@@ -89,11 +87,11 @@ module_expressions
     ;
 
 module_expression
-    = IMPORT qualified_identifier.id import_alias.a         {: return importId(id, a == null ? id.getLastSegment() : a); :}
-    | IMPORT qualified_identifier.id DOT THROWAWAY          {: return importWildcard(id); :}
-    | FROM qualified_identifier.id IMPORT sub_imports.s     {: return from(id, s); :}
+    = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
+    | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
+    | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
+    | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
-    | opt_annotations.a IDENTIFIER.id ASSIGN expression.e   {: return a == null ? def(id, e) : annotated(def(id, e), a); :}
     ;
 
 sub_imports
@@ -108,29 +106,6 @@ sub_import
 import_alias
     = AS IDENTIFIER.id {: return new Symbol(id); :}
     |
-    ;
-
-opt_annotations
-    = annotations.a nl* {: return new Symbol(a); :}
-    |
-    ;
-
-annotations
-    = annotation
-    | annotations nl* annotation
-    ;
-
-annotation
-    = AT qualified_identifier.id                            {: return annotation(id, nothing()); :}
-    | AT qualified_identifier.id LPAREN expression.e RPAREN {: return annotation(id, e); :}
-    | AT qualified_identifier.id LPAREN map_list.e RPAREN   {: return annotation(id, map(e)); :}
-    | AT qualified_identifier.id LPAREN keyed_list.e RPAREN {: return annotation(id, map(e)); :}
-    | AT qualified_identifier.id tuple_literal.e            {: return annotation(id, e); :}
-    | AT qualified_identifier.id map_literal.e              {: return annotation(id, e); :}
-    | AT qualified_identifier.id set_literal.e              {: return annotation(id, e); :}
-    | AT qualified_identifier.id list_literal.e             {: return annotation(id, e); :}
-    | AT qualified_identifier.id function_literal.e         {: return annotation(id, e); :}
-    | AT qualified_identifier.id block.e                    {: return annotation(id, e); :}
     ;
 
 qualified_identifier
@@ -216,9 +191,14 @@ prefix_expression
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
-    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {: return index(e, a); :}
     | postfix_expression.e LARG RPAREN                          {: return invocation(e); :}
+    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {:
+                                                                    Symbol result = apply(id("[]"), e);
+                                                                    for (Symbol arg : a) {
+                                                                        result = apply(result, arg);
+                                                                    }
+                                                                    return result;
+                                                                :}
     | postfix_expression.e LARG arguments.a RPAREN              {:
                                                                     Symbol result = e;
                                                                     for (Symbol arg : a) {
@@ -371,7 +351,7 @@ alternative_case
     ;
 
 default_case
-    = ELSE sequence.e term* {: return dcase(block(e)); :}
+    = ELSE sequence.e term* {: return block(e); :}
     |
     ;
 

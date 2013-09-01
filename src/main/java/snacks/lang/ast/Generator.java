@@ -40,6 +40,8 @@ public interface Generator {
 
     void generateStringConstant(StringConstant node);
 
+    void generateSymbol(SymbolConstant node);
+
     void generateVariableDeclaration(VariableDeclaration node);
 
     void generateVariableLocator(VariableLocator locator);
@@ -47,4 +49,6 @@ public interface Generator {
     void generateVoidApply(VoidApply node);
 
     void generateVoidFunction(VoidFunction node);
+
+    void visitCharacterConstant(CharacterConstant node);
 }

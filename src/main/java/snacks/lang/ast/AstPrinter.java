@@ -1,5 +1,6 @@
 package snacks.lang.ast;
 
+import static java.lang.String.valueOf;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.io.PrintStream;
@@ -43,6 +44,10 @@ public class AstPrinter {
 
     public void printBooleanConstant(BooleanConstant node) {
         print("value: " + node.getValue());
+    }
+
+    public void printCharacterConstant(CharacterConstant node) {
+        print("value: '" + escapeJava(valueOf(node.getValue())));
     }
 
     public void printClosure(Closure node) {
@@ -121,7 +126,11 @@ public class AstPrinter {
     }
 
     public void printStringConstant(StringConstant node) {
-        print("value: " + "\"" + escapeJava(node.getValue()) + "\"");
+        print("value: \"" + escapeJava(node.getValue()) + "\"");
+    }
+
+    public void printSymbolConstant(SymbolConstant node) {
+        print("name: \"" + escapeJava(node.getName()) + "\"");
     }
 
     public void printVariableDeclaration(VariableDeclaration node) {

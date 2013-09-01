@@ -10,18 +10,6 @@ import beaver.Symbol;
 
 public final class SyntaxFactory {
 
-    public static Symbol access(Symbol expression, String property) {
-        return new AccessExpression(expression, property);
-    }
-
-    public static Symbol annotated(Symbol expression, Symbol... annotations) {
-        return new Annotated(expression, annotations);
-    }
-
-    public static Symbol annotation(Symbol id, Symbol value) {
-        return new Annotation(id, value);
-    }
-
     public static Symbol apply(Symbol function, Symbol argument) {
         return new ApplyExpression(function, argument);
     }
@@ -99,10 +87,6 @@ public final class SyntaxFactory {
         return new Conditional(elements);
     }
 
-    public static Symbol dcase(Symbol expression) {
-        return new DefaultCase(expression);
-    }
-
     public static Symbol def(String name, Symbol expression) {
         return new Declaration(name, expression);
     }
@@ -153,10 +137,6 @@ public final class SyntaxFactory {
 
     public static Symbol importWildcard(Symbol id) {
         return new WildcardImport(id);
-    }
-
-    public static Symbol index(Symbol expression, Symbol... arguments) {
-        return new IndexExpression(expression, arguments);
     }
 
     public static Symbol invocation(Symbol function) {

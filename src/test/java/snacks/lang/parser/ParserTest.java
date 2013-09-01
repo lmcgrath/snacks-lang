@@ -82,12 +82,14 @@ public class ParserTest {
 
     @Test
     public void shouldParseIndexExpression() {
-        assertThat(expression("fruits[0]"), equalTo(index(id("fruits"), literal(0))));
+        assertThat(expression("fruits[0]"),
+            equalTo(apply(apply(id("[]"), id("fruits")), literal(0))));
     }
 
     @Test
     public void shouldParseIndexExpressionWithMultipleArguments() {
-        assertThat(expression("fruits[1 2 3]"), equalTo(index(id("fruits"), literal(1), literal(2), literal(3))));
+        assertThat(expression("fruits[1 2 3]"),
+            equalTo(apply(apply(apply(apply(id("[]"), id("fruits")), literal(1)), literal(2)), literal(3))));
     }
 
     @Test
@@ -329,7 +331,7 @@ public class ParserTest {
             def("test", conditional(
                 condition(id("bananas"), block(apply(apply(apply(id("waffles"), literal(1)), literal(2)), literal(3)))),
                 condition(id("toast"), block(apply(apply(apply(id("ducks"), literal(4)), literal(5)), literal(6)))),
-                dcase(block(apply(id("waffles"), id("anyway!"))))
+                block(apply(id("waffles"), id("anyway!")))
             ))
         )));
     }
@@ -340,7 +342,7 @@ public class ParserTest {
             "test = begin",
             "           try something dangerous",
             "       embrace oops ->",
-            "           say oops.message",
+            "           say 'oops, I broke it'",
             "       ensure",
             "           perform some cleanup",
             "       end"
@@ -349,7 +351,7 @@ public class ParserTest {
             def("test", begin(
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
-                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                    embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
                 ),
                 ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
@@ -362,7 +364,7 @@ public class ParserTest {
             "test = use try = uranium238",
             "           try something dangerous",
             "       embrace oops ->",
-            "           say oops.message",
+            "           say 'oops, I broke it'",
             "       ensure",
             "           perform some cleanup",
             "       end"
@@ -374,7 +376,7 @@ public class ParserTest {
                 ),
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
-                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                    embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
                 ),
                 ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))
@@ -388,7 +390,7 @@ public class ParserTest {
             "       use something = centrifuge + lots of electricity",
             "           try something dangerous",
             "       embrace oops ->",
-            "           say oops.message",
+            "           say 'oops, boom!'",
             "       ensure",
             "           perform some cleanup",
             "       end"
@@ -401,7 +403,7 @@ public class ParserTest {
                 ),
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
                 array(
-                    embrace("oops", block(apply(id("say"), access(id("oops"), "message"))))
+                    embrace("oops", block(apply(id("say"), literal("oops, boom!"))))
                 ),
                 ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
             ))

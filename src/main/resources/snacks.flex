@@ -110,7 +110,6 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 %state SELECTOR_STATE
 %state DETECT_FUNCTION_STATE
 %state FUNCTION_STATE
-%state ANNOTATION_STATE
 %state EMBRACE_STATE
 
 %%
@@ -225,7 +224,6 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         }
                     }
     ","             { detectNewLine(); return token(COMMA); }
-    "@"             { enterState(ANNOTATION_STATE); return token(AT); }
     "\"\"\"" \n?    { beginString(HEREDOC_STATE); return token(TRIPLE_DQUOTE); }
     "'''" \n?       { beginString(NOWDOC_STATE); return token(TRIPLE_QUOTE); }
     "\""            { beginString(INTERPOLATION_STATE); return token(DQUOTE); }
@@ -389,14 +387,6 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "}"             { return token(RCURLY); }
     "->"            { leaveState(); detectNewLine(); return token(APPLIES_TO); }
     {AnyWhitespace} { /* ignore */ }
-}
-
-<ANNOTATION_STATE> {
-    {Identifier}    { return token(IDENTIFIER, yytext()); }
-    "."             { return token(DOT); }
-    {Whitespace}    { /* ignore */ }
-    "("             { leaveState(); return token(LPAREN); }
-    .               { yypushback(1); leaveState(); }
 }
 
 <EMBRACE_STATE> {

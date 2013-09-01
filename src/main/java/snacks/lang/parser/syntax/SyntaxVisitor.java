@@ -2,12 +2,6 @@ package snacks.lang.parser.syntax;
 
 public interface SyntaxVisitor {
 
-    void visitAccessExpression(AccessExpression node);
-
-    void visitAnnotated(Annotated node);
-
-    void visitAnnotation(Annotation node);
-
     void visitApplyExpression(ApplyExpression node);
 
     void visitArgument(Argument node);
@@ -23,8 +17,6 @@ public interface SyntaxVisitor {
     void visitConditional(Conditional node);
 
     void visitDeclaration(Declaration node);
-
-    void visitDefaultCase(DefaultCase node);
 
     void visitDoubleLiteral(DoubleLiteral node);
 
@@ -43,8 +35,6 @@ public interface SyntaxVisitor {
     void visitIdentifier(Identifier node);
 
     void visitImport(Import node);
-
-    void visitIndexExpression(IndexExpression node);
 
     void visitIntegerLiteral(IntegerLiteral node);
 

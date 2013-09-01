@@ -13,17 +13,12 @@ public class GuardCases extends AstNode {
     }
 
     @Override
-    public void print(AstPrinter printer) {
-        printer.printGuardCases(this);
+    public void generate(Generator generator) {
+        generator.generateGuardCases(this);
     }
 
     public List<AstNode> getCases() {
         return cases;
-    }
-
-    @Override
-    public void generate(Generator generator) {
-        generator.generateGuardCases(this);
     }
 
     @Override
@@ -33,5 +28,10 @@ public class GuardCases extends AstNode {
             types.add(c.getType());
         }
         return set(types);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printGuardCases(this);
     }
 }

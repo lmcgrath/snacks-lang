@@ -8,11 +8,15 @@ import java.util.Map;
 
 public abstract class Type {
 
-    public static final Type BOOLEAN_TYPE = type("Boolean");
-    public static final Type DOUBLE_TYPE = type("Double");
-    public static final Type INTEGER_TYPE = type("Integer");
-    public static final Type STRING_TYPE = type("String");
-    public static final Type VOID_TYPE = type("Void");
+    public static final Type
+        BOOLEAN_TYPE = type("Boolean"),
+        CHARACTER_TYPE = type("Character"),
+        DOUBLE_TYPE = type("Double"),
+        INTEGER_TYPE = type("Integer"),
+        STRING_TYPE = type("String"),
+        SYMBOL_TYPE = type("Symbol"),
+        VOID_TYPE = type("Void")
+    ;
 
     public static Type func(Type argument, Type result) {
         return new TypeOperator("->", argument, result);

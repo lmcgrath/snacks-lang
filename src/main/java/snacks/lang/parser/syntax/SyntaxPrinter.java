@@ -20,26 +20,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitAccessExpression(AccessExpression node) {
-        print(node.getExpression());
-        print("property: " + node.getProperty());
-    }
-
-    @Override
-    public void visitAnnotated(Annotated node) {
-        print(node.getExpression());
-        for (Symbol annotation : node.getAnnotations()) {
-            print(annotation);
-        }
-    }
-
-    @Override
-    public void visitAnnotation(Annotation node) {
-        print(node.getName());
-        print(node.getValue());
-    }
-
-    @Override
     public void visitApplyExpression(ApplyExpression node) {
         print(node.getExpression());
         print(node.getArgument());
@@ -85,11 +65,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     public void visitDeclaration(Declaration node) {
         print("name: " + node.getName());
         print(node.getBody());
-    }
-
-    @Override
-    public void visitDefaultCase(DefaultCase node) {
-        print(node.getExpression());
     }
 
     @Override
@@ -150,13 +125,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     public void visitImport(Import node) {
         print("module: " + node.getModule());
         print("alias: " + node.getAlias());
-    }
-
-    @Override
-    public void visitIndexExpression(IndexExpression node) {
-        for (Symbol argument : node.getArguments()) {
-            print(argument);
-        }
     }
 
     @Override
