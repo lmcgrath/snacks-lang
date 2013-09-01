@@ -1,6 +1,6 @@
 ext.grammarSpec = file("${projectDir}/src/main/resources/snacks.grammar")
 ext.parserClass = file("${generatedDir}/snacks/lang/parser/Parser.java")
-ext.terminals = "${generatedDir}/snacks/lang/parser/Terminals.java"
+ext.terminals = file("${generatedDir}/snacks/lang/parser/Terminals.java")
 ext.parserClasses = files(parserClass, terminals)
 
 configurations {
@@ -13,13 +13,16 @@ dependencies {
     compile 'net.sf.beaver:beaver-rt:0.9.11'
 }
 
-task (cleanParser) << {
-    parserClasses.each { it.delete() }
+task (cleanParser) {
+    inputs.files parserClasses
+    doLast {
+        parserClasses.each { it.delete() }
+    }
 }
 
 task (generateParser, dependsOn: setUpGeneratedDir) {
     inputs.file grammarSpec
-    outputs.file parserClasses
+    outputs.files parserClasses
     doLast {
         parserClasses.each { it.delete() }
         ant.taskdef (
