@@ -8,12 +8,7 @@ public class PrinterState {
     private int currentIndent;
 
     public PrinterState(PrintStream out) {
-        this(out, 0);
-    }
-
-    public PrinterState(PrintStream out, int indent) {
         this.out = out;
-        this.currentIndent = indent;
     }
 
     public void begin(Object node) {
