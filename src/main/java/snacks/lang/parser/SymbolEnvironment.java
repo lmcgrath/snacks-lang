@@ -18,6 +18,7 @@ public class SymbolEnvironment implements TypeFactory {
         def("Double", DOUBLE_TYPE);
 
         def("concat", func(var("T"), func(var("U"), STRING_TYPE)));
+        def("hurl", func(var("T"), var("U")));
         def("not", func(BOOLEAN_TYPE, BOOLEAN_TYPE));
         def("say", func(var("T"), VOID_TYPE));
         def("stringy", func(var("T"), STRING_TYPE));

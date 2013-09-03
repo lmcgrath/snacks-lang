@@ -14,6 +14,8 @@ public interface SyntaxVisitor {
 
     void visitCharacterLiteral(CharacterLiteral node);
 
+    void visitConditionCase(ConditionCase node);
+
     void visitConditional(Conditional node);
 
     void visitDeclaration(Declaration node);
@@ -28,7 +30,7 @@ public interface SyntaxVisitor {
 
     void visitFunctionLiteral(FunctionLiteral node);
 
-    void visitHurl(Hurl node);
+    void visitHurl(HurlExpression node);
 
     void visitIdentifier(Identifier node);
 
@@ -36,9 +38,9 @@ public interface SyntaxVisitor {
 
     void visitIntegerLiteral(IntegerLiteral node);
 
-    void visitInvokableLiteral(InvokableLiteral node);
-
     void visitInvocation(Invocation node);
+
+    void visitInvokableLiteral(InvokableLiteral node);
 
     void visitIsExpression(IsExpression node);
 
@@ -69,8 +71,6 @@ public interface SyntaxVisitor {
     void visitSubImport(SubImport node);
 
     void visitSymbolLiteral(SymbolLiteral node);
-
-    void visitConditionCase(ConditionCase node);
 
     void visitTupleLiteral(TupleLiteral node);
 

@@ -350,9 +350,11 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", begin(
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
-                array(
-                    embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
-                ),
+                array(embrace(
+                    "oops",
+                    type(qid("snacks", "lang", "SnacksException")),
+                    block(apply(id("say"), literal("oops, I broke it")))
+                )),
                 block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
@@ -375,9 +377,11 @@ public class ParserTest {
                     use("try", id("uranium238"))
                 ),
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
-                array(
-                    embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
-                ),
+                array(embrace(
+                    "oops",
+                    type(qid("snacks", "lang", "SnacksException")),
+                    block(apply(id("say"), literal("oops, I broke it")))
+                )),
                 block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
@@ -402,9 +406,11 @@ public class ParserTest {
                     use("something", binary("+", id("centrifuge"), apply(apply(id("lots"), id("of")), id("electricity"))))
                 ),
                 block(apply(apply(id("try"), id("something")), id("dangerous"))),
-                array(
-                    embrace("oops", block(apply(id("say"), literal("oops, boom!"))))
-                ),
+                array(embrace(
+                    "oops",
+                    type(qid("snacks", "lang", "SnacksException")),
+                    block(apply(id("say"), literal("oops, boom!")))
+                )),
                 block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));

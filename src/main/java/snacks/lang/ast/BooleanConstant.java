@@ -1,6 +1,6 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.DOUBLE_TYPE;
+import static snacks.lang.ast.Type.BOOLEAN_TYPE;
 
 import java.util.Objects;
 
@@ -29,7 +29,7 @@ public class BooleanConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return DOUBLE_TYPE;
+        return BOOLEAN_TYPE;
     }
 
     public boolean getValue() {

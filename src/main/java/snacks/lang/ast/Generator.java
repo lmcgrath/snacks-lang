@@ -34,6 +34,8 @@ public interface Generator {
 
     void generateGuardCases(GuardCases node);
 
+    void generateHurl(Hurl hurl);
+
     void generateIntegerConstant(IntegerConstant node);
 
     void generateReference(Reference node);

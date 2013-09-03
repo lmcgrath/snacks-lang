@@ -71,6 +71,10 @@ public final class AstFactory {
         return new GuardCases(cases);
     }
 
+    public static AstNode hurl(AstNode body) {
+        return new Hurl(body);
+    }
+
     public static AstNode invokable(AstNode body) {
         return new VoidFunction(body);
     }

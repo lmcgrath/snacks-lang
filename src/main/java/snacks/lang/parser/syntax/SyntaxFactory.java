@@ -116,7 +116,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol hurl(Symbol expression) {
-        return new Hurl(expression);
+        return new HurlExpression(expression);
     }
 
     public static Symbol id(String name) {

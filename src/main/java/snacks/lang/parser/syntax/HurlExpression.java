@@ -3,11 +3,11 @@ package snacks.lang.parser.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class Hurl extends Symbol implements Visitable {
+public class HurlExpression extends Symbol implements Visitable {
 
     private final Symbol expression;
 
-    public Hurl(Symbol expression) {
+    public HurlExpression(Symbol expression) {
         this.expression = expression;
     }
 
@@ -18,7 +18,7 @@ public class Hurl extends Symbol implements Visitable {
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof Hurl && Objects.equals(expression, ((Hurl) o).expression);
+        return o == this || o instanceof HurlExpression && Objects.equals(expression, ((HurlExpression) o).expression);
     }
 
     public Symbol getExpression() {

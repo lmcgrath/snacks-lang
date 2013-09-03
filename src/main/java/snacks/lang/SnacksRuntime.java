@@ -2,12 +2,14 @@ package snacks.lang;
 
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
+import static org.apache.commons.lang.reflect.MethodUtils.getMatchingAccessibleMethod;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
+import java.lang.reflect.Method;
 import com.headius.invokebinder.Binder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
@@ -21,6 +23,8 @@ public class SnacksRuntime {
         sig(CallSite.class, Lookup.class, String.class, MethodType.class)
     );
 
+    private static final String apply = "apply";
+
     public static CallSite bootstrap(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
         MutableCallSite callSite = new MutableCallSite(type);
         MethodHandle send = Binder.from(type)
@@ -31,19 +35,19 @@ public class SnacksRuntime {
     }
 
     public static Object apply(Lookup lookup, Object function, Object argument) throws Throwable {
-        return methodHandleFor(lookup, function, argument).invoke(function, argument);
+        Method method = methodFor(function, argument);
+        return Binder.from(Object.class, Object.class, Object.class)
+            .cast(Object.class, function.getClass(), method.getParameterTypes()[0])
+            .invokeVirtual(lookup, apply)
+            .invoke(function, argument);
     }
 
-    private static MethodHandle methodHandleFor(Lookup lookup, Object function, Object argument) throws Throwable {
-        Binder binder = Binder.from(Object.class, Object.class, Object.class);
-        try {
-            return binder.cast(Object.class, function.getClass(), argument.getClass()).invokeVirtual(lookup, "apply");
-        } catch (ReflectiveOperationException firstException) {
-            try {
-                return binder.cast(Object.class, function.getClass(), Object.class).invokeVirtual(lookup, "apply");
-            } catch (ReflectiveOperationException secondException) {
-                throw firstException;
-            }
+    private static Method methodFor(Object function, Object argument) throws Throwable {
+        Method method = getMatchingAccessibleMethod(function.getClass(), apply, new Class[] { argument.getClass() });
+        if (method == null) {
+            throw new NoSuchMethodException(p(function.getClass()) + ":" + apply + ":" + sig(Object.class, argument.getClass()));
+        } else {
+            return method;
         }
     }
 }

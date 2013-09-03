@@ -248,6 +248,16 @@ public class TranslatorTest {
         );
     }
 
+    @Test(expected = TypeException.class)
+    public void shouldNotAddBooleanToBoolean() {
+        translate("example = True + True");
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotAddBooleanToBooleanWithinFunction() {
+        translate("example = () -> True + True");
+    }
+
     private Type typeOf(String name) {
         return typeOf("test", name);
     }

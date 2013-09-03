@@ -55,6 +55,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConditionCase(ConditionCase node) {
+        print(node.getCondition());
+        print(node.getExpression());
+    }
+
+    @Override
     public void visitConditional(Conditional node) {
         for (Symbol element : node.getCases()) {
             print(element);
@@ -107,7 +113,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitHurl(Hurl node) {
+    public void visitHurl(HurlExpression node) {
         print(node.getExpression());
     }
 
@@ -128,13 +134,13 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitInvokableLiteral(InvokableLiteral node) {
-        value(node.getExpression());
+    public void visitInvocation(Invocation node) {
+        print(node.getExpression());
     }
 
     @Override
-    public void visitInvocation(Invocation node) {
-        print(node.getExpression());
+    public void visitInvokableLiteral(InvokableLiteral node) {
+        value(node.getExpression());
     }
 
     @Override
@@ -227,12 +233,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitSymbolLiteral(SymbolLiteral node) {
         value(node.getValue());
-    }
-
-    @Override
-    public void visitConditionCase(ConditionCase node) {
-        print(node.getCondition());
-        print(node.getExpression());
     }
 
     @Override

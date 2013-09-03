@@ -95,7 +95,6 @@ public class Compiler implements Generator, Reducer {
     public void generateBegin(Begin begin) {
         CodeBlock block = block();
         ExceptionScope scope = currentExceptionScope();
-        block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
         block.label(scope.getStart());
         generate(begin.getBody());
         block.label(scope.getEnd());
@@ -221,6 +220,16 @@ public class Compiler implements Generator, Reducer {
             generate(guard);
         }
         block().label(labels.pop());
+    }
+
+    @Override
+    public void generateHurl(Hurl hurl) {
+        CodeBlock block = block();
+        block.invokestatic(p(Errorize.class), "instance", sig(Object.class));
+        generate(hurl.getBody());
+        block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
+        block.checkcast(p(Throwable.class));
+        block.athrow();
     }
 
     @Override
@@ -475,6 +484,7 @@ public class Compiler implements Generator, Reducer {
 
     private void leaveExceptionScope() {
         ExceptionScope scope = exceptionScopes.pop();
+        block().trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
         scope.generateEnsureAll();
         block().label(scope.getExit());
     }

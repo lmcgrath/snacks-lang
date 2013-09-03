@@ -1,5 +1,8 @@
 package snacks.lang;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static snacks.lang.parser.CompilerUtil.translate;
@@ -235,11 +238,6 @@ public class CompilerTest {
         verifyOut("waffles waffles waffles ");
     }
 
-    @Test(expected = NoSuchMethodException.class)
-    public void shouldNotAddBooleanToBoolean() throws Exception {
-        run("main = () -> True + True");
-    }
-
     @Test
     public void shouldCompileConditional() throws Exception {
         run(
@@ -290,19 +288,75 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileExceptional() throws Exception {
+    public void shouldCompileHappyExceptional() throws Exception {
         run(
             "main = () -> begin",
             "    say 'oops'",
-            "embrace e:java.lang.RuntimeException ->",
+            "embrace e ->",
             "    say 'got it!'",
             "ensure",
-            "    say 'doing this right'",
+            "    say 'cleaning stuff up'",
             "end"
         );
         verifyOut("oops");
-        verifyOut("doing this right");
+        verifyOut("cleaning stuff up");
         verifyNever("got it!");
+    }
+
+    @Test
+    public void shouldCompileSadExceptional() throws Exception {
+        run(
+            "main = () -> begin",
+            "    hurl 'oops'",
+            "    say 'oops, did not oops'",
+            "embrace e ->",
+            "    say 'got it!'",
+            "ensure",
+            "    say 'cleaning stuff up'",
+            "end"
+        );
+        verifyNever("oops, did not oops");
+        verifyOut("got it!");
+        verifyOut("cleaning stuff up");
+    }
+
+    @Test
+    public void shouldRethrowException() throws Exception {
+        try {
+            run(
+                "main = () -> begin",
+                "    hurl 'oops'",
+                "embrace e ->",
+                "    hurl e",
+                "    say 'oops, did not throw'",
+                "ensure",
+                "    say 'cleaning stuff up'",
+                "end"
+            );
+            fail("Did not throw");
+        } catch (SnacksException exception) {
+            assertThat(exception.getMessage(), equalTo("oops"));
+            verifyNever("oops, did not throw");
+            verifyOut("cleaning stuff up");
+        }
+    }
+
+    @Test
+    public void shouldCompileNestedExceptional() throws Exception {
+        run(
+            "main = () -> begin",
+            "    say 'beginning!'",
+            "    begin",
+            "        hurl 'oops!'",
+            "    ensure",
+            "        say 'here it comes!'",
+            "    end",
+            "embrace x ->",
+            "    say 'got it!'",
+            "end"
+        );
+        verifyOut("here it comes!");
+        verifyOut("got it!");
     }
 
     private void run(String... inputs) throws Exception {

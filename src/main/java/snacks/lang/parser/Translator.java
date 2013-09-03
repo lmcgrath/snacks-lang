@@ -191,6 +191,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitEmbraceCase(EmbraceCase node) {
+        define(locator(node.getArgument()), Type.var("E"));
         result = embrace(node.getArgument(), javaClass(node.getType()), translate(node.getExpression()));
     }
 
@@ -198,9 +199,12 @@ public class Translator implements SyntaxVisitor {
     public void visitExceptional(ExceptionalExpression node) {
         enterScope();
         AstNode begin = begin(translate(node.getExpression()));
-        AstNode ensure = translate(node.getEnsureCase());
         List<AstNode> embraces = new ArrayList<>();
-        matchTypes(begin, ensure);
+        AstNode ensure = null;
+        if (node.getEnsureCase() != null) {
+            ensure = translate(node.getEnsureCase());
+            matchTypes(begin, ensure);
+        }
         for (Symbol symbol : node.getEmbraceCases()) {
             AstNode embrace = translate(symbol);
             matchTypes(begin, embrace);
@@ -227,8 +231,8 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitHurl(Hurl node) {
-        throw new UnsupportedOperationException(); // TODO
+    public void visitHurl(HurlExpression node) {
+        result = hurl(translate(node.getExpression()));
     }
 
     @Override
@@ -255,15 +259,19 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitIsExpression(IsExpression node) {
-        result = is(translate(node.getLeft()), translate(node.getRight()));
+    public void visitInvokableLiteral(InvokableLiteral node) {
+        beginFunction();
+        AstNode invokable = invokable(translate(node.getExpression()));
+        leaveFunction();
+        if (result(invokable.getType()).decompose().isEmpty()) {
+            throw new TypeException("Could not determine type of invokable");
+        }
+        result = invokable;
     }
 
     @Override
-    public void visitInvokableLiteral(InvokableLiteral node) {
-        beginFunction();
-        result = invokable(translate(node.getExpression()));
-        leaveFunction();
+    public void visitIsExpression(IsExpression node) {
+        result = is(translate(node.getLeft()), translate(node.getRight()));
     }
 
     @Override

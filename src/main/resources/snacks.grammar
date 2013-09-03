@@ -384,11 +384,11 @@ embrace_cases
 
 embrace_case
     = EMBRACE IDENTIFIER.a embrace_typespec.t APPLIES_TO sequence.e term*   {: return embrace(a, t, block(e)); :}
-    | EMBRACE IDENTIFIER.a APPLIES_TO sequence.e term*                      {: return embrace(a, null, block(e)); :}
     ;
 
 embrace_typespec
     = COLON qualified_identifier.id {: return type(id); :}
+    |                               {: return type(qid("snacks", "lang", "SnacksException")); :}
     ;
 
 ensure_case
