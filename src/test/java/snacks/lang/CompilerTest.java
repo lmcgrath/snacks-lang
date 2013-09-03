@@ -379,6 +379,24 @@ public class CompilerTest {
         verifyOut(3);
     }
 
+    @Test
+    public void shouldCompileNegative() throws Exception {
+        run("main = () -> say $ -3");
+        verifyOut(-3);
+    }
+
+    @Test
+    public void shouldCompilePositive() throws Exception {
+        run("main = () -> say $ +3");
+        verifyOut(3);
+    }
+
+    @Test
+    public void shouldCompileNegativeNegative() throws Exception {
+        run("main = () -> say $ --3");
+        verifyOut(3);
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
