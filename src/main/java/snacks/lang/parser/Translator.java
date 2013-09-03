@@ -3,9 +3,9 @@ package snacks.lang.parser;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.ast.Type.*;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
-import static snacks.lang.ast.Type.*;
 
 import java.util.*;
 import beaver.Symbol;
@@ -191,17 +191,23 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitEmbraceCase(EmbraceCase node) {
-        throw new UnsupportedOperationException(); // TODO
+        result = embrace(node.getArgument(), javaClass(node.getType()), translate(node.getExpression()));
     }
 
     @Override
-    public void visitEnsureCase(EnsureCase node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitExceptional(Exceptional node) {
-        throw new UnsupportedOperationException(); // TODO
+    public void visitExceptional(ExceptionalExpression node) {
+        enterScope();
+        AstNode begin = translate(node.getExpression());
+        AstNode ensure = translate(node.getEnsureCase());
+        List<AstNode> embraces = new ArrayList<>();
+        matchTypes(begin, ensure);
+        for (Symbol symbol : node.getEmbraceCases()) {
+            AstNode embrace = translate(symbol);
+            matchTypes(begin, embrace);
+            embraces.add(embrace);
+        }
+        leaveScope();
+        result = exceptional(begin, embraces, ensure);
     }
 
     @Override
@@ -433,8 +439,20 @@ public class Translator implements SyntaxVisitor {
         return set(allowedTypes);
     }
 
+    private String javaClass(Symbol symbol) {
+        TypeSpec type = (TypeSpec) symbol;
+        QualifiedIdentifier id = (QualifiedIdentifier) type.getType();
+        return join(id.getSegments(), ".");
+    }
+
     private void leaveFunction() {
         functionLevel--;
+    }
+
+    private void matchTypes(AstNode left, AstNode right) {
+        if (!left.getType().unify(right.getType())) {
+            throw new TypeException("Type mismatch: " + left.getType() + " != " + right.getType());
+        }
     }
 
     private void reserveName(String name) {

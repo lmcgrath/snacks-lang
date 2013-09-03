@@ -18,6 +18,8 @@ public class SymbolEnvironment implements TypeFactory {
         def("Double", DOUBLE_TYPE);
 
         def("concat", func(var("T"), func(var("U"), STRING_TYPE)));
+        def("not", func(BOOLEAN_TYPE, BOOLEAN_TYPE));
+        def("say", func(var("T"), VOID_TYPE));
         def("stringy", func(var("T"), STRING_TYPE));
 
         def("+", func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)));
@@ -55,9 +57,6 @@ public class SymbolEnvironment implements TypeFactory {
         def("unary-", func(INTEGER_TYPE, INTEGER_TYPE));
         def("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
         def("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
-
-        def("say", func(var("T"), VOID_TYPE));
-        def("string", func(var("T"), STRING_TYPE));
     }
 
     private static void def(String name, Type type) {

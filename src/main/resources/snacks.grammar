@@ -392,7 +392,7 @@ embrace_typespec
     ;
 
 ensure_case
-    = ENSURE sequence.e term* {: return ensure(block(e)); :}
+    = ENSURE sequence.e term* {: return block(e); :}
     ;
 
 keyed_list

@@ -81,6 +81,20 @@ public class AstPrinter {
         print("value: " + node.getValue());
     }
 
+    public void printEmbrace(Embrace embrace) {
+        print("variable: " + embrace.getVariable());
+        print("type: " + embrace.getException());
+        print(embrace.getBody());
+    }
+
+    public void printExceptional(Exceptional node) {
+        print(node.getBegin());
+        for (AstNode embrace : node.getEmbraces()) {
+            print(embrace);
+        }
+        print(node.getEnsure());
+    }
+
     public void printExpressionConstant(ExpressionConstant node) {
         print(node.getValue());
     }

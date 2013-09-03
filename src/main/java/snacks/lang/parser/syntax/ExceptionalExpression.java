@@ -9,14 +9,14 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class Exceptional extends Symbol implements Visitable {
+public class ExceptionalExpression extends Symbol implements Visitable {
 
     private final List<Symbol> useCases;
     private final Symbol expression;
     private final List<Symbol> embraceCases;
     private final Symbol ensureCase;
 
-    public Exceptional(Symbol[] useCases, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
+    public ExceptionalExpression(Symbol[] useCases, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
         this.expression = expression;
         this.ensureCase = ensureCase;
         this.useCases = useCases == null ? new ArrayList<Symbol>() : asList(useCases);
@@ -32,8 +32,8 @@ public class Exceptional extends Symbol implements Visitable {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof Exceptional) {
-            Exceptional other = (Exceptional) o;
+        } else if (o instanceof ExceptionalExpression) {
+            ExceptionalExpression other = (ExceptionalExpression) o;
             return new EqualsBuilder()
                 .append(useCases, other.useCases)
                 .append(expression, other.expression)

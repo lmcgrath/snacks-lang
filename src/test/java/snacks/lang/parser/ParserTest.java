@@ -353,7 +353,7 @@ public class ParserTest {
                 array(
                     embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
                 ),
-                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
+                block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
     }
@@ -378,7 +378,7 @@ public class ParserTest {
                 array(
                     embrace("oops", block(apply(id("say"), literal("oops, I broke it"))))
                 ),
-                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
+                block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
     }
@@ -405,7 +405,7 @@ public class ParserTest {
                 array(
                     embrace("oops", block(apply(id("say"), literal("oops, boom!"))))
                 ),
-                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
+                block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
     }
@@ -427,7 +427,7 @@ public class ParserTest {
                 array(
                     embrace("oops", type(qid("ouch", "BustedFoot")), block(apply(id("say"), literal("ouch!"))))
                 ),
-                ensure(block(apply(apply(id("perform"), id("some")), id("cleanup"))))
+                block(apply(apply(id("perform"), id("some")), id("cleanup")))
             ))
         )));
     }

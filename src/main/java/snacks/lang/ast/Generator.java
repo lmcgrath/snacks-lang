@@ -20,6 +20,10 @@ public interface Generator {
 
     void generateDoubleConstant(DoubleConstant node);
 
+    void generateEmbrace(Embrace node);
+
+    void generateExceptional(Exceptional node);
+
     void generateExpressionConstant(ExpressionConstant node);
 
     void generateFunction(Function node);

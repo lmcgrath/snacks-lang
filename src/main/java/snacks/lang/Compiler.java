@@ -140,6 +140,63 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
+    public void generateEmbrace(Embrace node) {
+        block().astore(getVariable(node.getVariable()));
+        generate(node.getBody());
+    }
+
+    @Override
+    public void generateExceptional(Exceptional node) {
+        LabelNode beginScope = new LabelNode();
+        LabelNode endScope = new LabelNode();
+        LabelNode exit = new LabelNode();
+        LabelNode error = new LabelNode();
+        CodeBlock block = block();
+
+        // try block + associated finally
+        block.trycatch(beginScope, endScope, error, null);
+        block.label(beginScope);
+        generate(node.getBegin());
+        block.label(endScope);
+        if (node.getEnsure() != null) {
+            generate(node.getEnsure());
+        }
+        block.go_to(exit);
+
+        // catch blocks + associated finally's
+        for (AstNode n : node.getEmbraces()) {
+            Embrace embrace = (Embrace) n;
+            LabelNode beginCatch = new LabelNode();
+            LabelNode endCatch = new LabelNode();
+            block.trycatch(beginScope, endScope, beginCatch, embrace.getException().replace('.', '/'));
+            block.trycatch(beginCatch, endCatch, error, null);
+            block.label(beginCatch);
+            generate(embrace);
+            block.label(endCatch);
+            if (node.getEnsure() != null) {
+                generate(node.getEnsure());
+            }
+            block.go_to(exit);
+        }
+
+        // error block + associated finally block
+        int exceptionVar = getVariable("$snacks$~exception");
+        block.label(error);
+        block.astore(exceptionVar);
+        if (node.getEnsure() != null) {
+            LabelNode ensureLabel = new LabelNode();
+            block.trycatch(error, ensureLabel, error, null);
+            block.label(ensureLabel);
+            generate(node.getEnsure());
+        }
+        block.aload(exceptionVar);
+        block.athrow();
+
+        block.label(exit);
+        block.areturn();
+    }
+
+    @Override
     public void generateExpressionConstant(ExpressionConstant node) {
         CodeBlock block = beginBlock();
         LabelNode returnValue = new LabelNode(new Label());

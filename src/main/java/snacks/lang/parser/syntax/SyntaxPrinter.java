@@ -80,12 +80,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitEnsureCase(EnsureCase node) {
-        print(node.getExpression());
-    }
-
-    @Override
-    public void visitExceptional(Exceptional node) {
+    public void visitExceptional(ExceptionalExpression node) {
         for (Symbol useCase : node.getUseCases()) {
             print(useCase);
         }

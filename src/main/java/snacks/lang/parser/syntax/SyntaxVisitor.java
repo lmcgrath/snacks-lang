@@ -22,9 +22,7 @@ public interface SyntaxVisitor {
 
     void visitEmbraceCase(EmbraceCase node);
 
-    void visitEnsureCase(EnsureCase node);
-
-    void visitExceptional(Exceptional node);
+    void visitExceptional(ExceptionalExpression node);
 
     void visitFromImport(FromImport node);
 

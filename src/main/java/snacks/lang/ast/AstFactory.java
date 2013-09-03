@@ -43,6 +43,14 @@ public final class AstFactory {
         return new DeclaredExpression(module, name, body);
     }
 
+    public static AstNode embrace(String var, String javaClass, AstNode body) {
+        return new Embrace(var, javaClass, body);
+    }
+
+    public static AstNode exceptional(AstNode begin, List<AstNode> embraces, AstNode ensure) {
+        return new Exceptional(begin, embraces, ensure);
+    }
+
     public static AstNode expression(AstNode value) {
         return new ExpressionConstant(value);
     }

@@ -276,6 +276,35 @@ public class CompilerTest {
         verifyOut("waffles and bananas");
     }
 
+    @Test
+    public void shouldNotBeTrueWhenNotted() throws Exception {
+        run(
+            "main = () ->",
+            "    if not True",
+            "        say 'It\\'s not true!'",
+            "    else",
+            "        say 'It\\'s true!'",
+            "    end"
+        );
+        verifyOut("It\'s true!");
+    }
+
+    @Test
+    public void shouldCompileExceptional() throws Exception {
+        run(
+            "main = () -> begin",
+            "    say 'oops'",
+            "embrace e:java.lang.RuntimeException ->",
+            "    say 'got it!'",
+            "ensure",
+            "    say 'doing this right'",
+            "end"
+        );
+        verifyOut("oops");
+        verifyOut("doing this right");
+        verifyNever("got it!");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }

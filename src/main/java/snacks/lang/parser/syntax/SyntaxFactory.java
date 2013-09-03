@@ -32,31 +32,31 @@ public final class SyntaxFactory {
     }
 
     public static Symbol begin(Symbol expression, Symbol[] embraceCases) {
-        return new Exceptional(null, expression, embraceCases, null);
+        return new ExceptionalExpression(null, expression, embraceCases, null);
     }
 
     public static Symbol begin(Symbol expression, Symbol ensureCase) {
-        return new Exceptional(null, expression, null, ensureCase);
+        return new ExceptionalExpression(null, expression, null, ensureCase);
     }
 
     public static Symbol begin(Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
-        return new Exceptional(null, expression, embraceCases, ensureCase);
+        return new ExceptionalExpression(null, expression, embraceCases, ensureCase);
     }
 
     public static Symbol begin(Symbol[] usings, Symbol expression) {
-        return new Exceptional(usings, expression, null, null);
+        return new ExceptionalExpression(usings, expression, null, null);
     }
 
     public static Symbol begin(Symbol[] usings, Symbol expression, Symbol[] embraceCases) {
-        return new Exceptional(usings, expression, embraceCases, null);
+        return new ExceptionalExpression(usings, expression, embraceCases, null);
     }
 
     public static Symbol begin(Symbol[] usings, Symbol expression, Symbol ensureCase) {
-        return new Exceptional(usings, expression, null, ensureCase);
+        return new ExceptionalExpression(usings, expression, null, ensureCase);
     }
 
     public static Symbol begin(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
-        return new Exceptional(usings, expression, embraceCases, ensureCase);
+        return new ExceptionalExpression(usings, expression, embraceCases, ensureCase);
     }
 
     public static Symbol binary(String operator, Symbol left, Symbol right) {
@@ -97,10 +97,6 @@ public final class SyntaxFactory {
 
     public static Symbol embrace(String var, Symbol type, Symbol expression) {
         return new EmbraceCase(var, type, expression);
-    }
-
-    public static Symbol ensure(Symbol expression) {
-        return new EnsureCase(expression);
     }
 
     public static Symbol entry(Symbol key, Symbol value) {
