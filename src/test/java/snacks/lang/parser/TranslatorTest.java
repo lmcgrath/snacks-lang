@@ -4,11 +4,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.parser.TranslatorMatcher.defines;
 import static snacks.lang.ast.Type.*;
+import static snacks.lang.ast.Type.func;
+import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Type;
@@ -256,6 +258,16 @@ public class TranslatorTest {
     @Test(expected = TypeException.class)
     public void shouldNotAddBooleanToBooleanWithinFunction() {
         translate("example = () -> True + True");
+    }
+
+    @Ignore
+    @Test
+    public void shouldApplyFunctionToFunction() throws Exception {
+        translate(
+            "operate = (op) -> op 2 4",
+            "example = operate `+`"
+        );
+        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
     private Type typeOf(String name) {

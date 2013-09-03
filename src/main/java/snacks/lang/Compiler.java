@@ -28,6 +28,7 @@ public class Compiler implements Generator, Reducer {
         replacements.put("?", "$Query");
         replacements.put("!", "$Bang");
         replacements.put("+", "$Plus");
+        replacements.put("-", "$Minus");
         replacements.put("**", "$Exponent");
         replacements.put("*", "$Multiply");
         replacements.put("/", "$Divide");

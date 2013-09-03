@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static snacks.lang.parser.CompilerUtil.translate;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -196,6 +197,7 @@ public class CompilerTest {
         verifyOut("I like\n waffles waffles waffles and bananas\n");
     }
 
+    @Ignore
     @Test
     public void shouldPassFunctionIntoFunction() throws Exception {
         run(
@@ -357,6 +359,24 @@ public class CompilerTest {
         );
         verifyOut("here it comes!");
         verifyOut("got it!");
+    }
+
+    @Test
+    public void shouldCompileModulo() throws Exception {
+        run("main = () -> say $ 5 % 2");
+        verifyOut(1);
+    }
+
+    @Test
+    public void shouldCompileDivide() throws Exception {
+        run("main = () -> say $ 6 / 2");
+        verifyOut(3);
+    }
+
+    @Test
+    public void shouldCompileMinus() throws Exception {
+        run("main = () -> say $ 5 - 2");
+        verifyOut(3);
     }
 
     private void run(String... inputs) throws Exception {
