@@ -6,6 +6,8 @@ public interface Generator {
 
     void generateAssign(Assign node);
 
+    void generateBegin(Begin begin);
+
     void generateBooleanConstant(BooleanConstant node);
 
     void generateClosure(Closure node);

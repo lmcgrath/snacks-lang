@@ -15,6 +15,10 @@ public final class AstFactory {
         return new Assign(left, right);
     }
 
+    public static AstNode begin(AstNode body) {
+        return new Begin(body);
+    }
+
     public static AstNode closure(String variable, Collection<String> environment, AstNode expression, Type type) {
         return new Closure(variable, environment, expression, type);
     }

@@ -54,12 +54,14 @@ public class Compiler implements Generator, Reducer {
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
     private final Deque<LabelNode> labels;
+    private final Deque<ExceptionScope> exceptionScopes;
     private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
         labels = new ArrayDeque<>();
+        exceptionScopes = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -87,6 +89,18 @@ public class Compiler implements Generator, Reducer {
         generate(node.getRight());
         reduce(node.getLeft());
         popValue = false;
+    }
+
+    @Override
+    public void generateBegin(Begin begin) {
+        CodeBlock block = block();
+        ExceptionScope scope = currentExceptionScope();
+        block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
+        block.label(scope.getStart());
+        generate(begin.getBody());
+        block.label(scope.getEnd());
+        scope.generateEnsure();
+        block.go_to(scope.getExit());
     }
 
     @Override
@@ -141,44 +155,28 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateEmbrace(Embrace node) {
-        block().astore(getVariable(node.getVariable()));
+        ExceptionScope scope = currentExceptionScope();
+        CodeBlock block = block();
+        LabelNode beginCatch = new LabelNode();
+        LabelNode endCatch = new LabelNode();
+        block.trycatch(scope.getStart(), scope.getEnd(), beginCatch, node.getException().replace('.', '/'));
+        block.trycatch(beginCatch, endCatch, scope.getError(), null);
+        block.label(beginCatch);
+        block.astore(getVariable(node.getVariable()));
         generate(node.getBody());
+        block.label(endCatch);
+        scope.generateEnsure();
+        block.go_to(scope.getExit());
     }
 
     @Override
     public void generateExceptional(Exceptional node) {
-        LabelNode beginScope = new LabelNode();
-        LabelNode endScope = new LabelNode();
-        LabelNode exit = new LabelNode();
-        LabelNode error = new LabelNode();
-        CodeBlock block = block();
-
-        // try block + associated finally
-        block.trycatch(beginScope, endScope, error, null);
-        block.label(beginScope);
+        enterExceptionScope(node);
         generate(node.getBegin());
-        block.label(endScope);
-        generateEnsure(node);
-        block.go_to(exit);
-
-        // catch blocks + associated finally's
-        for (AstNode n : node.getEmbraces()) {
-            Embrace embrace = (Embrace) n;
-            LabelNode beginCatch = new LabelNode();
-            LabelNode endCatch = new LabelNode();
-            block.trycatch(beginScope, endScope, beginCatch, embrace.getException().replace('.', '/'));
-            block.trycatch(beginCatch, endCatch, error, null);
-            block.label(beginCatch);
+        for (AstNode embrace : node.getEmbraces()) {
             generate(embrace);
-            block.label(endCatch);
-            generateEnsure(node);
-            block.go_to(exit);
         }
-
-        // error block + associated finally block
-        generateAllHandler(node, error);
-
-        block.label(exit);
+        leaveExceptionScope();
     }
 
     @Override
@@ -354,6 +352,10 @@ public class Compiler implements Generator, Reducer {
         return state().block();
     }
 
+    private ExceptionScope currentExceptionScope() {
+        return exceptionScopes.peek();
+    }
+
     private void defineClosureConstructor(Closure closure) {
         String signature = sig(params(void.class, Object.class, closure.getEnvironment().size()));
         CodeBlock block = beginBlock();
@@ -394,27 +396,16 @@ public class Compiler implements Generator, Reducer {
         jiteClass.defineDefaultConstructor();
     }
 
+    private void enterExceptionScope(Exceptional node) {
+        exceptionScopes.push(new ExceptionScope(node.getEnsure()));
+    }
+
     private void generate(AstNode node) {
         node.generate(this);
     }
 
     private void generate(Locator locator) {
         locator.generate(this);
-    }
-
-    private void generateAllHandler(Exceptional node, LabelNode error) {
-        CodeBlock block = block();
-        int exceptionVar = getVariable("$snacks$~exception");
-        block.label(error);
-        block.astore(exceptionVar);
-        if (node.getEnsure() != null) {
-            LabelNode ensureLabel = new LabelNode();
-            block.trycatch(error, ensureLabel, error, null);
-            block.label(ensureLabel);
-            generateEnsure(node);
-        }
-        block.aload(exceptionVar);
-        block.athrow();
     }
 
     private void generateApply(AstNode body) {
@@ -424,12 +415,6 @@ public class Compiler implements Generator, Reducer {
             block.areturn();
         }
         jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
-    }
-
-    private void generateEnsure(Exceptional node) {
-        if (node.getEnsure() != null) {
-            generate(node.getEnsure());
-        }
     }
 
     private int getVariable(String name) {
@@ -486,6 +471,12 @@ public class Compiler implements Generator, Reducer {
 
     private JiteClass jiteClass() {
         return state().jiteClass;
+    }
+
+    private void leaveExceptionScope() {
+        ExceptionScope scope = exceptionScopes.pop();
+        scope.generateEnsureAll();
+        block().label(scope.getExit());
     }
 
     private void loadVariable(String name) {
@@ -604,6 +595,64 @@ public class Compiler implements Generator, Reducer {
 
         public void setFields(Collection<String> fields) {
             this.fields = new ArrayList<>(fields);
+        }
+    }
+
+    private final class ExceptionScope {
+
+        private final LabelNode start;
+        private final LabelNode end;
+        private final LabelNode exit;
+        private final LabelNode error;
+        private final AstNode ensure;
+
+        public ExceptionScope(AstNode ensure) {
+            this.ensure = ensure;
+            this.start = new LabelNode();
+            this.end = new LabelNode();
+            this.exit = new LabelNode();
+            this.error = new LabelNode();
+        }
+
+        public void generateEnsure() {
+            if (ensure != null) {
+                generate(ensure);
+            }
+        }
+
+        public void generateEnsureAll() {
+            int exceptionVar = getVariable("$snacks$~exception");
+            CodeBlock block = block();
+            block.label(error);
+            block.astore(exceptionVar);
+            if (ensure != null) {
+                LabelNode ensureLabel = new LabelNode();
+                block.trycatch(error, ensureLabel, error, null);
+                block.label(ensureLabel);
+                generateEnsure();
+            }
+            block.aload(exceptionVar);
+            block.athrow();
+        }
+
+        public LabelNode getEnd() {
+            return end;
+        }
+
+        public AstNode getEnsure() {
+            return ensure;
+        }
+
+        public LabelNode getError() {
+            return error;
+        }
+
+        public LabelNode getExit() {
+            return exit;
+        }
+
+        public LabelNode getStart() {
+            return start;
         }
     }
 }

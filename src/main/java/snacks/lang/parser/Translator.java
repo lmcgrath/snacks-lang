@@ -197,7 +197,7 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitExceptional(ExceptionalExpression node) {
         enterScope();
-        AstNode begin = translate(node.getExpression());
+        AstNode begin = begin(translate(node.getExpression()));
         AstNode ensure = translate(node.getEnsureCase());
         List<AstNode> embraces = new ArrayList<>();
         matchTypes(begin, ensure);
