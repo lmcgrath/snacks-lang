@@ -33,9 +33,6 @@ public class Compiler implements Generator, Reducer {
         replacements.put("*", "$Multiply");
         replacements.put("/", "$Divide");
         replacements.put("%", "$Modulo");
-        replacements.put("unary+", "$Positive");
-        replacements.put("unary-", "$Negative");
-        replacements.put("unary~", "$BitNot");
         replacements.put("&", "$BitAnd");
         replacements.put("|", "$BitOr");
         replacements.put("^", "$BitXor");
