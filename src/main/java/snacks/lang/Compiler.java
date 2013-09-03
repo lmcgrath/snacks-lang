@@ -158,9 +158,7 @@ public class Compiler implements Generator, Reducer {
         block.label(beginScope);
         generate(node.getBegin());
         block.label(endScope);
-        if (node.getEnsure() != null) {
-            generate(node.getEnsure());
-        }
+        generateEnsure(node);
         block.go_to(exit);
 
         // catch blocks + associated finally's
@@ -173,27 +171,14 @@ public class Compiler implements Generator, Reducer {
             block.label(beginCatch);
             generate(embrace);
             block.label(endCatch);
-            if (node.getEnsure() != null) {
-                generate(node.getEnsure());
-            }
+            generateEnsure(node);
             block.go_to(exit);
         }
 
         // error block + associated finally block
-        int exceptionVar = getVariable("$snacks$~exception");
-        block.label(error);
-        block.astore(exceptionVar);
-        if (node.getEnsure() != null) {
-            LabelNode ensureLabel = new LabelNode();
-            block.trycatch(error, ensureLabel, error, null);
-            block.label(ensureLabel);
-            generate(node.getEnsure());
-        }
-        block.aload(exceptionVar);
-        block.athrow();
+        generateAllHandler(node, error);
 
         block.label(exit);
-        block.areturn();
     }
 
     @Override
@@ -327,12 +312,6 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
-    public void visitCharacterConstant(CharacterConstant node) {
-        block().ldc(node.getValue());
-        block().invokestatic(p(Character.class), "valueOf", sig(Character.class, char.class));
-    }
-
-    @Override
     public void reduceReference(Reference node) {
         reduce(node.getLocator());
     }
@@ -345,6 +324,12 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void reduceVariableLocator(VariableLocator node) {
         block().astore(getVariable(node.getName()));
+    }
+
+    @Override
+    public void visitCharacterConstant(CharacterConstant node) {
+        block().ldc(node.getValue());
+        block().invokestatic(p(Character.class), "valueOf", sig(Character.class, char.class));
     }
 
     private CodeBlock acceptBlock() {
@@ -417,6 +402,21 @@ public class Compiler implements Generator, Reducer {
         locator.generate(this);
     }
 
+    private void generateAllHandler(Exceptional node, LabelNode error) {
+        CodeBlock block = block();
+        int exceptionVar = getVariable("$snacks$~exception");
+        block.label(error);
+        block.astore(exceptionVar);
+        if (node.getEnsure() != null) {
+            LabelNode ensureLabel = new LabelNode();
+            block.trycatch(error, ensureLabel, error, null);
+            block.label(ensureLabel);
+            generateEnsure(node);
+        }
+        block.aload(exceptionVar);
+        block.athrow();
+    }
+
     private void generateApply(AstNode body) {
         CodeBlock block = beginBlock();
         generate(body);
@@ -424,6 +424,12 @@ public class Compiler implements Generator, Reducer {
             block.areturn();
         }
         jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+    }
+
+    private void generateEnsure(Exceptional node) {
+        if (node.getEnsure() != null) {
+            generate(node.getEnsure());
+        }
     }
 
     private int getVariable(String name) {
