@@ -10,6 +10,8 @@ public interface Generator {
 
     void generateBooleanConstant(BooleanConstant node);
 
+    void generateBreak(Break node);
+
     void generateClosure(Closure node);
 
     void generateClosureLocator(ClosureLocator locator);
@@ -34,9 +36,13 @@ public interface Generator {
 
     void generateGuardCases(GuardCases node);
 
-    void generateHurl(Hurl hurl);
+    void generateHurl(Hurl node);
 
     void generateIntegerConstant(IntegerConstant node);
+
+    void generateLoop(Loop node);
+
+    void generateNillable(Nillable nillable);
 
     void generateReference(Reference node);
 

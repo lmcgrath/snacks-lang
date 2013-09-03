@@ -55,14 +55,16 @@ public class Compiler implements Generator, Reducer {
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
     private final Deque<LabelNode> labels;
-    private final Deque<ExceptionScope> exceptionScopes;
+    private final Deque<EmbraceScope> embraces;
+    private final Deque<LoopScope> loops;
     private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
         labels = new ArrayDeque<>();
-        exceptionScopes = new ArrayDeque<>();
+        loops = new ArrayDeque<>();
+        embraces = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -88,6 +90,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateAssign(Assign node) {
         generate(node.getRight());
+        block().dup();
         reduce(node.getLeft());
         popValue = false;
     }
@@ -95,7 +98,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateBegin(Begin begin) {
         CodeBlock block = block();
-        ExceptionScope scope = currentExceptionScope();
+        EmbraceScope scope = currentEmbrace();
         block.label(scope.getStart());
         generate(begin.getBody());
         block.label(scope.getEnd());
@@ -107,6 +110,11 @@ public class Compiler implements Generator, Reducer {
     public void generateBooleanConstant(BooleanConstant node) {
         block().ldc(node.getValue());
         block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
+    }
+
+    @Override
+    public void generateBreak(Break node) {
+        currentLoop().exit(block());
     }
 
     @Override
@@ -155,7 +163,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateEmbrace(Embrace node) {
-        ExceptionScope scope = currentExceptionScope();
+        EmbraceScope scope = currentEmbrace();
         CodeBlock block = block();
         LabelNode beginCatch = new LabelNode();
         LabelNode endCatch = new LabelNode();
@@ -171,12 +179,12 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateExceptional(Exceptional node) {
-        enterExceptionScope(node);
+        enterEmbrace(node);
         generate(node.getBegin());
         for (AstNode embrace : node.getEmbraces()) {
             generate(embrace);
         }
-        leaveExceptionScope();
+        leaveEmbrace();
     }
 
     @Override
@@ -206,8 +214,8 @@ public class Compiler implements Generator, Reducer {
         CodeBlock block = block();
         LabelNode skipLabel = new LabelNode();
         generate(node.getCondition());
-        block().ldc(true);
-        block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
+        block.ldc(true);
+        block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
         block.if_acmpne(skipLabel);
         generate(node.getExpression());
         block.go_to(labels.peek());
@@ -224,10 +232,10 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
-    public void generateHurl(Hurl hurl) {
+    public void generateHurl(Hurl node) {
         CodeBlock block = block();
         block.invokestatic(p(Errorize.class), "instance", sig(Object.class));
-        generate(hurl.getBody());
+        generate(node.getBody());
         block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
         block.checkcast(p(Throwable.class));
         block.athrow();
@@ -238,6 +246,24 @@ public class Compiler implements Generator, Reducer {
         CodeBlock block = block();
         block().ldc(node.getValue());
         block.invokestatic(p(Integer.class), "valueOf", sig(Integer.class, int.class));
+    }
+
+    @Override
+    public void generateLoop(Loop node) {
+        CodeBlock block = block();
+        LoopScope loop = enterLoop();
+        loop.begin(block);
+        generate(node.getCondition());
+        loop.testCondition(block);
+        generate(node.getBody());
+        block().pop();
+        loop.end(block);
+        leaveLoop();
+    }
+
+    @Override
+    public void generateNillable(Nillable nillable) {
+        block().aconst_null();
     }
 
     @Override
@@ -269,15 +295,15 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateSequence(Sequence node) {
-        List<AstNode> elements = node.getElements();
-        for (int i = 0; i < elements.size() - 1; i++) {
-            popValue = true;
-            generate(elements.get(i));
+        Iterator<AstNode> elements = node.getElements().iterator();
+        popValue = true;
+        generate(elements.next());
+        while (elements.hasNext()) {
             if (popValue) {
                 block().pop();
             }
+            generate(elements.next());
         }
-        generate(elements.get(elements.size() - 1));
     }
 
     @Override
@@ -362,8 +388,12 @@ public class Compiler implements Generator, Reducer {
         return state().block();
     }
 
-    private ExceptionScope currentExceptionScope() {
-        return exceptionScopes.peek();
+    private EmbraceScope currentEmbrace() {
+        return embraces.peek();
+    }
+
+    private LoopScope currentLoop() {
+        return loops.peek();
     }
 
     private void defineClosureConstructor(Closure closure) {
@@ -406,8 +436,14 @@ public class Compiler implements Generator, Reducer {
         jiteClass.defineDefaultConstructor();
     }
 
-    private void enterExceptionScope(Exceptional node) {
-        exceptionScopes.push(new ExceptionScope(node.getEnsure()));
+    private void enterEmbrace(Exceptional node) {
+        embraces.push(new EmbraceScope(node.getEnsure()));
+    }
+
+    private LoopScope enterLoop() {
+        LoopScope loop = new LoopScope();
+        loops.push(loop);
+        return loop;
     }
 
     private void generate(AstNode node) {
@@ -483,11 +519,15 @@ public class Compiler implements Generator, Reducer {
         return state().jiteClass;
     }
 
-    private void leaveExceptionScope() {
-        ExceptionScope scope = exceptionScopes.pop();
+    private void leaveEmbrace() {
+        EmbraceScope scope = embraces.pop();
         block().trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
         scope.generateEnsureAll();
         block().label(scope.getExit());
+    }
+
+    private void leaveLoop() {
+        loops.pop();
     }
 
     private void loadVariable(String name) {
@@ -552,6 +592,36 @@ public class Compiler implements Generator, Reducer {
         }
     }
 
+    private static final class LoopScope {
+
+        private final LabelNode start;
+        private final LabelNode end;
+
+        public LoopScope() {
+            this.start = new LabelNode();
+            this.end = new LabelNode();
+        }
+
+        public void begin(CodeBlock block) {
+            block.label(start);
+        }
+
+        public void end(CodeBlock block) {
+            block.go_to(start);
+            block.label(end);
+        }
+
+        public void exit(CodeBlock block) {
+            block.go_to(end);
+        }
+
+        public void testCondition(CodeBlock block) {
+            block.ldc(true);
+            block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
+            block.if_acmpne(end);
+        }
+    }
+
     private static final class SnacksLoader extends ClassLoader {
 
         public SnacksLoader(ClassLoader parent) {
@@ -609,7 +679,7 @@ public class Compiler implements Generator, Reducer {
         }
     }
 
-    private final class ExceptionScope {
+    private final class EmbraceScope {
 
         private final LabelNode start;
         private final LabelNode end;
@@ -617,7 +687,7 @@ public class Compiler implements Generator, Reducer {
         private final LabelNode error;
         private final AstNode ensure;
 
-        public ExceptionScope(AstNode ensure) {
+        public EmbraceScope(AstNode ensure) {
             this.ensure = ensure;
             this.start = new LabelNode();
             this.end = new LabelNode();

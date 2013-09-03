@@ -9,13 +9,11 @@ public class IteratorLoop extends Symbol implements Visitable {
     private final String variable;
     private final Symbol expression;
     private final Symbol action;
-    private final Symbol defaultCase;
 
-    public IteratorLoop(String variable, Symbol expression, Symbol action, Symbol defaultCase) {
+    public IteratorLoop(String variable, Symbol expression, Symbol action) {
         this.variable = variable;
         this.expression = expression;
         this.action = action;
-        this.defaultCase = defaultCase;
     }
 
     @Override
@@ -33,7 +31,6 @@ public class IteratorLoop extends Symbol implements Visitable {
                 .append(variable, other.variable)
                 .append(expression, other.expression)
                 .append(action, other.action)
-                .append(defaultCase, other.defaultCase)
                 .isEquals();
         } else {
             return false;
@@ -42,10 +39,6 @@ public class IteratorLoop extends Symbol implements Visitable {
 
     public Symbol getAction() {
         return action;
-    }
-
-    public Symbol getDefaultCase() {
-        return defaultCase;
     }
 
     public Symbol getExpression() {
@@ -58,11 +51,11 @@ public class IteratorLoop extends Symbol implements Visitable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(variable, expression, action, defaultCase);
+        return Objects.hash(variable, expression, action);
     }
 
     @Override
     public String toString() {
-        return "(for " + variable + " in " + expression + " do " + action + (defaultCase == null ? "" : " " + defaultCase) + ")";
+        return "(for " + variable + " in " + expression + " do " + action + ")";
     }
 }

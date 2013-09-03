@@ -149,6 +149,11 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void BreakExpression(BreakExpression node) {
+        result = Break.INSTANCE;
+    }
+
+    @Override
     public void visitCharacterLiteral(CharacterLiteral node) {
         result = constant(node.getValue());
     }
@@ -285,8 +290,11 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitLoop(Loop node) {
-        throw new UnsupportedOperationException(); // TODO
+    public void visitLoopExpression(LoopExpression node) {
+        result = loop(
+            translate(node.getCondition()),
+            translate(node.getBody())
+        );
     }
 
     @Override
@@ -304,6 +312,11 @@ public class Translator implements SyntaxVisitor {
         for (Symbol element : node.getElements()) {
             translate(element);
         }
+    }
+
+    @Override
+    public void visitNillableExpression(NillableExpression node) {
+        result = nillable();
     }
 
     @Override

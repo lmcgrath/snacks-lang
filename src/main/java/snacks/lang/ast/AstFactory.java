@@ -95,6 +95,14 @@ public final class AstFactory {
         return new DeclarationLocator(module, name);
     }
 
+    public static AstNode loop(AstNode condition, AstNode body) {
+        return new Loop(condition, body);
+    }
+
+    public static AstNode nillable() {
+        return Nillable.INSTANCE;
+    }
+
     public static Reference reference(String name, Type type) {
         return reference(new VariableLocator(name), type);
     }

@@ -12,7 +12,7 @@
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
     FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
     TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
-    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO,
+    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO, BREAK,
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
     APPLIES_TO, THROWAWAY, APPLY, COMMA, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC,
     LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
@@ -115,16 +115,17 @@ qualified_identifier
 
 statement
     = expression
-    | VAR IDENTIFIER.v                                          {: return var(v); :}
-    | VAR IDENTIFIER.v ASSIGN expression.e                      {: return var(v, e); :}
-    | HURL expression.e                                         {: return hurl(e); :}
-    | RETURN expression.e                                       {: return result(e); :}
-    | WHILE expression.c NEWLINE+ sequence.e default_case.d END {: return loop(condition(c, block(e)), d); :}
-    | WHILE expression.c DO sequence.e default_case.d END       {: return loop(condition(c, block(e)), d); :}
-    | UNTIL expression.c NEWLINE+ sequence.e default_case.d END {: return loop(condition(unary("not", c), block(e)), d); :}
-    | UNTIL expression.c DO sequence.e default_case.d END       {: return loop(condition(unary("not", c), block(e)), d); :}
-    | FOR IDENTIFIER.v IN expression.e NEWLINE+ sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
-    | FOR IDENTIFIER.v IN expression.e DO sequence.s default_case.d END {: return loop(v, e, block(s), d); :}
+    | BREAK                                                             {: return new BreakExpression(); :}
+    | VAR IDENTIFIER.v                                                  {: return var(v); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
+    | HURL expression.e                                                 {: return hurl(e); :}
+    | RETURN expression.e                                               {: return result(e); :}
+    | WHILE expression.c NEWLINE+ sequence.e term* END                  {: return loop(c, block(e)); :}
+    | WHILE expression.c DO sequence.e term* END                        {: return loop(c, block(e)); :}
+    | UNTIL expression.c NEWLINE+ sequence.e term* END                  {: return loop(unary("not", c), block(e)); :}
+    | UNTIL expression.c DO sequence.e term* END                        {: return loop(unary("not", c), block(e)); :}
+    | FOR IDENTIFIER.v IN expression.e NEWLINE+ sequence.s term* END    {: return loop(v, e, block(s)); :}
+    | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END          {: return loop(v, e, block(s)); :}
     ;
 
 expression
@@ -352,7 +353,7 @@ alternative_case
 
 default_case
     = ELSE sequence.e term* {: return block(e); :}
-    |
+    |                       {: return nillable(); :}
     ;
 
 exceptional

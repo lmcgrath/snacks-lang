@@ -128,6 +128,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "and" | "&&"    { detectNewLine(); return token(AND); }
     "as"            { return token(AS); }
     "begin"         { detectNewLine(); return token(BEGIN); }
+    "break"         { return token(BREAK); }
     "c"+ "'" {OctalEscape} "'"
                     {
                         String text = yytext();

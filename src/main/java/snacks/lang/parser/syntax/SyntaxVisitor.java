@@ -12,6 +12,8 @@ public interface SyntaxVisitor {
 
     void visitBooleanLiteral(BooleanLiteral node);
 
+    void BreakExpression(BreakExpression node);
+
     void visitCharacterLiteral(CharacterLiteral node);
 
     void visitConditionCase(ConditionCase node);
@@ -48,13 +50,15 @@ public interface SyntaxVisitor {
 
     void visitListLiteral(ListLiteral node);
 
-    void visitLoop(Loop node);
+    void visitLoopExpression(LoopExpression node);
 
     void visitMapEntry(MapEntry node);
 
     void visitMapLiteral(MapLiteral node);
 
     void visitModule(Module node);
+
+    void visitNillableExpression(NillableExpression node);
 
     void visitNothingLiteral(NothingLiteral node);
 

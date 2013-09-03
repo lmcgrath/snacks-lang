@@ -50,6 +50,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void BreakExpression(BreakExpression node) {
+        // TODO
+    }
+
+    @Override
     public void visitCharacterLiteral(CharacterLiteral node) {
         value("'" + node.getValue() + "'");
     }
@@ -154,7 +159,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
         print("variable: " + node.getVariable());
         print(node.getExpression());
         print(node.getAction());
-        print(node.getDefaultCase());
     }
 
     @Override
@@ -165,9 +169,9 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitLoop(Loop node) {
-        print(node.getLoopCase());
-        print(node.getDefaultCase());
+    public void visitLoopExpression(LoopExpression node) {
+        print(node.getCondition());
+        print(node.getBody());
     }
 
     @Override
@@ -188,6 +192,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
         for (Symbol element : node.getElements()) {
             print(element);
         }
+    }
+
+    @Override
+    public void visitNillableExpression(NillableExpression node) {
+        // intentionally empty
     }
 
     @Override

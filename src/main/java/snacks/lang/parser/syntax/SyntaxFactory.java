@@ -81,7 +81,7 @@ public final class SyntaxFactory {
         if (tail != null) {
             addAll(elements, tail);
         }
-        if (defaultCase != null) {
+        if (defaultCase instanceof Visitable) {
             elements.add(defaultCase);
         }
         return new Conditional(elements);
@@ -171,12 +171,12 @@ public final class SyntaxFactory {
         return new BooleanLiteral(value);
     }
 
-    public static Symbol loop(Symbol body, Symbol defaultCase) {
-        return new Loop(body, defaultCase);
+    public static Symbol loop(Symbol condition, Symbol body) {
+        return new LoopExpression(condition, body);
     }
 
-    public static Symbol loop(String var, Symbol elements, Symbol body, Symbol defaultCase) {
-        return new IteratorLoop(var, elements, body, defaultCase);
+    public static Symbol loop(String var, Symbol elements, Symbol body) {
+        return new IteratorLoop(var, elements, body);
     }
 
     public static Symbol map(Symbol... entries) {
@@ -185,6 +185,10 @@ public final class SyntaxFactory {
 
     public static Symbol module(Symbol... elements) {
         return new Module(elements);
+    }
+
+    public static Symbol nillable() {
+        return new NillableExpression();
     }
 
     public static Symbol nothing() {

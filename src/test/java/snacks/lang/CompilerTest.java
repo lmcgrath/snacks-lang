@@ -101,7 +101,7 @@ public class CompilerTest {
             "    say 'World!'",
             "}"
         );
-        verifyOut("Hello");
+        verifyOut("Hello" );
         verifyOut("World!");
     }
 
@@ -153,7 +153,7 @@ public class CompilerTest {
             "main = () -> say $ triple 12"
         );
         verifyOut(36);
-        verifyNever("can't touch this");
+        verifyNever("can't touch this" );
     }
 
     @Test
@@ -230,13 +230,13 @@ public class CompilerTest {
 
     @Test
     public void shouldConcatenateStringToInteger() throws Exception {
-        run("main = () -> say $ 'Answer = ' + 4 + 2");
+        run("main = () -> say $ 'Answer = ' + 4 + 2" );
         verifyOut("Answer = 42");
     }
 
     @Test
     public void shouldMultiplyString() throws Exception {
-        run("main = () -> say $ 'waffles ' * 3");
+        run("main = () -> say $ 'waffles ' * 3" );
         verifyOut("waffles waffles waffles ");
     }
 
@@ -258,7 +258,7 @@ public class CompilerTest {
             "}"
         );
         verifyOut("waffles is true!");
-        verifyOut("bananas is false!");
+        verifyOut("bananas is false!" );
         verifyOut("We have oranges!");
     }
 
@@ -273,7 +273,7 @@ public class CompilerTest {
             "    say \"#{x} and #{y}\"",
             "}"
         );
-        verifyOut("waffles and bananas");
+        verifyOut("waffles and bananas" );
     }
 
     @Test
@@ -286,7 +286,7 @@ public class CompilerTest {
             "        say 'It\\'s true!'",
             "    end"
         );
-        verifyOut("It\'s true!");
+        verifyOut("It\'s true!" );
     }
 
     @Test
@@ -300,9 +300,9 @@ public class CompilerTest {
             "    say 'cleaning stuff up'",
             "end"
         );
-        verifyOut("oops");
-        verifyOut("cleaning stuff up");
-        verifyNever("got it!");
+        verifyOut("oops" );
+        verifyOut("cleaning stuff up" );
+        verifyNever("got it!" );
     }
 
     @Test
@@ -357,13 +357,13 @@ public class CompilerTest {
             "    say 'got it!'",
             "end"
         );
-        verifyOut("here it comes!");
+        verifyOut("here it comes!" );
         verifyOut("got it!");
     }
 
     @Test
     public void shouldCompileModulo() throws Exception {
-        run("main = () -> say $ 5 % 2");
+        run("main = () -> say $ 5 % 2" );
         verifyOut(1);
     }
 
@@ -395,6 +395,76 @@ public class CompilerTest {
     public void shouldCompileNegativeNegative() throws Exception {
         run("main = () -> say $ --3");
         verifyOut(3);
+    }
+
+    @Test
+    public void shouldCompileIfWithoutElse() throws Exception {
+        run(
+            "main = {",
+            "    var x = 10",
+            "    if x >= 10",
+            "        say 'got it!'",
+            "    end",
+            "}"
+        );
+        verifyOut("got it!");
+    }
+
+    @Test
+    public void shouldCompileMultiIfWithoutElse() throws Exception {
+        run(
+            "main = {",
+            "    var x = 9",
+            "    if x >= 10",
+            "        say '10 or bigger'",
+            "    else if x >= 9",
+            "        say '9 or bigger'",
+            "    end",
+            "}"
+        );
+        verifyOut("9 or bigger" );
+    }
+
+    @Test
+    public void shouldCompileSequentialAssign() throws Exception {
+        run(
+            "main = {",
+            "    var x",
+            "    var y",
+            "    x = y = 3",
+            "    say \"x = #{x}; y = #{y}\"",
+            "}"
+        );
+        verifyOut("x = 3; y = 3" );
+    }
+
+    @Test
+    public void shouldCompileLoop() throws Exception {
+        run(
+            "main = {",
+            "    var x = 0",
+            "    while x < 10 do x += 1 end",
+            "    say x",
+            "}"
+        );
+        verifyOut(10);
+    }
+
+    @Test
+    public void shouldBreakLoop() throws Exception {
+        run(
+            "main = {",
+            "    var x = 0",
+            "    while True",
+            "        if x > 10",
+            "            break",
+            "        end",
+            "        x += 1",
+            "    end",
+            "    say \"X is #{x}\"",
+            "}"
+        );
+        verifyOut("X is 11");
     }
 
     private void run(String... inputs) throws Exception {
