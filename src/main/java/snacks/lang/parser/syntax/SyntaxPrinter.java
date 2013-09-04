@@ -50,8 +50,8 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void BreakExpression(BreakExpression node) {
-        // TODO
+    public void visitBreakExpression(BreakExpression node) {
+        // intentionally empty
     }
 
     @Override
@@ -70,6 +70,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
         for (Symbol element : node.getCases()) {
             print(element);
         }
+    }
+
+    @Override
+    public void visitContinueExpression(ContinueExpression node) {
+        // intentionally empty
     }
 
     @Override

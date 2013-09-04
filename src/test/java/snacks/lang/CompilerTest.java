@@ -456,15 +456,41 @@ public class CompilerTest {
             "main = {",
             "    var x = 0",
             "    while True",
+            "        x += 1",
             "        if x > 10",
             "            break",
             "        end",
-            "        x += 1",
             "    end",
             "    say \"X is #{x}\"",
             "}"
         );
         verifyOut("X is 11");
+    }
+
+    @Test
+    public void shouldContinueLoop() throws Exception {
+        run(
+            "main = {",
+            "    var x = 0",
+            "    var last = 0",
+            "    while x < 8",
+            "        x += 1",
+            "        if x % 2 == 0",
+            "            continue",
+            "        end",
+            "        say \"x is #{x}\"",
+            "    end",
+            "    say 'got it!'",
+            "}"
+        );
+        verifyNever("x is 0");
+        verifyNever("x is 2");
+        verifyNever("x is 4");
+        verifyNever("x is 6");
+        verifyOut("x is 1");
+        verifyOut("x is 3");
+        verifyOut("x is 5");
+        verifyOut("x is 7");
     }
 
     private void run(String... inputs) throws Exception {

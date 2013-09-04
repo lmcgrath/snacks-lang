@@ -149,7 +149,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void BreakExpression(BreakExpression node) {
+    public void visitBreakExpression(BreakExpression node) {
         result = Break.INSTANCE;
     }
 
@@ -171,6 +171,11 @@ public class Translator implements SyntaxVisitor {
             cases.add(result);
         }
         result = guards(cases);
+    }
+
+    @Override
+    public void visitContinueExpression(ContinueExpression node) {
+        result = Continue.INSTANCE;
     }
 
     @Override

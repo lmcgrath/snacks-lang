@@ -141,6 +141,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         detectSelector();
                         return token(CHARACTER, unescapeJava(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\''))).charAt(0));
                     }
+    "continue"      { return token(CONTINUE); }
     "do"            { detectNewLine(); return token(DO); }
     "else if"       { return token(ELSE_IF); }
     "else unless"   { return token(ELSE_UNLESS); }

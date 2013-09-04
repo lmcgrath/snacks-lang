@@ -16,6 +16,8 @@ public interface Generator {
 
     void generateClosureLocator(ClosureLocator locator);
 
+    void generateContinue(Continue node);
+
     void generateDeclarationLocator(DeclarationLocator locator);
 
     void generateDeclaredArgument(DeclaredArgument node);

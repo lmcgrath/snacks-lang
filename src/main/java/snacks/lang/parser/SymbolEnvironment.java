@@ -73,6 +73,8 @@ public class SymbolEnvironment implements TypeFactory {
         def(">=", func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
         def(">=", func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
 
+        def("==", func(var("T"), func(var("U"), BOOLEAN_TYPE)));
+
         def("unary+", func(INTEGER_TYPE, INTEGER_TYPE));
         def("unary+", func(DOUBLE_TYPE, DOUBLE_TYPE));
         def("unary-", func(INTEGER_TYPE, INTEGER_TYPE));

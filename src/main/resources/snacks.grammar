@@ -16,7 +16,8 @@
     LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
     APPLIES_TO, THROWAWAY, APPLY, COMMA, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC,
     LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
-    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN
+    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN,
+    CONTINUE
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -116,6 +117,7 @@ qualified_identifier
 statement
     = expression
     | BREAK                                                             {: return new BreakExpression(); :}
+    | CONTINUE                                                          {: return new ContinueExpression(); :}
     | VAR IDENTIFIER.v                                                  {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
     | HURL expression.e                                                 {: return hurl(e); :}

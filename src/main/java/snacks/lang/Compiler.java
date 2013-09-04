@@ -54,7 +54,6 @@ public class Compiler implements Generator, Reducer {
     private final Deque<LabelNode> labels;
     private final Deque<EmbraceScope> embraces;
     private final Deque<LoopScope> loops;
-    private boolean popValue;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
@@ -89,7 +88,6 @@ public class Compiler implements Generator, Reducer {
         generate(node.getRight());
         block().dup();
         reduce(node.getLeft());
-        popValue = false;
     }
 
     @Override
@@ -112,6 +110,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateBreak(Break node) {
         currentLoop().exit(block());
+        block().aconst_null();
     }
 
     @Override
@@ -132,6 +131,12 @@ public class Compiler implements Generator, Reducer {
             loadVariable(variable);
         }
         block.invokespecial(className, "<init>", sig(params(void.class, Object.class, locator.getEnvironment().size())));
+    }
+
+    @Override
+    public void generateContinue(Continue node) {
+        currentLoop().next(block());
+        block().aconst_null();
     }
 
     @Override
@@ -293,12 +298,9 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateSequence(Sequence node) {
         Iterator<AstNode> elements = node.getElements().iterator();
-        popValue = true;
         generate(elements.next());
         while (elements.hasNext()) {
-            if (popValue) {
-                block().pop();
-            }
+            block().pop();
             generate(elements.next());
         }
     }
@@ -317,7 +319,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateVariableDeclaration(VariableDeclaration node) {
         getVariable(node.getName());
-        popValue = false;
+        block().aconst_null();
     }
 
     @Override
@@ -518,9 +520,10 @@ public class Compiler implements Generator, Reducer {
 
     private void leaveEmbrace() {
         EmbraceScope scope = embraces.pop();
-        block().trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
-        scope.generateEnsureAll();
-        block().label(scope.getExit());
+        CodeBlock block = block();
+        block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
+        scope.generateEnsureAll(block);
+        block.label(scope.getExit());
     }
 
     private void leaveLoop() {
@@ -606,10 +609,15 @@ public class Compiler implements Generator, Reducer {
         public void end(CodeBlock block) {
             block.go_to(start);
             block.label(end);
+            block.aconst_null();
         }
 
         public void exit(CodeBlock block) {
             block.go_to(end);
+        }
+
+        public void next(CodeBlock block) {
+            block.go_to(start);
         }
 
         public void testCondition(CodeBlock block) {
@@ -698,9 +706,8 @@ public class Compiler implements Generator, Reducer {
             }
         }
 
-        public void generateEnsureAll() {
-            int exceptionVar = getVariable("$snacks$~exception");
-            CodeBlock block = block();
+        public void generateEnsureAll(CodeBlock block) {
+            int exceptionVar = getVariable("$snacks$~exception" );
             block.label(error);
             block.astore(exceptionVar);
             if (ensure != null) {

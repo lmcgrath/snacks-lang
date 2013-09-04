@@ -12,13 +12,15 @@ public interface SyntaxVisitor {
 
     void visitBooleanLiteral(BooleanLiteral node);
 
-    void BreakExpression(BreakExpression node);
+    void visitBreakExpression(BreakExpression node);
 
     void visitCharacterLiteral(CharacterLiteral node);
 
     void visitConditionCase(ConditionCase node);
 
     void visitConditional(Conditional node);
+
+    void visitContinueExpression(ContinueExpression node);
 
     void visitDeclaration(Declaration node);
 
