@@ -436,7 +436,7 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void enterEmbrace(Exceptional node) {
-        embraces.push(new EmbraceScope(node.getEnsure()));
+        embraces.push(new EmbraceScope(this, node.getEnsure()));
     }
 
     private LoopScope enterLoop() {
@@ -522,7 +522,7 @@ public class Compiler implements Generator, Reducer {
         EmbraceScope scope = embraces.pop();
         CodeBlock block = block();
         block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
-        scope.generateEnsureAll(block);
+        scope.generateEnsureAll();
         block.label(scope.getExit());
     }
 
@@ -589,6 +589,66 @@ public class Compiler implements Generator, Reducer {
 
         public boolean isVariable(String name) {
             return variables.containsKey(name);
+        }
+    }
+
+    private static final class EmbraceScope {
+
+        private final Compiler compiler;
+        private final AstNode ensure;
+        private final LabelNode start;
+        private final LabelNode end;
+        private final LabelNode exit;
+        private final LabelNode error;
+
+        public EmbraceScope(Compiler compiler, AstNode ensure) {
+            this.compiler = compiler;
+            this.ensure = ensure;
+            this.start = new LabelNode();
+            this.end = new LabelNode();
+            this.exit = new LabelNode();
+            this.error = new LabelNode();
+        }
+
+        public void generateEnsure() {
+            if (ensure != null) {
+                compiler.generate(ensure);
+            }
+        }
+
+        public void generateEnsureAll() {
+            int exceptionVar = compiler.getVariable("$snacks$~exception" );
+            CodeBlock block = compiler.block();
+            block.label(error);
+            block.astore(exceptionVar);
+            if (ensure != null) {
+                LabelNode ensureLabel = new LabelNode();
+                block.trycatch(error, ensureLabel, error, null);
+                block.label(ensureLabel);
+                generateEnsure();
+            }
+            block.aload(exceptionVar);
+            block.athrow();
+        }
+
+        public LabelNode getEnd() {
+            return end;
+        }
+
+        public AstNode getEnsure() {
+            return ensure;
+        }
+
+        public LabelNode getError() {
+            return error;
+        }
+
+        public LabelNode getExit() {
+            return exit;
+        }
+
+        public LabelNode getStart() {
+            return start;
         }
     }
 
@@ -681,63 +741,6 @@ public class Compiler implements Generator, Reducer {
 
         public void setFields(Collection<String> fields) {
             this.fields = new ArrayList<>(fields);
-        }
-    }
-
-    private final class EmbraceScope {
-
-        private final LabelNode start;
-        private final LabelNode end;
-        private final LabelNode exit;
-        private final LabelNode error;
-        private final AstNode ensure;
-
-        public EmbraceScope(AstNode ensure) {
-            this.ensure = ensure;
-            this.start = new LabelNode();
-            this.end = new LabelNode();
-            this.exit = new LabelNode();
-            this.error = new LabelNode();
-        }
-
-        public void generateEnsure() {
-            if (ensure != null) {
-                generate(ensure);
-            }
-        }
-
-        public void generateEnsureAll(CodeBlock block) {
-            int exceptionVar = getVariable("$snacks$~exception" );
-            block.label(error);
-            block.astore(exceptionVar);
-            if (ensure != null) {
-                LabelNode ensureLabel = new LabelNode();
-                block.trycatch(error, ensureLabel, error, null);
-                block.label(ensureLabel);
-                generateEnsure();
-            }
-            block.aload(exceptionVar);
-            block.athrow();
-        }
-
-        public LabelNode getEnd() {
-            return end;
-        }
-
-        public AstNode getEnsure() {
-            return ensure;
-        }
-
-        public LabelNode getError() {
-            return error;
-        }
-
-        public LabelNode getExit() {
-            return exit;
-        }
-
-        public LabelNode getStart() {
-            return start;
         }
     }
 }
