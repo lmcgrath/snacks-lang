@@ -50,11 +50,11 @@ public class Compiler implements Generator, Reducer {
     }
 
     private final List<JiteClass> acceptedClasses;
-    private final Deque<State> states;
+    private final Deque<ClassBuilder> builders;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
-        states = new ArrayDeque<>();
+        builders = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -68,6 +68,11 @@ public class Compiler implements Generator, Reducer {
             writeClass(new File(jiteClass.getClassName() + ".class"), bytes);
         }
         return loader;
+    }
+
+    @Override
+    public void generate(AstNode node) {
+        node.generate(this);
     }
 
     @Override
@@ -91,7 +96,7 @@ public class Compiler implements Generator, Reducer {
         block.label(scope.getStart());
         generate(begin.getBody());
         block.label(scope.getEnd());
-        scope.generateEnsure();
+        scope.generateEnsure(this);
         block.go_to(scope.getExit());
     }
 
@@ -103,8 +108,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateBreak(Break node) {
-        currentLoop().exit(block());
-        block().aconst_null();
+        currentLoop().exit();
     }
 
     @Override
@@ -129,8 +133,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateContinue(Continue node) {
-        currentLoop().next(block());
-        block().aconst_null();
+        currentLoop().next();
     }
 
     @Override
@@ -169,7 +172,7 @@ public class Compiler implements Generator, Reducer {
         block.astore(getVariable(node.getVariable()));
         generate(node.getBody());
         block.label(endCatch);
-        scope.generateEnsure();
+        scope.generateEnsure(this);
         block.go_to(scope.getExit());
     }
 
@@ -214,17 +217,17 @@ public class Compiler implements Generator, Reducer {
         block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
         block.if_acmpne(skipLabel);
         generate(node.getExpression());
-        block.go_to(currentLabel());
+        exitGuard();
         block.label(skipLabel);
     }
 
     @Override
     public void generateGuardCases(GuardCases node) {
-        createLabel();
+        enterGuard();
         for (AstNode guard : node.getCases()) {
             generate(guard);
         }
-        markLabel();
+        leaveGuard();
     }
 
     @Override
@@ -246,14 +249,10 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateLoop(Loop node) {
-        CodeBlock block = block();
         LoopScope loop = enterLoop();
-        loop.begin(block);
         generate(node.getCondition());
-        loop.testCondition(block);
+        loop.testCondition();
         generate(node.getBody());
-        block().pop();
-        loop.end(block);
         leaveLoop();
     }
 
@@ -364,7 +363,7 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void acceptClass() {
-        acceptedClasses.add(states.pop().getJiteClass());
+        acceptedClasses.add(builders.pop().getJiteClass());
     }
 
     private CodeBlock beginBlock() {
@@ -373,7 +372,7 @@ public class Compiler implements Generator, Reducer {
 
     private JiteClass beginClass(String name, List<String> interfaces) {
         JiteClass jiteClass = new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()]));
-        states.push(new State(this, jiteClass));
+        builders.push(new ClassBuilder(jiteClass));
         return jiteClass;
     }
 
@@ -381,16 +380,16 @@ public class Compiler implements Generator, Reducer {
         return state().block();
     }
 
-    private void createLabel() {
-        state().createLabel();
+    private void enterGuard() {
+        state().enterGuard();
     }
 
     private EmbraceScope currentEmbrace() {
         return state().currentEmbrace();
     }
 
-    private LabelNode currentLabel() {
-        return state().currentLabel();
+    private void exitGuard() {
+        state().exitGuard();
     }
 
     private LoopScope currentLoop() {
@@ -438,15 +437,11 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void enterEmbrace(Exceptional node) {
-        state().enterEmbrace(node);
+        state().enterEmbrace(getVariable("$snacks$~exception" ), node);
     }
 
     private LoopScope enterLoop() {
         return state().enterLoop();
-    }
-
-    private void generate(AstNode node) {
-        node.generate(this);
     }
 
     private void generate(Locator locator) {
@@ -515,11 +510,11 @@ public class Compiler implements Generator, Reducer {
     }
 
     private JiteClass jiteClass() {
-        return state().jiteClass;
+        return state().getJiteClass();
     }
 
     private void leaveEmbrace() {
-        state().leaveEmbrace();
+        state().leaveEmbrace(this);
     }
 
     private void leaveLoop() {
@@ -537,8 +532,8 @@ public class Compiler implements Generator, Reducer {
         }
     }
 
-    private void markLabel() {
-        state().markLabel();
+    private void leaveGuard() {
+        state().leaveGuard();
     }
 
     private void reduce(AstNode node) {
@@ -549,8 +544,8 @@ public class Compiler implements Generator, Reducer {
         locator.reduce(this);
     }
 
-    private State state() {
-        return states.peek();
+    private ClassBuilder state() {
+        return builders.peek();
     }
 
     private void writeClass(File file, byte[] bytes) throws CompileException {
@@ -566,127 +561,6 @@ public class Compiler implements Generator, Reducer {
         }
     }
 
-    private static final class BlockState {
-
-        private final CodeBlock block;
-        private final Map<String, Integer> variables;
-
-        public BlockState(CodeBlock block) {
-            this.block = block;
-            this.variables = new LinkedHashMap<>();
-        }
-
-        public CodeBlock getBlock() {
-            return block;
-        }
-
-        public int getVariable(String name) {
-            if (!isVariable(name)) {
-                variables.put(name, variables.size() + 2);
-            }
-            return variables.get(name);
-        }
-
-        public boolean isVariable(String name) {
-            return variables.containsKey(name);
-        }
-    }
-
-    private static final class EmbraceScope {
-
-        private final Compiler compiler;
-        private final AstNode ensure;
-        private final LabelNode start;
-        private final LabelNode end;
-        private final LabelNode exit;
-        private final LabelNode error;
-
-        public EmbraceScope(Compiler compiler, AstNode ensure) {
-            this.compiler = compiler;
-            this.ensure = ensure;
-            this.start = new LabelNode();
-            this.end = new LabelNode();
-            this.exit = new LabelNode();
-            this.error = new LabelNode();
-        }
-
-        public void generateEnsure() {
-            if (ensure != null) {
-                compiler.generate(ensure);
-            }
-        }
-
-        public void generateEnsureAll() {
-            int exceptionVar = compiler.getVariable("$snacks$~exception" );
-            CodeBlock block = compiler.block();
-            block.label(error);
-            block.astore(exceptionVar);
-            if (ensure != null) {
-                LabelNode ensureLabel = new LabelNode();
-                block.trycatch(error, ensureLabel, error, null);
-                block.label(ensureLabel);
-                generateEnsure();
-            }
-            block.aload(exceptionVar);
-            block.athrow();
-        }
-
-        public LabelNode getEnd() {
-            return end;
-        }
-
-        public AstNode getEnsure() {
-            return ensure;
-        }
-
-        public LabelNode getError() {
-            return error;
-        }
-
-        public LabelNode getExit() {
-            return exit;
-        }
-
-        public LabelNode getStart() {
-            return start;
-        }
-    }
-
-    private static final class LoopScope {
-
-        private final LabelNode start;
-        private final LabelNode end;
-
-        public LoopScope() {
-            this.start = new LabelNode();
-            this.end = new LabelNode();
-        }
-
-        public void begin(CodeBlock block) {
-            block.label(start);
-        }
-
-        public void end(CodeBlock block) {
-            block.go_to(start);
-            block.label(end);
-            block.aconst_null();
-        }
-
-        public void exit(CodeBlock block) {
-            block.go_to(end);
-        }
-
-        public void next(CodeBlock block) {
-            block.go_to(start);
-        }
-
-        public void testCondition(CodeBlock block) {
-            block.ldc(true);
-            block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
-            block.if_acmpne(end);
-        }
-    }
-
     private static final class SnacksLoader extends ClassLoader {
 
         public SnacksLoader(ClassLoader parent) {
@@ -695,103 +569,6 @@ public class Compiler implements Generator, Reducer {
 
         public Class defineClass(String name, byte[] bytes) {
             return super.defineClass(name, bytes, 0, bytes.length);
-        }
-    }
-
-    private static final class State {
-
-        private final Compiler compiler;
-        private final JiteClass jiteClass;
-        private final List<String> fields;
-        private final Deque<BlockState> blocks;
-        private final Deque<LabelNode> labels;
-        private final Deque<EmbraceScope> embraces;
-        private final Deque<LoopScope> loops;
-
-        public State(Compiler compiler, JiteClass jiteClass) {
-            this.compiler = compiler;
-            this.jiteClass = jiteClass;
-            this.fields = new ArrayList<>();
-            this.blocks = new ArrayDeque<>();
-            this.labels = new ArrayDeque<>();
-            this.loops = new ArrayDeque<>();
-            this.embraces = new ArrayDeque<>();
-        }
-
-        public CodeBlock acceptBlock() {
-            return blocks.pop().getBlock();
-        }
-
-        public CodeBlock beginBlock() {
-            blocks.push(new BlockState(new CodeBlock()));
-            return block();
-        }
-
-        public CodeBlock block() {
-            return blocks.peek().getBlock();
-        }
-
-        public void createLabel() {
-            labels.push(new LabelNode());
-        }
-
-        public EmbraceScope currentEmbrace() {
-            return embraces.peek();
-        }
-
-        public LabelNode currentLabel() {
-            return labels.peek();
-        }
-
-        public LoopScope currentLoop() {
-            return loops.peek();
-        }
-
-        public void enterEmbrace(Exceptional node) {
-            embraces.push(new EmbraceScope(compiler, node.getEnsure()));
-        }
-
-        public LoopScope enterLoop() {
-            LoopScope loop = new LoopScope();
-            loops.push(loop);
-            return loop;
-        }
-
-        public JiteClass getJiteClass() {
-            return jiteClass;
-        }
-
-        public int getVariable(String name) {
-            return blocks.peek().getVariable(name);
-        }
-
-        public boolean isField(String name) {
-            return fields.contains(name);
-        }
-
-        public boolean isVariable(String name) {
-            return blocks.peek().isVariable(name);
-        }
-
-        public void leaveEmbrace() {
-            EmbraceScope scope = embraces.pop();
-            CodeBlock block = block();
-            block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
-            scope.generateEnsureAll();
-            block.label(scope.getExit());
-        }
-
-        public void leaveLoop() {
-            loops.pop();
-        }
-
-        public void markLabel() {
-            compiler.block().label(labels.pop());
-        }
-
-        public void setFields(Collection<String> fields) {
-            this.fields.clear();
-            this.fields.addAll(fields);
         }
     }
 }

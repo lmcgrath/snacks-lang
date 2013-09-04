@@ -2,6 +2,8 @@ package snacks.lang.ast;
 
 public interface Generator {
 
+    void generate(AstNode node);
+
     void generateApply(Apply node);
 
     void generateAssign(Assign node);
