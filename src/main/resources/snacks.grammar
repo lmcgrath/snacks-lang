@@ -117,11 +117,7 @@ qualified_identifier
 statement
     = expression
     | BREAK                                                             {: return new BreakExpression(); :}
-    | BREAK IF expression.c                                             {: return suffix(new BreakExpression(), c); :}
-    | BREAK UNLESS expression.c                                         {: return suffix(new BreakExpression(), unary("not", c)); :}
     | CONTINUE                                                          {: return new ContinueExpression(); :}
-    | CONTINUE IF expression.c                                          {: return suffix(new ContinueExpression(), c); :}
-    | CONTINUE UNLESS expression.c                                      {: return suffix(new ContinueExpression(), unary("not", c)); :}
     | VAR IDENTIFIER.v                                                  {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
     | HURL expression.e                                                 {: return hurl(e); :}
@@ -132,6 +128,10 @@ statement
     | UNTIL expression.c DO sequence.e term* END                        {: return loop(unary("not", c), block(e)); :}
     | FOR IDENTIFIER.v IN expression.e NEWLINE+ sequence.s term* END    {: return loop(v, e, block(s)); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END          {: return loop(v, e, block(s)); :}
+    | statement.s COMMA IF expression.c                                 {: return suffix(s, c); :}
+    | statement.s COMMA UNLESS expression.c                             {: return suffix(s, unary("not", c)); :}
+    | statement.s COMMA WHILE expression.c                              {: return loop(c, s); :}
+    | statement.s COMMA UNTIL expression.c                              {: return loop(unary("not", c), s); :}
     ;
 
 expression

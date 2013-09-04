@@ -443,7 +443,7 @@ public class CompilerTest {
         run(
             "main = {",
             "    var x = 0",
-            "    while x < 10 do x += 1 end",
+            "    x += 1, while x < 10",
             "    say x",
             "}"
         );
@@ -457,7 +457,7 @@ public class CompilerTest {
             "    var x = 0",
             "    while True",
             "        x += 1",
-            "        break if x > 10",
+            "        break, if x > 10",
             "    end",
             "    say \"X is #{x}\"",
             "}"
@@ -473,7 +473,7 @@ public class CompilerTest {
             "    var last = 0",
             "    while x < 8",
             "        x += 1",
-            "        continue if x % 2 == 0",
+            "        continue, if x % 2 == 0",
             "        say \"x is #{x}\"",
             "    end",
             "    say 'got it!'",
@@ -517,9 +517,7 @@ public class CompilerTest {
             "    while counter < 10",
             "        begin",
             "            counter += 1",
-            "            if counter > 8",
-            "                hurl 'oops'",
-            "            end",
+            "            hurl 'oops', if counter > 8",
             "        embrace error ->",
             "            break",
             "        end",
