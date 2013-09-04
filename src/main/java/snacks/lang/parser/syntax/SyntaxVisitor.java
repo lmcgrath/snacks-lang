@@ -60,7 +60,7 @@ public interface SyntaxVisitor {
 
     void visitModule(Module node);
 
-    void visitNillableExpression(NillableExpression node);
+    void visitNopExpression(NopExpression node);
 
     void visitNothingLiteral(NothingLiteral node);
 

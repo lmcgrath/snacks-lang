@@ -320,8 +320,8 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitNillableExpression(NillableExpression node) {
-        result = nillable();
+    public void visitNopExpression(NopExpression node) {
+        result = nop();
     }
 
     @Override

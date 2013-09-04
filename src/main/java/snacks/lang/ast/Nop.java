@@ -2,17 +2,17 @@ package snacks.lang.ast;
 
 import static snacks.lang.ast.Type.var;
 
-public class Nillable extends AstNode {
+public class Nop extends AstNode {
 
-    public static final Nillable INSTANCE = new Nillable();
+    public static final Nop INSTANCE = new Nop();
 
-    private Nillable() {
+    private Nop() {
         // intentionally empty
     }
 
     @Override
     public void generate(Generator generator) {
-        generator.generateNillable(this);
+        generator.generateNop(this);
     }
 
     @Override

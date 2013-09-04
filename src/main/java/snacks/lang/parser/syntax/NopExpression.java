@@ -2,10 +2,10 @@ package snacks.lang.parser.syntax;
 
 import beaver.Symbol;
 
-public class NillableExpression extends Symbol implements Visitable {
+public class NopExpression extends Symbol implements Visitable {
 
     @Override
     public void accept(SyntaxVisitor visitor) {
-        visitor.visitNillableExpression(this);
+        visitor.visitNopExpression(this);
     }
 }

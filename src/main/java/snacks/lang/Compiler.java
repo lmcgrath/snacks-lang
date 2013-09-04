@@ -86,18 +86,18 @@ public class Compiler implements Generator, Reducer {
     public void generateAssign(Assign node) {
         generate(node.getRight());
         block().dup();
-        reduce(node.getLeft());
+        node.getLeft().reduce(this);
     }
 
     @Override
     public void generateBegin(Begin begin) {
         CodeBlock block = block();
-        EmbraceScope scope = currentEmbrace();
-        block.label(scope.getStart());
+        EmbraceScope embrace = currentEmbrace();
+        block.label(embrace.getStart());
         generate(begin.getBody());
-        block.label(scope.getEnd());
-        scope.generateEnsure(this);
-        block.go_to(scope.getExit());
+        block.label(embrace.getEnd());
+        embrace.generateEnsure(this);
+        block.go_to(embrace.getExit());
     }
 
     @Override
@@ -122,7 +122,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
-        String className = javaClass(locator);
+        String className = javaClass(locator.getModule(), locator.getName());
         block.newobj(className);
         block.dup();
         for (String variable : locator.getEnvironment()) {
@@ -138,9 +138,8 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
-        CodeBlock block = block();
-        String className = javaClass(locator);
-        block.invokestatic(className, "instance", sig(Object.class));
+        String className = javaClass(locator.getModule(), locator.getName());
+        block().invokestatic(className, "instance", sig(Object.class));
     }
 
     @Override
@@ -150,7 +149,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclaredExpression(DeclaredExpression node) {
-        beginClass(javaClass(node), interfacesFor(node.getType()));
+        beginClass(javaClass(node.getModule(), node.getName()), interfacesFor(node.getType()));
         generate(node.getBody());
         acceptClass();
     }
@@ -257,7 +256,7 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
-    public void generateNillable(Nillable nillable) {
+    public void generateNop(Nop nop) {
         block().aconst_null();
     }
 
@@ -291,9 +290,10 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateSequence(Sequence node) {
         Iterator<AstNode> elements = node.getElements().iterator();
+        CodeBlock block = block();
         generate(elements.next());
         while (elements.hasNext()) {
-            block().pop();
+            block.pop();
             generate(elements.next());
         }
     }
@@ -329,17 +329,17 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateVoidFunction(VoidFunction node) {
         defineFunctionInitializer();
-        beginBlock();
+        CodeBlock block = beginBlock();
         generate(node.getBody());
-        if (!block().returns()) {
-            block().areturn();
+        if (!block.returns()) {
+            block.areturn();
         }
         jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
     }
 
     @Override
     public void reduceReference(Reference node) {
-        reduce(node.getLocator());
+        node.getLocator().reduce(this);
     }
 
     @Override
@@ -437,7 +437,7 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void enterEmbrace(Exceptional node) {
-        state().enterEmbrace(getVariable("$snacks$~exception" ), node);
+        state().enterEmbrace(getVariable("$snacks$~exception"), node);
     }
 
     private LoopScope enterLoop() {
@@ -477,36 +477,20 @@ public class Compiler implements Generator, Reducer {
         return state().isVariable(name);
     }
 
-    private String javaClass(DeclaredExpression expression) {
-        return javaClass(expression.getModule(), expression.getName());
-    }
-
-    private String javaClass(DeclarationLocator locator) {
-        return javaClass(locator.getModule(), locator.getName());
-    }
-
-    private String javaClass(ClosureLocator locator) {
-        return javaClass(locator.getModule(), locator.getName());
-    }
-
     private String javaClass(String module, String name) {
-        return module + "/" + javafy(name);
-    }
-
-    private String javafy(String name) {
-        String javafiedName;
+        String escapedName;
         if ("?".equals(name)) {
-            javafiedName = "$Coalesce";
+            escapedName = "$Coalesce";
         } else {
-            javafiedName = name.substring(0, 1).toUpperCase() + name.substring(1);
+            escapedName = name.substring(0, 1).toUpperCase() + name.substring(1);
             for (String replacement : replacements.keySet()) {
-                javafiedName = javafiedName.replace(replacement, replacements.get(replacement));
+                escapedName = escapedName.replace(replacement, replacements.get(replacement));
             }
         }
-        if (javafiedName.startsWith("$")) {
-            javafiedName = "Op" + javafiedName;
+        if (escapedName.startsWith("$")) {
+            escapedName = "Op" + escapedName;
         }
-        return javafiedName;
+        return module + "/" + escapedName;
     }
 
     private JiteClass jiteClass() {
@@ -534,14 +518,6 @@ public class Compiler implements Generator, Reducer {
 
     private void leaveGuard() {
         state().leaveGuard();
-    }
-
-    private void reduce(AstNode node) {
-        node.reduce(this);
-    }
-
-    private void reduce(Locator locator) {
-        locator.reduce(this);
     }
 
     private ClassBuilder state() {

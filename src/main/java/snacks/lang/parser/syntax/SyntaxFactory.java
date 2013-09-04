@@ -187,8 +187,8 @@ public final class SyntaxFactory {
         return new Module(elements);
     }
 
-    public static Symbol nillable() {
-        return new NillableExpression();
+    public static Symbol nop() {
+        return new NopExpression();
     }
 
     public static Symbol nothing() {
@@ -228,7 +228,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol suffix(Symbol target, Symbol condition) {
-        return conditional(condition(condition, target), null, nillable());
+        return conditional(condition(condition, target), null, nop());
     }
 
     public static Symbol symbol(String name) {

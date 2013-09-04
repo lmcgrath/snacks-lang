@@ -200,7 +200,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitNillableExpression(NillableExpression node) {
+    public void visitNopExpression(NopExpression node) {
         // intentionally empty
     }
 

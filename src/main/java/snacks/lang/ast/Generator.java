@@ -46,7 +46,7 @@ public interface Generator {
 
     void generateLoop(Loop node);
 
-    void generateNillable(Nillable nillable);
+    void generateNop(Nop nop);
 
     void generateReference(Reference node);
 

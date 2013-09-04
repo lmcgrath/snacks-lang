@@ -359,7 +359,7 @@ alternative_case
 
 default_case
     = ELSE sequence.e term* {: return block(e); :}
-    |                       {: return nillable(); :}
+    |                       {: return nop(); :}
     ;
 
 exceptional

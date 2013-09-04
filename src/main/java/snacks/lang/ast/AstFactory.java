@@ -99,8 +99,8 @@ public final class AstFactory {
         return new Loop(condition, body);
     }
 
-    public static AstNode nillable() {
-        return Nillable.INSTANCE;
+    public static AstNode nop() {
+        return Nop.INSTANCE;
     }
 
     public static Reference reference(String name, Type type) {
