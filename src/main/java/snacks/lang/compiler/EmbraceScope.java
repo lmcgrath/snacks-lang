@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import me.qmx.jitescript.CodeBlock;
 import org.objectweb.asm.tree.LabelNode;

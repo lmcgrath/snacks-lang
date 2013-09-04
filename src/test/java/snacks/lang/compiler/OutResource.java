@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import static org.mockito.Mockito.mock;
 

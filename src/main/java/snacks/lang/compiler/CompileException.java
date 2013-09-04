@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 public class CompileException extends Exception {
 

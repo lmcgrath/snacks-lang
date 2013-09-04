@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;

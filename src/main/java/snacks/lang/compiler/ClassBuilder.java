@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import java.util.*;
 import me.qmx.jitescript.CodeBlock;

@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import static me.qmx.jitescript.util.CodegenUtils.*;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
@@ -17,6 +17,9 @@ import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
+import snacks.lang.Errorize;
+import snacks.lang.Invokable;
+import snacks.lang.Symbol;
 import snacks.lang.ast.*;
 
 public class Compiler implements Generator, Reducer {

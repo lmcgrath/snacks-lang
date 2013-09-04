@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.compiler;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
