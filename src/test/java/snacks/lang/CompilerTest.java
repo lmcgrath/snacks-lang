@@ -493,6 +493,47 @@ public class CompilerTest {
         verifyOut("x is 7");
     }
 
+    @Test
+    public void shouldCompileNestedLoop() throws Exception {
+        run(
+            "main = {",
+            "    var x = 0",
+            "    var total = 0",
+            "    while x < 10",
+            "        var y = 0",
+            "        while y < 10",
+            "            y += 1",
+            "            total += 1",
+            "        end",
+            "        x += 1",
+            "    end",
+            "    say \"Total iterations = #{total}\"",
+            "}"
+        );
+        verifyOut("Total iterations = 100");
+    }
+
+    @Test
+    public void shouldBeAbleToBreakLoopFromWithinEmbrace() throws Exception {
+        run(
+            "main = {",
+            "    var counter = 0",
+            "    while counter < 10",
+            "        begin",
+            "            counter += 1",
+            "            if counter > 8",
+            "                hurl 'oops'",
+            "            end",
+            "        embrace error ->",
+            "            break",
+            "        end",
+            "    end",
+            "    say \"counter = #{counter}\"",
+            "}"
+        );
+        verifyOut("counter = 9");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
