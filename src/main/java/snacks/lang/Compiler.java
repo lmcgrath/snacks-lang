@@ -51,16 +51,10 @@ public class Compiler implements Generator, Reducer {
 
     private final List<JiteClass> acceptedClasses;
     private final Deque<State> states;
-    private final Deque<LabelNode> labels;
-    private final Deque<EmbraceScope> embraces;
-    private final Deque<LoopScope> loops;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
         states = new ArrayDeque<>();
-        labels = new ArrayDeque<>();
-        loops = new ArrayDeque<>();
-        embraces = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
@@ -220,17 +214,17 @@ public class Compiler implements Generator, Reducer {
         block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
         block.if_acmpne(skipLabel);
         generate(node.getExpression());
-        block.go_to(labels.peek());
+        block.go_to(currentLabel());
         block.label(skipLabel);
     }
 
     @Override
     public void generateGuardCases(GuardCases node) {
-        labels.push(new LabelNode());
+        createLabel();
         for (AstNode guard : node.getCases()) {
             generate(guard);
         }
-        block().label(labels.pop());
+        markLabel();
     }
 
     @Override
@@ -379,7 +373,7 @@ public class Compiler implements Generator, Reducer {
 
     private JiteClass beginClass(String name, List<String> interfaces) {
         JiteClass jiteClass = new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()]));
-        states.push(new State(jiteClass));
+        states.push(new State(this, jiteClass));
         return jiteClass;
     }
 
@@ -387,12 +381,20 @@ public class Compiler implements Generator, Reducer {
         return state().block();
     }
 
+    private void createLabel() {
+        state().createLabel();
+    }
+
     private EmbraceScope currentEmbrace() {
-        return embraces.peek();
+        return state().currentEmbrace();
+    }
+
+    private LabelNode currentLabel() {
+        return state().currentLabel();
     }
 
     private LoopScope currentLoop() {
-        return loops.peek();
+        return state().currentLoop();
     }
 
     private void defineClosureConstructor(Closure closure) {
@@ -436,13 +438,11 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void enterEmbrace(Exceptional node) {
-        embraces.push(new EmbraceScope(this, node.getEnsure()));
+        state().enterEmbrace(node);
     }
 
     private LoopScope enterLoop() {
-        LoopScope loop = new LoopScope();
-        loops.push(loop);
-        return loop;
+        return state().enterLoop();
     }
 
     private void generate(AstNode node) {
@@ -519,15 +519,11 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void leaveEmbrace() {
-        EmbraceScope scope = embraces.pop();
-        CodeBlock block = block();
-        block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
-        scope.generateEnsureAll();
-        block.label(scope.getExit());
+        state().leaveEmbrace();
     }
 
     private void leaveLoop() {
-        loops.pop();
+        state().leaveLoop();
     }
 
     private void loadVariable(String name) {
@@ -539,6 +535,10 @@ public class Compiler implements Generator, Reducer {
         } else {
             block().aload(1);
         }
+    }
+
+    private void markLabel() {
+        state().markLabel();
     }
 
     private void reduce(AstNode node) {
@@ -700,14 +700,22 @@ public class Compiler implements Generator, Reducer {
 
     private static final class State {
 
+        private final Compiler compiler;
         private final JiteClass jiteClass;
+        private final List<String> fields;
         private final Deque<BlockState> blocks;
-        private List<String> fields;
+        private final Deque<LabelNode> labels;
+        private final Deque<EmbraceScope> embraces;
+        private final Deque<LoopScope> loops;
 
-        public State(JiteClass jiteClass) {
+        public State(Compiler compiler, JiteClass jiteClass) {
+            this.compiler = compiler;
             this.jiteClass = jiteClass;
             this.fields = new ArrayList<>();
             this.blocks = new ArrayDeque<>();
+            this.labels = new ArrayDeque<>();
+            this.loops = new ArrayDeque<>();
+            this.embraces = new ArrayDeque<>();
         }
 
         public CodeBlock acceptBlock() {
@@ -721,6 +729,32 @@ public class Compiler implements Generator, Reducer {
 
         public CodeBlock block() {
             return blocks.peek().getBlock();
+        }
+
+        public void createLabel() {
+            labels.push(new LabelNode());
+        }
+
+        public EmbraceScope currentEmbrace() {
+            return embraces.peek();
+        }
+
+        public LabelNode currentLabel() {
+            return labels.peek();
+        }
+
+        public LoopScope currentLoop() {
+            return loops.peek();
+        }
+
+        public void enterEmbrace(Exceptional node) {
+            embraces.push(new EmbraceScope(compiler, node.getEnsure()));
+        }
+
+        public LoopScope enterLoop() {
+            LoopScope loop = new LoopScope();
+            loops.push(loop);
+            return loop;
         }
 
         public JiteClass getJiteClass() {
@@ -739,8 +773,25 @@ public class Compiler implements Generator, Reducer {
             return blocks.peek().isVariable(name);
         }
 
+        public void leaveEmbrace() {
+            EmbraceScope scope = embraces.pop();
+            CodeBlock block = block();
+            block.trycatch(scope.getStart(), scope.getEnd(), scope.getError(), null);
+            scope.generateEnsureAll();
+            block.label(scope.getExit());
+        }
+
+        public void leaveLoop() {
+            loops.pop();
+        }
+
+        public void markLabel() {
+            compiler.block().label(labels.pop());
+        }
+
         public void setFields(Collection<String> fields) {
-            this.fields = new ArrayList<>(fields);
+            this.fields.clear();
+            this.fields.addAll(fields);
         }
     }
 }
