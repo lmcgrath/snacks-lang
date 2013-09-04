@@ -227,6 +227,10 @@ public final class SyntaxFactory {
         return new SubImport(id, alias);
     }
 
+    public static Symbol suffix(Symbol target, Symbol condition) {
+        return conditional(condition(condition, target), null, nillable());
+    }
+
     public static Symbol symbol(String name) {
         return new SymbolLiteral(name);
     }

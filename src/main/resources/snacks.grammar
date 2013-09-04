@@ -117,7 +117,11 @@ qualified_identifier
 statement
     = expression
     | BREAK                                                             {: return new BreakExpression(); :}
+    | BREAK IF expression.c                                             {: return suffix(new BreakExpression(), c); :}
+    | BREAK UNLESS expression.c                                         {: return suffix(new BreakExpression(), unary("not", c)); :}
     | CONTINUE                                                          {: return new ContinueExpression(); :}
+    | CONTINUE IF expression.c                                          {: return suffix(new ContinueExpression(), c); :}
+    | CONTINUE UNLESS expression.c                                      {: return suffix(new ContinueExpression(), unary("not", c)); :}
     | VAR IDENTIFIER.v                                                  {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
     | HURL expression.e                                                 {: return hurl(e); :}
