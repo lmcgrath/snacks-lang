@@ -14,11 +14,11 @@ import com.headius.invokebinder.Binder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 
-public class SnacksRuntime {
+public class SnacksDispatcher {
 
     public static final Handle BOOTSTRAP = new Handle(
         Opcodes.H_INVOKESTATIC,
-        p(SnacksRuntime.class),
+        p(SnacksDispatcher.class),
         "bootstrap",
         sig(CallSite.class, Lookup.class, String.class, MethodType.class)
     );
@@ -29,7 +29,7 @@ public class SnacksRuntime {
         MutableCallSite callSite = new MutableCallSite(type);
         MethodHandle send = Binder.from(type)
             .insert(0, lookup)
-            .invokeStatic(lookup, SnacksRuntime.class, name);
+            .invokeStatic(lookup, SnacksDispatcher.class, name);
         callSite.setTarget(send);
         return callSite;
     }
@@ -37,7 +37,7 @@ public class SnacksRuntime {
     public static Object apply(Lookup lookup, Object function, Object argument) throws Throwable {
         Method method = methodFor(function, argument);
         return Binder.from(Object.class, Object.class, Object.class)
-            .cast(Object.class, function.getClass(), method.getParameterTypes()[0])
+            .cast(method.getReturnType(), function.getClass(), method.getParameterTypes()[0])
             .invokeVirtual(lookup, apply)
             .invoke(function, argument);
     }

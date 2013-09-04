@@ -6,7 +6,7 @@ public class Say {
 
     private static Say instance;
 
-    public static Object instance() {
+    public static Say instance() {
         if (instance == null) {
             instance = new Say();
         }

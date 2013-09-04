@@ -4,22 +4,22 @@ public class Op$Multiply {
 
     private static Op$Multiply instance;
 
-    public static Object instance() {
+    public static Op$Multiply instance() {
         if (instance == null) {
             instance = new Op$Multiply();
         }
         return instance;
     }
 
-    public Object apply(Double left) {
+    public DoubleClosure apply(Double left) {
         return new DoubleClosure(left);
     }
 
-    public Object apply(Integer left) {
+    public IntegerClosure apply(Integer left) {
         return new IntegerClosure(left);
     }
 
-    public Object apply(String left) {
+    public StringClosure apply(String left) {
         return new StringClosure(left);
     }
 
@@ -31,11 +31,11 @@ public class Op$Multiply {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Double apply(Integer right) {
             return left * right;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left * right;
         }
     }
@@ -48,11 +48,11 @@ public class Op$Multiply {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Integer apply(Integer right) {
             return left * right;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left * right;
         }
     }
@@ -65,7 +65,7 @@ public class Op$Multiply {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public String apply(Integer right) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < right; i++) {
                 builder.append(left);

@@ -7,14 +7,14 @@ public class Not {
 
     private static Not instance;
 
-    public static Object instance() {
+    public static Not instance() {
         if (instance == null) {
             instance = new Not();
         }
         return instance;
     }
 
-    public Object apply(Boolean argument) {
+    public Boolean apply(Boolean argument) {
         return argument ? FALSE : TRUE;
     }
 }

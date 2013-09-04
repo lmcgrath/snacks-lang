@@ -22,12 +22,13 @@ public abstract class Type {
         return new TypeOperator("->", argument, result);
     }
 
-    public static Type argument(Type type) {
-        return type.getParameters().get(0);
-    }
-
     public static boolean isFunction(Type type) {
-        return "->".equals(type.decompose().get(0).getName());
+        for (Type t : type.decompose()) {
+            if ("->".equals(t.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isInstantiable(Type type) {

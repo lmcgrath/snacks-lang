@@ -4,14 +4,14 @@ public class Stringy {
 
     private static Stringy instance;
 
-    public static Object instance() {
+    public static Stringy instance() {
         if (instance == null) {
             instance = new Stringy();
         }
         return instance;
     }
 
-    public Object apply(Object argument) {
+    public String apply(Object argument) {
         return argument.toString();
     }
 }

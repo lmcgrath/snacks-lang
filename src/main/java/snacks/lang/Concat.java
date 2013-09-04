@@ -4,26 +4,26 @@ public class Concat {
 
     private static Concat instance;
 
-    public static Object instance() {
+    public static Concat instance() {
         if (instance == null) {
             instance = new Concat();
         }
         return instance;
     }
 
-    public Object apply(Object left) {
-        return new Closure(left);
+    public ConcatClosure apply(Object left) {
+        return new ConcatClosure(left);
     }
 
-    public static final class Closure {
+    public static final class ConcatClosure {
 
         private final Object left;
 
-        public Closure(Object left) {
+        public ConcatClosure(Object left) {
             this.left = left;
         }
 
-        public Object apply(Object right) {
+        public String apply(Object right) {
             return left.toString() + right.toString();
         }
     }

@@ -4,18 +4,18 @@ public class Op$Minus {
 
     private static Op$Minus instance;
 
-    public static Object instance() {
+    public static Op$Minus instance() {
         if (instance == null) {
             instance = new Op$Minus();
         }
         return instance;
     }
 
-    public Object apply(Integer left) {
+    public IntegerClosure apply(Integer left) {
         return new IntegerClosure(left);
     }
 
-    public Object apply(Double left) {
+    public DoubleClosure apply(Double left) {
         return new DoubleClosure(left);
     }
 
@@ -27,11 +27,11 @@ public class Op$Minus {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Integer apply(Integer right) {
             return left - right;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left - right;
         }
     }
@@ -44,11 +44,11 @@ public class Op$Minus {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Double apply(Integer right) {
             return left - right;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left - right;
         }
     }

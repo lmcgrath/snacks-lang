@@ -4,14 +4,14 @@ public class Op$Modulo {
 
     private static Op$Modulo instance;
 
-    public static Object instance() {
+    public static Op$Modulo instance() {
         if (instance == null) {
             instance = new Op$Modulo();
         }
         return instance;
     }
 
-    public Object apply(Integer left) {
+    public Closure apply(Integer left) {
         return new Closure(left);
     }
 
@@ -23,7 +23,7 @@ public class Op$Modulo {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Integer apply(Integer right) {
             return left % right;
         }
     }

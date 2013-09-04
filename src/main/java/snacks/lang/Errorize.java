@@ -4,18 +4,18 @@ public class Errorize {
 
     private static Errorize instance;
 
-    public static Object instance() {
+    public static Errorize instance() {
         if (instance == null) {
             instance = new Errorize();
         }
         return instance;
     }
 
-    public Object apply(String message) {
+    public SnacksException apply(String message) {
         return new SnacksException(message);
     }
 
-    public Object apply(SnacksException exception) {
+    public SnacksException apply(SnacksException exception) {
         return exception;
     }
 }

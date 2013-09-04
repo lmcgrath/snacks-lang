@@ -5,7 +5,8 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static snacks.lang.SnacksRuntime.BOOTSTRAP;
+import static snacks.lang.SnacksDispatcher.BOOTSTRAP;
+import static snacks.lang.ast.Type.isFunction;
 import static snacks.lang.ast.Type.isInstantiable;
 
 import java.io.File;
@@ -54,6 +55,7 @@ public class Compiler implements Generator, Reducer {
 
     private final List<JiteClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
+    private Reference currentReference;
 
     public Compiler() {
         acceptedClasses = new ArrayList<>();
@@ -142,7 +144,12 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
         String className = javaClass(locator.getModule(), locator.getName());
-        block().invokestatic(className, "instance", sig(Object.class));
+        Type type = currentReference.getType();
+        if (isFunction(type)) {
+            block().invokestatic(className, "instance", "()L" + className + ";");
+        } else {
+            block().invokestatic(className, "instance", sig(Object.class));
+        }
     }
 
     @Override
@@ -235,7 +242,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateHurl(Hurl node) {
         CodeBlock block = block();
-        block.invokestatic(p(Errorize.class), "instance", sig(Object.class));
+        block.invokestatic(p(Errorize.class), "instance", sig(Errorize.class));
         generate(node.getBody());
         block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
         block.checkcast(p(Throwable.class));
@@ -265,7 +272,9 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateReference(Reference node) {
+        currentReference = node; // TODO hack
         generate(node.getLocator());
+        currentReference = null;
     }
 
     @Override
@@ -423,19 +432,20 @@ public class Compiler implements Generator, Reducer {
 
     private void defineFunctionInitializer() {
         JiteClass jiteClass = jiteClass();
+        String className = "L" + jiteClass().getClassName() + ";";
         CodeBlock block = beginBlock();
         LabelNode returnValue = new LabelNode(new Label());
-        jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, ci(Object.class), null);
-        block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        jiteClass.defineField("instance", ACC_PRIVATE | ACC_STATIC, className, null);
+        block.getstatic(jiteClass.getClassName(), "instance", className);
         block.ifnonnull(returnValue);
         block.newobj(jiteClass.getClassName());
         block.dup();
         block.invokespecial(jiteClass.getClassName(), "<init>", sig(void.class));
-        block.putstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        block.putstatic(jiteClass.getClassName(), "instance", className);
         block.label(returnValue);
-        block.getstatic(jiteClass.getClassName(), "instance", ci(Object.class));
+        block.getstatic(jiteClass.getClassName(), "instance", className);
         block.areturn();
-        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
+        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, "()" + className, acceptBlock());
         jiteClass.defineDefaultConstructor();
     }
 

@@ -4,18 +4,18 @@ public class Unary$Plus {
 
     private static Unary$Plus instance;
 
-    public static Object instance() {
+    public static Unary$Plus instance() {
         if (instance == null) {
             instance = new Unary$Plus();
         }
         return instance;
     }
 
-    public Object apply(Integer argument) {
+    public Integer apply(Integer argument) {
         return +argument;
     }
 
-    public Object apply(Double argument) {
+    public Double apply(Double argument) {
         return +argument;
     }
 }

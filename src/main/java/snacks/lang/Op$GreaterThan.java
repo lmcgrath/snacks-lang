@@ -4,18 +4,18 @@ public class Op$GreaterThan {
 
     private static Op$GreaterThan instance;
 
-    public static Object instance() {
+    public static Op$GreaterThan instance() {
         if (instance == null) {
             instance = new Op$GreaterThan();
         }
         return instance;
     }
 
-    public Object apply(Integer left) {
+    public IntegerClosure apply(Integer left) {
         return new IntegerClosure(left);
     }
 
-    public Object apply(Double left) {
+    public DoubleClosure apply(Double left) {
         return new DoubleClosure(left);
     }
 
@@ -27,11 +27,11 @@ public class Op$GreaterThan {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Boolean apply(Integer right) {
             return left > right;
         }
 
-        public Object apply(Double right) {
+        public Boolean apply(Double right) {
             return left > right;
         }
     }
@@ -44,11 +44,11 @@ public class Op$GreaterThan {
             this.left = left;
         }
 
-        public Object apply(Integer right) {
+        public Boolean apply(Integer right) {
             return left > right;
         }
 
-        public Object apply(Double right) {
+        public Boolean apply(Double right) {
             return left > right;
         }
     }

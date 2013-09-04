@@ -4,26 +4,26 @@ public class Op$Plus {
 
     private static Op$Plus instance;
 
-    public static Object instance() {
+    public static Op$Plus instance() {
         if (instance == null) {
             instance = new Op$Plus();
         }
         return instance;
     }
 
-    public Object apply(Boolean left) {
+    public BooleanClosure apply(Boolean left) {
         return new BooleanClosure(left);
     }
 
-    public Object apply(Double left) {
+    public DoubleClosure apply(Double left) {
         return new DoubleClosure(left);
     }
 
-    public Object apply(Integer left) {
+    public IntegerClosure apply(Integer left) {
         return new IntegerClosure(left);
     }
 
-    public Object apply(String left) {
+    public StringClosure apply(String left) {
         return new StringClosure(left);
     }
 
@@ -35,7 +35,7 @@ public class Op$Plus {
             this.left = left;
         }
 
-        public Object apply(String right) {
+        public String apply(String right) {
             return left + right;
         }
     }
@@ -48,15 +48,15 @@ public class Op$Plus {
             this.left = left;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left + right;
         }
 
-        public Object apply(Integer right) {
+        public Double apply(Integer right) {
             return left + right;
         }
 
-        public Object apply(String right) {
+        public String apply(String right) {
             return left + right;
         }
     }
@@ -69,15 +69,15 @@ public class Op$Plus {
             this.left = left;
         }
 
-        public Object apply(Double right) {
+        public Double apply(Double right) {
             return left + right;
         }
 
-        public Object apply(Integer right) {
+        public Integer apply(Integer right) {
             return left + right;
         }
 
-        public Object apply(String right) {
+        public String apply(String right) {
             return left + right;
         }
     }
@@ -90,19 +90,19 @@ public class Op$Plus {
             this.left = left;
         }
 
-        public Object apply(Boolean right) {
+        public String apply(Boolean right) {
             return left + right;
         }
 
-        public Object apply(Double right) {
+        public String apply(Double right) {
             return left + right;
         }
 
-        public Object apply(Integer right) {
+        public String apply(Integer right) {
             return left + right;
         }
 
-        public Object apply(String right) {
+        public String apply(String right) {
             return left + right;
         }
     }
