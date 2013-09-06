@@ -13,12 +13,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import snacks.lang.Invokable;
 import snacks.lang.SnacksException;
+import snacks.lang.SnacksLoader;
 
 public class CompilerTest {
 
     @Rule
     public final OutResource out;
-    private snacks.lang.compiler.Compiler compiler;
+    private Compiler compiler;
 
     public CompilerTest() {
         out = new OutResource();
@@ -26,7 +27,7 @@ public class CompilerTest {
 
     @Before
     public void setUp() {
-        compiler = new Compiler();
+        compiler = new Compiler(new SnacksLoader());
     }
 
     @Test

@@ -20,6 +20,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.Errorize;
 import snacks.lang.Invokable;
+import snacks.lang.SnacksLoader;
 import snacks.lang.Symbol;
 import snacks.lang.ast.*;
 
@@ -53,20 +54,21 @@ public class Compiler implements Generator, Reducer {
         replacements.put(">", "$GreaterThan");
     }
 
+    private final SnacksLoader loader;
     private final List<JiteClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
     private Reference currentReference;
 
-    public Compiler() {
-        acceptedClasses = new ArrayList<>();
-        builders = new ArrayDeque<>();
+    public Compiler(SnacksLoader loader) {
+        this.loader = loader;
+        this.acceptedClasses = new ArrayList<>();
+        this.builders = new ArrayDeque<>();
     }
 
     public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
         for (AstNode declaration : declarations) {
             generate(declaration);
         }
-        SnacksLoader loader = new SnacksLoader(getClass().getClassLoader());
         for (JiteClass jiteClass : acceptedClasses) {
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
             loader.defineClass(c(jiteClass.getClassName()), bytes);
@@ -547,17 +549,6 @@ public class Compiler implements Generator, Reducer {
             }
         } catch (IOException exception) {
             throw new CompileException(exception);
-        }
-    }
-
-    private static final class SnacksLoader extends ClassLoader {
-
-        public SnacksLoader(ClassLoader parent) {
-            super(parent);
-        }
-
-        public Class defineClass(String name, byte[] bytes) {
-            return super.defineClass(name, bytes, 0, bytes.length);
         }
     }
 }
