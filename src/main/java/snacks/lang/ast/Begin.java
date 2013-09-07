@@ -1,6 +1,7 @@
 package snacks.lang.ast;
 
 import java.util.Objects;
+import snacks.lang.Type;
 
 public class Begin extends AstNode {
 

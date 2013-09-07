@@ -1,5 +1,7 @@
 package snacks.lang.ast;
 
+import snacks.lang.Type;
+
 public abstract class AstNode {
 
     public void generate(Generator generator) {

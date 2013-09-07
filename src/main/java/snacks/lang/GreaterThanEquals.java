@@ -1,14 +1,31 @@
 package snacks.lang;
 
-public class Op$GreaterThanEquals {
+import static snacks.lang.Type.BOOLEAN_TYPE;
+import static snacks.lang.Type.DOUBLE_TYPE;
+import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.set;
 
-    private static Op$GreaterThanEquals instance;
+@Snack(">=")
+public class GreaterThanEquals {
 
-    public static Op$GreaterThanEquals instance() {
+    private static GreaterThanEquals instance;
+
+    public static GreaterThanEquals instance() {
         if (instance == null) {
-            instance = new Op$GreaterThanEquals();
+            instance = new GreaterThanEquals();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE))
+        );
     }
 
     public IntegerClosure apply(Integer left) {

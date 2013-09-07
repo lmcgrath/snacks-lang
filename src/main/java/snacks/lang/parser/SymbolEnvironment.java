@@ -1,103 +1,20 @@
 package snacks.lang.parser;
 
-import static snacks.lang.ast.AstFactory.locator;
+import static snacks.lang.Type.set;
+import static snacks.lang.Type.type;
+import static snacks.lang.Type.var;
 import static snacks.lang.ast.AstFactory.reference;
-import static snacks.lang.ast.Type.*;
 
 import java.util.*;
+import snacks.lang.*;
 import snacks.lang.ast.*;
 
 public class SymbolEnvironment implements TypeFactory {
 
-    private static final Map<String, List<Reference>> builtin = new HashMap<>();
-
-    static {
-        def("Integer", INTEGER_TYPE);
-        def("String", STRING_TYPE);
-        def("Boolean", BOOLEAN_TYPE);
-        def("Double", DOUBLE_TYPE);
-
-        def("concat", func(var("T"), func(var("U"), STRING_TYPE)));
-        def("hurl", func(var("T"), var("U")));
-        def("not", func(BOOLEAN_TYPE, BOOLEAN_TYPE));
-        def("say", func(var("T"), VOID_TYPE));
-        def("stringy", func(var("T"), STRING_TYPE));
-
-        def("+", func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        def("+", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        def("+", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("+", func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        def("+", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("+", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        def("+", func(DOUBLE_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        def("+", func(STRING_TYPE, func(STRING_TYPE, STRING_TYPE)));
-        def("+", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
-        def("+", func(STRING_TYPE, func(DOUBLE_TYPE, STRING_TYPE)));
-        def("+", func(STRING_TYPE, func(BOOLEAN_TYPE, STRING_TYPE)));
-
-        def("-", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        def("-", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("-", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("-", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-
-        def("*", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-        def("*", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("*", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("*", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        def("*", func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)));
-
-        def("/", func(INTEGER_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-        def("/", func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("/", func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)));
-        def("/", func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)));
-
-        def("%", func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)));
-
-        def("<", func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def("<", func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-        def("<", func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def("<", func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-
-        def(">", func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def(">", func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-        def(">", func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def(">", func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-
-        def("<=", func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def("<=", func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-        def("<=", func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def("<=", func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-
-        def(">=", func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def(">=", func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-        def(">=", func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)));
-        def(">=", func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)));
-
-        def("==", func(var("T"), func(var("U"), BOOLEAN_TYPE)));
-
-        def("unary+", func(INTEGER_TYPE, INTEGER_TYPE));
-        def("unary+", func(DOUBLE_TYPE, DOUBLE_TYPE));
-        def("unary-", func(INTEGER_TYPE, INTEGER_TYPE));
-        def("unary-", func(DOUBLE_TYPE, DOUBLE_TYPE));
-        def("unary~", func(INTEGER_TYPE, INTEGER_TYPE));
-    }
-
-    private static void def(String name, Type type) {
-        if (!builtin.containsKey(name)) {
-            builtin.put(name, new ArrayList<Reference>());
-        }
-        builtin.get(name).add(reference(locator("snacks/lang", name), type));
-    }
-
     private final State state;
 
-    public SymbolEnvironment() {
-        state = new HeadState();
-        for (List<Reference> list : builtin.values()) {
-            for (Reference reference : list) {
-                state.define(reference);
-            }
-        }
+    public SymbolEnvironment(SnacksLoader loader) {
+        state = new HeadState(loader);
     }
 
     private SymbolEnvironment(SymbolEnvironment parent) {
@@ -204,13 +121,15 @@ public class SymbolEnvironment implements TypeFactory {
         Type typeOf(Locator locator);
     }
 
-    private static final class HeadState implements State {
+    private static final class HeadState implements State, LocatorVisitor {
 
-        private final Map<Locator, Set<Type>> symbols;
+        private final SnacksLoader resolver;
+        private final Map<Locator, Type> symbols;
         private final Set<Type> specializedTypes;
         private int nextId = 1;
 
-        public HeadState() {
+        public HeadState(SnacksLoader resolver) {
+            this.resolver = resolver;
             this.symbols = new HashMap<>();
             this.specializedTypes = new HashSet<>();
         }
@@ -222,10 +141,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public void define(Reference reference) {
-            if (!symbols.containsKey(reference.getLocator())) {
-                symbols.put(reference.getLocator(), new HashSet<Type>());
-            }
-            symbols.get(reference.getLocator()).add(reference.getType());
+            symbols.put(reference.getLocator(), reference.getType());
         }
 
         @Override
@@ -256,6 +172,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public boolean isDefined(Locator locator) {
+            resolve(locator);
             return symbols.containsKey(locator);
         }
 
@@ -267,17 +184,41 @@ public class SymbolEnvironment implements TypeFactory {
         @Override
         public Type typeOf(Locator locator) {
             if (isDefined(locator)) {
-                return set(symbols.get(locator));
+                return symbols.get(locator);
             } else {
                 throw new UndefinedSymbolException("Undefined symbol: " + locator);
             }
+        }
+
+        private void resolve(Locator locator) {
+            if (!symbols.containsKey(locator)) {
+                locator.accept(this);
+            }
+        }
+
+        @Override
+        public void visitClosureLocator(ClosureLocator locator) {
+            // intentionally empty
+        }
+
+        @Override
+        public void visitDeclarationLocator(DeclarationLocator locator) {
+            Type type = resolver.typeOf(locator.getModule() + "." + locator.getName());
+            if (type != null) {
+                symbols.put(locator, type);
+            }
+        }
+
+        @Override
+        public void visitVariableLocator(VariableLocator locator) {
+            // intentionally empty
         }
     }
 
     private static final class TailState implements State {
 
         private final SymbolEnvironment parent;
-        private final Map<Locator, Set<Type>> symbols;
+        private final Map<Locator, Type> symbols;
         private final Set<Type> specialized;
 
         public TailState(SymbolEnvironment parent) {
@@ -293,10 +234,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public void define(Reference reference) {
-            if (!symbols.containsKey(reference.getLocator())) {
-                symbols.put(reference.getLocator(), new HashSet<Type>());
-            }
-            symbols.get(reference.getLocator()).add(reference.getType());
+            symbols.put(reference.getLocator(), reference.getType());
         }
 
         @Override
@@ -310,7 +248,7 @@ public class SymbolEnvironment implements TypeFactory {
             if (parent.isDefined(locator)) {
                 return parent.getReference(locator);
             } else {
-                return reference(locator, set(symbols.get(locator)));
+                return reference(locator, symbols.get(locator));
             }
         }
 
@@ -347,11 +285,7 @@ public class SymbolEnvironment implements TypeFactory {
         @Override
         public Type typeOf(Locator locator) {
             if (isDefinedLocally(locator)) {
-                Set<Type> types = new HashSet<>();
-                for (Type type : symbols.get(locator)) {
-                    types.add(type);
-                }
-                return set(types);
+                return symbols.get(locator);
             } else {
                 return parent.typeOf(locator);
             }

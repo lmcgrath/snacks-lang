@@ -119,8 +119,8 @@ public final class MainRunner {
         }
 
         private void printDoc(CommandLineRunner runner) {
-            Class<?> klass = runner.getClass();
-            try (InputStream docStream = klass.getResourceAsStream('/' + klass.getName().replace('.', '/') + ".txt")) {
+            Class<?> clazz = runner.getClass();
+            try (InputStream docStream = clazz.getResourceAsStream('/' + clazz.getName().replace('.', '/') + ".txt")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(docStream));
                 String line = reader.readLine();
                 while (line != null) {

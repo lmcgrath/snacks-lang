@@ -1,14 +1,32 @@
 package snacks.lang;
 
-public class Op$Multiply {
+import static snacks.lang.Type.DOUBLE_TYPE;
+import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.Type.STRING_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.set;
 
-    private static Op$Multiply instance;
+@Snack("*")
+public class Multiply {
 
-    public static Op$Multiply instance() {
+    private static Multiply instance;
+
+    public static Multiply instance() {
         if (instance == null) {
-            instance = new Op$Multiply();
+            instance = new Multiply();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
+            func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))
+        );
     }
 
     public DoubleClosure apply(Double left) {

@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import java.util.List;
+import snacks.lang.Type;
 
 public final class AstFactory {
 

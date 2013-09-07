@@ -2,6 +2,8 @@ package snacks.lang.ast;
 
 public abstract class Locator {
 
+    public abstract void accept(LocatorVisitor visitor);
+
     public void generate(Generator generator) {
         throw new UnsupportedOperationException("Cannot reference " + getClass().getSimpleName());
     }

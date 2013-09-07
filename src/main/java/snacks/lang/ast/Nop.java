@@ -1,6 +1,8 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.var;
+import static snacks.lang.Type.var;
+
+import snacks.lang.Type;
 
 public class Nop extends AstNode {
 

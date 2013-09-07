@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.List;
 import java.util.Objects;
+import snacks.lang.Type;
 
 public class Sequence extends AstNode {
 

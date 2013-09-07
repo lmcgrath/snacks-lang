@@ -1,9 +1,10 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.BOOLEAN_TYPE;
+import static snacks.lang.Type.BOOLEAN_TYPE;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.Type;
 
 public class ReferencesEqual extends AstNode {
 

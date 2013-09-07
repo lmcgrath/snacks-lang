@@ -1,9 +1,10 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.VOID_TYPE;
-import static snacks.lang.ast.Type.func;
+import static snacks.lang.Type.VOID_TYPE;
+import static snacks.lang.Type.func;
 
 import java.util.Objects;
+import snacks.lang.Type;
 
 public class VoidFunction extends AstNode {
 

@@ -6,6 +6,7 @@ import static java.lang.System.out;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
+import snacks.lang.SnacksLoader;
 import snacks.lang.ast.AstPrinter;
 import snacks.lang.cli.CommandLineRunner;
 
@@ -29,7 +30,7 @@ public class TranslatorRunner implements CommandLineRunner {
         out.print(">>> ");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser parser = new Parser();
-        Translator translator = new Translator(new SymbolEnvironment(), "cli");
+        Translator translator = new Translator(new SymbolEnvironment(new SnacksLoader()), "cli");
         AstPrinter printer = new AstPrinter(out);
         String line;
         try {

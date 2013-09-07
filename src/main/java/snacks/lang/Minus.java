@@ -1,14 +1,30 @@
 package snacks.lang;
 
-public class Op$Divide {
+import static snacks.lang.Type.DOUBLE_TYPE;
+import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.set;
 
-    private static Op$Divide instance;
+@Snack("-")
+public class Minus {
 
-    public static Op$Divide instance() {
+    private static Minus instance;
+
+    public static Minus instance() {
         if (instance == null) {
-            instance = new Op$Divide();
+            instance = new Minus();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE))
+        );
     }
 
     public IntegerClosure apply(Integer left) {
@@ -28,11 +44,11 @@ public class Op$Divide {
         }
 
         public Integer apply(Integer right) {
-            return left / right;
+            return left - right;
         }
 
         public Double apply(Double right) {
-            return left / right;
+            return left - right;
         }
     }
 
@@ -45,11 +61,11 @@ public class Op$Divide {
         }
 
         public Double apply(Integer right) {
-            return left / right;
+            return left - right;
         }
 
         public Double apply(Double right) {
-            return left / right;
+            return left - right;
         }
     }
 }

@@ -1,12 +1,17 @@
 package snacks.lang;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static snacks.lang.Type.SYMBOL_TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Snack("Symbol")
 public class Symbol {
+
+    @SnackType
+    public static final Type type = SYMBOL_TYPE;
 
     private static final Map<String, Symbol> symbols = new HashMap<>();
     private static final Object lock = new Object();

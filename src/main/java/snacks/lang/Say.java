@@ -1,7 +1,11 @@
 package snacks.lang;
 
 import static java.lang.System.out;
+import static snacks.lang.Type.VOID_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.var;
 
+@Snack("say")
 public class Say {
 
     private static Say instance;
@@ -11,6 +15,11 @@ public class Say {
             instance = new Say();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return func(var("T"), VOID_TYPE);
     }
 
     public Object apply(Boolean value) {

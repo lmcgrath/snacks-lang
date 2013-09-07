@@ -16,6 +16,11 @@ public class VariableLocator extends Locator {
     }
 
     @Override
+    public void accept(LocatorVisitor visitor) {
+        visitor.visitVariableLocator(this);
+    }
+
+    @Override
     public void generate(Generator generator) {
         generator.generateVariableLocator(this);
     }

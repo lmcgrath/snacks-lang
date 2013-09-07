@@ -1,16 +1,26 @@
 package snacks.lang;
 
+import static snacks.lang.Type.BOOLEAN_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.var;
+
 import java.util.Objects;
 
-public class Op$Equals {
+@Snack("==")
+public class Equals {
 
-    private static Op$Equals instance;
+    private static Equals instance;
 
-    public static Op$Equals instance() {
+    public static Equals instance() {
         if (instance == null) {
-            instance = new Op$Equals();
+            instance = new Equals();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return func(var("T"), func(var("U"), BOOLEAN_TYPE));
     }
 
     public EqualsClosure apply(Object left) {

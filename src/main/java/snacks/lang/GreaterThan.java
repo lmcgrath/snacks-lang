@@ -1,14 +1,31 @@
 package snacks.lang;
 
-public class Op$LessThan {
+import static snacks.lang.Type.BOOLEAN_TYPE;
+import static snacks.lang.Type.DOUBLE_TYPE;
+import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.set;
 
-    private static Op$LessThan instance;
+@Snack(">")
+public class GreaterThan {
 
-    public static Op$LessThan instance() {
+    private static GreaterThan instance;
+
+    public static GreaterThan instance() {
         if (instance == null) {
-            instance = new Op$LessThan();
+            instance = new GreaterThan();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE))
+        );
     }
 
     public IntegerClosure apply(Integer left) {
@@ -28,11 +45,11 @@ public class Op$LessThan {
         }
 
         public Boolean apply(Integer right) {
-            return left < right;
+            return left > right;
         }
 
         public Boolean apply(Double right) {
-            return left < right;
+            return left > right;
         }
     }
 
@@ -45,11 +62,11 @@ public class Op$LessThan {
         }
 
         public Boolean apply(Integer right) {
-            return left < right;
+            return left > right;
         }
 
         public Boolean apply(Double right) {
-            return left < right;
+            return left > right;
         }
     }
 }

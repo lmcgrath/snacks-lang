@@ -3,12 +3,13 @@ package snacks.lang.parser;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.Type.*;
+import static snacks.lang.Type.*;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 
 import java.util.*;
 import beaver.Symbol;
+import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
@@ -33,7 +34,7 @@ public class Translator implements SyntaxVisitor {
         this.aliases = new HashMap<>();
         this.typeErrors = new ArrayList<>();
         this.names = new IdentityHashMap<>();
-        this.wildcardImports = new ArrayList<>(asList("snacks/lang"));
+        this.wildcardImports = new ArrayList<>(asList("snacks.lang"));
     }
 
     public void addAlias(String alias, Locator locator) {
@@ -254,7 +255,7 @@ public class Translator implements SyntaxVisitor {
     public void visitImport(Import node) {
         QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
         List<String> segments = identifier.getSegments();
-        Locator locator = locator(join(segments.subList(0, segments.size() - 1), '/'), identifier.getLastSegment());
+        Locator locator = locator(join(segments.subList(0, segments.size() - 1), '.'), identifier.getLastSegment());
         addAlias(node.getAlias(), locator);
     }
 
@@ -404,7 +405,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitWildcardImport(WildcardImport node) {
-        addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '/'));
+        addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '.'));
     }
 
     private void beginFunction() {

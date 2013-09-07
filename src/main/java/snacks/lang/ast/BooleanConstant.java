@@ -1,8 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.BOOLEAN_TYPE;
+import static snacks.lang.Type.BOOLEAN_TYPE;
 
 import java.util.Objects;
+import snacks.lang.Type;
 
 public class BooleanConstant extends AstNode {
 

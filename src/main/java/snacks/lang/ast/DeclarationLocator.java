@@ -29,6 +29,11 @@ public class DeclarationLocator extends Locator {
     }
 
     @Override
+    public void accept(LocatorVisitor visitor) {
+        visitor.visitDeclarationLocator(this);
+    }
+
+    @Override
     public void generate(Generator generator) {
         generator.generateDeclarationLocator(this);
     }

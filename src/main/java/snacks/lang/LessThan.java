@@ -1,14 +1,27 @@
 package snacks.lang;
 
-public class Op$LessThanEquals {
+import static snacks.lang.Type.*;
 
-    private static Op$LessThanEquals instance;
+@Snack("<")
+public class LessThan {
 
-    public static Op$LessThanEquals instance() {
+    private static LessThan instance;
+
+    public static LessThan instance() {
         if (instance == null) {
-            instance = new Op$LessThanEquals();
+            instance = new LessThan();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE))
+        );
     }
 
     public IntegerClosure apply(Integer left) {
@@ -28,11 +41,11 @@ public class Op$LessThanEquals {
         }
 
         public Boolean apply(Integer right) {
-            return left <= right;
+            return left < right;
         }
 
         public Boolean apply(Double right) {
-            return left <= right;
+            return left < right;
         }
     }
 
@@ -45,11 +58,11 @@ public class Op$LessThanEquals {
         }
 
         public Boolean apply(Integer right) {
-            return left <= right;
+            return left < right;
         }
 
         public Boolean apply(Double right) {
-            return left <= right;
+            return left < right;
         }
     }
 }

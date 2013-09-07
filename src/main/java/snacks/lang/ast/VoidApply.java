@@ -1,5 +1,7 @@
 package snacks.lang.ast;
 
+import snacks.lang.Type;
+
 public class VoidApply extends AstNode {
 
     private final AstNode invokable;

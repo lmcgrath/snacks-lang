@@ -4,16 +4,17 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.Type.*;
-import static snacks.lang.ast.Type.func;
+import static snacks.lang.Type.*;
+import static snacks.lang.Type.func;
 import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import snacks.lang.SnacksLoader;
 import snacks.lang.ast.AstNode;
-import snacks.lang.ast.Type;
+import snacks.lang.Type;
 
 public class TranslatorTest {
 
@@ -21,7 +22,7 @@ public class TranslatorTest {
 
     @Before
     public void setUp() {
-        environment = new SymbolEnvironment();
+        environment = new SymbolEnvironment(new SnacksLoader());
     }
 
     @Test
@@ -58,7 +59,7 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test", "value", expression(constant("Hello, World!")))));
         assertThat(nodes, defines(declaration("test", "example", expression(apply(
             apply(
-                environment.getReference(locator("snacks/lang", "+")),
+                environment.getReference(locator("snacks.lang", "+")),
                 constant(2),
                 set(
                     func(STRING_TYPE, STRING_TYPE),
@@ -148,7 +149,7 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateUntypedFunctionWithMultipleArguments() {
         translate("multiply = (x y) -> x * y");
-        assertThat(typeOf("multiply"), equalTo(typeOf("snacks/lang", "*")));
+        assertThat(typeOf("multiply"), equalTo(typeOf("snacks.lang", "*")));
     }
 
     @Test(expected = TypeException.class)
@@ -279,7 +280,7 @@ public class TranslatorTest {
     }
 
     private void define(String name, Type type) {
-        environment.define(reference("test/example", name, type));
+        environment.define(reference("test.example", name, type));
     }
 
     private Set<AstNode> translate(String... inputs) {

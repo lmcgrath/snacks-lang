@@ -1,4 +1,4 @@
-package snacks.lang.ast;
+package snacks.lang;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.join;

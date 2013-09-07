@@ -1,9 +1,10 @@
 package snacks.lang.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.ast.Type.STRING_TYPE;
+import static snacks.lang.Type.STRING_TYPE;
 
 import java.util.Objects;
+import snacks.lang.Type;
 
 public class StringConstant extends AstNode {
 

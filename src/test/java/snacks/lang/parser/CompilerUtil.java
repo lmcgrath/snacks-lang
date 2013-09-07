@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Set;
 import beaver.Symbol;
+import snacks.lang.SnacksLoader;
 import snacks.lang.parser.Parser.AltGoals;
 import snacks.lang.ast.AstNode;
 
@@ -25,7 +26,7 @@ public final class CompilerUtil {
     }
 
     public static Set<AstNode> translate(String... inputs) {
-        return translate(new SymbolEnvironment(), inputs);
+        return translate(new SymbolEnvironment(new SnacksLoader()), inputs);
     }
 
     public static Set<AstNode> translate(SymbolEnvironment environment, String... inputs) {

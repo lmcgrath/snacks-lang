@@ -1,14 +1,34 @@
 package snacks.lang;
 
-public class Op$Plus {
+import static snacks.lang.Type.*;
 
-    private static Op$Plus instance;
+@Snack("+")
+public class Plus {
 
-    public static Op$Plus instance() {
+    private static Plus instance;
+
+    public static Plus instance() {
         if (instance == null) {
-            instance = new Op$Plus();
+            instance = new Plus();
         }
         return instance;
+    }
+
+    @SnackType
+    public static Type type() {
+        return set(
+            func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)),
+            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
+            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
+            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
+            func(DOUBLE_TYPE, func(STRING_TYPE, STRING_TYPE)),
+            func(STRING_TYPE, func(STRING_TYPE, STRING_TYPE)),
+            func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)),
+            func(STRING_TYPE, func(DOUBLE_TYPE, STRING_TYPE)),
+            func(STRING_TYPE, func(BOOLEAN_TYPE, STRING_TYPE))
+        );
     }
 
     public BooleanClosure apply(Boolean left) {

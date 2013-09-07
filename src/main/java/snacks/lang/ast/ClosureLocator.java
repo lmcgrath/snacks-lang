@@ -34,6 +34,11 @@ public class ClosureLocator extends Locator {
     }
 
     @Override
+    public void accept(LocatorVisitor visitor) {
+        visitor.visitClosureLocator(this);
+    }
+
+    @Override
     public void generate(Generator generator) {
         generator.generateClosureLocator(this);
     }

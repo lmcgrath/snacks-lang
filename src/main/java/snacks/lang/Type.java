@@ -1,4 +1,4 @@
-package snacks.lang.ast;
+package snacks.lang;
 
 import static java.util.Arrays.asList;
 

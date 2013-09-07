@@ -1,8 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.ast.Type.set;
+import static snacks.lang.Type.set;
 
 import java.util.*;
+import snacks.lang.Type;
 
 public class GuardCases extends AstNode {
 

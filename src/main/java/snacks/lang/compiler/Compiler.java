@@ -6,8 +6,8 @@ import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP;
-import static snacks.lang.ast.Type.isFunction;
-import static snacks.lang.ast.Type.isInstantiable;
+import static snacks.lang.Type.isFunction;
+import static snacks.lang.Type.isInstantiable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,10 +18,7 @@ import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
-import snacks.lang.Errorize;
-import snacks.lang.Invokable;
-import snacks.lang.SnacksLoader;
-import snacks.lang.Symbol;
+import snacks.lang.*;
 import snacks.lang.ast.*;
 
 public class Compiler implements Generator, Reducer {
@@ -493,19 +490,24 @@ public class Compiler implements Generator, Reducer {
     }
 
     private String javaClass(String module, String name) {
-        String escapedName;
-        if ("?".equals(name)) {
-            escapedName = "$Coalesce";
-        } else {
-            escapedName = name.substring(0, 1).toUpperCase() + name.substring(1);
-            for (String replacement : replacements.keySet()) {
-                escapedName = escapedName.replace(replacement, replacements.get(replacement));
+        Class<?> actualClass = loader.loadSnack(module + '.' + name);
+        if (actualClass == null) {
+            String escapedName;
+            if ("?".equals(name)) {
+                escapedName = "$Coalesce";
+            } else {
+                escapedName = name.substring(0, 1).toUpperCase() + name.substring(1);
+                for (String replacement : replacements.keySet()) {
+                    escapedName = escapedName.replace(replacement, replacements.get(replacement));
+                }
             }
+            if (escapedName.startsWith("$")) {
+                escapedName = "Op" + escapedName;
+            }
+            return module.replace('.', '/') + '/' + escapedName;
+        } else {
+            return actualClass.getName().replace('.', '/');
         }
-        if (escapedName.startsWith("$")) {
-            escapedName = "Op" + escapedName;
-        }
-        return module + "/" + escapedName;
     }
 
     private JiteClass jiteClass() {
