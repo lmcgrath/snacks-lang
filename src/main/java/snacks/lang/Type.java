@@ -2,9 +2,7 @@ package snacks.lang;
 
 import static java.util.Arrays.asList;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Type {
 
@@ -19,7 +17,7 @@ public abstract class Type {
     ;
 
     public static Type func(Type argument, Type result) {
-        return new TypeOperator("->", argument, result);
+        return type("->", argument, result);
     }
 
     public static boolean isFunction(Type type) {
@@ -33,6 +31,14 @@ public abstract class Type {
 
     public static boolean isInstantiable(Type type) {
         return isFunction(type) && VOID_TYPE == type.decompose().get(0).getParameters().get(0);
+    }
+
+    public static Type record(String name, Type... properties) {
+        return type(name, properties);
+    }
+
+    public static Type property(String name, Type type) {
+        return type(name, type);
     }
 
     public static Type result(Type functionType) {
@@ -57,11 +63,25 @@ public abstract class Type {
     }
 
     public static Type tuple(Type... types) {
-        return new TypeOperator("x", types);
+        return tuple(asList(types));
+    }
+
+    public static Type tuple(Collection<Type> types) {
+        List<Type> properties = new ArrayList<>();
+        Iterator<Type> iterator = types.iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            properties.add(property("_" + index++, iterator.next()));
+        }
+        return type("snacks.lang.Tuple" + types.size(), properties);
     }
 
     public static Type type(String name) {
         return new TypeOperator(name);
+    }
+
+    public static Type type(String name, Type... parameters) {
+        return type(name, asList(parameters));
     }
 
     public static Type type(String name, Collection<Type> parameters) {

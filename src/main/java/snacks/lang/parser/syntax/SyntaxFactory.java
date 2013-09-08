@@ -10,6 +10,10 @@ import beaver.Symbol;
 
 public final class SyntaxFactory {
 
+    public static Symbol access(Symbol expression, String property) {
+        return new AccessExpression(expression, property);
+    }
+
     public static Symbol apply(Symbol function, Symbol argument) {
         return new ApplyExpression(function, argument);
     }

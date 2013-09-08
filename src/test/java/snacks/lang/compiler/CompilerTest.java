@@ -14,6 +14,7 @@ import org.junit.Test;
 import snacks.lang.Invokable;
 import snacks.lang.SnacksException;
 import snacks.lang.SnacksLoader;
+import snacks.lang.parser.TypeException;
 
 public class CompilerTest {
 
@@ -104,7 +105,7 @@ public class CompilerTest {
             "    say 'World!'",
             "}"
         );
-        verifyOut("Hello" );
+        verifyOut("Hello");
         verifyOut("World!");
     }
 
@@ -156,7 +157,7 @@ public class CompilerTest {
             "main = () -> say $ triple 12"
         );
         verifyOut(36);
-        verifyNever("can't touch this" );
+        verifyNever("can't touch this");
     }
 
     @Test
@@ -233,13 +234,13 @@ public class CompilerTest {
 
     @Test
     public void shouldConcatenateStringToInteger() throws Exception {
-        run("main = () -> say $ 'Answer = ' + 4 + 2" );
+        run("main = () -> say $ 'Answer = ' + 4 + 2");
         verifyOut("Answer = 42");
     }
 
     @Test
     public void shouldMultiplyString() throws Exception {
-        run("main = () -> say $ 'waffles ' * 3" );
+        run("main = () -> say $ 'waffles ' * 3");
         verifyOut("waffles waffles waffles ");
     }
 
@@ -261,7 +262,7 @@ public class CompilerTest {
             "}"
         );
         verifyOut("waffles is true!");
-        verifyOut("bananas is false!" );
+        verifyOut("bananas is false!");
         verifyOut("We have oranges!");
     }
 
@@ -276,7 +277,7 @@ public class CompilerTest {
             "    say \"#{x} and #{y}\"",
             "}"
         );
-        verifyOut("waffles and bananas" );
+        verifyOut("waffles and bananas");
     }
 
     @Test
@@ -289,7 +290,7 @@ public class CompilerTest {
             "        say 'It\\'s true!'",
             "    end"
         );
-        verifyOut("It\'s true!" );
+        verifyOut("It\'s true!");
     }
 
     @Test
@@ -303,9 +304,9 @@ public class CompilerTest {
             "    say 'cleaning stuff up'",
             "end"
         );
-        verifyOut("oops" );
-        verifyOut("cleaning stuff up" );
-        verifyNever("got it!" );
+        verifyOut("oops");
+        verifyOut("cleaning stuff up");
+        verifyNever("got it!");
     }
 
     @Test
@@ -360,13 +361,13 @@ public class CompilerTest {
             "    say 'got it!'",
             "end"
         );
-        verifyOut("here it comes!" );
+        verifyOut("here it comes!");
         verifyOut("got it!");
     }
 
     @Test
     public void shouldCompileModulo() throws Exception {
-        run("main = () -> say $ 5 % 2" );
+        run("main = () -> say $ 5 % 2");
         verifyOut(1);
     }
 
@@ -529,6 +530,18 @@ public class CompilerTest {
             "}"
         );
         verifyOut("counter = 9");
+    }
+
+    @Test
+    public void shouldCreateTuple() throws Exception {
+        run("main = () -> say $ stringy ('waffles', 10, True)");
+        verifyOut("(Tuple3 waffles, 10, true)");
+    }
+
+    @Test
+    public void shouldAccessSecondMemberOfTuple() throws Exception {
+        run("main = () -> say ('waffles', 10, True)._1");
+        verifyOut(10);
     }
 
     private void run(String... inputs) throws Exception {

@@ -13,6 +13,7 @@ import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
+import snacks.lang.parser.syntax.TupleLiteral;
 
 public class Translator implements SyntaxVisitor {
 
@@ -98,6 +99,21 @@ public class Translator implements SyntaxVisitor {
     public Set<AstNode> translateModule(Symbol node) {
         translate(node);
         return new HashSet<>(declarations);
+    }
+
+    @Override
+    public void visitAccessExpression(AccessExpression node) {
+        AstNode expression = translate(node.getExpression());
+        String property = node.getProperty();
+        for (Type type : expression.getType().decompose()) {
+            for (Type parameter : type.getParameters()) {
+                if (parameter.getName().equals(property)) {
+                    result = access(expression, property, parameter.getParameters().get(0));
+                    return;
+                }
+            }
+        }
+        throw new TypeException("Could not locate property '" + property + "' on type " + expression.getType());
     }
 
     @Override
@@ -371,7 +387,11 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitTupleLiteral(TupleLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
+        List<AstNode> elements = new ArrayList<>();
+        for (Symbol element : node.getElements()) {
+            elements.add(translate(element));
+        }
+        result = tuple(elements);
     }
 
     @Override

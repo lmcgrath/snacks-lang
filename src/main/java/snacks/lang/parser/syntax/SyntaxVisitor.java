@@ -2,6 +2,8 @@ package snacks.lang.parser.syntax;
 
 public interface SyntaxVisitor {
 
+    void visitAccessExpression(AccessExpression node);
+
     void visitApplyExpression(ApplyExpression node);
 
     void visitArgument(Argument node);

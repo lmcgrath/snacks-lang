@@ -8,6 +8,10 @@ import snacks.lang.Type;
 
 public final class AstFactory {
 
+    public static AstNode access(AstNode expression, String property, Type type) {
+        return new Access(expression, property, type);
+    }
+
     public static AstNode apply(AstNode function, AstNode argument, Type type) {
         return new Apply(function, argument, type);
     }
@@ -130,6 +134,10 @@ public final class AstFactory {
 
     public static AstNode symbol(String name) {
         return new SymbolConstant(name);
+    }
+
+    public static AstNode tuple(List<AstNode> elements) {
+        return new TupleInitializer(elements);
     }
 
     public static AstNode var(String name) {

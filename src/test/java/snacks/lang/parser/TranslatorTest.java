@@ -271,6 +271,11 @@ public class TranslatorTest {
         assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
+    @Test(expected = TypeException.class)
+    public void shouldNotAccessNonexistentMemberOfTuple() throws Exception {
+        translate("main = () -> say ('waffles', 10, True)._3");
+    }
+
     private Type typeOf(String name) {
         return typeOf("test", name);
     }

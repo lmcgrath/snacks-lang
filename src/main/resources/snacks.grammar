@@ -198,6 +198,7 @@ prefix_expression
 
 postfix_expression
     = primary_expression
+    | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
     | postfix_expression.e LARG RPAREN                          {: return invocation(e); :}
     | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {:
                                                                     Symbol result = apply(id("[]"), e);

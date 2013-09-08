@@ -4,6 +4,8 @@ public interface Generator {
 
     void generate(AstNode node);
 
+    void generateAccess(Access node);
+
     void generateApply(Apply node);
 
     void generateAssign(Assign node);
@@ -59,6 +61,8 @@ public interface Generator {
     void generateStringConstant(StringConstant node);
 
     void generateSymbol(SymbolConstant node);
+
+    void generateTupleInitializer(TupleInitializer node);
 
     void generateVariableDeclaration(VariableDeclaration node);
 

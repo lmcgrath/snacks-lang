@@ -20,6 +20,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitAccessExpression(AccessExpression node) {
+        print(node.getExpression());
+        print("property: " + node.getProperty());
+    }
+
+    @Override
     public void visitApplyExpression(ApplyExpression node) {
         print(node.getExpression());
         print(node.getArgument());

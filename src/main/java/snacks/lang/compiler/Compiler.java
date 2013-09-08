@@ -5,7 +5,8 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static snacks.lang.SnacksDispatcher.BOOTSTRAP;
+import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
+import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
 import static snacks.lang.Type.isFunction;
 import static snacks.lang.Type.isInstantiable;
 
@@ -80,10 +81,17 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
+    public void generateAccess(Access node) {
+        generate(node.getExpression());
+        block().ldc(node.getProperty());
+        block().invokedynamic("get", sig(Object.class, Object.class, String.class), BOOTSTRAP_GET);
+    }
+
+    @Override
     public void generateApply(Apply node) {
         generate(node.getFunction());
         generate(node.getArgument());
-        block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
+        block().invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP_APPLY);
     }
 
     @Override
@@ -243,7 +251,7 @@ public class Compiler implements Generator, Reducer {
         CodeBlock block = block();
         block.invokestatic(p(Errorize.class), "instance", sig(Errorize.class));
         generate(node.getBody());
-        block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP);
+        block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP_APPLY);
         block.checkcast(p(Throwable.class));
         block.athrow();
     }
@@ -318,6 +326,23 @@ public class Compiler implements Generator, Reducer {
     public void generateSymbol(SymbolConstant node) {
         block().ldc(node.getName());
         block().invokestatic(p(Symbol.class), "valueOf", sig(Symbol.class, String.class));
+    }
+
+    @Override
+    public void generateTupleInitializer(TupleInitializer node) {
+        try {
+            CodeBlock block = block();
+            List<AstNode> elements = node.getElements();
+            String tupleClass = p(Class.forName("snacks.lang.Tuple" + elements.size()));
+            block.newobj(tupleClass);
+            block.dup();
+            for (AstNode element : elements) {
+                generate(element);
+            }
+            block.invokespecial(tupleClass, "<init>", sig(void.class, params(Object.class, elements.size())));
+        } catch (ClassNotFoundException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     @Override
