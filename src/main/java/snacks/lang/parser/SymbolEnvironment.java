@@ -110,9 +110,9 @@ public class SymbolEnvironment implements TypeFactory {
 
     private static abstract class State {
 
-        protected final Map<Locator, Type> symbols;
-        protected final Map<Locator, Type> signatures;
-        protected final Set<Type> specializedTypes;
+        private final Map<Locator, Type> symbols;
+        private final Map<Locator, Type> signatures;
+        private final Set<Type> specializedTypes;
 
         public State() {
             symbols = new HashMap<>();
@@ -156,6 +156,7 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         public boolean isDefined(Locator locator) {
+            resolve(locator);
             return symbols.containsKey(locator) || signatures.containsKey(locator);
         }
 
@@ -178,6 +179,10 @@ public class SymbolEnvironment implements TypeFactory {
                 throw new UndefinedSymbolException("Undefined symbol: " + locator);
             }
         }
+
+        protected void resolve(Locator locator) {
+            // intentionally empty
+        }
     }
 
     private static final class HeadState extends State implements LocatorVisitor {
@@ -195,18 +200,6 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public boolean isDefined(Locator locator) {
-            resolve(locator);
-            return super.isDefined(locator);
-        }
-
-        private void resolve(Locator locator) {
-            if (!symbols.containsKey(locator)) {
-                locator.accept(this);
-            }
-        }
-
-        @Override
         public void visitClosureLocator(ClosureLocator locator) {
             // intentionally empty
         }
@@ -215,13 +208,18 @@ public class SymbolEnvironment implements TypeFactory {
         public void visitDeclarationLocator(DeclarationLocator locator) {
             Type type = resolver.typeOf(locator.getModule() + "." + locator.getName());
             if (type != null) {
-                symbols.put(locator, type);
+                define(new Reference(locator, type));
             }
         }
 
         @Override
         public void visitVariableLocator(VariableLocator locator) {
             // intentionally empty
+        }
+
+        @Override
+        protected void resolve(Locator locator) {
+            locator.accept(this);
         }
     }
 
