@@ -14,7 +14,7 @@ public class SymbolEnvironment implements TypeFactory {
     private final State state;
 
     public SymbolEnvironment(SnacksLoader loader) {
-        state = new HeadState(loader);
+        this.state = new HeadState(loader);
     }
 
     private SymbolEnvironment(SymbolEnvironment parent) {
@@ -68,6 +68,10 @@ public class SymbolEnvironment implements TypeFactory {
         state.generify(type);
     }
 
+    public int getPrecedence(String name) {
+        return state.getPrecedence(name);
+    }
+
     public Reference getReference(Locator locator) {
         return state.getReference(locator);
     }
@@ -82,6 +86,22 @@ public class SymbolEnvironment implements TypeFactory {
 
     public boolean isDefined(Locator locator) {
         return state.isDefined(locator);
+    }
+
+    public boolean isNextOperator(String name, int minimum) {
+        return state.isNextOperator(name, minimum);
+    }
+
+    public boolean isOperator(String name) {
+        return state.isOperator(name);
+    }
+
+    public boolean isRightOperator(String name, int precedence) {
+        return state.isRightOperator(name, precedence);
+    }
+
+    public void register(int precedence, Fixity fixity, String name) {
+        state.register(precedence, fixity, name);
     }
 
     public void signature(Reference reference) {
@@ -133,6 +153,8 @@ public class SymbolEnvironment implements TypeFactory {
             specializedTypes.remove(type);
         }
 
+        public abstract int getPrecedence(String name);
+
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
         }
@@ -159,6 +181,14 @@ public class SymbolEnvironment implements TypeFactory {
             resolve(locator);
             return symbols.containsKey(locator) || signatures.containsKey(locator);
         }
+
+        public abstract boolean isNextOperator(String name, int minimum);
+
+        public abstract boolean isOperator(String name);
+
+        public abstract boolean isRightOperator(String name, int precedence);
+
+        public abstract void register(int precedence, Fixity fixity, String name);
 
         public void signature(Reference reference) {
             signatures.put(reference.getLocator(), reference.getType());
@@ -187,16 +217,47 @@ public class SymbolEnvironment implements TypeFactory {
 
     private static final class HeadState extends State implements LocatorVisitor {
 
-        private final SnacksLoader resolver;
+        private final SnacksLoader loader;
+        private final OperatorRegistry operators;
         private int nextId = 1;
 
-        public HeadState(SnacksLoader resolver) {
-            this.resolver = resolver;
+        public HeadState(SnacksLoader loader) {
+            this.loader = loader;
+            this.operators = new OperatorRegistry();
         }
 
         @Override
         public Type createVariable() {
             return var("#" + nextId++);
+        }
+
+        @Override
+        public int getPrecedence(String name) {
+            return operators.isOperator(name) ? operators.getPrecedence(name) : loader.getPrecedence(name);
+        }
+
+        @Override
+        public boolean isNextOperator(String name, int minimum) {
+            return operators.isNextOperator(name, minimum) || loader.isNextOperator(name, minimum);
+        }
+
+        @Override
+        public boolean isOperator(String name) {
+            return operators.isOperator(name) || loader.isOperator(name);
+        }
+
+        @Override
+        public boolean isRightOperator(String name, int precedence) {
+            return operators.isRightOperator(name, precedence) || loader.isRightOperator(name, precedence);
+        }
+
+        @Override
+        public void register(int precedence, Fixity fixity, String name) {
+            if (loader.isOperator(name)) {
+                throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
+            } else {
+                operators.register(precedence, fixity, name);
+            }
         }
 
         @Override
@@ -206,7 +267,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public void visitDeclarationLocator(DeclarationLocator locator) {
-            Type type = resolver.typeOf(locator.getModule() + "." + locator.getName());
+            Type type = loader.typeOf(locator.getModule() + "." + locator.getName());
             if (type != null) {
                 define(new Reference(locator, type));
             }
@@ -243,6 +304,11 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
+        public int getPrecedence(String name) {
+            return parent.getPrecedence(name);
+        }
+
+        @Override
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
         }
@@ -266,6 +332,26 @@ public class SymbolEnvironment implements TypeFactory {
         @Override
         public boolean isDefined(Locator locator) {
             return super.isDefined(locator) || parent.isDefined(locator);
+        }
+
+        @Override
+        public boolean isNextOperator(String name, int minimum) {
+            return parent.isNextOperator(name, minimum);
+        }
+
+        @Override
+        public boolean isOperator(String name) {
+            return parent.isOperator(name);
+        }
+
+        @Override
+        public boolean isRightOperator(String name, int precedence) {
+            return parent.isRightOperator(name, precedence);
+        }
+
+        @Override
+        public void register(int precedence, Fixity fixity, String name) {
+            parent.register(precedence, fixity, name);
         }
 
         @Override

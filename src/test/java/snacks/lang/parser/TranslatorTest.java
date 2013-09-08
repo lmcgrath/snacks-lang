@@ -3,9 +3,9 @@ package snacks.lang.parser;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.Type.*;
 import static snacks.lang.Type.func;
+import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Set;
@@ -13,8 +13,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksLoader;
-import snacks.lang.ast.AstNode;
 import snacks.lang.Type;
+import snacks.lang.ast.AstNode;
 
 public class TranslatorTest {
 
@@ -163,6 +163,7 @@ public class TranslatorTest {
         assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
     }
 
+    @Ignore
     @Test
     public void shouldTranslateUnaryPlus() {
         translate("positive = (x) -> +x");
@@ -172,6 +173,7 @@ public class TranslatorTest {
         )));
     }
 
+    @Ignore
     @Test
     public void shouldTranslateUnaryMinus() {
         translate("negative = (x) -> -x");
@@ -181,6 +183,7 @@ public class TranslatorTest {
         )));
     }
 
+    @Ignore
     @Test(expected = TypeException.class)
     public void shouldNotTranslateNegativeString() {
         translate("negative = (x:String) -> -x");
@@ -263,7 +266,7 @@ public class TranslatorTest {
 
     @Ignore
     @Test
-    public void shouldApplyFunctionToFunction() throws Exception {
+    public void shouldApplyFunctionToFunction() {
         translate(
             "operate = (op) -> op 2 4",
             "example = operate `+`"
@@ -272,7 +275,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void shouldSpecifySignature() throws Exception {
+    public void shouldSpecifySignature() {
         translate(
             "addIntegers :: Integer -> Integer -> Integer",
             "addIntegers = (x y) -> x + y"
@@ -281,7 +284,7 @@ public class TranslatorTest {
     }
 
     @Test(expected = TypeException.class)
-    public void shouldNotAccessNonexistentMemberOfTuple() throws Exception {
+    public void shouldNotAccessNonexistentMemberOfTuple() {
         translate("main = () -> say ('waffles', 10, True)._3");
     }
 

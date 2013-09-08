@@ -1,9 +1,11 @@
 package snacks.lang;
 
+import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.INTEGER_TYPE;
 import static snacks.lang.Type.func;
 
 @Snack("%")
+@Infix(fixity = LEFT, precedence = 9)
 public class Modulo {
 
     private static Modulo instance;

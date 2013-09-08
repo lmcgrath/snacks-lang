@@ -2,6 +2,9 @@ package snacks.lang.parser.syntax;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
+import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.Fixity.NONE;
+import static snacks.lang.Fixity.RIGHT;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,10 +65,6 @@ public final class SyntaxFactory {
 
     public static Symbol begin(Symbol[] usings, Symbol expression, Symbol[] embraceCases, Symbol ensureCase) {
         return new ExceptionalExpression(usings, expression, embraceCases, ensureCase);
-    }
-
-    public static Symbol binary(String operator, Symbol left, Symbol right) {
-        return apply(apply(id(operator), left), right);
     }
 
     public static Symbol block(Symbol... elements) {
@@ -160,6 +159,10 @@ public final class SyntaxFactory {
         return new IsExpression(left, right);
     }
 
+    public static Symbol leftOp(String id, int precedence) {
+        return new Operator(LEFT, precedence, id);
+    }
+
     public static Symbol list(Symbol... elements) {
         return new ListLiteral(elements);
     }
@@ -200,12 +203,24 @@ public final class SyntaxFactory {
         return new Module(elements);
     }
 
+    public static Symbol msg(Symbol... elements) {
+        if (elements.length == 1) {
+            return elements[0];
+        } else {
+            return new Message(elements);
+        }
+    }
+
     public static Symbol nop() {
         return new NopExpression();
     }
 
     public static Symbol nothing() {
         return new NothingLiteral();
+    }
+
+    public static Symbol op(String name, int precedence) {
+        return new Operator(NONE, precedence, name);
     }
 
     public static Symbol qid(QualifiedIdentifier id, String segment) {
@@ -216,12 +231,20 @@ public final class SyntaxFactory {
         return new QualifiedIdentifier(ids);
     }
 
+    public static Symbol quoted(String id) {
+        return new QuotedIdentifier(id);
+    }
+
     public static Symbol regex(List<Symbol> elements, Set<Character> options) {
         return new RegexLiteral(elements, options);
     }
 
     public static Symbol result(Symbol expression) {
         return new Result(expression);
+    }
+
+    public static Symbol rightOp(String id, int precedence) {
+        return new Operator(RIGHT, precedence, id);
     }
 
     public static Symbol set(Symbol element, Symbol[] elements) {

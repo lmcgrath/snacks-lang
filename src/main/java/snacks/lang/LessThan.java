@@ -1,8 +1,10 @@
 package snacks.lang;
 
+import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.*;
 
 @Snack("<")
+@Infix(fixity = LEFT, precedence = 2)
 public class LessThan {
 
     private static LessThan instance;

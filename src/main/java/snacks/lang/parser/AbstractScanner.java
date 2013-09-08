@@ -5,7 +5,7 @@ import static snacks.lang.parser.Scanner.DETECT_FUNCTION_STATE;
 import static snacks.lang.parser.Scanner.EAT_NEWLINE_STATE;
 import static snacks.lang.parser.Scanner.SELECTOR_STATE;
 import static snacks.lang.parser.Scanner.YYINITIAL;
-import static snacks.lang.parser.Terminals.STRING;
+import static snacks.lang.parser.Terminals.*;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -94,9 +94,31 @@ public abstract class AbstractScanner extends beaver.Scanner implements AutoClos
         throw new ScannerException(message + " in " + source + " (" + line() + ", " + column() + ")");
     }
 
+    protected Symbol eword() {
+        String text = yytext();
+        switch (text) {
+            case "_": return token(THROWAWAY);
+            case "=": return token(ASSIGN);
+            case "->": leaveState(); detectNewLine(); return token(APPLIES_TO);
+            case "=>": return token(GOES_TO);
+            default: detectSelector(); return token(IDENTIFIER, text);
+        }
+    }
+
     protected void flipState(int state) {
         states.pop();
         enterState(state);
+    }
+
+    protected Symbol fword() {
+        String text = yytext();
+        switch (text) {
+            case "_": return token(THROWAWAY);
+            case "=": return token(ASSIGN);
+            case "->": leaveState(); detectNewLine(); return token(APPLIES_TO);
+            case "=>": return token(GOES_TO);
+            default: return token(FWORD, text);
+        }
     }
 
     protected void gatherString() {
@@ -138,5 +160,16 @@ public abstract class AbstractScanner extends beaver.Scanner implements AutoClos
 
     protected Symbol token(short type, Object value) {
         return new Token(type, line(), column(), length(), source, value);
+    }
+
+    protected Symbol word() {
+        String text = yytext();
+        switch (text) {
+            case "_": return token(THROWAWAY);
+            case "=": detectNewLine(); return token(ASSIGN);
+            case "->": detectNewLine(); return token(APPLIES_TO);
+            case "=>": detectNewLine(); return token(GOES_TO);
+            default: detectSelector(); return token(IDENTIFIER, text);
+        }
     }
 }

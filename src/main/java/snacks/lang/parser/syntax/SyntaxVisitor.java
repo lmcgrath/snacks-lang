@@ -62,13 +62,19 @@ public interface SyntaxVisitor {
 
     void visitMapLiteral(MapLiteral node);
 
+    void visitMessage(Message node);
+
     void visitModule(Module node);
 
     void visitNopExpression(NopExpression node);
 
     void visitNothingLiteral(NothingLiteral node);
 
+    void visitOperator(Operator node);
+
     void visitQualifiedIdentifier(QualifiedIdentifier node);
+
+    void visitQuotedIdentifier(QuotedIdentifier node);
 
     void visitRegexLiteral(RegexLiteral node);
 

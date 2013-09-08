@@ -16,38 +16,8 @@ import org.junit.Test;
 public class ScannerTest {
 
     @Test
-    public void shouldGetPlus() throws IOException {
-        assertThat(scan("+ bananas").nextToken(), hasKind(PLUS));
-    }
-
-    @Test
-    public void shouldGetMinus() throws IOException {
-        assertThat(scan("- bananas").nextToken(), hasKind(MINUS));
-    }
-
-    @Test
-    public void shouldGetMultiply() throws IOException {
-        assertThat(scan("* bananas").nextToken(), hasKind(MULTIPLY));
-    }
-
-    @Test
-    public void shouldGetDivide() throws IOException {
-        assertThat(scan("/ bananas").nextToken(), hasKind(DIVIDE));
-    }
-
-    @Test
-    public void shouldGetModulo() throws IOException {
-        assertThat(scan("% bananas").nextToken(), hasKind(MODULO));
-    }
-
-    @Test
     public void shouldGetInteger() throws IOException {
         assertThat(scan("123").nextToken(), hasKind(INTEGER));
-    }
-
-    @Test
-    public void shouldGetExponent() throws IOException {
-        assertThat(scan("** carrots").nextToken(), hasKind(EXPONENT));
     }
 
     @Test
@@ -207,86 +177,6 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetBitNot() throws IOException {
-        assertThat(scan("~ bananas").nextToken(), hasKind(BIT_NOT));
-    }
-
-    @Test
-    public void shouldGetEqual() throws IOException {
-        assertThat(scan("== bananas").nextToken(), hasKind(EQUALS));
-    }
-
-    @Test
-    public void shouldGetLessThanEquals() throws IOException {
-        assertThat(scan("<= bananas").nextToken(), hasKind(LESS_THAN_EQUALS));
-    }
-
-    @Test
-    public void shouldGetLShift() throws IOException {
-        assertThat(scan("<< bananas").nextToken(), hasKind(LSHIFT));
-    }
-
-    @Test
-    public void shouldGetLessThan() throws IOException {
-        assertThat(scan("< bananas").nextToken(), hasKind(LESS_THAN));
-    }
-
-    @Test
-    public void shouldGetGreaterThanEquals() throws IOException {
-        assertThat(scan(">= bananas").nextToken(), hasKind(GREATER_THAN_EQUALS));
-    }
-
-    @Test
-    public void shouldGetRShift() throws IOException {
-        assertThat(scan(">> bananas").nextToken(), hasKind(RSHIFT));
-    }
-
-    @Test
-    public void shouldGetURShift() throws IOException {
-        assertThat(scan(">>> bananas").nextToken(), hasKind(URSHIFT));
-    }
-
-    @Test
-    public void shouldGetGreaterThan() throws IOException {
-        assertThat(scan("> bananas").nextToken(), hasKind(GREATER_THAN));
-    }
-
-    @Test
-    public void shouldGetXRange() throws IOException {
-        assertThat(scan("... bananas").nextToken(), hasKind(XRANGE));
-    }
-
-    @Test
-    public void shouldGetRange() throws IOException {
-        assertThat(scan(".. bananas").nextToken(), hasKind(RANGE));
-    }
-
-    @Test
-    public void shouldGetBitAnd() throws IOException {
-        assertThat(scan("& bananas").nextToken(), hasKind(BIT_AND));
-    }
-
-    @Test
-    public void shouldGetBitOr() throws IOException {
-        assertThat(scan("| bananas").nextToken(), hasKind(BIT_OR));
-    }
-
-    @Test
-    public void shouldGetBitXor() throws IOException {
-        assertThat(scan("^ bananas").nextToken(), hasKind(BIT_XOR));
-    }
-
-    @Test
-    public void shouldGetCoalesce() throws IOException {
-        assertThat(scan("? bananas").nextToken(), hasKind(COALESCE));
-    }
-
-    @Test
-    public void shouldGetApply() throws IOException {
-        assertThat(scan("$ bananas").nextToken(), hasKind(APPLY));
-    }
-
-    @Test
     public void shouldGetLIndex() throws IOException {
         Scanner scanner = scan("bananas[");
         scanner.nextToken();
@@ -318,29 +208,6 @@ public class ScannerTest {
     @Test
     public void shouldGetNothing() throws IOException {
         assertThat(scan("Nothing").nextToken(), hasKind(NOTHING));
-    }
-
-    @Test
-    public void shouldGetNotEquals() throws IOException {
-        assertThat(scan("!= bananas").nextToken(), hasKind(NOT_EQUALS));
-        assertThat(scan("<> bananas").nextToken(), hasKind(NOT_EQUALS));
-    }
-
-    @Test
-    public void shouldGetAnd() throws IOException {
-        assertThat(scan("and bananas").nextToken(), hasKind(AND));
-        assertThat(scan("&& bananas").nextToken(), hasKind(AND));
-    }
-
-    @Test
-    public void shouldGetOr() throws IOException {
-        assertThat(scan("or bananas").nextToken(), hasKind(OR));
-        assertThat(scan("|| bananas").nextToken(), hasKind(OR));
-    }
-
-    @Test
-    public void shouldGetNot() throws IOException {
-        assertThat(scan("not bananas").nextToken(), hasKind(NOT));
     }
 
     @Test

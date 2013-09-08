@@ -1,9 +1,5 @@
 package snacks.lang.parser;
 
-import static java.lang.Character.*;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.countMatches;
-import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
 import static snacks.lang.parser.Terminals.*;
 
@@ -11,11 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
 
@@ -81,7 +73,7 @@ TraditionalComment      = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 EndOfLineComment        = "//" {InputCharacter}* {NewLine}
 DocumentationComment    = "/**" {CommentContent} "*"+ "/"
 CommentContent          = ([^*] | \*+ [^/*])*
-Identifier              = [:jletter:] ([:jletterdigit:] | '_')* [\?!]?
+Id                      = (([:jletterdigit:] | "_" | "~" | "!" | "$" | "%" | "^" | "&" | "*" | "-" | "=" | "+" | "/" | "?" | "<" | ">")+ | ".." "."*)
 Integer                 = "0" | [1-9][0-9]*
 Double                  = {Integer}? \.[0-9]+
 Whitespace              = [ \t\f]+
@@ -94,10 +86,7 @@ NotInterpolation        = "#" ~"{" | "\\#{"
 InterpolationCharacter  = [^\n\r\"\\#] | {EscapeSequence} | {NotInterpolation}
 StringCharacter         = [^\n\r\']
 RegexCharacter          = [^#/] | "\\/" | {NotInterpolation} | {Whitespace}
-Symbol                  = {Identifier} =? | "+"  | "-"  | "*"   | "%"  | "|"  | "&"  | "^"  | "?"
-                                          | "<"  | ">"  | "~"   | ">=" | "<=" | "<<" | ">>" | ">>>"
-                                          | "[]" | "**" | "[]=" | ".=" | "in" | "=="
-FunctionArgument        = {Identifier} | [:\.] | {Whitespace} | {NewLine}
+FunctionArgument        = {Id} | [:\.] | {Whitespace} | {NewLine}
 AnyWhitespace           = {Whitespace} | {NewLine}
 
 %state EAT_NEWLINE_STATE
@@ -111,21 +100,22 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 %state DETECT_FUNCTION_STATE
 %state FUNCTION_STATE
 %state EMBRACE_STATE
+%state FOR_STATE
 
 %%
 
 <YYINITIAL> {
+    {Double}        { detectSelector(); return token(DOUBLE, Double.parseDouble(yytext())); }
+    {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
+    "."             { return token(DOT); }
     "r/"            { enterState(REGEX_STATE); return token(LREGEX); }
-    {Symbol} ":"    { detectNewLine(); return token(KEY_SYMBOL, yytext().substring(0, yylength() - 1)); }
-    ":" {Symbol}    { detectSelector(); return token(SYMBOL, yytext().substring(1)); }
-    "`" {Symbol} "`"
-                    { return token(IDENTIFIER, yytext().substring(1, yylength() - 1)); }
+    "`" {Id} "`"    { return token(QUOTED_IDENTIFIER, yytext().substring(1, yylength() - 1)); }
+    {Id} ":"        { detectNewLine(); return token(KEY_SYMBOL, yytext().substring(0, yylength() - 1)); }
+    ":" {Id}        { detectSelector(); return token(SYMBOL, yytext().substring(1)); }
     {Comment}       { /* ignore */ }
-    "<>" | "!="     { detectNewLine(); return token(NOT_EQUALS); }
     "True"          { detectSelector(); return token(TRUE); }
     "False"         { detectSelector(); return token(FALSE); }
     "Nothing"       { detectSelector(); return token(NOTHING); }
-    "and" | "&&"    { detectNewLine(); return token(AND); }
     "as"            { return token(AS); }
     "begin"         { detectNewLine(); return token(BEGIN); }
     "break"         { return token(BREAK); }
@@ -147,70 +137,31 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "else unless"   { return token(ELSE_UNLESS); }
     "else"          { detectNewLine(); return token(ELSE); }
     "if"            { return token(IF); }
-    "in"            { detectNewLine(); return token(IN); }
-    "is"            { detectNewLine(); return token(IS); }
-    "is not"        { detectNewLine(); return token(IS_NOT); }
+    "in"            { detectNewLine(); return token(IDENTIFIER, yytext()); }
+    "is"            { detectNewLine(); return token(IDENTIFIER, yytext()); }
+    "is not"        { detectNewLine(); return token(IDENTIFIER, yytext()); }
     "unless"        { return token(UNLESS); }
     "embrace"       { enterState(EMBRACE_STATE); return token(EMBRACE); }
     "end"           { return token(END); }
     "ensure"        { detectNewLine(); return token(ENSURE); }
-    "for"           { return token(FOR); }
+    "for"           { enterState(FOR_STATE); return token(FOR); }
     "from"          { return token(FROM); }
     "hurl"          { return token(HURL); }
     "import"        { return token(IMPORT); }
-    "not in"        { detectNewLine(); return token(NOT_IN); }
-    "not" | "!"     { detectNewLine(); return token(NOT); }
-    "or" | "||"     { detectNewLine(); return token(OR); }
+    "infix left"    { return token(LEFT_OPERATOR); }
+    "infix right"   { return token(RIGHT_OPERATOR); }
+    "infix"         { return token(OPERATOR); }
+    "not in"        { return token(IDENTIFIER, yytext()); }
     "return"        { return token(RETURN); }
     "then"          { detectNewLine(); return token(THEN); }
     "until"         { return token(UNTIL); }
     "use"           { return token(USE); }
     "var"           { return token(VAR); }
     "while"         { return token(WHILE); }
-    "_"             { return token(THROWAWAY); }
-    "$"             { detectNewLine(); return token(APPLY); }
-    {Identifier}    { detectSelector(); return token(IDENTIFIER, yytext()); }
+    {Id}            { return word(); }
     ";"             { detectNewLine(); return token(SEMICOLON); }
     "::"            { detectNewLine(); return token(DOUBLE_COLON); }
     ":"             { detectNewLine(); return token(COLON); }
-    "~"             { detectNewLine(); return token(BIT_NOT); }
-    "=="            { detectNewLine(); return token(EQUALS); }
-    "=>"            { detectNewLine(); return token(GOES_TO); }
-    "="             { detectNewLine(); return token(ASSIGN); }
-    "<="            { detectNewLine(); return token(LESS_THAN_EQUALS); }
-    "<<="           { detectNewLine(); return token(LSHIFT_ASSIGN); }
-    "<<"            { detectNewLine(); return token(LSHIFT); }
-    "<"             { detectNewLine(); return token(LESS_THAN); }
-    ">="            { detectNewLine(); return token(GREATER_THAN_EQUALS); }
-    ">>="           { detectNewLine(); return token(RSHIFT_ASSIGN); }
-    ">>"            { detectNewLine(); return token(RSHIFT); }
-    ">>>="          { detectNewLine(); return token(URSHIFT_ASSIGN); }
-    ">>>"           { detectNewLine(); return token(URSHIFT); }
-    ">"             { detectNewLine(); return token(GREATER_THAN); }
-    "->"            { detectNewLine(); return token(APPLIES_TO); }
-    "..."           { detectNewLine(); return token(XRANGE); }
-    ".."            { detectNewLine(); return token(RANGE); }
-    "."             { detectNewLine(); return token(DOT); }
-    "**="           { detectNewLine(); return token(EXPONENT_ASSIGN); }
-    "**"            { detectNewLine(); return token(EXPONENT); }
-    "*="            { detectNewLine(); return token(MULTIPLY_ASSIGN); }
-    "*"             { detectNewLine(); return token(MULTIPLY); }
-    "/="            { detectNewLine(); return token(DIVIDE_ASSIGN); }
-    "/"             { detectNewLine(); return token(DIVIDE); }
-    "%="            { detectNewLine(); return token(MODULO_ASSIGN); }
-    "%"             { detectNewLine(); return token(MODULO); }
-    "+="            { detectNewLine(); return token(PLUS_ASSIGN); }
-    "+"             { detectNewLine(); return token(PLUS); }
-    "-="            { detectNewLine(); return token(MINUS_ASSIGN); }
-    "-"             { detectNewLine(); return token(MINUS); }
-    "&="            { detectNewLine(); return token(BIT_AND_ASSIGN); }
-    "&"             { detectNewLine(); return token(BIT_AND); }
-    "|="            { detectNewLine(); return token(BIT_OR_ASSIGN); }
-    "|"             { detectNewLine(); return token(BIT_OR); }
-    "^="            { detectNewLine(); return token(BIT_XOR_ASSIGN); }
-    "^"             { detectNewLine(); return token(BIT_XOR); }
-    "?="            { detectNewLine(); return token(COALESCE_ASSIGN); }
-    "?"             { detectNewLine(); return token(COALESCE); }
     "("             { detectFunction(); yypushback(1); }
     ")"             { detectSelector(); return token(RPAREN); }
     "["             { detectNewLine(); return token(LSQUARE); }
@@ -230,8 +181,6 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "'''" \n?       { beginString(NOWDOC_STATE); return token(TRIPLE_QUOTE); }
     "\""            { beginString(INTERPOLATION_STATE); return token(DQUOTE); }
     "'"             { beginString(STRING_STATE); return token(QUOTE); }
-    {Double}        { detectSelector(); return token(DOUBLE, Double.parseDouble(yytext())); }
-    {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
     "\\" {NewLine}+ { /* ignore */ }
     {Whitespace}    { /* ignore */ }
     {NewLine}+      { return token(NEWLINE); }
@@ -383,20 +332,25 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "{"             { return token(LFUNC_MULTILINE); }
     "::"            { return token(DOUBLE_COLON); }
     ":"             { return token(COLON); }
-    {Identifier}    { return token(FWORD, yytext()); }
     "."             { return token(DOT); }
+    "`" {Id} "`"    { return token(FWORD, yytext().substring(1, yylength() - 1)); }
+    {Id}            { return fword(); }
     ")"             { return token(RPAREN); }
     "}"             { return token(RCURLY); }
-    "->"            { leaveState(); detectNewLine(); return token(APPLIES_TO); }
     {AnyWhitespace} { /* ignore */ }
 }
 
 <EMBRACE_STATE> {
-    {Identifier}    { return token(IDENTIFIER, yytext()); }
-    "."             { return token(DOT); }
     ":"             { return token(COLON); }
-    "->"            { leaveState(); detectNewLine(); return token(APPLIES_TO); }
+    "."             { return token(DOT); }
+    "`" {Id} "`"    { return token(FWORD, yytext().substring(1, yylength() - 1)); }
+    {Id}            { return eword(); }
     {Whitespace}    { /* ignore */ }
+}
+
+<FOR_STATE> {
+    "in"            { leaveState(); return token(IN); }
+    {Id}            { return word(); }
 }
 
 . { badInput(); }

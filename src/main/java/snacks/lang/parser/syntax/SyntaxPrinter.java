@@ -141,7 +141,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
 
     @Override
     public void visitIdentifier(Identifier node) {
-        value(node.getValue());
+        value(node.getName());
     }
 
     @Override
@@ -205,6 +205,13 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitMessage(Message node) {
+        for (Symbol element : node.getElements()) {
+            print(element);
+        }
+    }
+
+    @Override
     public void visitModule(Module node) {
         for (Symbol element : node.getElements()) {
             print(element);
@@ -221,8 +228,20 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitOperator(Operator node) {
+        print("name: `" + node.getName() + "`");
+        print("fixity: " + node.getFixity());
+        print("precedence: " + node.getPrecedence());
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         print("identifier: " + node);
+    }
+
+    @Override
+    public void visitQuotedIdentifier(QuotedIdentifier node) {
+        print("identifier: " + node.getName());
     }
 
     @Override

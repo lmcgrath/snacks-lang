@@ -11,16 +11,12 @@
         "static java.util.Arrays.*",
         "static org.apache.commons.lang.StringUtils.join";
 
-%terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
-    KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
-    FOR, FROM, HURL, IMPORT, NOT, OR, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, BIT_NOT, IS_NOT, QUOTE,
-    TRIPLE_QUOTE, TRIPLE_DQUOTE, LSHIFT, RSHIFT, URSHIFT, LSQUARE, RSQUARE, LCURLY, RCURLY, PLUS, MINUS, MULTIPLY,
-    DIVIDE, MODULO, EXPONENT, RANGE, XRANGE, DOT, USE, IN, NOT_IN, IS, CHARACTER, LESS_THAN, GREATER_THAN, DO, BREAK,
-    LESS_THAN_EQUALS, GREATER_THAN_EQUALS, EQUALS, ASSIGN, BIT_AND, BIT_OR, BIT_XOR, COALESCE, NEWLINE, GOES_TO,
-    APPLIES_TO, THROWAWAY, APPLY, COMMA, INTEGER, LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC,
-    LFUNC_MULTILINE, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
-    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN,
-    CONTINUE
+%terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL, DOT,
+    KEY_SYMBOL, TRUE, FALSE, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL,
+    IMPORT, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE,
+    LCURLY, RCURLY, USE, CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY,
+    LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, OPERATOR, LEFT_OPERATOR,
+    RIGHT_OPERATOR, QUOTED_IDENTIFIER
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -43,24 +39,8 @@
     }
 :};
 
-%right EXPONENT;
-%left MULTIPLY, DIVIDE, MODULO;
-%left PLUS, MINUS;
-%left BIT_AND;
-%left BIT_OR;
-%left BIT_XOR;
-%left COALESCE;
-%left LSHIFT, RSHIFT, URSHIFT;
-%left IS, IS_NOT, EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_THAN_EQUALS, LESS_THAN_EQUALS, IN, NOT_IN;
-%right NOT;
-%left AND;
-%left OR;
-%left RANGE, XRANGE;
-%right APPLY;
-%right ASSIGN, EXPONENT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN,
-    BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, COALESCE_ASSIGN, LSHIFT_ASSIGN, RSHIFT_ASSIGN, URSHIFT_ASSIGN;
-
 %typeof IDENTIFIER = "String";
+%typeof QUOTED_IDENTIFIER = "String";
 %typeof FWORD = "String";
 %typeof STRING = "String";
 %typeof INTEGER = "Integer";
@@ -93,6 +73,9 @@ module_expressions
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
     | IDENTIFIER.id DOUBLE_COLON function_signature.t   {: return sig(id, t); :}
+    | OPERATOR INTEGER.p IDENTIFIER.id                  {: return op(id, p); :}
+    | LEFT_OPERATOR INTEGER.p IDENTIFIER.id             {: return leftOp(id, p); :}
+    | RIGHT_OPERATOR INTEGER.p IDENTIFIER.id            {: return rightOp(id, p); :}
     | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
@@ -137,8 +120,10 @@ import_alias
     ;
 
 qualified_identifier
-    = IDENTIFIER.id                                 {: return qid(id); :}
-    | qualified_identifier.ids DOT IDENTIFIER.id    {: return qid(ids, id); :}
+    = IDENTIFIER.id                                     {: return qid(id); :}
+    | QUOTED_IDENTIFIER.id                              {: return qid(id); :}
+    | qualified_identifier.ids DOT IDENTIFIER.id        {: return qid(ids, id); :}
+    | qualified_identifier.ids DOT QUOTED_IDENTIFIER.id {: return qid(ids, id); :}
     ;
 
 statement
@@ -147,6 +132,8 @@ statement
     | CONTINUE                                                          {: return new ContinueExpression(); :}
     | VAR IDENTIFIER.v                                                  {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
+    | VAR QUOTED_IDENTIFIER.v                                           {: return var(v); :}
+    | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e                       {: return var(v, e); :}
     | HURL expression.e                                                 {: return hurl(e); :}
     | RETURN expression.e                                               {: return result(e); :}
     | WHILE expression.c NEWLINE+ sequence.e term* END                  {: return loop(c, block(e)); :}
@@ -162,90 +149,46 @@ statement
     ;
 
 expression
-    = prefix_expression
-    | tailed_function
-    | expression.l EXPONENT expression.r            {: return binary("**", l, r); :}
-    | expression.l MULTIPLY expression.r            {: return binary("*", l, r); :}
-    | expression.l DIVIDE expression.r              {: return binary("/", l, r); :}
-    | expression.l MODULO expression.r              {: return binary("%", l, r); :}
-    | expression.l PLUS expression.r                {: return binary("+", l, r); :}
-    | expression.l MINUS expression.r               {: return binary("-", l, r); :}
-    | expression.l BIT_AND expression.r             {: return binary("&", l, r); :}
-    | expression.l BIT_OR expression.r              {: return binary("|", l, r); :}
-    | expression.l BIT_XOR expression.r             {: return binary("^", l, r); :}
-    | expression.l COALESCE expression.r            {: return binary("?", l, r); :}
-    | expression.l LSHIFT expression.r              {: return binary("<<", l, r); :}
-    | expression.l RSHIFT expression.r              {: return binary(">>", l, r); :}
-    | expression.l URSHIFT expression.r             {: return binary(">>>", l, r); :}
-    | expression.l IS expression.r                  {: return is(l, r); :}
-    | expression.l IS_NOT expression.r              {: return unary("not", is(l, r)); :}
-    | expression.l EQUALS expression.r              {: return binary("==", l, r); :}
-    | expression.l NOT_EQUALS expression.r          {: return unary("not", binary("==", l, r)); :}
-    | expression.l GREATER_THAN expression.r        {: return binary(">", l, r); :}
-    | expression.l LESS_THAN expression.r           {: return binary("<", l, r); :}
-    | expression.l GREATER_THAN_EQUALS expression.r {: return binary(">=", l, r); :}
-    | expression.l LESS_THAN_EQUALS expression.r    {: return binary("<=", l, r); :}
-    | expression.l IN expression.r                  {: return binary("in", l, r); :}
-    | expression.l NOT_IN expression.r              {: return unary("not", binary("in", l, r)); :}
-    | NOT expression.e                              {: return unary("not", e); :}
-    | expression.l AND expression.r                 {: return binary("and", l, r); :}
-    | expression.l OR expression.r                  {: return binary("or", l, r); :}
-    | expression.l RANGE expression.r               {: return binary("..", l, r); :}
-    | expression.l XRANGE expression.r              {: return binary("...", l, r); :}
-    | expression.l APPLY expression.r               {: return apply(l, r); :}
-    | expression.l ASSIGN expression.r              {: return assign(l, r); :}
-    | expression.l EXPONENT_ASSIGN expression.r     {: return assign(l, binary("**", l, r)); :}
-    | expression.l MULTIPLY_ASSIGN expression.r     {: return assign(l, binary("*", l, r)); :}
-    | expression.l DIVIDE_ASSIGN expression.r       {: return assign(l, binary("/", l, r)); :}
-    | expression.l MODULO_ASSIGN expression.r       {: return assign(l, binary("%", l, r)); :}
-    | expression.l PLUS_ASSIGN expression.r         {: return assign(l, binary("+", l, r)); :}
-    | expression.l MINUS_ASSIGN expression.r        {: return assign(l, binary("-", l, r)); :}
-    | expression.l BIT_AND_ASSIGN expression.r      {: return assign(l, binary("&", l, r)); :}
-    | expression.l BIT_OR_ASSIGN expression.r       {: return assign(l, binary("|", l, r)); :}
-    | expression.l BIT_XOR_ASSIGN expression.r      {: return assign(l, binary("^", l, r)); :}
-    | expression.l COALESCE_ASSIGN expression.r     {: return assign(l, binary("?", l, r)); :}
-    | expression.l LSHIFT_ASSIGN expression.r       {: return assign(l, binary("<<", l, r)); :}
-    | expression.l RSHIFT_ASSIGN expression.r       {: return assign(l, binary(">>", l, r)); :}
-    | expression.l URSHIFT_ASSIGN expression.r      {: return assign(l, binary(">>>", l, r)); :}
+    = message.e {: return msg(e); :}
     ;
 
-prefix_expression
+message
     = postfix_expression
-    | postfix_expression.e arguments.a  {:
-                                            Symbol result = e;
-                                            for (Symbol arg : a) {
-                                                result = apply(result, arg);
-                                            }
-                                            return result;
-                                        :}
-    | MINUS prefix_expression.e         {: return unary("unary-", e); :}
-    | PLUS prefix_expression.e          {: return unary("unary+", e); :}
-    | BIT_NOT prefix_expression.e       {: return unary("unary~", e); :}
+    | message postfix_expression
     ;
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e DOT IDENTIFIER.id                    {: return access(e, id); :}
-    | postfix_expression.e LARG RPAREN                          {: return invocation(e); :}
-    | postfix_expression.e LINDEX arguments.a COMMA? RSQUARE    {:
-                                                                    Symbol result = apply(id("[]"), e);
-                                                                    for (Symbol arg : a) {
-                                                                        result = apply(result, arg);
-                                                                    }
-                                                                    return result;
-                                                                :}
-    | postfix_expression.e LARG arguments.a RPAREN              {:
-                                                                    Symbol result = e;
-                                                                    for (Symbol arg : a) {
-                                                                        result = apply(result, arg);
-                                                                    }
-                                                                    return result;
-                                                                :}
-    ;
-
-arguments
-    = postfix_expression
-    | arguments postfix_expression
+    | ASSIGN                                                {: return id("="); :}
+    | postfix_expression.e DOT IDENTIFIER.id                {: return access(e, id); :}
+    | postfix_expression.e LARG RPAREN                      {: return invocation(e); :}
+    | postfix_expression.e LINDEX message.a COMMA? RSQUARE  {:
+                                                                Symbol result = apply(id("[]"), e);
+                                                                for (Symbol arg : a) {
+                                                                    result = apply(result, arg);
+                                                                }
+                                                                return result;
+                                                            :}
+    | postfix_expression.e LARG message.a RPAREN            {:
+                                                                Symbol result = e;
+                                                                for (Symbol arg : a) {
+                                                                    result = apply(result, arg);
+                                                                }
+                                                                return result;
+                                                            :}
+    | LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
+        {:
+            Symbol expression = e;
+            if (a == null) {
+                expression = invokable(expression);
+            } else {
+                for (int i = a.length - 1; i >= 1; i--) {
+                    expression = func(a[i], expression);
+                }
+                expression = func(a[0], expression, t);
+            }
+            return expression;
+        :}
     ;
 
 list
@@ -255,6 +198,7 @@ list
 
 primary_expression
     = IDENTIFIER.id                 {: return id(id); :}
+    | QUOTED_IDENTIFIER.id          {: return quoted(id); :}
     | INTEGER.val                   {: return literal(val); :}
     | DOUBLE.val                    {: return literal(val); :}
     | TRUE                          {: return literal(true); :}
@@ -338,22 +282,6 @@ function_literal
 function_typespec
     = DOUBLE_COLON FWORD.t {: return type(qid(t)); :}
     |
-    ;
-
-tailed_function
-    = LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
-        {:
-            Symbol expression = e;
-            if (a == null) {
-                expression = invokable(expression);
-            } else {
-                for (int i = a.length - 1; i >= 1; i--) {
-                    expression = func(a[i], expression);
-                }
-                expression = func(a[0], expression, t);
-            }
-            return expression;
-        :}
     ;
 
 opt_function_arguments

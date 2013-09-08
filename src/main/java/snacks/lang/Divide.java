@@ -1,11 +1,13 @@
 package snacks.lang;
 
+import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.DOUBLE_TYPE;
 import static snacks.lang.Type.INTEGER_TYPE;
 import static snacks.lang.Type.func;
 import static snacks.lang.Type.set;
 
 @Snack("/")
+@Infix(fixity = LEFT, precedence = 9)
 public class Divide {
 
     private static Divide instance;

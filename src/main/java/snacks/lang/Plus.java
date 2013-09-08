@@ -1,8 +1,10 @@
 package snacks.lang;
 
+import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.*;
 
 @Snack("+")
+@Infix(fixity = LEFT, precedence = 8)
 public class Plus {
 
     private static Plus instance;

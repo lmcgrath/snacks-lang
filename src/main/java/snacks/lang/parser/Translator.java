@@ -2,8 +2,8 @@ package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
-import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.Type.*;
+import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 
@@ -13,7 +13,6 @@ import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
-import snacks.lang.parser.syntax.TupleLiteral;
 
 public class Translator implements SyntaxVisitor {
 
@@ -138,13 +137,7 @@ public class Translator implements SyntaxVisitor {
     public void visitAssignmentExpression(AssignmentExpression node) {
         AstNode target = translate(node.getTarget());
         AstNode value = translate(node.getValue());
-        Type targetType = target.getType();
-        specialize(targetType);
-        Type valueType = value.getType();
-        if (!targetType.unify(valueType)) {
-            throw new TypeException("Type mismatch: " + targetType + " != " + valueType);
-        }
-        generify(targetType);
+        verifyAssignmentType(target.getType(), value.getType());
         result = assign(target, value);
     }
 
@@ -282,7 +275,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitIdentifier(Identifier node) {
-        result = reference(node.getValue());
+        result = reference(node.getName());
     }
 
     @Override
@@ -348,6 +341,12 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitMessage(Message node) {
+        Deque<Symbol> iterator = new ArrayDeque<>(node.getElements());
+        result = shufflePrecedence(gatherArguments(iterator), iterator, 0);
+    }
+
+    @Override
     public void visitModule(Module node) {
         for (Symbol element : node.getElements()) {
             translate(element);
@@ -365,12 +364,22 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitOperator(Operator node) {
+        environment().register(node.getPrecedence(), node.getFixity(), node.getName());
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         List<String> segments = node.getSegments();
         if (segments.size() > 1) {
             throw new UnsupportedOperationException(); // TODO
         }
         result = reference(segments.get(0));
+    }
+
+    @Override
+    public void visitQuotedIdentifier(QuotedIdentifier node) {
+        result = reference(node.getName());
     }
 
     @Override
@@ -475,8 +484,21 @@ public class Translator implements SyntaxVisitor {
         throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
     }
 
+    private AstNode gatherArguments(Deque<Symbol> queue) {
+        AstNode function = translate(queue.poll());
+        while (!queue.isEmpty() && !isOperator(queue.peek())) {
+            AstNode argument = translate(queue.poll());
+            function = apply(function, argument, inferenceResultType(function.getType(), argument.getType()));
+        }
+        return function;
+    }
+
     private String generateName() {
         return currentName.generateName();
+    }
+
+    private int getPrecedence(Symbol node) {
+        return environment().getPrecedence(((Identifier) node).getName());
     }
 
     private Type inferenceFunctionType(FunctionLiteral functionNode, DeclaredArgument argument) {
@@ -520,6 +542,26 @@ public class Translator implements SyntaxVisitor {
         return set(allowedTypes);
     }
 
+    private boolean isNextOperator(Symbol node, int minimum) {
+        return isOperator(node) && environment().isNextOperator(((Identifier) node).getName(), minimum);
+    }
+
+    private boolean isOperator(Symbol node) {
+        if (node instanceof Identifier) {
+            String name = ((Identifier) node).getName();
+            if (!"=".equals(name)) {
+                reference(name);
+            }
+            return environment().isOperator(name);
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isRightOperator(Symbol node, int precedence) {
+        return isOperator(node) && environment().isRightOperator(((Identifier) node).getName(), precedence);
+    }
+
     private String javaClass(Symbol symbol) {
         TypeSpec type = (TypeSpec) symbol;
         QualifiedIdentifier id = (QualifiedIdentifier) type.getType();
@@ -544,6 +586,30 @@ public class Translator implements SyntaxVisitor {
 
     private void reserveName(String name) {
         currentName = new NameSequence(name);
+    }
+
+    private AstNode shufflePrecedence(AstNode head, Deque<Symbol> queue, int minimum) {
+        AstNode lhs = head;
+        while (!queue.isEmpty() && isNextOperator(queue.peek(), minimum)) {
+            Identifier op = (Identifier) queue.poll();
+            final int precedence = getPrecedence(op);
+            if (!"=".equals(op.getName())) {
+                AstNode function = translate((Symbol) op);
+                lhs = apply(function, lhs, inferenceResultType(function.getType(), lhs.getType()));
+            }
+            AstNode rhs = gatherArguments(queue);
+            while (!queue.isEmpty() && isRightOperator(queue.peek(), precedence)) {
+                int lookAhead = getPrecedence(queue.peek());
+                rhs = shufflePrecedence(rhs, queue, lookAhead);
+            }
+            if ("=".equals(op.getName())) {
+                verifyAssignmentType(lhs.getType(), rhs.getType());
+                lhs = assign(lhs, rhs);
+            } else {
+                lhs = apply(lhs, rhs, inferenceResultType(lhs.getType(), rhs.getType()));
+            }
+        }
+        return lhs;
     }
 
     private AstNode translate(Visitable node) {
@@ -613,6 +679,14 @@ public class Translator implements SyntaxVisitor {
                 );
             }
         }
+    }
+
+    private void verifyAssignmentType(Type targetType, Type valueType) {
+        specialize(targetType);
+        if (!targetType.unify(valueType)) {
+            throw new TypeException("Type mismatch: " + targetType + " != " + valueType);
+        }
+        generify(targetType);
     }
 
     private static final class NameSequence {

@@ -8,38 +8,28 @@ import static snacks.lang.parser.syntax.SyntaxFactory.*;
 
 import beaver.Symbol;
 import org.junit.Test;
-import snacks.lang.parser.syntax.SyntaxFactory;
 
 public class ParserTest {
 
     @Test
     public void shouldParseTwoPlusTwo() {
-        assertThat(expression("2 + 2"), equalTo(binary("+", literal(2), literal(2))));
+        assertThat(expression("2 + 2"), equalTo(msg(literal(2), id("+"), literal(2))));
     }
 
     @Test
     public void shouldParseParenthetical() {
-        assertThat(expression("(2 + 2)"), equalTo(binary("+", literal(2), literal(2))));
-    }
-
-    @Test
-    public void shouldParseTwoPlusTwoWithNewLine() {
-        Symbol tree = expression(
-            "2 +",
-            "2"
-        );
-        assertThat(tree, equalTo(binary("+", literal(2), literal(2))));
+        assertThat(expression("(2 + 2)"), equalTo(msg(literal(2), id("+"), literal(2))));
     }
 
     @Test
     public void shouldParseTuple() {
-        assertThat(expression("(a, b)"), equalTo(SyntaxFactory.tuple(id("a"), id("b"))));
+        assertThat(expression("(a, b)"), equalTo(tuple(id("a"), id("b"))));
     }
 
     @Test
     public void shouldParseEmptyTuple() {
-        assertThat(expression("()"), equalTo(SyntaxFactory.tuple()));
-        assertThat(expression("(,)"), equalTo(SyntaxFactory.tuple()));
+        assertThat(expression("()"), equalTo(tuple()));
+        assertThat(expression("(,)"), equalTo(tuple()));
     }
 
     @Test
@@ -57,7 +47,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseEmptySet() {
-        assertThat(expression("{,}"), equalTo(SyntaxFactory.set()));
+        assertThat(expression("{,}"), equalTo(set()));
     }
 
     @Test
@@ -95,12 +85,12 @@ public class ParserTest {
 
     @Test
     public void shouldParseArgumentsExpression() {
-        assertThat(expression("fruits 0"), equalTo(apply(id("fruits"), literal(0))));
+        assertThat(expression("fruits 0"), equalTo(msg(id("fruits"), literal(0))));
     }
 
     @Test
     public void shouldParseMultipleArgumentsExpression() {
-        assertThat(expression("fruits 1 2 3"), equalTo(apply(apply(apply(id("fruits"), literal(1)), literal(2)), literal(3))));
+        assertThat(expression("fruits 1 2 3"), equalTo(msg(id("fruits"), literal(1), literal(2), literal(3))));
     }
 
     @Test
@@ -111,7 +101,7 @@ public class ParserTest {
     @Test
     public void shouldParseFunction() {
         assertThat(expression("(a b c -> a b c)"), equalTo(
-            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
+            func(arg("a"), func(arg("b"), func(arg("c"), msg(id("a"), id("b"), id("c")))))
         ));
     }
 
@@ -122,14 +112,14 @@ public class ParserTest {
             "    a b c)"
         );
         assertThat(tree, equalTo(
-            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
+            func(arg("a"), func(arg("b"), func(arg("c"), msg(id("a"), id("b"), id("c")))))
         ));
     }
 
     @Test
     public void shouldParseTailedFunction() {
         assertThat(expression("(a b c) -> a b c"), equalTo(
-            func(arg("a"), func(arg("b"), func(arg("c"), apply(apply(id("a"), id("b")), id("c")))))
+            func(arg("a"), func(arg("b"), func(arg("c"), msg(id("a"), id("b"), id("c")))))
         ));
     }
 
@@ -143,7 +133,7 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(
             func(arg("x"), func(arg("y"), func(arg("z"), block(
-                apply(apply(id("print"), id("x")), id("y")),
+                msg(id("print"), id("x"), id("y")),
                 result(id("z"))
             ))))
         ));
@@ -155,7 +145,7 @@ public class ParserTest {
             arg("a", type(qid("x"))),
             func(
                 arg("b", type(qid("y"))),
-                apply(id("a"), id("b"))
+                msg(id("a"), id("b"))
             ),
             type(qid("z"))
         )));
@@ -167,7 +157,7 @@ public class ParserTest {
             arg("a", type(qid("x"))),
             func(
                 arg("b", type(qid("y"))),
-                apply(id("a"), id("b"))
+                msg(id("a"), id("b"))
             ),
             type(qid("z"))
         )));
@@ -175,12 +165,12 @@ public class ParserTest {
 
     @Test
     public void shouldParseFunctionWithNoArgs() {
-        assertThat(expression("(-> a b)"), equalTo(invokable(apply(id("a"), id("b")))));
+        assertThat(expression("(-> a b)"), equalTo(invokable(msg(id("a"), id("b")))));
     }
 
     @Test
     public void shouldParseTailedFunctionWithNoArgs() {
-        assertThat(expression("() -> a b"), equalTo(invokable(apply(id("a"), id("b")))));
+        assertThat(expression("() -> a b"), equalTo(invokable(msg(id("a"), id("b")))));
     }
 
     @Test
@@ -196,8 +186,8 @@ public class ParserTest {
             func(
                 arg("y", type(qid("b"))),
                 block(
-                    apply(id("print"), id("x")),
-                    result(apply(id("x"), id("y")))
+                    msg(id("print"), id("x")),
+                    result(msg(id("x"), id("y")))
                 )
             ),
             type(qid("z"))
@@ -292,7 +282,7 @@ public class ParserTest {
     @Test
     public void shouldParseDeclaration() {
         assertThat(parse("test = a b c"), equalTo(module(
-            def("test", apply(apply(id("a"), id("b")), id("c")))
+            def("test", msg(id("a"), id("b"), id("c")))
         )));
     }
 
@@ -312,7 +302,7 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", invokable(block(
                 var("waffles", id("bananas")),
-                apply(id("say"), id("waffles"))
+                msg(id("say"), id("waffles"))
             )))
         )));
     }
@@ -330,9 +320,9 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", conditional(
-                condition(id("bananas"), block(apply(apply(apply(id("waffles"), literal(1)), literal(2)), literal(3)))),
-                condition(id("toast"), block(apply(apply(apply(id("ducks"), literal(4)), literal(5)), literal(6)))),
-                block(apply(id("waffles"), id("anyway!")))
+                condition(id("bananas"), block(msg(id("waffles"), literal(1), literal(2), literal(3)))),
+                condition(id("toast"), block(msg(id("ducks"), literal(4), literal(5), literal(6)))),
+                block(msg(id("waffles"), id("anyway!")))
             ))
         )));
     }
@@ -350,13 +340,13 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", begin(
-                block(apply(apply(id("try"), id("something")), id("dangerous"))),
+                block(msg(id("try"), id("something"), id("dangerous"))),
                 array(embrace(
                     "oops",
                     type(qid("snacks", "lang", "SnacksException")),
-                    block(apply(id("say"), literal("oops, I broke it")))
+                    block(msg(id("say"), literal("oops, I broke it")))
                 )),
-                block(apply(apply(id("perform"), id("some")), id("cleanup")))
+                block(msg(id("perform"), id("some"), id("cleanup")))
             ))
         )));
     }
@@ -377,13 +367,13 @@ public class ParserTest {
                 array(
                     use("try", id("uranium238"))
                 ),
-                block(apply(apply(id("try"), id("something")), id("dangerous"))),
+                block(msg(id("try"), id("something"), id("dangerous"))),
                 array(embrace(
                     "oops",
                     type(qid("snacks", "lang", "SnacksException")),
-                    block(apply(id("say"), literal("oops, I broke it")))
+                    block(msg(id("say"), literal("oops, I broke it")))
                 )),
-                block(apply(apply(id("perform"), id("some")), id("cleanup")))
+                block(msg(id("perform"), id("some"), id("cleanup")))
             ))
         )));
     }
@@ -404,15 +394,15 @@ public class ParserTest {
             def("test", begin(
                 array(
                     use("try", id("uranium238")),
-                    use("something", binary("+", id("centrifuge"), apply(apply(id("lots"), id("of")), id("electricity"))))
+                    use("something", msg(id("centrifuge"), id("+"), id("lots"), id("of"), id("electricity")))
                 ),
-                block(apply(apply(id("try"), id("something")), id("dangerous"))),
+                block(msg(id("try"), id("something"), id("dangerous"))),
                 array(embrace(
                     "oops",
                     type(qid("snacks", "lang", "SnacksException")),
-                    block(apply(id("say"), literal("oops, boom!")))
+                    block(msg(id("say"), literal("oops, boom!")))
                 )),
-                block(apply(apply(id("perform"), id("some")), id("cleanup")))
+                block(msg(id("perform"), id("some"), id("cleanup")))
             ))
         )));
     }
@@ -430,11 +420,11 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("test", begin(
-                block(apply(apply(id("try"), id("something")), id("dangerous"))),
+                block(msg(id("try"), id("something"), id("dangerous"))),
                 array(
-                    embrace("oops", type(qid("ouch", "BustedFoot")), block(apply(id("say"), literal("ouch!"))))
+                    embrace("oops", type(qid("ouch", "BustedFoot")), block(msg(id("say"), literal("ouch!"))))
                 ),
-                block(apply(apply(id("perform"), id("some")), id("cleanup")))
+                block(msg(id("perform"), id("some"), id("cleanup")))
             ))
         )));
     }
@@ -451,12 +441,12 @@ public class ParserTest {
         assertThat(tree, equalTo(module(
             def("test", begin(
                 array(
-                    using(apply(apply(literal("secret"), id("surveillance")), id("program")))
+                    using(msg(literal("secret"), id("surveillance"), id("program")))
                 ),
-                block(apply(apply(id("try"), id("something")), id("unconstitutional"))),
+                block(msg(id("try"), id("something"), id("unconstitutional"))),
                 array(embrace("problem",
                     type(qid("PoliticalFallout")),
-                    block(apply(apply(id("make"), id("problem")), id("disappear")))
+                    block(msg(id("make"), id("problem"), id("disappear")))
                 ))
             ))
         )));
@@ -465,7 +455,7 @@ public class ParserTest {
     @Test
     public void shouldParsePartialApplication() {
         assertThat(parse("example = `+` 2"), equalTo(module(
-            def("example", apply(id("+"), literal(2)))
+            def("example", msg(quoted("+"), literal(2)))
         )));
     }
 
@@ -473,6 +463,13 @@ public class ParserTest {
     public void shouldParseWildcardImport() {
         assertThat(parse("import example.monkey._"), equalTo(module(
             importWildcard(qid("example", "monkey"))
+        )));
+    }
+
+    @Test
+    public void shouldParseOperatorImport() {
+        assertThat(parse("import example.funny.`..`"), equalTo(module(
+            importId(qid("example", "funny", ".."))
         )));
     }
 
@@ -494,6 +491,20 @@ public class ParserTest {
     public void shouldParseDeclarationReturningTuple() {
         assertThat(parse("pair :: String -> Integer -> (String, Integer)"), equalTo(module(
             sig("pair", fsig(type("String"), fsig(type("Integer"), tsig(type("String"), type("Integer")))))
+        )));
+    }
+
+    @Test
+    public void shouldParseOperatorSpec() {
+        Symbol tree = parse(
+            "infix left 0 **",
+            "infix right 8 >>=",
+            "infix 7 .."
+        );
+        assertThat(tree, equalTo(module(
+            leftOp("**", 0),
+            rightOp(">>=", 8),
+            op("..", 7)
         )));
     }
 }

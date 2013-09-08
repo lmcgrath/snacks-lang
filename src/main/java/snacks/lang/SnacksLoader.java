@@ -11,20 +11,21 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SnacksLoader extends URLClassLoader {
 
-    private final Map<String, SnackEntry> snacks;
+    private final Map<String, SnackEntry> snacks = new HashMap<>();
+    private final OperatorRegistry operators = new OperatorRegistry();
 
     public SnacksLoader() {
         super(new URL[0]);
-        snacks = new HashMap<>();
     }
 
     public SnacksLoader(ClassLoader parent) {
         super(new URL[0], parent);
-        snacks = new HashMap<>();
     }
 
     public Class defineClass(String name, byte[] bytes) {
@@ -33,6 +34,22 @@ public class SnacksLoader extends URLClassLoader {
 
     public Class defineClass(String name, byte[] bytes, ProtectionDomain domain) {
         return super.defineClass(name, bytes, 0, bytes.length, domain);
+    }
+
+    public int getPrecedence(String name) {
+        return operators.getPrecedence(name);
+    }
+
+    public boolean isNextOperator(String name, int minimum) {
+        return operators.isNextOperator(name, minimum);
+    }
+
+    public boolean isOperator(String name) {
+        return operators.isOperator(name);
+    }
+
+    public boolean isRightOperator(String name, int precedence) {
+        return operators.isRightOperator(name, precedence);
     }
 
     public Class<?> loadSnack(String qualifiedName) {
@@ -78,7 +95,14 @@ public class SnacksLoader extends URLClassLoader {
                     Class<?> snackClass = forName(packageName + '.' + baseName(file));
                     Snack snack = snackClass.getAnnotation(Snack.class);
                     if (snack != null) {
-                        classes.put(packageName + "." + snack.value(), new SnackEntry(snack, snackClass, resolveType(snackClass)));
+                        String name = packageName + '.' + snack.value();
+                        if (!snacks.containsKey(name)) {
+                            classes.put(name, new SnackEntry(snack, snackClass, resolveType(snackClass)));
+                            Infix infix = snackClass.getAnnotation(Infix.class);
+                            if (infix != null) {
+                                operators.register(infix.precedence(), infix.fixity(), snack.value());
+                            }
+                        }
                     }
                 } catch (ClassNotFoundException exception) {
                     throw new ResolutionException(exception);

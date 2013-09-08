@@ -5,17 +5,15 @@ import static snacks.lang.Type.BOOLEAN_TYPE;
 import static snacks.lang.Type.func;
 import static snacks.lang.Type.var;
 
-import java.util.Objects;
+@Snack("is")
+@Infix(fixity = LEFT, precedence = 1)
+public class Identical {
 
-@Snack("==")
-@Infix(fixity = LEFT, precedence = 2)
-public class Equals {
+    private static Identical instance;
 
-    private static Equals instance;
-
-    public static Equals instance() {
+    public static Identical instance() {
         if (instance == null) {
-            instance = new Equals();
+            instance = new Identical();
         }
         return instance;
     }
@@ -25,20 +23,20 @@ public class Equals {
         return func(var("T"), func(var("U"), BOOLEAN_TYPE));
     }
 
-    public EqualsClosure apply(Object left) {
-        return new EqualsClosure(left);
+    public Closure apply(Object left) {
+        return new Closure(left);
     }
 
-    public static final class EqualsClosure {
+    public static final class Closure {
 
         private final Object left;
 
-        public EqualsClosure(Object left) {
+        public Closure(Object left) {
             this.left = left;
         }
 
         public Boolean apply(Object right) {
-            return Objects.equals(left, right);
+            return left == right;
         }
     }
 }
