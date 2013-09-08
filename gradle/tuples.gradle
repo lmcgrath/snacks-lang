@@ -1,0 +1,91 @@
+ext.tupleRange = (0..22)
+ext.tuples = []
+
+tupleRange.each { tuples << file("${generatedDir}/snacks/lang/Tuple${it}.java") }
+
+task (generateTuples, dependsOn: setUpGeneratedDir) {
+    outputs.files tuples
+    doLast {
+        tupleRange.each {
+            def range = it == 0 ? [] : (0..it - 1)
+            def content = [
+                'package snacks.lang;',
+                '',
+                'import java.util.Objects;',
+                'import org.apache.commons.lang.builder.EqualsBuilder;',
+                '',
+            ]
+
+            if (it <= 0) {
+                content << "public class Tuple$it {"
+            } else {
+                content << "public class Tuple$it<${range.collect { t -> "T$t" }.join(', ')}> {"
+            }
+
+            content << ''
+            range.each { f ->
+                content << "    private final T$f _$f;"
+            }
+
+            content << ''
+            content << "    public Tuple$it(${range.collect { t -> "T$t _$t"}.join(', ')}) {"
+            range.each { f ->
+                content << "        this._$f = _$f;"
+            }
+            content << "    }"
+
+            content << ''
+            content << '    @Override'
+            content << '    public boolean equals(Object o) {'
+            content << '        if (o == this) {'
+            content << '            return true;'
+            content << "        } else if (o instanceof Tuple$it) {"
+            content << "            Tuple$it other = (Tuple$it) o;"
+            content << '            return new EqualsBuilder()'
+            range.each { f ->
+                content << "                .append(_$f, other._$f)"
+            }
+            content << '                .isEquals();'
+            content << '        } else {'
+            content << '            return false;'
+            content << '        }'
+            content << '    }'
+
+            range.each { f ->
+                content << ''
+                content << "    public T$f get_$f() {"
+                content << "        return _$f;"
+                content << "    }"
+            }
+
+            content << ''
+            content << '    @Override'
+            content << '    public int hashCode() {'
+            content << "        return Objects.hash(${range.collect { t -> "_$t" }.join(', ')});"
+            content << "    }"
+
+            content << ''
+            content << '    @Override'
+            content << '    public String toString() {'
+            if (it <= 0) {
+                content << "        return \"(Tuple0)\";"
+            } else {
+                content << "        return \"(Tuple$it \" + ${range.collect { t -> "_${t}" }.join(' + ", " + ')} + \")\";"
+            }
+            content << '    }'
+            content << '}'
+
+            file(tuples.get(it)).write(content.join('\n'))
+        }
+    }
+}
+
+task(cleanTuples) {
+    inputs.files tuples
+    doLast {
+        tuples.each { it.delete() }
+    }
+}
+
+compileJava.dependsOn << generateTuples
+clean.dependsOn << cleanTuples
