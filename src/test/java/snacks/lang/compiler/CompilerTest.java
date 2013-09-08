@@ -14,7 +14,6 @@ import org.junit.Test;
 import snacks.lang.Invokable;
 import snacks.lang.SnacksException;
 import snacks.lang.SnacksLoader;
-import snacks.lang.parser.TypeException;
 
 public class CompilerTest {
 
@@ -542,6 +541,36 @@ public class CompilerTest {
     public void shouldAccessSecondMemberOfTuple() throws Exception {
         run("main = () -> say ('waffles', 10, True)._1");
         verifyOut(10);
+    }
+
+    @Test
+    public void shouldSpecifySignature() throws Exception {
+        run(
+            "addIntegers :: Integer -> Integer -> Integer",
+            "main = () -> say $ addIntegers 2 4",
+            "addIntegers = (x y) -> x + y"
+        );
+        verifyOut(6);
+    }
+
+    @Test
+    public void shouldPassTupleAsArgument() throws Exception {
+        run(
+            "something :: (String, Boolean, Integer) -> Void",
+            "main = () -> something ('waffles', True, 3)",
+            "something = (x) -> say $ stringy x"
+        );
+        verifyOut("(Tuple3 waffles, true, 3)");
+    }
+
+    @Test
+    public void shouldReturnTupleAsResult() throws Exception {
+        run(
+            "pair :: String -> Integer -> (Integer, String)",
+            "main = () -> say $ stringy $ pair 'toast' 2",
+            "pair = (x y) -> (y, x)"
+        );
+        verifyOut("(Tuple2 2, toast)");
     }
 
     private void run(String... inputs) throws Exception {

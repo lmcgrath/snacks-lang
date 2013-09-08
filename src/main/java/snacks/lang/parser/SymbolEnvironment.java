@@ -76,8 +76,16 @@ public class SymbolEnvironment implements TypeFactory {
         return state.getVariables();
     }
 
+    public boolean hasSignature(Locator locator) {
+        return state.hasSignature(locator);
+    }
+
     public boolean isDefined(Locator locator) {
         return state.isDefined(locator);
+    }
+
+    public void signature(Reference reference) {
+        state.signature(reference);
     }
 
     public void specialize(Type type) {
@@ -100,66 +108,39 @@ public class SymbolEnvironment implements TypeFactory {
         return !type.occursIn(state.getSpecializedTypes());
     }
 
-    private interface State {
+    private static abstract class State {
 
-        Type createVariable();
+        protected final Map<Locator, Type> symbols;
+        protected final Map<Locator, Type> signatures;
+        protected final Set<Type> specializedTypes;
 
-        void define(Reference reference);
-
-        void generify(Type type);
-
-        Reference getReference(Locator locator);
-
-        Set<Type> getSpecializedTypes();
-
-        Collection<String> getVariables();
-
-        boolean isDefined(Locator locator);
-
-        void specialize(Type type);
-
-        Type typeOf(Locator locator);
-    }
-
-    private static final class HeadState implements State, LocatorVisitor {
-
-        private final SnacksLoader resolver;
-        private final Map<Locator, Type> symbols;
-        private final Set<Type> specializedTypes;
-        private int nextId = 1;
-
-        public HeadState(SnacksLoader resolver) {
-            this.resolver = resolver;
-            this.symbols = new HashMap<>();
-            this.specializedTypes = new HashSet<>();
+        public State() {
+            symbols = new HashMap<>();
+            signatures = new HashMap<>();
+            specializedTypes = new HashSet<>();
         }
 
-        @Override
-        public Type createVariable() {
-            return var("#" + nextId++);
-        }
+        public abstract Type createVariable();
 
-        @Override
         public void define(Reference reference) {
+            if (signatures.containsKey(reference.getLocator())) {
+                signatures.remove(reference.getLocator());
+            }
             symbols.put(reference.getLocator(), reference.getType());
         }
 
-        @Override
         public void generify(Type type) {
             specializedTypes.remove(type);
         }
 
-        @Override
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
         }
 
-        @Override
         public Set<Type> getSpecializedTypes() {
             return new HashSet<>(specializedTypes);
         }
 
-        @Override
         public Collection<String> getVariables() {
             Set<String> variables = new TreeSet<>();
             for (Locator locator : symbols.keySet()) {
@@ -170,24 +151,53 @@ public class SymbolEnvironment implements TypeFactory {
             return variables;
         }
 
-        @Override
-        public boolean isDefined(Locator locator) {
-            resolve(locator);
-            return symbols.containsKey(locator);
+        public boolean hasSignature(Locator locator) {
+            return signatures.containsKey(locator);
         }
 
-        @Override
+        public boolean isDefined(Locator locator) {
+            return symbols.containsKey(locator) || signatures.containsKey(locator);
+        }
+
+        public void signature(Reference reference) {
+            signatures.put(reference.getLocator(), reference.getType());
+        }
+
         public void specialize(Type type) {
             specializedTypes.add(type);
         }
 
-        @Override
         public Type typeOf(Locator locator) {
             if (isDefined(locator)) {
-                return symbols.get(locator);
+                if (signatures.containsKey(locator)) {
+                    return signatures.get(locator);
+                } else {
+                    return symbols.get(locator);
+                }
             } else {
                 throw new UndefinedSymbolException("Undefined symbol: " + locator);
             }
+        }
+    }
+
+    private static final class HeadState extends State implements LocatorVisitor {
+
+        private final SnacksLoader resolver;
+        private int nextId = 1;
+
+        public HeadState(SnacksLoader resolver) {
+            this.resolver = resolver;
+        }
+
+        @Override
+        public Type createVariable() {
+            return var("#" + nextId++);
+        }
+
+        @Override
+        public boolean isDefined(Locator locator) {
+            resolve(locator);
+            return super.isDefined(locator);
         }
 
         private void resolve(Locator locator) {
@@ -215,16 +225,12 @@ public class SymbolEnvironment implements TypeFactory {
         }
     }
 
-    private static final class TailState implements State {
+    private static final class TailState extends State {
 
         private final SymbolEnvironment parent;
-        private final Map<Locator, Type> symbols;
-        private final Set<Type> specialized;
 
         public TailState(SymbolEnvironment parent) {
             this.parent = parent;
-            this.symbols = new HashMap<>();
-            this.specialized = new HashSet<>();
         }
 
         @Override
@@ -233,29 +239,20 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public void define(Reference reference) {
-            symbols.put(reference.getLocator(), reference.getType());
-        }
-
-        @Override
         public void generify(Type type) {
-            specialized.remove(type);
+            super.generify(type);
             parent.generify(type);
         }
 
         @Override
         public Reference getReference(Locator locator) {
-            if (parent.isDefined(locator)) {
-                return parent.getReference(locator);
-            } else {
-                return reference(locator, symbols.get(locator));
-            }
+            return reference(locator, typeOf(locator));
         }
 
         @Override
         public Set<Type> getSpecializedTypes() {
             Set<Type> specifics = new HashSet<>();
-            specifics.addAll(this.specialized);
+            specifics.addAll(super.getSpecializedTypes());
             specifics.addAll(parent.getSpecializedTypes());
             return specifics;
         }
@@ -263,36 +260,23 @@ public class SymbolEnvironment implements TypeFactory {
         @Override
         public Collection<String> getVariables() {
             Set<String> variables = new TreeSet<>();
+            variables.addAll(super.getVariables());
             variables.addAll(parent.getVariables());
-            for (Locator locator : symbols.keySet()) {
-                if (locator.isVariable()) {
-                    variables.add(locator.getName());
-                }
-            }
             return variables;
         }
 
         @Override
         public boolean isDefined(Locator locator) {
-            return isDefinedLocally(locator) || parent.isDefined(locator);
-        }
-
-        @Override
-        public void specialize(Type type) {
-            specialized.add(type);
+            return super.isDefined(locator) || parent.isDefined(locator);
         }
 
         @Override
         public Type typeOf(Locator locator) {
-            if (isDefinedLocally(locator)) {
-                return symbols.get(locator);
+            if (super.isDefined(locator)) {
+                return super.typeOf(locator);
             } else {
                 return parent.typeOf(locator);
             }
-        }
-
-        private boolean isDefinedLocally(Locator locator) {
-            return symbols.containsKey(locator);
         }
     }
 }

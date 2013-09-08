@@ -8,6 +8,7 @@ import static snacks.lang.parser.syntax.SyntaxFactory.*;
 
 import beaver.Symbol;
 import org.junit.Test;
+import snacks.lang.parser.syntax.SyntaxFactory;
 
 public class ParserTest {
 
@@ -32,13 +33,13 @@ public class ParserTest {
 
     @Test
     public void shouldParseTuple() {
-        assertThat(expression("(a, b)"), equalTo(tuple(id("a"), id("b"))));
+        assertThat(expression("(a, b)"), equalTo(SyntaxFactory.tuple(id("a"), id("b"))));
     }
 
     @Test
     public void shouldParseEmptyTuple() {
-        assertThat(expression("()"), equalTo(tuple()));
-        assertThat(expression("(,)"), equalTo(tuple()));
+        assertThat(expression("()"), equalTo(SyntaxFactory.tuple()));
+        assertThat(expression("(,)"), equalTo(SyntaxFactory.tuple()));
     }
 
     @Test
@@ -56,7 +57,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseEmptySet() {
-        assertThat(expression("{,}"), equalTo(set()));
+        assertThat(expression("{,}"), equalTo(SyntaxFactory.set()));
     }
 
     @Test
@@ -472,6 +473,27 @@ public class ParserTest {
     public void shouldParseWildcardImport() {
         assertThat(parse("import example.monkey._"), equalTo(module(
             importWildcard(qid("example", "monkey"))
+        )));
+    }
+
+    @Test
+    public void shouldParseDeclarationSignature() {
+        assertThat(parse("addIntegers :: Integer -> Integer -> Integer"), equalTo(module(
+            sig("addIntegers", fsig(type("Integer"), fsig(type("Integer"), type("Integer"))))
+        )));
+    }
+
+    @Test
+    public void shouldParseDeclarationSignatureWithTuple() {
+        assertThat(parse("something :: (String, Boolean, Integer) -> Void"), equalTo(module(
+            sig("something", fsig(tsig(type("String"), type("Boolean"), type("Integer")), type("Void")))
+        )));
+    }
+
+    @Test
+    public void shouldParseDeclarationReturningTuple() {
+        assertThat(parse("pair :: String -> Integer -> (String, Integer)"), equalTo(module(
+            sig("pair", fsig(type("String"), fsig(type("Integer"), tsig(type("String"), type("Integer")))))
         )));
     }
 }

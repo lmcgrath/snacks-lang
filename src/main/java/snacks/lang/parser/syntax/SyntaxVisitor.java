@@ -36,6 +36,8 @@ public interface SyntaxVisitor {
 
     void visitFunctionLiteral(FunctionLiteral node);
 
+    void visitFunctionSignature(FunctionSignature node);
+
     void visitHurl(HurlExpression node);
 
     void visitIdentifier(Identifier node);
@@ -74,6 +76,8 @@ public interface SyntaxVisitor {
 
     void visitSetLiteral(SetLiteral node);
 
+    void visitSignature(Signature node);
+
     void visitStringLiteral(StringLiteral node);
 
     void visitSubImport(SubImport node);
@@ -81,6 +85,8 @@ public interface SyntaxVisitor {
     void visitSymbolLiteral(SymbolLiteral node);
 
     void visitTupleLiteral(TupleLiteral node);
+
+    void visitTupleSignature(TupleSignature node);
 
     void visitTypeSpec(TypeSpec node);
 

@@ -9,6 +9,7 @@ public class DeclaredExpression extends AstNode {
     private final String module;
     private final String name;
     private final AstNode body;
+    private Type type;
 
     public DeclaredExpression(String module, String name, AstNode body) {
         this.module = module;
@@ -26,6 +27,7 @@ public class DeclaredExpression extends AstNode {
                 .append(module, other.module)
                 .append(name, other.name)
                 .append(body, other.body)
+                .append(type, other.type)
                 .isEquals();
         } else {
             return false;
@@ -56,12 +58,20 @@ public class DeclaredExpression extends AstNode {
 
     @Override
     public Type getType() {
-        return body.getType();
+        if (type == null) {
+            return body.getType();
+        } else {
+            return type;
+        }
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(module, name, body);
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     @Override

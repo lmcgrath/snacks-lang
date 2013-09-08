@@ -129,6 +129,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitFunctionSignature(FunctionSignature node) {
+        print(node.getArgument());
+        print(node.getResult());
+    }
+
+    @Override
     public void visitHurl(HurlExpression node) {
         print(node.getExpression());
     }
@@ -240,6 +246,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitSignature(Signature node) {
+        print(node.getIdentifier());
+        print(node.getType());
+    }
+
+    @Override
     public void visitStringLiteral(StringLiteral node) {
         value('"' + escapeJava(node.getValue()) + '"');
     }
@@ -259,6 +271,13 @@ public class SyntaxPrinter implements SyntaxVisitor {
     public void visitTupleLiteral(TupleLiteral node) {
         for (Symbol element : node.getElements()) {
             print(element);
+        }
+    }
+
+    @Override
+    public void visitTupleSignature(TupleSignature node) {
+        for (Symbol type : node.getTypes()) {
+            print(type);
         }
     }
 

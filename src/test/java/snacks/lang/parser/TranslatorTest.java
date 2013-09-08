@@ -271,6 +271,15 @@ public class TranslatorTest {
         assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
     }
 
+    @Test
+    public void shouldSpecifySignature() throws Exception {
+        translate(
+            "addIntegers :: Integer -> Integer -> Integer",
+            "addIntegers = (x y) -> x + y"
+        );
+        assertThat(typeOf("addIntegers"), equalTo(func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))));
+    }
+
     @Test(expected = TypeException.class)
     public void shouldNotAccessNonexistentMemberOfTuple() throws Exception {
         translate("main = () -> say ('waffles', 10, True)._3");

@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
@@ -95,6 +96,10 @@ public final class SyntaxFactory {
         return new Declaration(name, expression);
     }
 
+    public static Symbol sig(String identifier, Symbol type) {
+        return new Signature(identifier, type);
+    }
+
     public static Symbol embrace(String var, Symbol expression) {
         return new EmbraceCase(var, null, expression);
     }
@@ -117,6 +122,10 @@ public final class SyntaxFactory {
 
     public static Symbol func(Symbol arg, Symbol body, Symbol type) {
         return new FunctionLiteral(arg, body, type);
+    }
+
+    public static Symbol fsig(Symbol argument, Symbol result) {
+        return new FunctionSignature(argument, result);
     }
 
     public static Symbol hurl(Symbol expression) {
@@ -247,8 +256,20 @@ public final class SyntaxFactory {
         return new TupleLiteral(element, elements);
     }
 
+    public static Symbol tsig(Symbol... ids) {
+        return tsig(asList(ids));
+    }
+
+    public static Symbol tsig(Collection<Symbol> ids) {
+        return new TupleSignature(ids);
+    }
+
     public static Symbol type(Symbol id) {
         return new TypeSpec(id);
+    }
+
+    public static Symbol type(String... segments) {
+        return type(qid(segments));
     }
 
     public static Symbol unary(String operator, Symbol operand) {

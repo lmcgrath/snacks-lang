@@ -3,10 +3,13 @@
 %package "snacks.lang.parser";
 %class "Parser";
 %import "java.io.IOException",
+        "java.util.List",
         "java.util.Set",
+        "snacks.lang.Type",
         "snacks.lang.parser.syntax.*",
         "static snacks.lang.parser.syntax.SyntaxFactory.*",
-        "static java.util.Arrays.*";
+        "static java.util.Arrays.*",
+        "static org.apache.commons.lang.StringUtils.join";
 
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL,
     KEY_SYMBOL, NOT_EQUALS, TRUE, FALSE, AND, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE,
@@ -89,10 +92,34 @@ module_expressions
 
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
+    | IDENTIFIER.id DOUBLE_COLON function_signature.t   {: return sig(id, t); :}
     | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
+    ;
+
+function_signature
+    = qualified_identifier.id                                   {: return type(id); :}
+    | tuple_signature
+    | qualified_identifier.id APPLIES_TO function_signature.f   {: return fsig(type(id), f); :}
+    | tuple_signature.t APPLIES_TO function_signature.f         {: return fsig(t, f); :}
+    ;
+
+tuple_signature
+    = LPAREN tuple_types.t RPAREN
+        {:
+            List<Symbol> types = new ArrayList<>();
+            for (QualifiedIdentifier id : t) {
+                types.add(type(id));
+            }
+            return tsig(types);
+        :}
+    ;
+
+tuple_types
+    = qualified_identifier.id
+    | tuple_types COMMA qualified_identifier.id
     ;
 
 sub_imports

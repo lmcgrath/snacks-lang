@@ -7,13 +7,13 @@ import java.util.*;
 public abstract class Type {
 
     public static final Type
-        BOOLEAN_TYPE = type("Boolean"),
-        CHARACTER_TYPE = type("Character"),
-        DOUBLE_TYPE = type("Double"),
-        INTEGER_TYPE = type("Integer"),
-        STRING_TYPE = type("String"),
-        SYMBOL_TYPE = type("Symbol"),
-        VOID_TYPE = type("Void")
+        BOOLEAN_TYPE = type("snacks.lang.Boolean"),
+        CHARACTER_TYPE = type("snacks.lang.Character"),
+        DOUBLE_TYPE = type("snacks.lang.Double"),
+        INTEGER_TYPE = type("snacks.lang.Integer"),
+        STRING_TYPE = type("snacks.lang.String"),
+        SYMBOL_TYPE = type("snacks.lang.Symbol"),
+        VOID_TYPE = type("snacks.lang.Void")
     ;
 
     public static Type func(Type argument, Type result) {
@@ -31,10 +31,6 @@ public abstract class Type {
 
     public static boolean isInstantiable(Type type) {
         return isFunction(type) && VOID_TYPE == type.decompose().get(0).getParameters().get(0);
-    }
-
-    public static Type record(String name, Type... properties) {
-        return type(name, properties);
     }
 
     public static Type property(String name, Type type) {
