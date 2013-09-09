@@ -72,7 +72,7 @@ module_expressions
 
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
-    | IDENTIFIER.id DOUBLE_COLON function_signature.t   {: return sig(id, t); :}
+    | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
     | OPERATOR INTEGER.p IDENTIFIER.id                  {: return op(id, p); :}
     | LEFT_OPERATOR INTEGER.p IDENTIFIER.id             {: return leftOp(id, p); :}
     | RIGHT_OPERATOR INTEGER.p IDENTIFIER.id            {: return rightOp(id, p); :}
@@ -82,15 +82,16 @@ module_expression
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
     ;
 
-function_signature
-    = qualified_identifier.id                                   {: return type(id); :}
-    | tuple_signature
-    | qualified_identifier.id APPLIES_TO function_signature.f   {: return fsig(type(id), f); :}
-    | tuple_signature.t APPLIES_TO function_signature.f         {: return fsig(t, f); :}
+type_signature
+    = primary_signature
+    | primary_signature.t APPLIES_TO type_signature.f {: return fsig(t, f); :}
     ;
 
-tuple_signature
-    = LPAREN tuple_types.t RPAREN
+primary_signature
+    = qualified_identifier.id           {: return type(id); :}
+    | LFUNC COMMA? RPAREN               {: return type(qid("snacks", "lang", "Void")); :}
+    | LFUNC function_signature.f RPAREN {: return f; :}
+    | LPAREN tuple_signature.t COMMA? RPAREN
         {:
             List<Symbol> types = new ArrayList<>();
             for (QualifiedIdentifier id : t) {
@@ -100,9 +101,16 @@ tuple_signature
         :}
     ;
 
-tuple_types
+function_signature
+    = qualified_identifier.id                                 {: return type(id); :}
+    | qualified_fword.id                                      {: return type(id); :}
+    | qualified_identifier.id APPLIES_TO function_signature.f {: return fsig(type(id), f); :}
+    | qualified_fword.id APPLIES_TO function_signature.f      {: return fsig(type(id), f); :}
+    ;
+
+tuple_signature
     = qualified_identifier.id
-    | tuple_types COMMA qualified_identifier.id
+    | tuple_signature COMMA qualified_identifier.id
     ;
 
 sub_imports

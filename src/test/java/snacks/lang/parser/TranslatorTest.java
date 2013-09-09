@@ -268,6 +268,7 @@ public class TranslatorTest {
     @Test
     public void shouldApplyFunctionToFunction() {
         translate(
+            "operate :: (Integer -> Integer -> Integer) -> Integer",
             "operate = (op) -> op 2 4",
             "example = operate `+`"
         );
