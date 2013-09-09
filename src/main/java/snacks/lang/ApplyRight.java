@@ -9,13 +9,13 @@ import java.lang.reflect.Method;
 
 @Snack("$")
 @Infix(fixity = RIGHT, precedence = 1)
-public class Apply {
+public class ApplyRight {
 
-    private static Apply instance;
+    private static ApplyRight instance;
 
-    public static Apply instance() {
+    public static ApplyRight instance() {
         if (instance == null) {
-            instance = new Apply();
+            instance = new ApplyRight();
         }
         return instance;
     }
