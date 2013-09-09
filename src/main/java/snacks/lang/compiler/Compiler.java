@@ -31,25 +31,19 @@ public class Compiler implements Generator, Reducer {
         replacements.put("?", "$Query");
         replacements.put("!", "$Bang");
         replacements.put("+", "$Plus");
-        replacements.put("-", "$Minus");
-        replacements.put("**", "$Exponent");
-        replacements.put("*", "$Multiply");
-        replacements.put("/", "$Divide");
-        replacements.put("%", "$Modulo");
-        replacements.put("&", "$BitAnd");
-        replacements.put("|", "$BitOr");
-        replacements.put("^", "$BitXor");
+        replacements.put("-", "$Dash");
+        replacements.put("*", "$Splat");
+        replacements.put("/", "$Slash");
+        replacements.put("%", "$Frac");
+        replacements.put("&", "$Amp");
+        replacements.put("|", "$Pipe");
+        replacements.put("^", "$Point");
         replacements.put("[]", "$Index");
-        replacements.put("...", "$XRange");
-        replacements.put("..", "$Range");
-        replacements.put("==", "$Equals");
-        replacements.put("<<", "$LShift");
-        replacements.put(">>>", "$URShift");
-        replacements.put(">>", "$RShift");
-        replacements.put("<=", "$LessThanEquals");
-        replacements.put(">=", "$GreaterThanEquals");
-        replacements.put("<", "$LessThan");
-        replacements.put(">", "$GreaterThan");
+        replacements.put(".", "$Dot");
+        replacements.put("=", "$Equal");
+        replacements.put("<", "$Lt");
+        replacements.put(">", "$Gt");
+        replacements.put("~", "$Wave");
     }
 
     private final SnacksLoader loader;
