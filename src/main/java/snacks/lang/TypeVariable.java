@@ -59,6 +59,11 @@ public class TypeVariable extends Type {
     }
 
     @Override
+    public int size() {
+        return state.size();
+    }
+
+    @Override
     public String toString() {
         return state.toString();
     }
@@ -93,6 +98,8 @@ public class TypeVariable extends Type {
         List<Type> getParameters();
 
         Type recompose(Type functionType, TypeFactory environment);
+
+        int size();
     }
 
     private static final class BoundState implements State {
@@ -141,6 +148,11 @@ public class TypeVariable extends Type {
         @Override
         public Type recompose(Type functionType, TypeFactory environment) {
             return type;
+        }
+
+        @Override
+        public int size() {
+            return type.size();
         }
 
         @Override
@@ -196,12 +208,17 @@ public class TypeVariable extends Type {
 
         @Override
         public Type recompose(Type functionType, TypeFactory environment) {
-            int size = functionType.decompose().size();
+            int size = functionType.size();
             List<Type> variables = new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 variables.add(environment.createVariable());
             }
             return set(variables);
+        }
+
+        @Override
+        public int size() {
+            return 1;
         }
 
         @Override

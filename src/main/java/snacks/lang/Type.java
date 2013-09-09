@@ -106,6 +106,10 @@ public abstract class Type {
 
     public abstract List<Type> getParameters();
 
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
     public boolean occursIn(Collection<Type> types) {
         for (Type type : types) {
             if (occursIn(type)) {
@@ -122,6 +126,8 @@ public abstract class Type {
     }
 
     public abstract Type recompose(Type functionType, TypeFactory types);
+
+    public abstract int size();
 
     public boolean unify(Type other) {
         Type left = expose();

@@ -74,6 +74,11 @@ public class TypeSet extends Type {
     }
 
     @Override
+    public int size() {
+        return types.size();
+    }
+
+    @Override
     public String toString() {
         return "(set[" + join(types, ", ") + "])";
     }

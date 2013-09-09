@@ -201,7 +201,7 @@ public class Translator implements SyntaxVisitor {
         }
         Locator locator = locator(module, node.getName());
         DeclaredExpression declaration = declaration(getModule(), node.getName(), body);
-        if (declaration.getType().decompose().isEmpty()) {
+        if (declaration.getType().isEmpty()) {
             throw new TypeException(join(typeErrors, "; "));
         }
         if (environment().hasSignature(locator)) {
@@ -301,7 +301,7 @@ public class Translator implements SyntaxVisitor {
         beginFunction();
         AstNode invokable = invokable(translate(node.getExpression()));
         leaveFunction();
-        if (result(invokable.getType()).decompose().isEmpty()) {
+        if (result(invokable.getType()).isEmpty()) {
             throw new TypeException("Could not determine type of invokable");
         }
         result = invokable;
@@ -662,7 +662,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     private boolean unifyFunctionResult(Type functionType, Type declaredResultType) {
-        if (functionType.decompose().size() == 1) {
+        if (functionType.size() == 1) {
             Type actualResultType = result(functionType);
             return actualResultType.unify(declaredResultType);
         } else {
