@@ -365,7 +365,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitOperator(Operator node) {
-        environment().register(node.getPrecedence(), node.getFixity(), node.getName());
+        environment().registerInfix(node.getPrecedence(), node.getFixity(), node.getName());
     }
 
     @Override

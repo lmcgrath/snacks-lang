@@ -12,23 +12,29 @@ import snacks.lang.parser.syntax.Operator;
 
 public class SymbolEnvironment implements TypeFactory {
 
-    private final State state;
+    private final SnacksLoader loader;
+    private final OperatorRegistry operators;
+    private final Scope scope;
 
     public SymbolEnvironment(SnacksLoader loader) {
-        this.state = new HeadState(loader);
+        this.loader = loader;
+        this.operators = new OperatorRegistry();
+        this.scope = new HeadScope(loader);
     }
 
     private SymbolEnvironment(SymbolEnvironment parent) {
-        state = new TailState(parent);
+        this.loader = parent.loader;
+        this.operators = parent.operators;
+        this.scope = new TailScope(parent.scope);
     }
 
     @Override
     public Type createVariable() {
-        return state.createVariable();
+        return scope.createVariable();
     }
 
     public void define(Reference reference) {
-        state.define(reference);
+        scope.define(reference);
     }
 
     public SymbolEnvironment extend() {
@@ -66,47 +72,51 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     public void generify(Type type) {
-        state.generify(type);
+        scope.generify(type);
     }
 
     public Operator getOperator(String name) {
-        return state.getOperator(name);
+        return operators.isOperator(name) ? operators.getOperator(name) : loader.getOperator(name);
     }
 
     public Reference getReference(Locator locator) {
-        return state.getReference(locator);
+        return scope.getReference(locator);
     }
 
     public Collection<String> getVariables() {
-        return state.getVariables();
+        return scope.getVariables();
     }
 
     public boolean hasSignature(Locator locator) {
-        return state.hasSignature(locator);
+        return scope.hasSignature(locator);
     }
 
     public boolean isDefined(Locator locator) {
-        return state.isDefined(locator);
+        return scope.isDefined(locator);
     }
 
     public boolean isOperator(String name) {
-        return state.isOperator(name);
+        return operators.isOperator(name) || loader.isOperator(name);
     }
 
-    public void register(int precedence, Fixity fixity, String name) {
-        state.register(precedence, fixity, name);
+    public void registerInfix(int precedence, Fixity fixity, String name) {
+        if (loader.isOperator(name)) {
+            throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
+        } else {
+            operators.registerInfix(precedence, fixity, name);
+        }
     }
 
     public void signature(Reference reference) {
-        state.signature(reference);
+        scope.signature(reference);
     }
 
     public void specialize(Type type) {
-        state.specialize(type);
+        scope.specialize(type);
     }
 
     public Type typeOf(Locator locator) {
-        return genericCopy(state.typeOf(locator), new HashMap<Type, Type>());
+        return genericCopy(scope.typeOf(locator), new HashMap<Type, Type>());
     }
 
     private Type genericCopy(Type type, Map<Type, Type> mappings) {
@@ -114,20 +124,20 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     private Set<Type> getSpecializedTypes() {
-        return state.getSpecializedTypes();
+        return scope.getSpecializedTypes();
     }
 
     private boolean isGeneric(Type type) {
-        return !type.occursIn(state.getSpecializedTypes());
+        return !type.occursIn(scope.getSpecializedTypes());
     }
 
-    private static abstract class State {
+    private static abstract class Scope {
 
         private final Map<Locator, Type> symbols;
         private final Map<Locator, Type> signatures;
         private final Set<Type> specializedTypes;
 
-        public State() {
+        public Scope() {
             symbols = new HashMap<>();
             signatures = new HashMap<>();
             specializedTypes = new HashSet<>();
@@ -145,8 +155,6 @@ public class SymbolEnvironment implements TypeFactory {
         public void generify(Type type) {
             specializedTypes.remove(type);
         }
-
-        public abstract Operator getOperator(String name);
 
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
@@ -175,10 +183,6 @@ public class SymbolEnvironment implements TypeFactory {
             return symbols.containsKey(locator) || signatures.containsKey(locator);
         }
 
-        public abstract boolean isOperator(String name);
-
-        public abstract void register(int precedence, Fixity fixity, String name);
-
         public void signature(Reference reference) {
             signatures.put(reference.getLocator(), reference.getType());
         }
@@ -199,44 +203,21 @@ public class SymbolEnvironment implements TypeFactory {
             }
         }
 
-        protected void resolve(Locator locator) {
-            // intentionally empty
-        }
+        protected abstract void resolve(Locator locator);
     }
 
-    private static final class HeadState extends State implements LocatorVisitor {
+    private static final class HeadScope extends Scope implements LocatorVisitor {
 
         private final SnacksLoader loader;
-        private final OperatorRegistry operators;
         private int nextId = 1;
 
-        public HeadState(SnacksLoader loader) {
+        public HeadScope(SnacksLoader loader) {
             this.loader = loader;
-            this.operators = new OperatorRegistry();
         }
 
         @Override
         public Type createVariable() {
             return var("#" + nextId++);
-        }
-
-        @Override
-        public Operator getOperator(String name) {
-            return operators.isOperator(name) ? operators.getOperator(name) : loader.getOperator(name);
-        }
-
-        @Override
-        public boolean isOperator(String name) {
-            return operators.isOperator(name) || loader.isOperator(name);
-        }
-
-        @Override
-        public void register(int precedence, Fixity fixity, String name) {
-            if (loader.isOperator(name)) {
-                throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
-            } else {
-                operators.registerInfix(precedence, fixity, name);
-            }
         }
 
         @Override
@@ -263,11 +244,11 @@ public class SymbolEnvironment implements TypeFactory {
         }
     }
 
-    private static final class TailState extends State {
+    private static final class TailScope extends Scope {
 
-        private final SymbolEnvironment parent;
+        private final Scope parent;
 
-        public TailState(SymbolEnvironment parent) {
+        public TailScope(Scope parent) {
             this.parent = parent;
         }
 
@@ -280,11 +261,6 @@ public class SymbolEnvironment implements TypeFactory {
         public void generify(Type type) {
             super.generify(type);
             parent.generify(type);
-        }
-
-        @Override
-        public Operator getOperator(String name) {
-            return parent.getOperator(name);
         }
 
         @Override
@@ -314,22 +290,17 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public boolean isOperator(String name) {
-            return parent.isOperator(name);
-        }
-
-        @Override
-        public void register(int precedence, Fixity fixity, String name) {
-            parent.register(precedence, fixity, name);
-        }
-
-        @Override
         public Type typeOf(Locator locator) {
             if (super.isDefined(locator)) {
                 return super.typeOf(locator);
             } else {
                 return parent.typeOf(locator);
             }
+        }
+
+        @Override
+        protected void resolve(Locator locator) {
+            // intentionally empty
         }
     }
 }
