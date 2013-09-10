@@ -372,9 +372,17 @@ public class Translator implements SyntaxVisitor {
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         List<String> segments = node.getSegments();
         if (segments.size() > 1) {
-            throw new UnsupportedOperationException(); // TODO
+            String module = join(segments.subList(0, segments.size() - 1), '.');
+            String name = segments.get(segments.size() - 1);
+            Locator locator = locator(module, name);
+            if (environment().isDefined(locator(module, name))) {
+                result = new Reference(locator, environment().typeOf(locator));
+            } else {
+                throw new UndefinedSymbolException("Symbol " + join(segments, '.') + " is not defined");
+            }
+        } else {
+            result = reference(segments.get(0));
         }
-        result = reference(segments.get(0));
     }
 
     @Override

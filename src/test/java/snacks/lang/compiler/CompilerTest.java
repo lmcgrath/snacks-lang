@@ -583,6 +583,16 @@ public class CompilerTest {
         verifyOut(13);
     }
 
+    @Test
+    public void shouldResolveTypesWithFullyQualifiedNames() throws Exception {
+        run(
+            "something :: (snacks.lang.String, snacks.lang.Boolean, snacks.lang.Integer) -> Void",
+            "main = () -> something ('waffles', True, 3)",
+            "something = (x) -> say $ stringy x"
+        );
+        verifyOut("(Tuple3 waffles, true, 3)");
+    }
+
     private void run(String... inputs) throws Exception {
         ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
     }
