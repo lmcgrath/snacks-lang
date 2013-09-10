@@ -2,6 +2,7 @@ package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
+import static snacks.lang.Fixity.RIGHT;
 import static snacks.lang.Type.*;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
@@ -342,8 +343,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitMessage(Message node) {
-        Deque<Symbol> iterator = new ArrayDeque<>(node.getElements());
-        result = shufflePrecedence(gatherArguments(iterator), iterator, 0);
+        result = shuffleMessage(new LinkedList<>(node.getElements()));
     }
 
     @Override
@@ -484,21 +484,12 @@ public class Translator implements SyntaxVisitor {
         throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
     }
 
-    private AstNode gatherArguments(Deque<Symbol> queue) {
-        AstNode function = translate(queue.poll());
-        while (!queue.isEmpty() && !isOperator(queue.peek())) {
-            AstNode argument = translate(queue.poll());
-            function = apply(function, argument, inferenceResultType(function.getType(), argument.getType()));
-        }
-        return function;
-    }
-
     private String generateName() {
         return currentName.generateName();
     }
 
-    private int getPrecedence(Symbol node) {
-        return environment().getPrecedence(((Identifier) node).getName());
+    private Operator getOperator(Symbol node) {
+        return environment().getOperator(((Identifier) node).getName());
     }
 
     private Type inferenceFunctionType(FunctionLiteral functionNode, DeclaredArgument argument) {
@@ -542,10 +533,6 @@ public class Translator implements SyntaxVisitor {
         return set(allowedTypes);
     }
 
-    private boolean isNextOperator(Symbol node, int minimum) {
-        return isOperator(node) && environment().isNextOperator(((Identifier) node).getName(), minimum);
-    }
-
     private boolean isOperator(Symbol node) {
         if (node instanceof Identifier) {
             String name = ((Identifier) node).getName();
@@ -556,10 +543,6 @@ public class Translator implements SyntaxVisitor {
         } else {
             return false;
         }
-    }
-
-    private boolean isRightOperator(Symbol node, int precedence) {
-        return isOperator(node) && environment().isRightOperator(((Identifier) node).getName(), precedence);
     }
 
     private String javaClass(Symbol symbol) {
@@ -588,28 +571,92 @@ public class Translator implements SyntaxVisitor {
         currentName = new NameSequence(name);
     }
 
-    private AstNode shufflePrecedence(AstNode head, Deque<Symbol> queue, int minimum) {
-        AstNode lhs = head;
-        while (!queue.isEmpty() && isNextOperator(queue.peek(), minimum)) {
-            Identifier op = (Identifier) queue.poll();
-            final int precedence = getPrecedence(op);
-            if (!"=".equals(op.getName())) {
-                AstNode function = translate((Symbol) op);
-                lhs = apply(function, lhs, inferenceResultType(function.getType(), lhs.getType()));
+    private AstNode shuffleMessage(LinkedList<Symbol> input) {
+        LinkedList<Operator> operators = new LinkedList<>();
+        LinkedList<Symbol> expressions = new LinkedList<>();
+        boolean expectingPrefix = isOperator(input.peek());
+        Symbol start = null;
+        Symbol current;
+        Operator op;
+        while (!input.isEmpty()) {
+            current = input.poll();
+            if (start == null) {
+                if (isOperator(current)) {
+                    op = getOperator(current);
+                    if (expectingPrefix) {
+                        switch (op.getName()) {
+                            case "-": op = op.toAffix("unary-"); break;
+                            case "+": op = op.toAffix("unary+"); break;
+                            case "~": op = op.toAffix("unary~"); break;
+                            default:
+                                if (!op.isAffix()) {
+                                    throw new ParseException("Unexpected binary operator: " + op);
+                                }
+                        }
+                    }
+                    shuffleOperator(op, operators, expressions);
+                } else {
+                    start = current;
+                    while (!input.isEmpty() && !isOperator(input.peek())) {
+                        start = new ApplyExpression(start, input.poll());
+                    }
+                }
+            } else if (isOperator(current)) {
+                op = getOperator(current);
+                expressions.push(start);
+                start = null;
+                shuffleOperator(op, operators, expressions);
             }
-            AstNode rhs = gatherArguments(queue);
-            while (!queue.isEmpty() && isRightOperator(queue.peek(), precedence)) {
-                int lookAhead = getPrecedence(queue.peek());
-                rhs = shufflePrecedence(rhs, queue, lookAhead);
-            }
-            if ("=".equals(op.getName())) {
-                verifyAssignmentType(lhs.getType(), rhs.getType());
-                lhs = assign(lhs, rhs);
+            expectingPrefix = isOperator(input.peek());
+        }
+        if (start != null) {
+            expressions.push(start);
+        }
+        Symbol left;
+        while (!operators.isEmpty()) {
+            op = operators.pop();
+            left = expressions.pop();
+            if (op.isAffix()) {
+                expressions.push(new ApplyExpression(new Identifier(op.getName()), left));
+            } else if (op.isAssignment()) {
+                expressions.push(new AssignmentExpression(expressions.pop(), left));
             } else {
-                lhs = apply(lhs, rhs, inferenceResultType(lhs.getType(), rhs.getType()));
+                expressions.push(new ApplyExpression(new ApplyExpression(new Identifier(op.getName()), expressions.pop()), left));
             }
         }
-        return lhs;
+        if (expressions.size() > 1) {
+            throw new ParseException("Failed to shuffle: " + expressions.size() + " remaining");
+        }
+        return translate(expressions.pop());
+    }
+
+    private void shuffleOperator(Operator op, LinkedList<Operator> operators, LinkedList<Symbol> arguments) {
+        Operator pop;
+        Symbol n1, n2;
+        if (op.getFixity() == RIGHT) {
+            while (!operators.isEmpty() && op.getPrecedence() < operators.peek().getPrecedence()) {
+                pop = operators.pop();
+                n1 = arguments.pop();
+                if (pop.isAffix()) {
+                    arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
+                } else {
+                    n2 = arguments.pop();
+                    arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(pop.getName()), n2), n1));
+                }
+            }
+        } else {
+            while (!operators.isEmpty() && op.getPrecedence() <= operators.peek().getPrecedence()) {
+                pop = operators.pop();
+                n1 = arguments.pop();
+                if (pop.isAffix()) {
+                    arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
+                } else {
+                    n2 = arguments.pop();
+                    arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(pop.getName()), n2), n1));
+                }
+            }
+        }
+        operators.push(op);
     }
 
     private AstNode translate(Visitable node) {

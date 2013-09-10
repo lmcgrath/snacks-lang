@@ -160,7 +160,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol leftOp(String id, int precedence) {
-        return new Operator(LEFT, precedence, id);
+        return new Operator(LEFT, precedence, 2, id);
     }
 
     public static Symbol list(Symbol... elements) {
@@ -220,7 +220,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol op(String name, int precedence) {
-        return new Operator(NONE, precedence, name);
+        return new Operator(NONE, precedence, 2, name);
     }
 
     public static Symbol qid(QualifiedIdentifier id, String segment) {
@@ -244,7 +244,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol rightOp(String id, int precedence) {
-        return new Operator(RIGHT, precedence, id);
+        return new Operator(RIGHT, precedence, 2, id);
     }
 
     public static Symbol set(Symbol element, Symbol[] elements) {

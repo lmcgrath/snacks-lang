@@ -8,7 +8,7 @@ import static snacks.lang.Type.var;
 import java.util.Objects;
 
 @Snack("==")
-@Infix(fixity = LEFT, precedence = 2)
+@Infix(fixity = LEFT, precedence = 6)
 public class Equals {
 
     private static Equals instance;

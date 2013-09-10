@@ -38,11 +38,12 @@ public class Compiler implements Generator, Reducer {
         replacements.put("&", "$Amp");
         replacements.put("|", "$Pipe");
         replacements.put("^", "$Point");
-        replacements.put("[]", "$Index");
-        replacements.put(".", "$Dot");
+        replacements.put("[]", "$Sammich");
+        replacements.put("..", "$Dots");
+        replacements.put("...", "$Bore");
         replacements.put("=", "$Equal");
-        replacements.put("<", "$Lt");
-        replacements.put(">", "$Gt");
+        replacements.put("<", "$Grow");
+        replacements.put(">", "$Shrink");
         replacements.put("~", "$Wave");
     }
 

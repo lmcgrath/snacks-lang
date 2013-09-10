@@ -14,6 +14,7 @@ import java.security.ProtectionDomain;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import snacks.lang.parser.syntax.Operator;
 
 public class SnacksLoader extends URLClassLoader {
 
@@ -36,20 +37,12 @@ public class SnacksLoader extends URLClassLoader {
         return super.defineClass(name, bytes, 0, bytes.length, domain);
     }
 
-    public int getPrecedence(String name) {
-        return operators.getPrecedence(name);
-    }
-
-    public boolean isNextOperator(String name, int minimum) {
-        return operators.isNextOperator(name, minimum);
+    public Operator getOperator(String name) {
+        return operators.getOperator(name);
     }
 
     public boolean isOperator(String name) {
         return operators.isOperator(name);
-    }
-
-    public boolean isRightOperator(String name, int precedence) {
-        return operators.isRightOperator(name, precedence);
     }
 
     public Class<?> loadSnack(String qualifiedName) {
@@ -100,7 +93,12 @@ public class SnacksLoader extends URLClassLoader {
                             classes.put(name, new SnackEntry(snack, snackClass, resolveType(snackClass)));
                             Infix infix = snackClass.getAnnotation(Infix.class);
                             if (infix != null) {
-                                operators.register(infix.precedence(), infix.fixity(), snack.value());
+                                operators.registerInfix(infix.precedence(), infix.fixity(), snack.value());
+                            } else {
+                                Affix affix = snackClass.getAnnotation(Affix.class);
+                                if (affix != null) {
+                                    operators.registerAffix(affix.precedence(), affix.fixity(), snack.value());
+                                }
                             }
                         }
                     }

@@ -8,6 +8,7 @@ import static snacks.lang.ast.AstFactory.reference;
 import java.util.*;
 import snacks.lang.*;
 import snacks.lang.ast.*;
+import snacks.lang.parser.syntax.Operator;
 
 public class SymbolEnvironment implements TypeFactory {
 
@@ -68,8 +69,8 @@ public class SymbolEnvironment implements TypeFactory {
         state.generify(type);
     }
 
-    public int getPrecedence(String name) {
-        return state.getPrecedence(name);
+    public Operator getOperator(String name) {
+        return state.getOperator(name);
     }
 
     public Reference getReference(Locator locator) {
@@ -88,16 +89,8 @@ public class SymbolEnvironment implements TypeFactory {
         return state.isDefined(locator);
     }
 
-    public boolean isNextOperator(String name, int minimum) {
-        return state.isNextOperator(name, minimum);
-    }
-
     public boolean isOperator(String name) {
         return state.isOperator(name);
-    }
-
-    public boolean isRightOperator(String name, int precedence) {
-        return state.isRightOperator(name, precedence);
     }
 
     public void register(int precedence, Fixity fixity, String name) {
@@ -153,7 +146,7 @@ public class SymbolEnvironment implements TypeFactory {
             specializedTypes.remove(type);
         }
 
-        public abstract int getPrecedence(String name);
+        public abstract Operator getOperator(String name);
 
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
@@ -182,11 +175,7 @@ public class SymbolEnvironment implements TypeFactory {
             return symbols.containsKey(locator) || signatures.containsKey(locator);
         }
 
-        public abstract boolean isNextOperator(String name, int minimum);
-
         public abstract boolean isOperator(String name);
-
-        public abstract boolean isRightOperator(String name, int precedence);
 
         public abstract void register(int precedence, Fixity fixity, String name);
 
@@ -232,13 +221,8 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public int getPrecedence(String name) {
-            return operators.isOperator(name) ? operators.getPrecedence(name) : loader.getPrecedence(name);
-        }
-
-        @Override
-        public boolean isNextOperator(String name, int minimum) {
-            return operators.isNextOperator(name, minimum) || loader.isNextOperator(name, minimum);
+        public Operator getOperator(String name) {
+            return operators.isOperator(name) ? operators.getOperator(name) : loader.getOperator(name);
         }
 
         @Override
@@ -247,16 +231,11 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public boolean isRightOperator(String name, int precedence) {
-            return operators.isRightOperator(name, precedence) || loader.isRightOperator(name, precedence);
-        }
-
-        @Override
         public void register(int precedence, Fixity fixity, String name) {
             if (loader.isOperator(name)) {
                 throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
             } else {
-                operators.register(precedence, fixity, name);
+                operators.registerInfix(precedence, fixity, name);
             }
         }
 
@@ -304,8 +283,8 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public int getPrecedence(String name) {
-            return parent.getPrecedence(name);
+        public Operator getOperator(String name) {
+            return parent.getOperator(name);
         }
 
         @Override
@@ -335,18 +314,8 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         @Override
-        public boolean isNextOperator(String name, int minimum) {
-            return parent.isNextOperator(name, minimum);
-        }
-
-        @Override
         public boolean isOperator(String name) {
             return parent.isOperator(name);
-        }
-
-        @Override
-        public boolean isRightOperator(String name, int precedence) {
-            return parent.isRightOperator(name, precedence);
         }
 
         @Override

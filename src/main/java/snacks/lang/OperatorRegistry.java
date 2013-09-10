@@ -12,23 +12,15 @@ public class OperatorRegistry {
 
     public OperatorRegistry() {
         operators = new HashMap<>();
-        operators.put("=", new OpEntry(RIGHT, 0));
+        operators.put("=", new OpEntry(RIGHT, 0, 2));
     }
 
     public Operator getOperator(String name) {
         OpEntry entry = operators.get(name);
         if (entry != null) {
-            return new Operator(entry.getFixity(), entry.getPrecedence(), name);
+            return entry.toOperator(name);
         } else {
             return null;
-        }
-    }
-
-    public int getPrecedence(String name) {
-        if (isOperator(name)) {
-            return getOperator(name).getPrecedence();
-        } else {
-            return -1;
         }
     }
 
@@ -36,23 +28,15 @@ public class OperatorRegistry {
         return operators.containsKey(name);
     }
 
-    public boolean isNextOperator(String name, int minimum) {
-        return isOperator(name) && getOperator(name).getPrecedence() >= minimum;
-    }
-
-    public boolean isRightOperator(String name, int precedence) {
-        if (isOperator(name)) {
-            Operator operator = getOperator(name);
-            return operator.getPrecedence() > precedence
-                || operator.getFixity() == RIGHT && operator.getPrecedence() == precedence;
-        } else {
-            return false;
+    public void registerAffix(int precedence, Fixity fixity, String... names) {
+        for (String name : names) {
+            operators.put(name, new OpEntry(fixity, precedence, 1));
         }
     }
 
-    public void register(int precedence, Fixity fixity, String... names) {
+    public void registerInfix(int precedence, Fixity fixity, String... names) {
         for (String name : names) {
-            operators.put(name, new OpEntry(fixity, precedence));
+            operators.put(name, new OpEntry(fixity, precedence, 2));
         }
     }
 
@@ -60,18 +44,16 @@ public class OperatorRegistry {
 
         private final Fixity fixity;
         private final int precedence;
+        private final int arity;
 
-        public OpEntry(Fixity fixity, int precedence) {
+        public OpEntry(Fixity fixity, int precedence, int arity) {
             this.fixity = fixity;
             this.precedence = precedence;
+            this.arity = arity;
         }
 
-        public Fixity getFixity() {
-            return fixity;
-        }
-
-        public int getPrecedence() {
-            return precedence;
+        public Operator toOperator(String name) {
+            return new Operator(fixity, precedence, arity, name);
         }
     }
 }

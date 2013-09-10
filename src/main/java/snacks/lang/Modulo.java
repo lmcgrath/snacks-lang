@@ -5,7 +5,7 @@ import static snacks.lang.Type.INTEGER_TYPE;
 import static snacks.lang.Type.func;
 
 @Snack("%")
-@Infix(fixity = LEFT, precedence = 9)
+@Infix(fixity = LEFT, precedence = 13)
 public class Modulo {
 
     private static Modulo instance;

@@ -381,24 +381,21 @@ public class CompilerTest {
         verifyOut(3);
     }
 
-    @Ignore
     @Test
     public void shouldCompileNegative() throws Exception {
         run("main = () -> say $ -3");
         verifyOut(-3);
     }
 
-    @Ignore
     @Test
     public void shouldCompilePositive() throws Exception {
         run("main = () -> say $ +3");
         verifyOut(3);
     }
 
-    @Ignore
     @Test
     public void shouldCompileNegativeNegative() throws Exception {
-        run("main = () -> say $ --3");
+        run("main = () -> say $ -(-3)");
         verifyOut(3);
     }
 

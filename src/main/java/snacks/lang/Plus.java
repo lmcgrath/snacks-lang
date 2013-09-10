@@ -4,7 +4,7 @@ import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.*;
 
 @Snack("+")
-@Infix(fixity = LEFT, precedence = 8)
+@Infix(fixity = LEFT, precedence = 12)
 public class Plus {
 
     private static Plus instance;

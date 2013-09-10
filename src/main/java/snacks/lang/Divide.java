@@ -7,7 +7,7 @@ import static snacks.lang.Type.func;
 import static snacks.lang.Type.set;
 
 @Snack("/")
-@Infix(fixity = LEFT, precedence = 9)
+@Infix(fixity = LEFT, precedence = 13)
 public class Divide {
 
     private static Divide instance;

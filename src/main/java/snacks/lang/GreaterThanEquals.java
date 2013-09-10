@@ -8,7 +8,7 @@ import static snacks.lang.Type.func;
 import static snacks.lang.Type.set;
 
 @Snack(">=")
-@Infix(fixity = LEFT, precedence = 2)
+@Infix(fixity = LEFT, precedence = 6)
 public class GreaterThanEquals {
 
     private static GreaterThanEquals instance;

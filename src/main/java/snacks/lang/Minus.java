@@ -7,7 +7,7 @@ import static snacks.lang.Type.func;
 import static snacks.lang.Type.set;
 
 @Snack("-")
-@Infix(fixity = LEFT, precedence = 8)
+@Infix(fixity = LEFT, precedence = 12)
 public class Minus {
 
     private static Minus instance;

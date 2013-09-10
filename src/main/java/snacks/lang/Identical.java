@@ -6,7 +6,7 @@ import static snacks.lang.Type.func;
 import static snacks.lang.Type.var;
 
 @Snack("is")
-@Infix(fixity = LEFT, precedence = 1)
+@Infix(fixity = LEFT, precedence = 6)
 public class Identical {
 
     private static Identical instance;

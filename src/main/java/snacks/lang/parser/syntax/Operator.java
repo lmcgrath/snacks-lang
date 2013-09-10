@@ -9,11 +9,13 @@ public class Operator extends Symbol implements Visitable {
 
     private final Fixity fixity;
     private final int precedence;
+    private final int arity;
     private final String name;
 
-    public Operator(Fixity fixity, int precedence, String name) {
+    public Operator(Fixity fixity, int precedence, int arity, String name) {
         this.fixity = fixity;
         this.precedence = precedence;
+        this.arity = arity;
         this.name = name;
     }
 
@@ -31,6 +33,7 @@ public class Operator extends Symbol implements Visitable {
             return new EqualsBuilder()
                 .append(fixity, other.fixity)
                 .append(precedence, other.precedence)
+                .append(arity, other.arity)
                 .append(name, other.name)
                 .isEquals();
         } else {
@@ -53,5 +56,17 @@ public class Operator extends Symbol implements Visitable {
     @Override
     public int hashCode() {
         return Objects.hash(fixity, precedence, name);
+    }
+
+    public boolean isAssignment() {
+        return "=".equals(name);
+    }
+
+    public boolean isAffix() {
+        return arity == 1;
+    }
+
+    public Operator toAffix(String name) {
+        return new Operator(fixity, precedence, 1, name);
     }
 }

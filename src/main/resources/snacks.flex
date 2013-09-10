@@ -73,7 +73,11 @@ TraditionalComment      = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 EndOfLineComment        = "//" {InputCharacter}* {NewLine}
 DocumentationComment    = "/**" {CommentContent} "*"+ "/"
 CommentContent          = ([^*] | \*+ [^/*])*
-Id                      = (([:jletterdigit:] | "_" | "~" | "!" | "$" | "%" | "^" | "&" | "*" | "-" | "=" | "+" | "/" | "?" | "<" | ">")+ | ".." "."*)
+Letter                  = [A-Za-z_\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u1FFF\u2200-\u22FF\u27C0-\u27EF\u2980-\u2AFF\u3040-\u318F\u3300-\u337F\u3400-\u3D2D\u4E00-\u9FFF\uF900-\uFAFF]
+Digit                   = [0-9]
+IdDigit                 = [0-9\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\u09E6-\u09EF\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0BE7-\u0BEF\u0C66-\u0C6F\u0CE6-\u0CEF\u0D66-\u0D6F\u0E50-\u0E59\u0ED0-\u0ED9\u1040-\u1049]
+IdSymbol                = ("~" | "!" | "$" | "%" | "^" | "&" | "*" | "-" | "=" | "+" | "/" | "?" | "<" | ">")
+Id                      = ({IdDigit} | {Letter} | {IdSymbol})+ | "..." | ".." | "[]"
 Integer                 = "0" | [1-9][0-9]*
 Double                  = {Integer}? \.[0-9]+
 Whitespace              = [ \t\f]+
@@ -107,6 +111,8 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 <YYINITIAL> {
     {Double}        { detectSelector(); return token(DOUBLE, Double.parseDouble(yytext())); }
     {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
+    [\+\-~] ({Letter} | {IdDigit} | "(" | ")" | "[" | "]" | "{" | "}")
+                    { yypushback(yylength() - 1); return token(IDENTIFIER, yytext()); }
     "."             { return token(DOT); }
     "r/"            { enterState(REGEX_STATE); return token(LREGEX); }
     "`" {Id} "`"    { return token(QUOTED_IDENTIFIER, yytext().substring(1, yylength() - 1)); }
@@ -332,9 +338,9 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "{"             { return token(LFUNC_MULTILINE); }
     "::"            { return token(DOUBLE_COLON); }
     ":"             { return token(COLON); }
-    "."             { return token(DOT); }
     "`" {Id} "`"    { return token(FWORD, yytext().substring(1, yylength() - 1)); }
     {Id}            { return fword(); }
+    "."             { return token(DOT); }
     ")"             { return token(RPAREN); }
     "}"             { return token(RCURLY); }
     {AnyWhitespace} { /* ignore */ }
@@ -342,9 +348,9 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 
 <EMBRACE_STATE> {
     ":"             { return token(COLON); }
-    "."             { return token(DOT); }
     "`" {Id} "`"    { return token(FWORD, yytext().substring(1, yylength() - 1)); }
     {Id}            { return eword(); }
+    "."             { return token(DOT); }
     {Whitespace}    { /* ignore */ }
 }
 

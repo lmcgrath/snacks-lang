@@ -6,7 +6,7 @@ import static snacks.lang.Type.func;
 import static snacks.lang.Type.var;
 
 @Snack("is not")
-@Infix(fixity = LEFT, precedence = 2)
+@Infix(fixity = LEFT, precedence = 6)
 public class NotIdentical {
 
     private static Identical instance;
