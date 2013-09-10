@@ -111,7 +111,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
 <YYINITIAL> {
     {Double}        { detectSelector(); return token(DOUBLE, Double.parseDouble(yytext())); }
     {Integer}       { detectSelector(); return token(INTEGER, Integer.parseInt(yytext())); }
-    [\+\-~] ({Letter} | {IdDigit} | "(" | ")" | "[" | "]" | "{" | "}")
+    [\+\-~!] ({Letter} | {IdDigit} | "(" | ")" | "[" | "]" | "{" | "}")
                     { yypushback(yylength() - 1); return token(IDENTIFIER, yytext()); }
     "."             { return token(DOT); }
     "r/"            { enterState(REGEX_STATE); return token(LREGEX); }

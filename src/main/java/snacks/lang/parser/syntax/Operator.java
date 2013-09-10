@@ -1,5 +1,7 @@
 package snacks.lang.parser.syntax;
 
+import static snacks.lang.Fixity.RIGHT;
+
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -62,11 +64,11 @@ public class Operator extends Symbol implements Visitable {
         return "=".equals(name);
     }
 
-    public boolean isAffix() {
-        return arity == 1;
+    public boolean isPrefix() {
+        return arity == 1 && fixity == RIGHT;
     }
 
-    public Operator toAffix(String name) {
-        return new Operator(fixity, precedence, 1, name);
+    public Operator toPrefix(String name) {
+        return new Operator(RIGHT, precedence, 1, name);
     }
 }

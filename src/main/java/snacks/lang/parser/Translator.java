@@ -343,7 +343,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitMessage(Message node) {
-        result = shuffleMessage(new LinkedList<>(node.getElements()));
+        result = translate(shuffleMessage(node));
     }
 
     @Override
@@ -561,6 +561,26 @@ public class Translator implements SyntaxVisitor {
         }
     }
 
+    private Symbol reduceOperations(LinkedList<Operator> operators, LinkedList<Symbol> arguments) {
+        Operator op;
+        Symbol left;
+        while (!operators.isEmpty()) {
+            op = operators.pop();
+            left = arguments.pop();
+            if (op.isPrefix()) {
+                arguments.push(new ApplyExpression(new Identifier(op.getName()), left));
+            } else if (op.isAssignment()) {
+                arguments.push(new AssignmentExpression(arguments.pop(), left));
+            } else {
+                arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(op.getName()), arguments.pop()), left));
+            }
+        }
+        if (arguments.size() > 1) {
+            throw new ParseException("Failed to shuffle: " + arguments.size() + " remaining");
+        }
+        return arguments.pop();
+    }
+
     private void register(String name, Type type) {
         Locator locator = locator(module, name);
         addAlias(name, locator);
@@ -571,63 +591,41 @@ public class Translator implements SyntaxVisitor {
         currentName = new NameSequence(name);
     }
 
-    private AstNode shuffleMessage(LinkedList<Symbol> input) {
+    private Symbol shuffleMessage(Message message) {
+        Deque<Symbol> elements = new ArrayDeque<>(message.getElements());
         LinkedList<Operator> operators = new LinkedList<>();
-        LinkedList<Symbol> expressions = new LinkedList<>();
-        boolean expectingPrefix = isOperator(input.peek());
+        LinkedList<Symbol> arguments = new LinkedList<>();
+        boolean expectingPrefix = isOperator(elements.peek());
         Symbol start = null;
         Symbol current;
         Operator op;
-        while (!input.isEmpty()) {
-            current = input.poll();
+        while (!elements.isEmpty()) {
+            current = elements.poll();
             if (start == null) {
                 if (isOperator(current)) {
                     op = getOperator(current);
                     if (expectingPrefix) {
-                        switch (op.getName()) {
-                            case "-": op = op.toAffix("unary-"); break;
-                            case "+": op = op.toAffix("unary+"); break;
-                            case "~": op = op.toAffix("unary~"); break;
-                            default:
-                                if (!op.isAffix()) {
-                                    throw new ParseException("Unexpected binary operator: " + op);
-                                }
-                        }
+                        op = toPrefix(op);
                     }
-                    shuffleOperator(op, operators, expressions);
+                    shuffleOperator(op, operators, arguments);
                 } else {
                     start = current;
-                    while (!input.isEmpty() && !isOperator(input.peek())) {
-                        start = new ApplyExpression(start, input.poll());
+                    while (!elements.isEmpty() && !isOperator(elements.peek())) {
+                        start = new ApplyExpression(start, elements.poll());
                     }
                 }
             } else if (isOperator(current)) {
                 op = getOperator(current);
-                expressions.push(start);
+                arguments.push(start);
                 start = null;
-                shuffleOperator(op, operators, expressions);
+                shuffleOperator(op, operators, arguments);
             }
-            expectingPrefix = isOperator(input.peek());
+            expectingPrefix = isOperator(elements.peek());
         }
         if (start != null) {
-            expressions.push(start);
+            arguments.push(start);
         }
-        Symbol left;
-        while (!operators.isEmpty()) {
-            op = operators.pop();
-            left = expressions.pop();
-            if (op.isAffix()) {
-                expressions.push(new ApplyExpression(new Identifier(op.getName()), left));
-            } else if (op.isAssignment()) {
-                expressions.push(new AssignmentExpression(expressions.pop(), left));
-            } else {
-                expressions.push(new ApplyExpression(new ApplyExpression(new Identifier(op.getName()), expressions.pop()), left));
-            }
-        }
-        if (expressions.size() > 1) {
-            throw new ParseException("Failed to shuffle: " + expressions.size() + " remaining");
-        }
-        return translate(expressions.pop());
+        return reduceOperations(operators, arguments);
     }
 
     private void shuffleOperator(Operator op, LinkedList<Operator> operators, LinkedList<Symbol> arguments) {
@@ -637,7 +635,7 @@ public class Translator implements SyntaxVisitor {
             while (!operators.isEmpty() && op.getPrecedence() < operators.peek().getPrecedence()) {
                 pop = operators.pop();
                 n1 = arguments.pop();
-                if (pop.isAffix()) {
+                if (pop.isPrefix()) {
                     arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
                 } else {
                     n2 = arguments.pop();
@@ -648,7 +646,7 @@ public class Translator implements SyntaxVisitor {
             while (!operators.isEmpty() && op.getPrecedence() <= operators.peek().getPrecedence()) {
                 pop = operators.pop();
                 n1 = arguments.pop();
-                if (pop.isAffix()) {
+                if (pop.isPrefix()) {
                     arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
                 } else {
                     n2 = arguments.pop();
@@ -657,6 +655,20 @@ public class Translator implements SyntaxVisitor {
             }
         }
         operators.push(op);
+    }
+
+    private Operator toPrefix(Operator op) {
+        switch (op.getName()) {
+            case "-": op = op.toPrefix("unary-"); break;
+            case "+": op = op.toPrefix("unary+"); break;
+            case "~": op = op.toPrefix("unary~"); break;
+            case "!": op = op.toPrefix("not"); break;
+            default:
+                if (!op.isPrefix()) {
+                    throw new ParseException("Unexpected binary operator: " + op);
+                }
+        }
+        return op;
     }
 
     private AstNode translate(Visitable node) {

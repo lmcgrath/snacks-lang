@@ -95,9 +95,9 @@ public class SnacksLoader extends URLClassLoader {
                             if (infix != null) {
                                 operators.registerInfix(infix.precedence(), infix.fixity(), snack.value());
                             } else {
-                                Affix affix = snackClass.getAnnotation(Affix.class);
-                                if (affix != null) {
-                                    operators.registerAffix(affix.precedence(), affix.fixity(), snack.value());
+                                Prefix prefix = snackClass.getAnnotation(Prefix.class);
+                                if (prefix != null) {
+                                    operators.registerPrefix(prefix.precedence(), snack.value());
                                 }
                             }
                         }

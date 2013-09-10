@@ -28,9 +28,9 @@ public class OperatorRegistry {
         return operators.containsKey(name);
     }
 
-    public void registerAffix(int precedence, Fixity fixity, String... names) {
+    public void registerPrefix(int precedence, String... names) {
         for (String name : names) {
-            operators.put(name, new OpEntry(fixity, precedence, 1));
+            operators.put(name, new OpEntry(RIGHT, precedence, 1));
         }
     }
 

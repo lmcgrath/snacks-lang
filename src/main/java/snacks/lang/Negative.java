@@ -1,13 +1,12 @@
 package snacks.lang;
 
-import static snacks.lang.Fixity.RIGHT;
 import static snacks.lang.Type.DOUBLE_TYPE;
 import static snacks.lang.Type.INTEGER_TYPE;
 import static snacks.lang.Type.func;
 import static snacks.lang.Type.set;
 
 @Snack("unary-")
-@Affix(fixity = RIGHT, precedence = 15)
+@Prefix(precedence = 15)
 public class Negative {
 
     private static Negative instance;
