@@ -286,6 +286,19 @@ function_literal
             expression = func(a[0], expression, t);
             return expression;
         :}
+    | LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
+        {:
+            Symbol expression = block(e);
+            if (a == null) {
+                expression = invokable(expression);
+            } else {
+                for (int i = a.length - 1; i >= 1; i--) {
+                    expression = func(a[i], expression);
+                }
+                expression = func(a[0], expression, t);
+            }
+            return expression;
+        :}
     ;
 
 function_typespec

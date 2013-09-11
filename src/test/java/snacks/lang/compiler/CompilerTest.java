@@ -161,7 +161,7 @@ public class CompilerTest {
     @Test
     public void shouldReturnClosureFromFunction() throws Exception {
         run(
-            "closure = { x ->",
+            "closure = (x) -> {",
             "    var z = x + 1",
             "    (y) -> z * y",
             "}",
@@ -173,10 +173,10 @@ public class CompilerTest {
     @Test
     public void shouldReferenceVariablesInParentScopes() throws Exception {
         run(
-            "closure = { x ->",
+            "closure = (x) -> {",
             "    var y = x * 2",
             "    var z = x + 1",
-            "    return { w ->",
+            "    return (w) -> {",
             "        var v = w + 3",
             "        return (u) -> \"x = #{x}; y = #{y}; z = #{z}; w = #{w}; v = #{v}; u = #{u}\"",
             "    }",
@@ -245,7 +245,7 @@ public class CompilerTest {
     @Test
     public void shouldCompileConditional() throws Exception {
         run(
-            "booleanizer = (name value) ->",
+            "booleanizer = (name value) -> {",
             "    if value",
             "        say \"#{name} is true!\"",
             "    else if value is 'oranges'",
@@ -253,6 +253,7 @@ public class CompilerTest {
             "    else",
             "        say \"#{name} is false!\"",
             "    end",
+            "}",
             "main = {",
             "    booleanizer 'waffles' True",
             "    booleanizer 'bananas' False",
