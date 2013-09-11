@@ -383,7 +383,7 @@ public class CompilerTest {
 
     @Test
     public void shouldCompileNegative() throws Exception {
-        run("main = () -> assert $ -3 == (-1 * 3)");
+        run("main = () -> assert $ -3 == 3 * -1");
     }
 
     @Test
@@ -444,7 +444,7 @@ public class CompilerTest {
             "    var x = 0",
             "    x = x + 1, while x < 10",
             "    var expected = 10",
-            "    assert $ (x is expected, \"Got ${x}, expected #{expected}\")",
+            "    assert $ (x is expected, \"Got #x}, expected #{expected}\")",
             "}"
         );
     }
@@ -459,7 +459,7 @@ public class CompilerTest {
             "        break, if x > 10",
             "    end",
             "    var expected = 11",
-            "    assert $ (x is expected, \"Got ${x}, expected #{expected}\")",
+            "    assert $ (x is expected, \"Got #{x}, expected #{expected}\")",
             "}"
         );
     }

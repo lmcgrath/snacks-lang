@@ -2,7 +2,7 @@ package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
-import static snacks.lang.Fixity.RIGHT;
+import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.*;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
@@ -541,6 +541,10 @@ public class Translator implements SyntaxVisitor {
         return set(allowedTypes);
     }
 
+    private boolean isAssignment(Symbol symbol) {
+        return getOperator(symbol).isAssignment();
+    }
+
     private boolean isOperator(Symbol node) {
         if (node instanceof Identifier) {
             String name = ((Identifier) node).getName();
@@ -551,6 +555,10 @@ public class Translator implements SyntaxVisitor {
         } else {
             return false;
         }
+    }
+
+    private boolean isPrefix(Symbol symbol) {
+        return getOperator(symbol).isPrefix();
     }
 
     private String javaClass(Symbol symbol) {
@@ -569,24 +577,32 @@ public class Translator implements SyntaxVisitor {
         }
     }
 
-    private Symbol reduceOperations(LinkedList<Operator> operators, LinkedList<Symbol> arguments) {
-        Operator op;
-        Symbol left;
-        while (!operators.isEmpty()) {
-            op = operators.pop();
-            left = arguments.pop();
-            if (op.isPrefix()) {
-                arguments.push(new ApplyExpression(new Identifier(op.getName()), left));
-            } else if (op.isAssignment()) {
-                arguments.push(new AssignmentExpression(arguments.pop(), left));
+    private boolean outputOperator(Operator o1, Operator o2) {
+        return o1.getFixity() == LEFT && o1.getPrecedence() <= o2.getPrecedence()
+            || (o1.isPrefix() || o2.isPrefix()) && o1.getPrecedence() == o2.getPrecedence();
+    }
+
+    private Symbol reduceOperations(Deque<Symbol> output) {
+        Deque<Symbol> stack = new ArrayDeque<>();
+        while (!output.isEmpty()) {
+            Symbol op = output.pollLast();
+            if (isOperator(op)) {
+                if (isPrefix(op)) {
+                    stack.push(new ApplyExpression(op, stack.pop()));
+                } else {
+                    Symbol right = stack.pop();
+                    Symbol left = stack.pop();
+                    if (isAssignment(op)) {
+                        stack.push(new AssignmentExpression(left, right));
+                    } else {
+                        stack.push(new ApplyExpression(new ApplyExpression(op, left), right));
+                    }
+                }
             } else {
-                arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(op.getName()), arguments.pop()), left));
+                stack.push(op);
             }
         }
-        if (arguments.size() > 1) {
-            throw new ParseException("Failed to shuffle: " + arguments.size() + " remaining");
-        }
-        return arguments.pop();
+        return stack.pop();
     }
 
     private void register(String name, Type type) {
@@ -600,69 +616,36 @@ public class Translator implements SyntaxVisitor {
     }
 
     private Symbol shuffleMessage(Message message) {
-        Deque<Symbol> elements = new ArrayDeque<>(message.getElements());
-        LinkedList<Operator> operators = new LinkedList<>();
-        LinkedList<Symbol> arguments = new LinkedList<>();
-        boolean expectingPrefix = isOperator(elements.peek());
-        Symbol previous = null;
-        Symbol current;
-        Operator op;
-        while (!elements.isEmpty()) {
-            current = elements.poll();
-            if (previous == null) {
-                if (isOperator(current)) {
-                    op = getOperator(current);
-                    if (expectingPrefix) {
-                        op = toPrefix(op);
-                    }
-                    shuffleOperator(op, operators, arguments);
-                } else {
-                    previous = current;
-                    while (!elements.isEmpty() && !isOperator(elements.peek())) {
-                        previous = new ApplyExpression(previous, elements.poll());
+        Deque<Symbol> input = new ArrayDeque<>(message.getElements());
+        Deque<Symbol> output = new ArrayDeque<>();
+        Deque<Operator> operators = new ArrayDeque<>();
+        boolean expectPrefix = isOperator(input.peek());
+        while (!input.isEmpty()) {
+            if (isOperator(input.peek())) {
+                Operator o1 = getOperator(input.poll());
+                if (expectPrefix) {
+                    o1 = toPrefix(o1);
+                }
+                if (!operators.isEmpty()) {
+                    Operator o2 = operators.peek();
+                    while (!operators.isEmpty() && outputOperator(o1, o2)) {
+                        output.push(new Identifier(operators.pop().getName()));
+                        o2 = operators.peek();
                     }
                 }
-            } else if (isOperator(current)) {
-                op = getOperator(current);
-                arguments.push(previous);
-                previous = null;
-                shuffleOperator(op, operators, arguments);
-            }
-            expectingPrefix = isOperator(elements.peek());
-        }
-        if (previous != null) {
-            arguments.push(previous);
-        }
-        return reduceOperations(operators, arguments);
-    }
-
-    private void shuffleOperator(Operator op, LinkedList<Operator> operators, LinkedList<Symbol> arguments) {
-        Operator pop;
-        Symbol n1, n2;
-        if (op.getFixity() == RIGHT) {
-            while (!operators.isEmpty() && op.getPrecedence() < operators.peek().getPrecedence()) {
-                pop = operators.pop();
-                n1 = arguments.pop();
-                if (pop.isPrefix()) {
-                    arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
-                } else {
-                    n2 = arguments.pop();
-                    arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(pop.getName()), n2), n1));
-                }
-            }
-        } else {
-            while (!operators.isEmpty() && op.getPrecedence() <= operators.peek().getPrecedence()) {
-                pop = operators.pop();
-                n1 = arguments.pop();
-                if (pop.isPrefix()) {
-                    arguments.push(new ApplyExpression(new Identifier(pop.getName()), n1));
-                } else {
-                    n2 = arguments.pop();
-                    arguments.push(new ApplyExpression(new ApplyExpression(new Identifier(pop.getName()), n2), n1));
+                operators.push(o1);
+                expectPrefix = isOperator(input.peek());
+            } else {
+                output.push(input.poll());
+                while (!input.isEmpty() && !isOperator(input.peek())) {
+                    output.push(new ApplyExpression(output.pop(), input.poll()));
                 }
             }
         }
-        operators.push(op);
+        while (!operators.isEmpty()) {
+            output.push(new Identifier(operators.pop().getName()));
+        }
+        return reduceOperations(output);
     }
 
     private Operator toPrefix(Operator op) {
