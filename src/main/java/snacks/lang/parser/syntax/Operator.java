@@ -75,9 +75,9 @@ public class Operator extends Symbol implements Visitable {
     @Override
     public String toString() {
         if (isPrefix()) {
-            return "Prefix(" + name + ")@" + precedence;
+            return "Prefix(" + name + ", " + precedence + ")";
         } else {
-            return "Infix(" + name + " " + fixity + ")@" + precedence;
+            return "Infix(" + name + " " + fixity + ", " + precedence + ")";
         }
     }
 }

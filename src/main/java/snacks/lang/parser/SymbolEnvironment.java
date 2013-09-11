@@ -123,10 +123,6 @@ public class SymbolEnvironment implements TypeFactory {
         return type.expose().genericCopy(this, mappings);
     }
 
-    private Set<Type> getSpecializedTypes() {
-        return scope.getSpecializedTypes();
-    }
-
     private boolean isGeneric(Type type) {
         return !type.occursIn(scope.getSpecializedTypes());
     }
