@@ -555,7 +555,7 @@ public class CompilerTest {
     @Test
     public void shouldPassTupleAsArgument() throws Exception {
         run(
-            "something :: (String, Boolean, Integer) -> Void",
+            "something :: (String, Boolean, Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
             "something = (x) -> say $ stringy x"
         );
@@ -586,11 +586,27 @@ public class CompilerTest {
     @Test
     public void shouldResolveTypesWithFullyQualifiedNames() throws Exception {
         run(
-            "something :: (snacks.lang.String, snacks.lang.Boolean, snacks.lang.Integer) -> Void",
+            "something :: (snacks.lang.String, snacks.lang.Boolean, snacks.lang.Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
             "something = (x) -> say $ stringy x"
         );
         verifyOut("(Tuple3 waffles, true, 3)");
+    }
+
+    @Test
+    public void shouldBooleanizeLogic() throws Exception {
+        run(
+            "main = {",
+            "    var a = True",
+            "    var b = False",
+            "    var c = 3",
+            "    var d = 4",
+            "    say $ \"Should be false: #{3 == 4 or 5 >= 5 and True is False}\"",
+            "    say $ \"Should be true: #{3 == 4 or 5 >= 5 and 'waffles' is 'waffles'}\"",
+            "}"
+        );
+        verifyOut("Should be false: false");
+        verifyOut("Should be true: true");
     }
 
     private void run(String... inputs) throws Exception {

@@ -604,12 +604,12 @@ public class Translator implements SyntaxVisitor {
         LinkedList<Operator> operators = new LinkedList<>();
         LinkedList<Symbol> arguments = new LinkedList<>();
         boolean expectingPrefix = isOperator(elements.peek());
-        Symbol start = null;
+        Symbol previous = null;
         Symbol current;
         Operator op;
         while (!elements.isEmpty()) {
             current = elements.poll();
-            if (start == null) {
+            if (previous == null) {
                 if (isOperator(current)) {
                     op = getOperator(current);
                     if (expectingPrefix) {
@@ -617,21 +617,21 @@ public class Translator implements SyntaxVisitor {
                     }
                     shuffleOperator(op, operators, arguments);
                 } else {
-                    start = current;
+                    previous = current;
                     while (!elements.isEmpty() && !isOperator(elements.peek())) {
-                        start = new ApplyExpression(start, elements.poll());
+                        previous = new ApplyExpression(previous, elements.poll());
                     }
                 }
             } else if (isOperator(current)) {
                 op = getOperator(current);
-                arguments.push(start);
-                start = null;
+                arguments.push(previous);
+                previous = null;
                 shuffleOperator(op, operators, arguments);
             }
             expectingPrefix = isOperator(elements.peek());
         }
-        if (start != null) {
-            arguments.push(start);
+        if (previous != null) {
+            arguments.push(previous);
         }
         return reduceOperations(operators, arguments);
     }

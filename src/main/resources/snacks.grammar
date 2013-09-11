@@ -89,8 +89,9 @@ type_signature
 
 primary_signature
     = qualified_identifier.id           {: return type(id); :}
-    | LFUNC COMMA? RPAREN               {: return type(qid("snacks", "lang", "Void")); :}
+    | LFUNC RPAREN                      {: return type(qid("snacks", "lang", "Void")); :}
     | LFUNC function_signature.f RPAREN {: return f; :}
+    | LPAREN RPAREN                     {: return type(qid("snacks", "lang", "Void")); :}
     | LPAREN tuple_signature.t COMMA? RPAREN
         {:
             List<Symbol> types = new ArrayList<>();
@@ -102,10 +103,10 @@ primary_signature
     ;
 
 function_signature
-    = qualified_identifier.id                                 {: return type(id); :}
-    | qualified_fword.id                                      {: return type(id); :}
-    | qualified_identifier.id APPLIES_TO function_signature.f {: return fsig(type(id), f); :}
-    | qualified_fword.id APPLIES_TO function_signature.f      {: return fsig(type(id), f); :}
+    = qualified_identifier.id                                   {: return type(id); :}
+    | qualified_fword.id                                        {: return type(id); :}
+    | qualified_identifier.id APPLIES_TO function_signature.f   {: return fsig(type(id), f); :}
+    | qualified_fword.id APPLIES_TO function_signature.f        {: return fsig(type(id), f); :}
     ;
 
 tuple_signature

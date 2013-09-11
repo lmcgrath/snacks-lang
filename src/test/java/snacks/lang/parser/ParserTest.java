@@ -482,8 +482,8 @@ public class ParserTest {
 
     @Test
     public void shouldParseDeclarationSignatureWithTuple() {
-        assertThat(parse("something :: (String, Boolean, Integer) -> Void"), equalTo(module(
-            sig("something", fsig(tsig(type("String"), type("Boolean"), type("Integer")), type("Void")))
+        assertThat(parse("something :: (String, Boolean, Integer) -> ()"), equalTo(module(
+            sig("something", fsig(tsig(type("String"), type("Boolean"), type("Integer")), type(qid("snacks", "lang", "Void"))))
         )));
     }
 
