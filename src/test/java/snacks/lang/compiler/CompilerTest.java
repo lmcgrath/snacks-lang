@@ -431,8 +431,8 @@ public class CompilerTest {
             "    var x",
             "    var y",
             "    x = y = 3",
-            "    assert $ (x == 3, 'x was not 3')",
-            "    assert $ (y == 3, 'y was not 3')",
+            "    assert (x == 3, 'x was not 3')",
+            "    assert (y == 3, 'y was not 3')",
             "}"
         );
     }
@@ -444,7 +444,7 @@ public class CompilerTest {
             "    var x = 0",
             "    x = x + 1, while x < 10",
             "    var expected = 10",
-            "    assert $ (x is expected, \"Got #x}, expected #{expected}\")",
+            "    assert (x is expected, \"Got #{x}, expected #{expected}\")",
             "}"
         );
     }
@@ -459,7 +459,7 @@ public class CompilerTest {
             "        break, if x > 10",
             "    end",
             "    var expected = 11",
-            "    assert $ (x is expected, \"Got #{x}, expected #{expected}\")",
+            "    assert (x is expected, \"Got #{x}, expected #{expected}\")",
             "}"
         );
     }
@@ -501,7 +501,7 @@ public class CompilerTest {
             "        end",
             "        x = x + 1",
             "    end",
-            "    assert $ (total == 100, \"Got #{total}, expected 100\")",
+            "    assert (total == 100, \"Got #{total}, expected 100\")",
             "}"
         );
     }
@@ -519,7 +519,7 @@ public class CompilerTest {
             "            break",
             "        end",
             "    end",
-            "    assert $ (counter == 9, 'Counter was not 9')",
+            "    assert (counter == 9, 'Counter was not 9')",
             "}"
         );
     }
