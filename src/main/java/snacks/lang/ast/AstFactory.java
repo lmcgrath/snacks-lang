@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import snacks.lang.Type;
 
 public final class AstFactory {
@@ -80,6 +81,10 @@ public final class AstFactory {
         return new Hurl(body);
     }
 
+    public static AstNode initializer(AstNode constructor, Map<String, PropertyInitializer> properties) {
+        return new Initializer(constructor, properties);
+    }
+
     public static AstNode invokable(AstNode body) {
         return new VoidFunction(body);
     }
@@ -108,6 +113,14 @@ public final class AstFactory {
         return Nop.INSTANCE;
     }
 
+    public static AstNode prop(String name, AstNode value) {
+        return new PropertyInitializer(name, value);
+    }
+
+    public static AstNode propDef(String name, Type type) {
+        return new DeclaredProperty(name, type);
+    }
+
     public static Reference reference(String name, Type type) {
         return reference(new VariableLocator(name), type);
     }
@@ -118,6 +131,10 @@ public final class AstFactory {
 
     public static Reference reference(Locator locator, Type type) {
         return new Reference(locator, type);
+    }
+
+    public static AstNode recordDeclaration(String name, Collection<DeclaredProperty> properties) {
+        return new DeclaredRecord(name, properties);
     }
 
     public static AstNode result(AstNode value) {

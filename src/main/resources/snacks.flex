@@ -122,6 +122,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "True"          { detectSelector(); return token(TRUE); }
     "False"         { detectSelector(); return token(FALSE); }
     "Nothing"       { detectSelector(); return token(NOTHING); }
+    "affix right"   { return token(PREFIX); }
     "as"            { return token(AS); }
     "begin"         { detectNewLine(); return token(BEGIN); }
     "break"         { return token(BREAK); }
@@ -138,6 +139,7 @@ AnyWhitespace           = {Whitespace} | {NewLine}
                         return token(CHARACTER, unescapeJava(text.substring(text.indexOf('\'') + 1, text.lastIndexOf('\''))).charAt(0));
                     }
     "continue"      { return token(CONTINUE); }
+    "data"          { return token(DATA); }
     "do"            { detectNewLine(); return token(DO); }
     "else if"       { return token(ELSE_IF); }
     "else unless"   { return token(ELSE_UNLESS); }
@@ -154,9 +156,9 @@ AnyWhitespace           = {Whitespace} | {NewLine}
     "from"          { return token(FROM); }
     "hurl"          { return token(HURL); }
     "import"        { return token(IMPORT); }
-    "infix left"    { return token(LEFT_OPERATOR); }
-    "infix right"   { return token(RIGHT_OPERATOR); }
-    "infix"         { return token(OPERATOR); }
+    "infix left"    { return token(LEFT_INFIX); }
+    "infix right"   { return token(RIGHT_INFIX); }
+    "infix none"    { return token(INFIX); }
     "not in"        { return token(IDENTIFIER, yytext()); }
     "return"        { return token(RETURN); }
     "then"          { detectNewLine(); return token(THEN); }

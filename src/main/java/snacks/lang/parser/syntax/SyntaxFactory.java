@@ -95,10 +95,6 @@ public final class SyntaxFactory {
         return new Declaration(name, expression);
     }
 
-    public static Symbol sig(String identifier, Symbol type) {
-        return new Signature(identifier, type);
-    }
-
     public static Symbol embrace(String var, Symbol expression) {
         return new EmbraceCase(var, null, expression);
     }
@@ -145,6 +141,10 @@ public final class SyntaxFactory {
 
     public static Symbol importWildcard(Symbol id) {
         return new WildcardImport(id);
+    }
+
+    public static Symbol initializer(String type, Symbol... properties) {
+        return new InitializerExpression(type, properties);
     }
 
     public static Symbol invocation(Symbol function) {
@@ -223,6 +223,18 @@ public final class SyntaxFactory {
         return new Operator(NONE, precedence, 2, name);
     }
 
+    public static Symbol prefix(String name, int precedence) {
+        return new Operator(RIGHT, precedence, 1, name);
+    }
+
+    public static Symbol propDef(String name, Symbol type) {
+        return new PropertyDeclaration(name, type);
+    }
+
+    public static Symbol property(String name, Symbol value) {
+        return new PropertyExpression(name, value);
+    }
+
     public static Symbol qid(QualifiedIdentifier id, String segment) {
         return new QualifiedIdentifier(id, segment);
     }
@@ -233,6 +245,10 @@ public final class SyntaxFactory {
 
     public static Symbol quoted(String id) {
         return new QuotedIdentifier(id);
+    }
+
+    public static Symbol recordDef(String name, Symbol... properties) {
+        return new RecordDeclaration(name, properties);
     }
 
     public static Symbol regex(List<Symbol> elements, Set<Character> options) {
@@ -255,6 +271,10 @@ public final class SyntaxFactory {
         return new SetLiteral(elements);
     }
 
+    public static Symbol sig(String identifier, Symbol type) {
+        return new Signature(identifier, type);
+    }
+
     public static Symbol sub(String id) {
         return new SubImport(id, id);
     }
@@ -271,6 +291,14 @@ public final class SyntaxFactory {
         return new SymbolLiteral(name);
     }
 
+    public static Symbol tsig(Symbol... ids) {
+        return tsig(asList(ids));
+    }
+
+    public static Symbol tsig(Collection<Symbol> ids) {
+        return new TupleSignature(ids);
+    }
+
     public static Symbol tuple(Symbol... elements) {
         return new TupleLiteral(elements);
     }
@@ -279,12 +307,8 @@ public final class SyntaxFactory {
         return new TupleLiteral(element, elements);
     }
 
-    public static Symbol tsig(Symbol... ids) {
-        return tsig(asList(ids));
-    }
-
-    public static Symbol tsig(Collection<Symbol> ids) {
-        return new TupleSignature(ids);
+    public static Symbol typeDef(String name, Symbol definition) {
+        return new TypeDeclaration(name, definition);
     }
 
     public static Symbol type(Symbol id) {

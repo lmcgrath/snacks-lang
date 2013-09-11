@@ -1,6 +1,8 @@
 package snacks.lang.compiler;
 
+import static java.util.Collections.sort;
 import static me.qmx.jitescript.util.CodegenUtils.*;
+import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -167,6 +169,70 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
+    public void generateDeclaredRecord(final DeclaredRecord node) {
+        final List<DeclaredProperty> properties = node.getProperties();
+        final JiteClass jiteClass = jiteClass();
+        sort(properties, new Comparator<DeclaredProperty>() {
+            @Override
+            public int compare(DeclaredProperty o1, DeclaredProperty o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        for (final DeclaredProperty property : properties) {
+            final Class<?> type = propertyType(property);
+            jiteClass.defineField(property.getName(), ACC_PRIVATE | ACC_FINAL, ci(type), null);
+            jiteClass.defineMethod("get" + capitalize(property.getName()), ACC_PUBLIC, sig(type), new CodeBlock() {{
+                aload(0);
+                getfield(jiteClass.getClassName(), property.getName(), ci(type));
+                areturn();
+            }});
+        }
+        Class<?>[] types = new Class<?>[properties.size()];
+        for (int i = 0; i < properties.size(); i++) {
+            types[i] = propertyType(properties.get(i));
+        }
+        jiteClass.defineMethod("<init>", ACC_PUBLIC, sig(void.class, params(types)), new CodeBlock() {{
+            aload(0);
+            invokespecial(p(Object.class), "<init>", sig(void.class));
+            int arg = 1;
+            for (DeclaredProperty property : properties) {
+                Class<?> type = propertyType(property);
+                aload(0);
+                aload(arg++);
+                putfield(jiteClass.getClassName(), property.getName(), ci(type));
+            }
+            voidreturn();
+        }});
+        jiteClass.defineMethod("toString", ACC_PUBLIC, sig(String.class), new CodeBlock() {{
+            newobj(p(StringBuilder.class));
+            dup();
+            invokespecial(p(StringBuilder.class), "<init>", sig(void.class));
+            ldc(node.getName().substring(node.getName().lastIndexOf('.') + 1) + "{");
+            invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+            for (int i = 0; i < properties.size(); i++) {
+                DeclaredProperty property = properties.get(i);
+                if (i > 0) {
+                    ldc(", " + property.getName() + "=");
+                } else {
+                    ldc(property.getName() + "=");
+                }
+                invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+                aload(0);
+                getfield(jiteClass.getClassName(), property.getName(), ci(propertyType(property)));
+                invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
+            }
+            ldc("}");
+            invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+            invokevirtual(p(StringBuilder.class), "toString", sig(String.class));
+            areturn();
+        }});
+    }
+
+    private Class<?> propertyType(DeclaredProperty property) {
+        return loader.classOf(property.getType().getParameters().get(0).getName());
+    }
+
+    @Override
     public void generateDoubleConstant(DoubleConstant node) {
         block().ldc(node.getValue());
     }
@@ -249,6 +315,28 @@ public class Compiler implements Generator, Reducer {
         block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP_APPLY);
         block.checkcast(p(Throwable.class));
         block.athrow();
+    }
+
+    @Override
+    public void generateInitializer(Initializer node) {
+        CodeBlock block = block();
+        String className = node.getType().getName().replace('.', '/');
+        block.newobj(className);
+        block.dup();
+        Map<String, PropertyInitializer> properties = node.getProperties();
+        List<Type> parameters = node.getType().getParameters();
+        sort(parameters, new Comparator<Type>() {
+            @Override
+            public int compare(Type o1, Type o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        Class<?>[] types = new Class<?>[parameters.size()];
+        for (int i = 0; i < parameters.size(); i++) {
+            types[i] = loader.classOf(parameters.get(i).getParameters().get(0).getName());
+            generate(properties.get(parameters.get(i).getName()).getValue());
+        }
+        block.invokespecial(className, "<init>", sig(void.class, types));
     }
 
     @Override

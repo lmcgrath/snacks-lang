@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.io.PrintStream;
+import java.util.Collection;
 import beaver.Symbol;
 import snacks.lang.util.PrinterState;
 
@@ -13,6 +14,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
 
     public SyntaxPrinter(PrintStream out) {
         state = new PrinterState(out);
+    }
+
+    public void print(Collection<?> collection) {
+        for (Object node : collection) {
+            print(node);
+        }
     }
 
     public void print(Object node) {
@@ -151,6 +158,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitInitializerExpression(InitializerExpression node) {
+        print("constructor: " + node.getConstructor());
+        print(node.getProperties());
+    }
+
+    @Override
     public void visitIntegerLiteral(IntegerLiteral node) {
         value(node.getValue());
     }
@@ -235,6 +248,18 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitPropertyDeclaration(PropertyDeclaration node) {
+        print("name: " + node.getName());
+        print(node.getType());
+    }
+
+    @Override
+    public void visitPropertyExpression(PropertyExpression node) {
+        print("name: " + node.getName());
+        print(node.getValue());
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         print("identifier: " + node);
     }
@@ -242,6 +267,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitQuotedIdentifier(QuotedIdentifier node) {
         print("identifier: " + node.getName());
+    }
+
+    @Override
+    public void visitRecordDeclaration(RecordDeclaration node) {
+        print("name: " + node.getName());
+        print(node.getProperties());
     }
 
     @Override
@@ -298,6 +329,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
         for (Symbol type : node.getTypes()) {
             print(type);
         }
+    }
+
+    @Override
+    public void visitTypeDeclaration(TypeDeclaration node) {
+        print("name: " + node.getName());
+        print(node.getDefinition());
     }
 
     @Override

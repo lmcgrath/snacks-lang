@@ -15,8 +15,8 @@
     KEY_SYMBOL, TRUE, FALSE, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL,
     IMPORT, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE,
     LCURLY, RCURLY, USE, CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY,
-    LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, OPERATOR, LEFT_OPERATOR,
-    RIGHT_OPERATOR, QUOTED_IDENTIFIER
+    LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX,
+    RIGHT_INFIX, PREFIX, QUOTED_IDENTIFIER, DATA
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -59,6 +59,7 @@
 %typeof begin_case = "Symbol[]";
 %typeof qualified_identifier = "QualifiedIdentifier";
 %typeof qualified_fword = "QualifiedIdentifier";
+%typeof initializer_properties = "Symbol[]";
 
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
@@ -73,13 +74,28 @@ module_expressions
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
     | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
-    | OPERATOR INTEGER.p IDENTIFIER.id                  {: return op(id, p); :}
-    | LEFT_OPERATOR INTEGER.p IDENTIFIER.id             {: return leftOp(id, p); :}
-    | RIGHT_OPERATOR INTEGER.p IDENTIFIER.id            {: return rightOp(id, p); :}
+    | INFIX INTEGER.p IDENTIFIER.id                     {: return op(id, p); :}
+    | LEFT_INFIX INTEGER.p IDENTIFIER.id                {: return leftOp(id, p); :}
+    | RIGHT_INFIX INTEGER.p IDENTIFIER.id               {: return rightOp(id, p); :}
+    | PREFIX INTEGER.p IDENTIFIER.id                    {: return prefix(id, p); :}
     | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
+    | DATA IDENTIFIER.id ASSIGN type_declaration.t      {: return typeDef(id, t); :}
+    ;
+
+type_declaration
+    = IDENTIFIER.id LCURLY type_properties.p COMMA? RCURLY {: return recordDef(id, p); :}
+    ;
+
+type_properties
+    = type_property
+    | type_properties COMMA type_property
+    ;
+
+type_property
+    = IDENTIFIER.id DOUBLE_COLON type_signature.t NEWLINE* {: return propDef(id, t); :}
     ;
 
 type_signature
@@ -139,6 +155,7 @@ statement
     = expression
     | BREAK                                                             {: return new BreakExpression(); :}
     | CONTINUE                                                          {: return new ContinueExpression(); :}
+    | expression.l ASSIGN statement.r                                   {: return msg(l, id("="), r); :}
     | VAR IDENTIFIER.v                                                  {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
     | VAR QUOTED_IDENTIFIER.v                                           {: return var(v); :}
@@ -168,7 +185,6 @@ message
 
 postfix_expression
     = primary_expression
-    | ASSIGN                                                {: return id("="); :}
     | postfix_expression.e DOT IDENTIFIER.id                {: return access(e, id); :}
     | postfix_expression.e LARG RPAREN                      {: return invocation(e); :}
     | postfix_expression.e LINDEX message.a COMMA? RSQUARE  {:
@@ -230,6 +246,21 @@ primary_expression
     | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return literal(val); :}
     | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return e; :}
     | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
+    | IDENTIFIER.id initializer_properties.p                {: return initializer(id, p); :}
+    ;
+
+initializer_properties
+    = LCURLY properties.p COMMA? RCURLY {: return new Symbol(p); :}
+    | LCURLY COMMA? RCURLY              {: return new Symbol(new Symbol[0]); :}
+    ;
+
+properties
+    = property
+    | properties COMMA property
+    ;
+
+property
+    = IDENTIFIER.id ASSIGN expression.e NEWLINE* {: return property(id, e); :}
     ;
 
 list_literal

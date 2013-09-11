@@ -44,6 +44,8 @@ public interface SyntaxVisitor {
 
     void visitImport(Import node);
 
+    void visitInitializerExpression(InitializerExpression node);
+
     void visitIntegerLiteral(IntegerLiteral node);
 
     void visitInvocation(Invocation node);
@@ -72,9 +74,15 @@ public interface SyntaxVisitor {
 
     void visitOperator(Operator node);
 
+    void visitPropertyDeclaration(PropertyDeclaration node);
+
+    void visitPropertyExpression(PropertyExpression node);
+
     void visitQualifiedIdentifier(QualifiedIdentifier node);
 
     void visitQuotedIdentifier(QuotedIdentifier node);
+
+    void visitRecordDeclaration(RecordDeclaration node);
 
     void visitRegexLiteral(RegexLiteral node);
 
@@ -93,6 +101,8 @@ public interface SyntaxVisitor {
     void visitTupleLiteral(TupleLiteral node);
 
     void visitTupleSignature(TupleSignature node);
+
+    void visitTypeDeclaration(TypeDeclaration node);
 
     void visitTypeSpec(TypeSpec node);
 

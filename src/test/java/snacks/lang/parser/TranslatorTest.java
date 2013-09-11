@@ -280,6 +280,54 @@ public class TranslatorTest {
         translate("main = () -> say ('waffles', 10, True)._3");
     }
 
+    @Test(expected = MissingPropertyException.class)
+    public void shouldRequireAllPropertiesOnRecord() throws Exception {
+        translate(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon :: Boolean,",
+            "}",
+            "main = () -> say $ stringy BreakfastItem {",
+            "    name = 'Waffles',",
+            "    tasteIndex = 10,",
+            "}"
+        );
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldRequirePropertyTypesToMatch() throws Exception {
+        translate(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon :: Boolean,",
+            "}",
+            "main = () -> say $ stringy BreakfastItem {",
+            "    name = 'Waffles',",
+            "    tasteIndex = 10,",
+            "    pairsWithBacon = 'eewwwww bacon is grody'",
+            "}"
+        );
+    }
+
+    @Test(expected = DuplicatePropertyException.class)
+    public void shouldNotAllowDuplicateProperties() throws Exception {
+        translate(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon :: Boolean,",
+            "}",
+            "main = () -> say $ stringy BreakfastItem {",
+            "    pairsWithBacon = True,",
+            "    name = 'Waffles',",
+            "    tasteIndex = 10,",
+            "    pairsWithBacon = False // can't make up my mind! )=",
+            "}"
+        );
+    }
+
     private Type typeOf(String name) {
         return typeOf("test", name);
     }

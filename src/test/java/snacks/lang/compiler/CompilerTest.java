@@ -438,6 +438,7 @@ public class CompilerTest {
         );
     }
 
+    @Ignore
     @Test
     public void shouldCompileLoop() throws Exception {
         run(
@@ -590,6 +591,36 @@ public class CompilerTest {
             "    assert ((3 == 4 or 5 >= 5 and 'waffles' is 'waffles') is True, 'Was not true')",
             "}"
         );
+    }
+
+    @Test
+    public void shouldCreatePrefixOperator() throws Exception {
+        run(
+            "?% :: Boolean -> String",
+            "affix right 10 ?%",
+            "main = {",
+            "    assert $ ?% True == 'Woot!'",
+            "    assert $ ?% False == 'Aww...'",
+            "}",
+            "?% = (x) -> if x is True then 'Woot!' else 'Aww...' end"
+        );
+    }
+
+    @Test
+    public void shouldCompileRecord() throws Exception {
+        run(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: snacks.lang.String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon :: Boolean,",
+            "}",
+            "main = () -> say $ stringy BreakfastItem {",
+            "    name = 'Waffles',",
+            "    tasteIndex = 10,",
+            "    pairsWithBacon = True",
+            "}"
+        );
+        verifyOut("BreakfastItem{name=Waffles, pairsWithBacon=true, tasteIndex=10}");
     }
 
     private void run(String... inputs) throws Exception {

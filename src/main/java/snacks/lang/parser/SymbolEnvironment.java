@@ -107,6 +107,14 @@ public class SymbolEnvironment implements TypeFactory {
         }
     }
 
+    public void registerPrefix(int precedence, String name) {
+        if (loader.isOperator(name)) {
+            throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
+        } else {
+            operators.registerPrefix(precedence, name);
+        }
+    }
+
     public void signature(Reference reference) {
         scope.signature(reference);
     }

@@ -3,6 +3,7 @@ package snacks.lang;
 import static snacks.lang.Type.STRING_TYPE;
 
 @Snack("String")
+@JavaType(String.class)
 public class SnacksString {
 
     @SnackType

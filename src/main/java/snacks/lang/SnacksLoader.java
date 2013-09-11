@@ -29,12 +29,20 @@ public class SnacksLoader extends URLClassLoader {
         super(new URL[0], parent);
     }
 
-    public Class defineClass(String name, byte[] bytes) {
-        return defineClass(name, bytes, SnacksLoader.class.getProtectionDomain());
+    public Class<?> classOf(String qualifiedName) {
+        if (hasSnack(qualifiedName)) {
+            return getSnack(qualifiedName).getJavaClazz();
+        } else {
+            return null;
+        }
     }
 
     public Class defineClass(String name, byte[] bytes, ProtectionDomain domain) {
         return super.defineClass(name, bytes, 0, bytes.length, domain);
+    }
+
+    public Class defineClass(String name, byte[] bytes) {
+        return defineClass(name, bytes, SnacksLoader.class.getProtectionDomain());
     }
 
     public Operator getOperator(String name) {
@@ -57,9 +65,8 @@ public class SnacksLoader extends URLClassLoader {
     }
 
     public Type typeOf(String qualifiedName) {
-        loadSnack(qualifiedName);
-        if (snacks.containsKey(qualifiedName)) {
-            return snacks.get(qualifiedName).getType();
+        if (hasSnack(qualifiedName)) {
+            return getSnack(qualifiedName).getType();
         } else {
             return null;
         }
@@ -90,7 +97,9 @@ public class SnacksLoader extends URLClassLoader {
                     if (snack != null) {
                         String name = packageName + '.' + snack.value();
                         if (!snacks.containsKey(name)) {
-                            classes.put(name, new SnackEntry(snack, snackClass, resolveType(snackClass)));
+                            JavaType javaType = snackClass.getAnnotation(JavaType.class);
+                            Class<?> javaClazz = (javaType == null) ? snackClass : javaType.value();
+                            classes.put(name, new SnackEntry(snack, javaClazz, snackClass, resolveType(snackClass)));
                             Infix infix = snackClass.getAnnotation(Infix.class);
                             if (infix != null) {
                                 operators.registerInfix(infix.precedence(), infix.fixity(), snack.value());
@@ -126,6 +135,20 @@ public class SnacksLoader extends URLClassLoader {
         }
     }
 
+    private SnackEntry getSnack(String qualifiedName) {
+        loadSnack(qualifiedName);
+        if (hasSnack(qualifiedName)) {
+            return snacks.get(qualifiedName);
+        } else {
+            return null;
+        }
+    }
+
+    private boolean hasSnack(String qualifiedName) {
+        loadSnack(qualifiedName);
+        return snacks.containsKey(qualifiedName);
+    }
+
     private Type resolveType(Class<?> snackClass) {
         try {
             Method[] methods = snackClass.getMethods();
@@ -150,16 +173,22 @@ public class SnacksLoader extends URLClassLoader {
 
         private final Snack snack;
         private final Type type;
+        private final Class<?> javaClazz;
         private final Class<?> clazz;
 
-        public SnackEntry(Snack snack, Class<?> clazz, Type type) {
+        public SnackEntry(Snack snack, Class<?> javaClazz, Class<?> clazz, Type type) {
             this.snack = snack;
+            this.javaClazz = javaClazz;
             this.clazz = clazz;
             this.type = type;
         }
 
         public Class<?> getClazz() {
             return clazz;
+        }
+
+        public Class<?> getJavaClazz() {
+            return javaClazz;
         }
 
         public Snack getSnack() {

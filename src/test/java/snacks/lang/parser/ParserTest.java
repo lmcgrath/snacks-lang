@@ -499,7 +499,7 @@ public class ParserTest {
         Symbol tree = parse(
             "infix left 0 **",
             "infix right 8 >>=",
-            "infix 7 .."
+            "infix none 7 .."
         );
         assertThat(tree, equalTo(module(
             leftOp("**", 0),

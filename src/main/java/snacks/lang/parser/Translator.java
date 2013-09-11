@@ -201,7 +201,7 @@ public class Translator implements SyntaxVisitor {
             body = expression(body);
         }
         Locator locator = locator(module, node.getName());
-        DeclaredExpression declaration = declaration(getModule(), node.getName(), body);
+        DeclaredExpression declaration = declaration(module, node.getName(), body);
         if (declaration.getType().isEmpty()) {
             throw new TypeException(join(typeErrors, "; "));
         }
@@ -288,6 +288,39 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitInitializerExpression(InitializerExpression node) {
+        Reference reference = reference(node.getConstructor());
+        Type recordType = reference.getType();
+        Map<String, PropertyInitializer> properties = new HashMap<>();
+        List<Type> matchedProperties = new ArrayList<>();
+        for (Symbol n : node.getProperties()) {
+            PropertyInitializer property = (PropertyInitializer) translate(n);
+            if (properties.containsKey(property.getName())) {
+                throw new DuplicatePropertyException("Duplicate property initializer: " + property.getName());
+            }
+            boolean found = false;
+            for (Type propertyType : recordType.getParameters()) {
+                if (propertyType.getName().equals(property.getName())) {
+                    verifyAssignmentType(propertyType, property.getType());
+                    matchedProperties.add(propertyType);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new TypeException("Property " + reference.getLocator() + "#" + property.getName() + " does not exist");
+            }
+            properties.put(property.getName(), property);
+        }
+        for (Type propertyType : recordType.getParameters()) {
+            if (!matchedProperties.contains(propertyType)) {
+                throw new MissingPropertyException("Missing property: " + propertyType);
+            }
+        }
+        result = initializer(reference, properties);
+    }
+
+    @Override
     public void visitIntegerLiteral(IntegerLiteral node) {
         result = constant(node.getValue());
     }
@@ -365,7 +398,21 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitOperator(Operator node) {
-        environment().registerInfix(node.getPrecedence(), node.getFixity(), node.getName());
+        if (node.isPrefix()) {
+            environment().registerPrefix(node.getPrecedence(), node.getName());
+        } else {
+            environment().registerInfix(node.getPrecedence(), node.getFixity(), node.getName());
+        }
+    }
+
+    @Override
+    public void visitPropertyDeclaration(PropertyDeclaration node) {
+        result = propDef(node.getName(), translateType(node.getType()));
+    }
+
+    @Override
+    public void visitPropertyExpression(PropertyExpression node) {
+        result = prop(node.getName(), translate(node.getValue()));
     }
 
     @Override
@@ -388,6 +435,15 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitQuotedIdentifier(QuotedIdentifier node) {
         result = reference(node.getName());
+    }
+
+    @Override
+    public void visitRecordDeclaration(RecordDeclaration node) {
+        List<DeclaredProperty> properties = new ArrayList<>();
+        for (Symbol property : node.getProperties()) {
+            properties.add((DeclaredProperty) translate(property));
+        }
+        result = recordDeclaration(module + "." + node.getName(), properties);
     }
 
     @Override
@@ -443,6 +499,15 @@ public class Translator implements SyntaxVisitor {
             types.add(translateType(type));
         }
         type = tuple(types);
+    }
+
+    @Override
+    public void visitTypeDeclaration(TypeDeclaration node) {
+        Locator locator = locator(module, node.getName());
+        DeclaredExpression declaration = declaration(module, node.getName(), translate(node.getDefinition()));
+        addAlias(node.getName(), locator);
+        environment().define(new Reference(locator, declaration.getType()));
+        declarations.add(declaration);
     }
 
     @Override

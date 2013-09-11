@@ -28,6 +28,8 @@ public interface Generator {
 
     void generateDeclaredExpression(DeclaredExpression node);
 
+    void generateDeclaredRecord(DeclaredRecord node);
+
     void generateDoubleConstant(DoubleConstant node);
 
     void generateEmbrace(Embrace node);
@@ -43,6 +45,8 @@ public interface Generator {
     void generateGuardCases(GuardCases node);
 
     void generateHurl(Hurl node);
+
+    void generateInitializer(Initializer node);
 
     void generateIntegerConstant(IntegerConstant node);
 

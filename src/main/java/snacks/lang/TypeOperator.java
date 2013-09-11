@@ -56,7 +56,7 @@ public class TypeOperator extends Type {
 
     @Override
     public List<Type> getParameters() {
-        return parameters;
+        return new ArrayList<>(parameters);
     }
 
     @Override
