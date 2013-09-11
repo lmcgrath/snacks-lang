@@ -383,20 +383,17 @@ public class CompilerTest {
 
     @Test
     public void shouldCompileNegative() throws Exception {
-        run("main = () -> say $ -3");
-        verifyOut(-3);
+        run("main = () -> assert $ -3 == (-1 * 3)");
     }
 
     @Test
     public void shouldCompilePositive() throws Exception {
-        run("main = () -> say $ +3");
-        verifyOut(3);
+        run("main = () -> assert $ +3 == 3");
     }
 
     @Test
     public void shouldCompileNegativeNegative() throws Exception {
-        run("main = () -> say $ -(-3)");
-        verifyOut(3);
+        run("main = () -> assert $ -(-3) == 3");
     }
 
     @Test
@@ -434,10 +431,10 @@ public class CompilerTest {
             "    var x",
             "    var y",
             "    x = y = 3",
-            "    say \"x = #{x}; y = #{y}\"",
+            "    assert $ (x == 3, 'x was not 3')",
+            "    assert $ (y == 3, 'y was not 3')",
             "}"
         );
-        verifyOut("x = 3; y = 3" );
     }
 
     @Test
@@ -446,10 +443,10 @@ public class CompilerTest {
             "main = {",
             "    var x = 0",
             "    x = x + 1, while x < 10",
-            "    say x",
+            "    var expected = 10",
+            "    assert $ (x is expected, \"Got ${x}, expected #{expected}\")",
             "}"
         );
-        verifyOut(10);
     }
 
     @Test
@@ -461,10 +458,10 @@ public class CompilerTest {
             "        x = x + 1",
             "        break, if x > 10",
             "    end",
-            "    say \"X is #{x}\"",
+            "    var expected = 11",
+            "    assert $ (x is expected, \"Got ${x}, expected #{expected}\")",
             "}"
         );
-        verifyOut("X is 11");
     }
 
     @Test
@@ -478,7 +475,6 @@ public class CompilerTest {
             "        continue, if x % 2 == 0",
             "        say \"x is #{x}\"",
             "    end",
-            "    say 'got it!'",
             "}"
         );
         verifyNever("x is 0");
@@ -505,10 +501,9 @@ public class CompilerTest {
             "        end",
             "        x = x + 1",
             "    end",
-            "    say \"Total iterations = #{total}\"",
+            "    assert $ (total == 100, \"Got #{total}, expected 100\")",
             "}"
         );
-        verifyOut("Total iterations = 100");
     }
 
     @Test
@@ -524,32 +519,28 @@ public class CompilerTest {
             "            break",
             "        end",
             "    end",
-            "    say \"counter = #{counter}\"",
+            "    assert $ (counter == 9, 'Counter was not 9')",
             "}"
         );
-        verifyOut("counter = 9");
     }
 
     @Test
     public void shouldCreateTuple() throws Exception {
-        run("main = () -> say $ stringy ('waffles', 10, True)");
-        verifyOut("(Tuple3 waffles, 10, true)");
+        run("main = () -> assert $ stringy ('waffles', 10, True) == '(Tuple3 waffles, 10, true)'");
     }
 
     @Test
     public void shouldAccessSecondMemberOfTuple() throws Exception {
-        run("main = () -> say ('waffles', 10, True)._1");
-        verifyOut(10);
+        run("main = () -> assert $ ('waffles', 10, True)._1 == 10");
     }
 
     @Test
     public void shouldSpecifySignature() throws Exception {
         run(
             "addIntegers :: Integer -> Integer -> Integer",
-            "main = () -> say $ addIntegers 2 4",
+            "main = () -> assert $ addIntegers 2 4 == 6",
             "addIntegers = (x y) -> x + y"
         );
-        verifyOut(6);
     }
 
     @Test
@@ -557,19 +548,17 @@ public class CompilerTest {
         run(
             "something :: (String, Boolean, Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
-            "something = (x) -> say $ stringy x"
+            "something = (x) -> assert $ stringy x == '(Tuple3 waffles, true, 3)'"
         );
-        verifyOut("(Tuple3 waffles, true, 3)");
     }
 
     @Test
     public void shouldReturnTupleAsResult() throws Exception {
         run(
             "pair :: String -> Integer -> (Integer, String)",
-            "main = () -> say $ stringy $ pair 'toast' 2",
+            "main = () -> assert $ (pair 'waffles' 2) == (2, 'waffles')",
             "pair = (x y) -> (y, x)"
         );
-        verifyOut("(Tuple2 2, toast)");
     }
 
     @Test
@@ -578,9 +567,8 @@ public class CompilerTest {
             "<&> :: Integer -> Integer -> Integer",
             "<&> = (x y) -> x + y",
             "infix left 3 <&>",
-            "main = () -> say $ 3 <&> 5 * 2"
+            "main = () -> assert $ (3 <&> 5 * 2) == 13"
         );
-        verifyOut(13);
     }
 
     @Test
@@ -597,16 +585,10 @@ public class CompilerTest {
     public void shouldBooleanizeLogic() throws Exception {
         run(
             "main = {",
-            "    var a = True",
-            "    var b = False",
-            "    var c = 3",
-            "    var d = 4",
-            "    say $ \"Should be false: #{3 == 4 or 5 >= 5 and True is False}\"",
-            "    say $ \"Should be true: #{3 == 4 or 5 >= 5 and 'waffles' is 'waffles'}\"",
+            "    assert ((3 == 4 or 5 >= 5 and True is False) is False, 'Was not false')",
+            "    assert ((3 == 4 or 5 >= 5 and 'waffles' is 'waffles') is True, 'Was not true')",
             "}"
         );
-        verifyOut("Should be false: false");
-        verifyOut("Should be true: true");
     }
 
     private void run(String... inputs) throws Exception {
