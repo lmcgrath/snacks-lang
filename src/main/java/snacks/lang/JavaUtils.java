@@ -11,7 +11,8 @@ public class JavaUtils {
 
     static {
         replacements = new LinkedHashMap<>();
-        replacements.put("¢", "¢Cent");
+        replacements.put("¢", "¢Jingle");
+        replacements.put("$", "¢Bank");
         replacements.put("?", "¢Query");
         replacements.put("!", "¢Bang");
         replacements.put("+", "¢Plus");
