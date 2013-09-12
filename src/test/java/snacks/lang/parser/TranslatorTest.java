@@ -284,9 +284,9 @@ public class TranslatorTest {
     public void shouldRequireAllPropertiesOnRecord() throws Exception {
         translate(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
@@ -299,9 +299,9 @@ public class TranslatorTest {
     public void shouldRequirePropertyTypesToMatch() throws Exception {
         translate(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
@@ -315,9 +315,9 @@ public class TranslatorTest {
     public void shouldNotAllowDuplicateProperties() throws Exception {
         translate(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    pairsWithBacon? = True,",

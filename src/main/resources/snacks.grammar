@@ -95,7 +95,8 @@ type_properties
     ;
 
 type_property
-    = IDENTIFIER.id DOUBLE_COLON type_signature.t NEWLINE* {: return propDef(id, t); :}
+    = IDENTIFIER.id COLON type_signature.t NEWLINE* {: return propDef(id, t); :}
+    | KEY_SYMBOL.id type_signature.t NEWLINE* {: return propDef(id, t); :}
     ;
 
 type_signature

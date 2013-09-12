@@ -610,9 +610,9 @@ public class CompilerTest {
     public void shouldCompileRecord() throws Exception {
         run(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: snacks.lang.String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: snacks.lang.String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
@@ -627,9 +627,9 @@ public class CompilerTest {
     public void shouldReferenceRecordProperty() throws Exception {
         run(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
             "main = {",
@@ -643,9 +643,9 @@ public class CompilerTest {
     public void shouldAcceptRecordAsArgument() throws Exception {
         run(
             "data BreakfastItem = BreakfastItem {",
-            "    name :: String,",
-            "    tasteIndex :: Integer,",
-            "    pairsWithBacon? :: Boolean,",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
             "}",
             "bacon? = (x:BreakfastItem) -> x.pairsWithBacon?",
             "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
