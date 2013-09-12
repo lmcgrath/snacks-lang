@@ -11,23 +11,24 @@ public class JavaUtils {
 
     static {
         replacements = new LinkedHashMap<>();
-        replacements.put("?", "$Query");
-        replacements.put("!", "$Bang");
-        replacements.put("+", "$Plus");
-        replacements.put("-", "$Dash");
-        replacements.put("*", "$Splat");
-        replacements.put("/", "$Slash");
-        replacements.put("%", "$Frac");
-        replacements.put("&", "$Amp");
-        replacements.put("|", "$Pipe");
-        replacements.put("^", "$Point");
-        replacements.put("[]", "$Sammich");
-        replacements.put("..", "$Dots");
-        replacements.put("...", "$Bore");
-        replacements.put("=", "$Equal");
-        replacements.put("<", "$Grow");
-        replacements.put(">", "$Shrink");
-        replacements.put("~", "$Wave");
+        replacements.put("¢", "¢Cent");
+        replacements.put("?", "¢Query");
+        replacements.put("!", "¢Bang");
+        replacements.put("+", "¢Plus");
+        replacements.put("-", "¢Dash");
+        replacements.put("*", "¢Splat");
+        replacements.put("/", "¢Slash");
+        replacements.put("%", "¢Frac");
+        replacements.put("&", "¢Amp");
+        replacements.put("|", "¢Pipe");
+        replacements.put("^", "¢Point");
+        replacements.put("[]", "¢Sammich");
+        replacements.put("..", "¢Dots");
+        replacements.put("...", "¢Bore");
+        replacements.put("=", "¢Equal");
+        replacements.put("<", "¢Grow");
+        replacements.put(">", "¢Shrink");
+        replacements.put("~", "¢Wave");
     }
 
     public static String javaClass(SnacksLoader loader, String module, String name) {
@@ -44,16 +45,11 @@ public class JavaUtils {
     }
 
     public static String javaName(String snacksName) {
-        String javaName;
-        if ("?".equals(snacksName)) {
-            javaName = "$Coalesce";
-        } else {
-            javaName = snacksName;
-            for (String replacement : replacements.keySet()) {
-                javaName = javaName.replace(replacement, replacements.get(replacement));
-            }
+        String javaName= snacksName;
+        for (String replacement : replacements.keySet()) {
+            javaName = javaName.replace(replacement, replacements.get(replacement));
         }
-        if (javaName.startsWith("$")) {
+        if (javaName.startsWith("¢")) {
             javaName = "Op" + javaName;
         }
         return javaName;
