@@ -2,8 +2,8 @@ package snacks.lang;
 
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
-import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.reflect.MethodUtils.getMatchingAccessibleMethod;
+import static snacks.lang.JavaUtils.javaGetter;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandle;
@@ -50,8 +50,8 @@ public class SnacksDispatcher {
     }
 
     public static Object get(Lookup lookup, Object expression, String property) throws Throwable {
-        String getter = "get" + capitalize(property);
-        Method method = getMatchingAccessibleMethod(expression.getClass(), "get" + capitalize(property), new Class[0]);
+        String getter = javaGetter(property);
+        Method method = getMatchingAccessibleMethod(expression.getClass(), javaGetter(property), new Class[0]);
         if (method == null) {
             throw new NoSuchMethodException(p(expression.getClass()) + ":" + getter + ":" + sig(Object.class));
         } else {

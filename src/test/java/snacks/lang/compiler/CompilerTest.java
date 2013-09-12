@@ -612,15 +612,45 @@ public class CompilerTest {
             "data BreakfastItem = BreakfastItem {",
             "    name :: snacks.lang.String,",
             "    tasteIndex :: Integer,",
-            "    pairsWithBacon :: Boolean,",
+            "    pairsWithBacon? :: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
-            "    pairsWithBacon = True",
+            "    pairsWithBacon? = True",
             "}"
         );
-        verifyOut("BreakfastItem{name=Waffles, pairsWithBacon=true, tasteIndex=10}");
+        verifyOut("BreakfastItem{name=Waffles, pairsWithBacon?=true, tasteIndex=10}");
+    }
+
+    @Test
+    public void shouldReferenceRecordProperty() throws Exception {
+        run(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon? :: Boolean,",
+            "}",
+            "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "main = {",
+            "    assert waffles.pairsWithBacon?",
+            "    assert $ waffles.name + 10 == 'Waffles' + waffles.tasteIndex",
+            "}"
+        );
+    }
+
+    @Test
+    public void shouldAcceptRecordAsArgument() throws Exception {
+        run(
+            "data BreakfastItem = BreakfastItem {",
+            "    name :: String,",
+            "    tasteIndex :: Integer,",
+            "    pairsWithBacon? :: Boolean,",
+            "}",
+            "bacon? = (x:BreakfastItem) -> x.pairsWithBacon?",
+            "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "main = () -> assert $ bacon? waffles"
+        );
     }
 
     private void run(String... inputs) throws Exception {

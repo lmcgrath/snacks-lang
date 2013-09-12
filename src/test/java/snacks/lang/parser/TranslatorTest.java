@@ -286,7 +286,7 @@ public class TranslatorTest {
             "data BreakfastItem = BreakfastItem {",
             "    name :: String,",
             "    tasteIndex :: Integer,",
-            "    pairsWithBacon :: Boolean,",
+            "    pairsWithBacon? :: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
@@ -301,12 +301,12 @@ public class TranslatorTest {
             "data BreakfastItem = BreakfastItem {",
             "    name :: String,",
             "    tasteIndex :: Integer,",
-            "    pairsWithBacon :: Boolean,",
+            "    pairsWithBacon? :: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
-            "    pairsWithBacon = 'eewwwww bacon is grody'",
+            "    pairsWithBacon? = 'eewwwww bacon is grody'",
             "}"
         );
     }
@@ -317,13 +317,13 @@ public class TranslatorTest {
             "data BreakfastItem = BreakfastItem {",
             "    name :: String,",
             "    tasteIndex :: Integer,",
-            "    pairsWithBacon :: Boolean,",
+            "    pairsWithBacon? :: Boolean,",
             "}",
             "main = () -> say $ stringy BreakfastItem {",
-            "    pairsWithBacon = True,",
+            "    pairsWithBacon? = True,",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
-            "    pairsWithBacon = False // can't make up my mind! )=",
+            "    pairsWithBacon? = False // can't make up my mind! )=",
             "}"
         );
     }

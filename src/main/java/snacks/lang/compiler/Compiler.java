@@ -2,11 +2,13 @@ package snacks.lang.compiler;
 
 import static java.util.Collections.sort;
 import static me.qmx.jitescript.util.CodegenUtils.*;
-import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static snacks.lang.JavaUtils.javaClass;
+import static snacks.lang.JavaUtils.javaGetter;
+import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
 import static snacks.lang.Type.isFunction;
@@ -25,29 +27,6 @@ import snacks.lang.*;
 import snacks.lang.ast.*;
 
 public class Compiler implements Generator, Reducer {
-
-    private static final Map<String, String> replacements;
-
-    static {
-        replacements = new LinkedHashMap<>();
-        replacements.put("?", "$Query");
-        replacements.put("!", "$Bang");
-        replacements.put("+", "$Plus");
-        replacements.put("-", "$Dash");
-        replacements.put("*", "$Splat");
-        replacements.put("/", "$Slash");
-        replacements.put("%", "$Frac");
-        replacements.put("&", "$Amp");
-        replacements.put("|", "$Pipe");
-        replacements.put("^", "$Point");
-        replacements.put("[]", "$Sammich");
-        replacements.put("..", "$Dots");
-        replacements.put("...", "$Bore");
-        replacements.put("=", "$Equal");
-        replacements.put("<", "$Grow");
-        replacements.put(">", "$Shrink");
-        replacements.put("~", "$Wave");
-    }
 
     private final SnacksLoader loader;
     private final List<JiteClass> acceptedClasses;
@@ -131,7 +110,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
-        String className = javaClass(locator.getModule(), locator.getName());
+        String className = javaClass(loader, locator.getModule(), locator.getName());
         block.newobj(className);
         block.dup();
         for (String variable : locator.getEnvironment()) {
@@ -147,7 +126,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
-        String className = javaClass(locator.getModule(), locator.getName());
+        String className = javaClass(loader, locator.getModule(), locator.getName());
         Type type = currentReference.getType();
         if (isFunction(type)) {
             block().invokestatic(className, "instance", "()L" + className + ";");
@@ -163,7 +142,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclaredExpression(DeclaredExpression node) {
-        beginClass(javaClass(node.getModule(), node.getName()), interfacesFor(node.getType()));
+        beginClass(javaClass(loader, node.getModule(), node.getName()), interfacesFor(node.getType()));
         generate(node.getBody());
         acceptClass();
     }
@@ -180,10 +159,10 @@ public class Compiler implements Generator, Reducer {
         });
         for (final DeclaredProperty property : properties) {
             final Class<?> type = propertyType(property);
-            jiteClass.defineField(property.getName(), ACC_PRIVATE | ACC_FINAL, ci(type), null);
-            jiteClass.defineMethod("get" + capitalize(property.getName()), ACC_PUBLIC, sig(type), new CodeBlock() {{
+            jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, ci(type), null);
+            jiteClass.defineMethod(javaGetter(property.getName()), ACC_PUBLIC, sig(type), new CodeBlock() {{
                 aload(0);
-                getfield(jiteClass.getClassName(), property.getName(), ci(type));
+                getfield(jiteClass.getClassName(), javaName(property.getName()), ci(type));
                 areturn();
             }});
         }
@@ -199,7 +178,7 @@ public class Compiler implements Generator, Reducer {
                 Class<?> type = propertyType(property);
                 aload(0);
                 aload(arg++);
-                putfield(jiteClass.getClassName(), property.getName(), ci(type));
+                putfield(jiteClass.getClassName(), javaName(property.getName()), ci(type));
             }
             voidreturn();
         }});
@@ -218,7 +197,7 @@ public class Compiler implements Generator, Reducer {
                 }
                 invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
                 aload(0);
-                getfield(jiteClass.getClassName(), property.getName(), ci(propertyType(property)));
+                getfield(jiteClass.getClassName(), javaName(property.getName()), ci(propertyType(property)));
                 invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
             }
             ldc("}");
@@ -595,27 +574,6 @@ public class Compiler implements Generator, Reducer {
 
     private boolean isVariable(String name) {
         return state().isVariable(name);
-    }
-
-    private String javaClass(String module, String name) {
-        Class<?> actualClass = loader.loadSnack(module + '.' + name);
-        if (actualClass == null) {
-            String escapedName;
-            if ("?".equals(name)) {
-                escapedName = "$Coalesce";
-            } else {
-                escapedName = name.substring(0, 1).toUpperCase() + name.substring(1);
-                for (String replacement : replacements.keySet()) {
-                    escapedName = escapedName.replace(replacement, replacements.get(replacement));
-                }
-            }
-            if (escapedName.startsWith("$")) {
-                escapedName = "Op" + escapedName;
-            }
-            return module.replace('.', '/') + '/' + escapedName;
-        } else {
-            return actualClass.getName().replace('.', '/');
-        }
     }
 
     private JiteClass jiteClass() {
