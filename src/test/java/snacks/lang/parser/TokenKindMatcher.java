@@ -21,12 +21,12 @@ public class TokenKindMatcher extends TypeSafeMatcher<Symbol> {
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("kind ").appendValue(kind);
+        description.appendText("kind ").appendValue(Terminals.NAMES[kind]);
     }
 
     @Override
     protected void describeMismatchSafely(Symbol token, Description description) {
-        description.appendText("was actually ").appendValue(token.getId());
+        description.appendText("was actually ").appendValue(Terminals.NAMES[token.getId()]);
     }
 
     @Override

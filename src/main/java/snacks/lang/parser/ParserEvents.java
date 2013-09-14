@@ -44,18 +44,22 @@ public class ParserEvents extends Events {
     }
 
     private void report(Symbol symbol, String message) {
-        StringBuilder builder = new StringBuilder()
-            .append(getPosition(symbol))
-            .append(": ").append(message).append(' ');
+        String value;
         if (symbol.value != null) {
-            builder.append('"').append(escapeJava(symbol.value.toString())).append("\" ");
+            value = '"' + escapeJava(symbol.value.toString()) + "\" ";
+        } else {
+            value = "";
         }
-        builder.append(getCompleteId(symbol));
-        logger.warning(builder.toString());
+        logger.warning(message + ' ' + value + getCompleteId(symbol) + ' ' + getPosition(symbol));
     }
 
     private String getPosition(Symbol symbol) {
-        return "(" + (getLine(symbol.getStart()) + 1) + ", " + (getColumn(symbol.getStart()) + 1) + ")";
+        if (symbol instanceof Token) {
+            Token token = (Token) symbol;
+            return token.getPosition().toString();
+        } else {
+            return "(" + (getLine(symbol.getStart()) + 1) + "," + (getColumn(symbol.getStart()) + 1) + ")";
+        }
     }
 
     private String getCompleteId(Symbol symbol) {

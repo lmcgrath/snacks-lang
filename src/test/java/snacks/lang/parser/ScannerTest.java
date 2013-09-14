@@ -1,37 +1,36 @@
 package snacks.lang.parser;
 
-import static snacks.lang.parser.Terminals.*;
+import static org.apache.commons.lang.StringUtils.join;
 import static org.hamcrest.Matchers.both;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.apache.commons.lang.StringUtils.join;
+import static snacks.lang.parser.Terminals.*;
 import static snacks.lang.parser.TokenKindMatcher.hasKind;
 import static snacks.lang.parser.TokenValueMatcher.hasValue;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import org.junit.Test;
 
 public class ScannerTest {
 
     @Test
-    public void shouldGetInteger() throws IOException {
+    public void shouldGetInteger() {
         assertThat(scan("123").nextToken(), hasKind(INTEGER));
     }
 
     @Test
-    public void shouldGetDouble() throws IOException {
+    public void shouldGetDouble() {
         assertThat(scan("12.3").nextToken(), hasKind(DOUBLE));
     }
 
     @Test
-    public void shouldNotGetDoubleWithDotOnly() throws IOException {
+    public void shouldNotGetDoubleWithDotOnly() {
         assertThat(scan("12.oops").nextToken(), hasKind(INTEGER));
     }
 
     @Test
-    public void shouldGetString() throws IOException {
+    public void shouldGetString() {
         Scanner scanner = scan("'this is a string'");
         assertThat(scanner.nextToken(), hasKind(QUOTE));
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is a string")));
@@ -39,7 +38,7 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetNowdocString() throws IOException {
+    public void shouldGetNowdocString() {
         Scanner scanner = scan("'''this is\na string'''");
         assertThat(scanner.nextToken(), hasKind(TRIPLE_QUOTE));
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is\na string")));
@@ -47,42 +46,42 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldTrimLeadingNewLineInNowdocString() throws IOException {
+    public void shouldTrimLeadingNewLineInNowdocString() {
         Scanner scanner = scan("'''\nthis is\na string'''");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is\na string")));
     }
 
     @Test
-    public void shouldNotEvaluateEscapeSequencesInString() throws IOException {
+    public void shouldNotEvaluateEscapeSequencesInString() {
         Scanner scanner = scan("'this\\nis\\na\\nstring'");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this\\nis\\na\\nstring")));
     }
 
     @Test
-    public void shouldNotEvaluateEscapeSequencesInNowdocString() throws IOException {
+    public void shouldNotEvaluateEscapeSequencesInNowdocString() {
         Scanner scanner = scan("'''this\\nis\\na\\nstring'''");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this\\nis\\na\\nstring")));
     }
 
     @Test
-    public void shouldNotEvaluateExpressionInString() throws IOException {
+    public void shouldNotEvaluateExpressionInString() {
         Scanner scanner = scan("'#{2}'");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("#{2}")));
     }
 
     @Test
-    public void shouldNotEvaluateExpressionInNowdocString() throws IOException {
+    public void shouldNotEvaluateExpressionInNowdocString() {
         Scanner scanner = scan("'''#{2}'''");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("#{2}")));
     }
 
     @Test
-    public void shouldGetInterpolatedString() throws IOException {
+    public void shouldGetInterpolatedString() {
         Scanner scanner = scan("\"this is a string\"");
         assertThat(scanner.nextToken(), hasKind(DQUOTE));
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is a string")));
@@ -90,7 +89,7 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetHeredocString() throws IOException {
+    public void shouldGetHeredocString() {
         Scanner scanner = scan("\"\"\"this is a string\"\"\"");
         assertThat(scanner.nextToken(), hasKind(TRIPLE_DQUOTE));
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is a string")));
@@ -98,155 +97,150 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetInterpolatedStringWithAsciiEscape() throws IOException {
+    public void shouldGetInterpolatedStringWithAsciiEscape() {
         Scanner scanner = scan("\"this\\nis\\na\\nstring\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this\nis\na\nstring")));
     }
 
     @Test
-    public void shouldGetHeredocStringWithAsciiEscape() throws IOException {
+    public void shouldGetHeredocStringWithAsciiEscape() {
         Scanner scanner = scan("\"\"\"this\\nis\\na\\nstring\"\"\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this\nis\na\nstring")));
     }
 
     @Test
-    public void shouldTrimLeadingNewLineInHeredocString() throws IOException {
+    public void shouldTrimLeadingNewLineInHeredocString() {
         Scanner scanner = scan("\"\"\"\nthis is a string\"\"\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("this is a string")));
     }
 
     @Test
-    public void shouldGetInterpolatedStringWithUnicodeEscape() throws IOException {
+    public void shouldGetInterpolatedStringWithUnicodeEscape() {
         Scanner scanner = scan("\"Clockwise: \\u27F3\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("Clockwise: ⟳")));
     }
 
     @Test
-    public void shouldGetInterpolatedStringWithOctalEscape() throws IOException {
+    public void shouldGetInterpolatedStringWithOctalEscape() {
         Scanner scanner = scan("\"@ octal: \\100\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("@ octal: @")));
     }
 
     @Test
-    public void shouldGetInterpolatedStringWithUnicodeEscapeHavingMultipleUs() throws IOException {
+    public void shouldGetInterpolatedStringWithUnicodeEscapeHavingMultipleUs() {
         Scanner scanner = scan("\"Clockwise: \\uu27F3\"");
         scanner.nextToken();
         assertThat(scanner.nextToken(), both(hasKind(STRING)).and(hasValue("Clockwise: ⟳")));
     }
 
-    @Test(expected = ScannerException.class)
-    public void shouldNotGetInterpolatedStringWithImproperlyCasedUnicodeEscape() throws IOException {
+    @Test(expected = ParseException.class)
+    public void shouldNotGetInterpolatedStringWithImproperlyCasedUnicodeEscape() {
         Scanner scanner = scan("\"Cyrillic Zhe: \\U0416\"");
         try {
             scanner.nextToken();
-        } catch (ScannerException exception) {
+        } catch (ParseException exception) {
             fail(exception.getMessage());
         }
         scanner.nextToken();
     }
 
-    @Test(expected = ScannerException.class)
-    public void shouldNotGetInterpolatedStringWithImproperAsciiEscape() throws IOException {
+    @Test(expected = ParseException.class)
+    public void shouldNotGetInterpolatedStringWithImproperAsciiEscape() {
         Scanner scanner = scan("\"Oops \\v\"");
         try {
             scanner.nextToken();
-        } catch (ScannerException exception) {
+        } catch (ParseException exception) {
             fail(exception.getMessage());
         }
         scanner.nextToken();
     }
 
     @Test
-    public void shouldGetLParen() throws IOException {
+    public void shouldGetLParen() {
         assertThat(scan("(bananas").nextToken(), hasKind(LPAREN));
     }
 
     @Test
-    public void shouldGetRParen() throws IOException {
+    public void shouldGetRParen() {
         assertThat(scan(")bananas").nextToken(), hasKind(RPAREN));
     }
 
     @Test
-    public void shouldGetIdentifier() throws IOException {
+    public void shouldGetIdentifier() {
         assertThat(scan("taco").nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("taco")));
     }
 
     @Test
-    public void shouldGetLIndex() throws IOException {
+    public void shouldGetLIndex() {
         Scanner scanner = scan("bananas[");
         scanner.nextToken();
         assertThat(scanner.nextToken(), hasKind(LINDEX));
     }
 
     @Test
-    public void shouldGetLArg() throws IOException {
+    public void shouldGetLArg() {
         Scanner scanner = scan("bananas(");
         scanner.nextToken();
         assertThat(scanner.nextToken(), hasKind(LARG));
     }
 
     @Test
-    public void shouldGetComma() throws IOException {
+    public void shouldGetComma() {
         assertThat(scan(", bananas").nextToken(), hasKind(COMMA));
     }
 
     @Test
-    public void shouldGetTrue() throws IOException {
+    public void shouldGetTrue() {
         assertThat(scan("True").nextToken(), hasKind(TRUE));
     }
 
     @Test
-    public void shouldGetFalse() throws IOException {
+    public void shouldGetFalse() {
         assertThat(scan("False").nextToken(), hasKind(FALSE));
     }
 
     @Test
-    public void shouldGetNothing() throws IOException {
-        assertThat(scan("Nothing").nextToken(), hasKind(NOTHING));
-    }
-
-    @Test
-    public void shouldGetSymbol() throws IOException {
+    public void shouldGetSymbol() {
         assertThat(scan(":bananas").nextToken(), both(hasKind(SYMBOL)).and(hasValue("bananas")));
     }
 
     @Test
-    public void shouldGetCharacter() throws IOException {
+    public void shouldGetCharacter() {
         assertThat(scan("c'a'").nextToken(), both(hasKind(CHARACTER)).and(hasValue('a')));
     }
 
     @Test
-    public void shouldGetCharacterWithUnicodeEscape() throws IOException {
+    public void shouldGetCharacterWithUnicodeEscape() {
         assertThat(scan("c'\\u27F3'").nextToken(), both(hasKind(CHARACTER)).and(hasValue('⟳')));
     }
 
     @Test
-    public void shouldGetCharacterWithOctalEscape() throws IOException {
+    public void shouldGetCharacterWithOctalEscape() {
         assertThat(scan("c'\\100'").nextToken(), both(hasKind(CHARACTER)).and(hasValue('@')));
     }
 
     @Test
-    public void shouldGetDot() throws IOException {
+    public void shouldGetDot() {
         assertThat(scan(".bananas").nextToken(), hasKind(DOT));
     }
 
     @Test
-    public void shouldGetAssign() throws IOException {
+    public void shouldGetAssign() {
         assertThat(scan("= bananas").nextToken(), hasKind(ASSIGN));
     }
 
     @Test
-    public void shouldGetAppliesTo() throws IOException {
+    public void shouldGetAppliesTo() {
         assertThat(scan("-> bananas").nextToken(), hasKind(APPLIES_TO));
     }
 
     @Test
-    public void shouldReturnFunctionArgumentsAgainstContainedFunction() throws IOException {
+    public void shouldReturnFunctionArgumentsAgainstContainedFunction() {
         Scanner scanner = scan("(a b c -> waffles)");
         assertThat(scanner.nextToken(), hasKind(LFUNC));
         assertThat(scanner.nextToken(), both(hasKind(FWORD)).and(hasValue("a")));
@@ -257,7 +251,7 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldReturnFunctionArgumentsAgainstTailedFunction() throws IOException {
+    public void shouldReturnFunctionArgumentsAgainstTailedFunction() {
         Scanner scanner = scan("(a b c) -> waffles");
         assertThat(scanner.nextToken(), hasKind(LFUNC));
         assertThat(scanner.nextToken(), both(hasKind(FWORD)).and(hasValue("a")));
@@ -269,26 +263,45 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetLSquare() throws IOException {
+    public void shouldGetLSquare() {
         assertThat(scan("[bananas").nextToken(), hasKind(LSQUARE));
     }
 
     @Test
-    public void shouldGetKeySymbol() throws IOException {
-        assertThat(scan("bananas:").nextToken(), both(hasKind(KEY_SYMBOL)).and(hasValue("bananas")));
-    }
-
-    @Test
-    public void shouldGetGoesTo() throws IOException {
+    public void shouldGetGoesTo() {
         assertThat(scan("=> bananas").nextToken(), hasKind(GOES_TO));
     }
 
     @Test
-    public void shouldGetThrowaway() throws IOException {
+    public void shouldGetThrowaway() {
         assertThat(scan("_").nextToken(), hasKind(THROWAWAY));
     }
 
-    private Scanner scan(String... inputs) throws IOException {
-        return new Scanner(new ByteArrayInputStream(join(inputs, '\n').getBytes(Charset.forName("UTF-8"))));
+    @Test
+    public void shouldGetPositive() {
+        assertThat(scan("+bananas").nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("+")));
+    }
+
+    @Test
+    public void shouldGetDoubleColon() {
+        assertThat(scan(":: bananas").nextToken(), hasKind(DOUBLE_COLON));
+    }
+
+    @Test
+    public void shouldGetQuotedIdentifier() {
+        assertThat(scan(" `+` bananas").nextToken(), both(hasKind(QUOTED_IDENTIFIER)).and(hasValue("+")));
+    }
+
+    @Test
+    public void shouldGetDoubleNegative() {
+        Scanner scanner = scan("-(-3)");
+        assertThat(scanner.nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("-")));
+        assertThat(scanner.nextToken(), hasKind(LPAREN));
+        assertThat(scanner.nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("-")));
+        assertThat(scanner.nextToken(), both(hasKind(INTEGER)).and(hasValue(3)));
+    }
+
+    private Scanner scan(String... inputs) {
+        return new Scanner("test", new ByteArrayInputStream(join(inputs, '\n').getBytes(Charset.forName("UTF-8"))));
     }
 }

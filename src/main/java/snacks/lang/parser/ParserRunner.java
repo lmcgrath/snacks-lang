@@ -38,7 +38,7 @@ public class ParserRunner implements CommandLineRunner {
                         break;
                     } else {
                         printer.print(parser.parse(
-                            new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
+                            new Scanner("Command Line", new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         ));
                     }
                 } catch (ScannerException exception) {

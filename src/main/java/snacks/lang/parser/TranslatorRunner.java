@@ -40,7 +40,7 @@ public class TranslatorRunner implements CommandLineRunner {
                         break;
                     } else {
                         printer.print(translator.translateModule(parser.parse(
-                            new Scanner(new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
+                            new Scanner("Command Line", new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         )));
                     }
                 } catch (ScannerException exception) {

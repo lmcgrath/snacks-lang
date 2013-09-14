@@ -24,7 +24,6 @@ buildscript {
 apply from: "${scriptsDir}/application.gradle"
 apply from: "${scriptsDir}/dependencies.gradle"
 apply from: "${scriptsDir}/parser.gradle"
-apply from: "${scriptsDir}/scanner.gradle"
 apply from: "${scriptsDir}/tuples.gradle"
 apply from: "${scriptsDir}/test.gradle"
 apply from: "${scriptsDir}/distribution.gradle"

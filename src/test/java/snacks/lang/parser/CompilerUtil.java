@@ -14,14 +14,14 @@ public final class CompilerUtil {
 
     public static Symbol expression(String... inputs) {
         return new Parser().parse(
-            new Scanner(new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8")))),
+            new Scanner("test", new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8")))),
             AltGoals.expression
         );
     }
 
     public static Symbol parse(String... inputs) {
         return new Parser().parse(
-            new Scanner(new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8"))))
+            new Scanner("test", new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8"))))
         );
     }
 

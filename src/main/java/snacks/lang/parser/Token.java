@@ -1,41 +1,50 @@
 package snacks.lang.parser;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static snacks.lang.parser.Terminals.NAMES;
 
 import beaver.Symbol;
 
 public class Token extends Symbol {
 
-    private final String source;
+    private Position position;
 
-    public Token(short kind, int line, int column, int length, String source) {
-        super(kind, line, column, length);
-        this.source = source;
+    public Token(short kind, Position position) {
+        super(kind);
+        this.position = position;
     }
 
-    public Token(short kind, int line, int column, int length, String source, Object value) {
-        super(kind, line, column, length, value);
-        this.source = source;
+    public Token(short kind, Object value, Position position) {
+        super(kind, value);
+        this.position = position;
     }
 
-    public int getKind() {
-        return super.getId();
+    @Override
+    public int getEnd() {
+        return makePosition(position.getEndLine(), position.getEndColumn());
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T getValue() {
-        return (T) value;
+    public Position getPosition() {
+        return position;
+    }
+
+    @Override
+    public int getStart() {
+        return makePosition(position.getStartLine(), position.getStartColumn());
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
     }
 
     @Override
     public String toString() {
-        return String.format(
-            "(%s \"%s\" in %s: %d, %d)",
-            Terminals.NAMES[getKind()],
-            escapeJava(value.toString()),
-            source,
-            getLine(getStart()),
-            getColumn(getStart())
-        );
+        String name;
+        if (getId() <= NAMES.length) {
+            name = NAMES[getId()];
+        } else {
+            name = "UNKNOWN";
+        }
+        return name + "{value=\"" + escapeJava(value == null ? null : value.toString()) + "\" position=" + position + "}";
     }
 }

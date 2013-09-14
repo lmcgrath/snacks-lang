@@ -12,9 +12,9 @@
         "static org.apache.commons.lang.StringUtils.join";
 
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, NOTHING, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL, DOT,
-    KEY_SYMBOL, TRUE, FALSE, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL,
-    IMPORT, RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE,
-    LCURLY, RCURLY, USE, CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY,
+    TRUE, FALSE, AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL, IMPORT,
+    RETURN, THEN, UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY,
+    RCURLY, USE, CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY,
     LINTERPOLATE, RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX,
     RIGHT_INFIX, PREFIX, QUOTED_IDENTIFIER, DATA
 ;
@@ -47,7 +47,6 @@
 %typeof DOUBLE = "Double";
 %typeof REGEX_OPTIONS = "Set<Character>";
 %typeof SYMBOL = "String";
-%typeof KEY_SYMBOL = "String";
 %typeof CHARACTER = "Character";
 
 %typeof function_argument = "Argument";
@@ -96,7 +95,6 @@ type_properties
 
 type_property
     = IDENTIFIER.id COLON type_signature.t NEWLINE* {: return propDef(id, t); :}
-    | KEY_SYMBOL.id type_signature.t NEWLINE* {: return propDef(id, t); :}
     ;
 
 type_signature
@@ -418,7 +416,7 @@ keyed_list
     ;
 
 keyed_entry
-    = KEY_SYMBOL.k expression.v {: return entry(symbol(k), v); :}
+    = IDENTIFIER.k COLON expression.v {: return entry(symbol(k), v); :}
     ;
 
 map_list
