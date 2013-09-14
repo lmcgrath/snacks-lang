@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class Conditional extends Symbol implements Visitable {
+public class Conditional extends VisitableSymbol {
 
     private final List<Symbol> cases;
 

@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static snacks.lang.parser.Terminals.NAMES;
 
 import beaver.Symbol;
+import snacks.lang.util.Position;
 
 public class Token extends Symbol {
 

@@ -9,7 +9,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class ExceptionalExpression extends Symbol implements Visitable {
+public class ExceptionalExpression extends VisitableSymbol {
 
     private final List<Symbol> useCases;
     private final Symbol expression;

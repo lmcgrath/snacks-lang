@@ -237,10 +237,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitNothingLiteral(NothingLiteral node) {
-    }
-
-    @Override
     public void visitOperator(Operator node) {
         print("name: `" + node.getName() + "`");
         print("fixity: " + node.getFixity());
@@ -372,11 +368,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
 
     private void print(Symbol node) {
         if (node != null) {
-            print((Visitable) node);
+            print((VisitableSymbol) node);
         }
     }
 
-    private void print(Visitable node) {
+    private void print(VisitableSymbol node) {
         if (node != null) {
             state.begin(node);
             node.accept(this);

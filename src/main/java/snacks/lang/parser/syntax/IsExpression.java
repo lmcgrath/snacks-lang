@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class IsExpression extends Symbol implements Visitable {
+public class IsExpression extends VisitableSymbol {
 
     private final Symbol left;
     private final Symbol right;

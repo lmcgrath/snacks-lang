@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class ApplyExpression extends Symbol implements Visitable {
+public class ApplyExpression extends VisitableSymbol {
 
     private final Symbol expression;
     private final Symbol argument;

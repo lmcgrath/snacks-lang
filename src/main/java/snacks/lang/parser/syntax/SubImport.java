@@ -1,10 +1,9 @@
 package snacks.lang.parser.syntax;
 
 import java.util.Objects;
-import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class SubImport extends Symbol implements Visitable {
+public class SubImport extends VisitableSymbol {
 
     private final String expression;
     private final String alias;

@@ -3,7 +3,7 @@ package snacks.lang.parser.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class HurlExpression extends Symbol implements Visitable {
+public class HurlExpression extends VisitableSymbol {
 
     private final Symbol expression;
 

@@ -2,7 +2,7 @@ package snacks.lang.parser.syntax;
 
 import beaver.Symbol;
 
-public class AccessExpression extends Symbol implements Visitable {
+public class AccessExpression extends VisitableSymbol {
 
     private final Symbol expression;
     private final String property;

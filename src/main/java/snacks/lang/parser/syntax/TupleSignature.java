@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class TupleSignature extends Symbol implements Visitable {
+public class TupleSignature extends VisitableSymbol {
 
     private final List<Symbol> types;
 

@@ -1,8 +1,6 @@
 package snacks.lang.parser.syntax;
 
-import beaver.Symbol;
-
-public class NopExpression extends Symbol implements Visitable {
+public class NopExpression extends VisitableSymbol {
 
     @Override
     public void accept(SyntaxVisitor visitor) {

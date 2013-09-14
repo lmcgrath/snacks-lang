@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class ListLiteral extends Symbol implements Visitable {
+public class ListLiteral extends VisitableSymbol {
 
     private final List<Symbol> elements;
 

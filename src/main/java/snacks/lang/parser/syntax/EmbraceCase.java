@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class EmbraceCase extends Symbol implements Visitable {
+public class EmbraceCase extends VisitableSymbol {
 
     private final String argument;
     private final Symbol type;

@@ -7,7 +7,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class InitializerExpression extends Symbol implements Visitable {
+public class InitializerExpression extends VisitableSymbol {
 
     private final String constructor;
     private final List<Symbol> properties;

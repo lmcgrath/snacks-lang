@@ -8,7 +8,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class RecordDeclaration extends Symbol implements Visitable {
+public class RecordDeclaration extends VisitableSymbol {
 
     private final String name;
     private final List<Symbol> properties;

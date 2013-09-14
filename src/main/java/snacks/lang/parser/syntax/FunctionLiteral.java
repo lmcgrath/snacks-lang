@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class FunctionLiteral extends Symbol implements Visitable {
+public class FunctionLiteral extends VisitableSymbol {
 
     private final Symbol argument;
     private final Symbol body;

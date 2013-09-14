@@ -1,9 +1,8 @@
 package snacks.lang.parser.syntax;
 
 import java.util.Objects;
-import beaver.Symbol;
 
-public class QuotedIdentifier extends Symbol implements Visitable {
+public class QuotedIdentifier extends VisitableSymbol {
 
     private final String name;
 

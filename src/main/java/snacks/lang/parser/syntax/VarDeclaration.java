@@ -1,9 +1,8 @@
 package snacks.lang.parser.syntax;
 
 import java.util.Objects;
-import beaver.Symbol;
 
-public class VarDeclaration extends Symbol implements Visitable {
+public class VarDeclaration extends VisitableSymbol {
 
     private final String name;
 

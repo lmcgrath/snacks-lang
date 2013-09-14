@@ -3,9 +3,8 @@ package snacks.lang.parser.syntax;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.util.Objects;
-import beaver.Symbol;
 
-public class StringLiteral extends Symbol implements Visitable {
+public class StringLiteral extends VisitableSymbol {
 
     private final String value;
 

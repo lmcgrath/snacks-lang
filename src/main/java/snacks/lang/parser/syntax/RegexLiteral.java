@@ -6,7 +6,7 @@ import java.util.Set;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class RegexLiteral extends Symbol implements Visitable {
+public class RegexLiteral extends VisitableSymbol {
 
     private final List<Symbol> elements;
     private final Set<Character> options;

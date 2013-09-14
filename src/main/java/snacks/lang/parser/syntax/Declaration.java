@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class Declaration extends Symbol implements Visitable {
+public class Declaration extends VisitableSymbol {
 
     private final String name;
     private final Symbol body;

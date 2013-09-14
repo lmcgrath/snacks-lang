@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class IteratorLoop extends Symbol implements Visitable {
+public class IteratorLoop extends VisitableSymbol {
 
     private final String variable;
     private final Symbol expression;

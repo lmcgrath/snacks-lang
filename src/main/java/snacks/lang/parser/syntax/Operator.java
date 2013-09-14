@@ -3,11 +3,10 @@ package snacks.lang.parser.syntax;
 import static snacks.lang.Fixity.RIGHT;
 
 import java.util.Objects;
-import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Fixity;
 
-public class Operator extends Symbol implements Visitable {
+public class Operator extends VisitableSymbol {
 
     private final Fixity fixity;
     private final int precedence;

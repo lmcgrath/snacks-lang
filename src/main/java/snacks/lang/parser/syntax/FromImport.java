@@ -8,7 +8,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class FromImport extends Symbol implements Visitable {
+public class FromImport extends VisitableSymbol {
 
     private final Symbol module;
     private final List<Symbol> subImports;

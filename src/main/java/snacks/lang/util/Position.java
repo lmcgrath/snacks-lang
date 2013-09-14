@@ -1,4 +1,4 @@
-package snacks.lang.parser;
+package snacks.lang.util;
 
 public class Position {
 

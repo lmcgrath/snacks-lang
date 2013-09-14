@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class Signature extends Symbol implements Visitable {
+public class Signature extends VisitableSymbol {
 
     private final String identifier;
     private final Symbol type;

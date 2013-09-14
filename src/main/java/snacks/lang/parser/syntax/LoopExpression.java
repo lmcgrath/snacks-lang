@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class LoopExpression extends Symbol implements Visitable {
+public class LoopExpression extends VisitableSymbol {
 
     private final Symbol condition;
     private final Symbol body;

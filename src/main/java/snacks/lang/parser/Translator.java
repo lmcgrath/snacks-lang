@@ -392,11 +392,6 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitNothingLiteral(NothingLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
     public void visitOperator(Operator node) {
         if (node.isPrefix()) {
             environment().registerPrefix(node.getPrecedence(), node.getName());
@@ -727,7 +722,7 @@ public class Translator implements SyntaxVisitor {
         return op;
     }
 
-    private AstNode translate(Visitable node) {
+    private AstNode translate(VisitableSymbol node) {
         type = null;
         result = null;
         node.accept(this);
@@ -735,7 +730,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     private AstNode translate(Symbol node) {
-        return translate((Visitable) node);
+        return translate((VisitableSymbol) node);
     }
 
     private AstNode translateFunction(FunctionLiteral node) {

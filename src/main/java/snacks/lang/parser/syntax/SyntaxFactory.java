@@ -85,7 +85,7 @@ public final class SyntaxFactory {
         if (tail != null) {
             addAll(elements, tail);
         }
-        if (defaultCase instanceof Visitable) {
+        if (defaultCase instanceof VisitableSymbol) {
             elements.add(defaultCase);
         }
         return new Conditional(elements);
@@ -213,10 +213,6 @@ public final class SyntaxFactory {
 
     public static Symbol nop() {
         return new NopExpression();
-    }
-
-    public static Symbol nothing() {
-        return new NothingLiteral();
     }
 
     public static Symbol op(String name, int precedence) {

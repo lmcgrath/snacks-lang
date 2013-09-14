@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class MapEntry extends Symbol implements Visitable {
+public class MapEntry extends VisitableSymbol {
 
     private final Symbol key;
     private final Symbol value;

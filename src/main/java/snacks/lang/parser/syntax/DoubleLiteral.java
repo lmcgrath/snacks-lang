@@ -1,9 +1,8 @@
 package snacks.lang.parser.syntax;
 
 import java.util.Objects;
-import beaver.Symbol;
 
-public class DoubleLiteral extends Symbol implements Visitable {
+public class DoubleLiteral extends VisitableSymbol {
 
     private final double value;
 

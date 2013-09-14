@@ -5,11 +5,10 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.List;
 import java.util.Objects;
-import beaver.Symbol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
-public class QualifiedIdentifier extends Symbol implements Visitable {
+public class QualifiedIdentifier extends VisitableSymbol {
 
     private final List<String> segments;
 

@@ -4,7 +4,7 @@ import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class ConditionCase extends Symbol implements Visitable {
+public class ConditionCase extends VisitableSymbol {
 
     private final Symbol condition;
     private final Symbol expression;

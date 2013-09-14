@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.*;
+import snacks.lang.util.Position;
 
 public class Scanner extends beaver.Scanner implements AutoCloseable {
 

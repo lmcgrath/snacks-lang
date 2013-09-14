@@ -3,7 +3,7 @@ package snacks.lang.parser.syntax;
 import java.util.Objects;
 import beaver.Symbol;
 
-public class InvokableLiteral extends Symbol implements Visitable {
+public class InvokableLiteral extends VisitableSymbol {
 
     private final Symbol expression;
 
