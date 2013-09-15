@@ -10,6 +10,7 @@ import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 
 import java.util.*;
 import beaver.Symbol;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
@@ -576,29 +577,20 @@ public class Translator implements SyntaxVisitor {
     }
 
     private Type inferenceResultType(Type functionType, Type argumentType) {
-        Type constrainedArgumentType = argumentType.recompose(functionType, environment());
-        List<Type> allowedTypes = new ArrayList<>();
-        List<Type> functionTypesQueue = new LinkedList<>(functionType.decompose());
-        for (Type argumentSubType : constrainedArgumentType.decompose()) {
-            List<Type> allowedResultTypes = new ArrayList<>();
-            for (Type functionSubType : functionTypesQueue) {
-                Type resultType = createVariable();
-                if (func(argumentSubType, resultType).unify(functionSubType)) {
-                    allowedResultTypes.add(resultType);
-                }
-            }
-            allowedTypes.addAll(allowedResultTypes);
-            if (functionTypesQueue.isEmpty()) {
-                break;
-            } else {
-                functionTypesQueue.remove(0);
+        Set<Type> argumentTypes = new HashSet<>();
+        Set<Type> resultTypes = new HashSet<>();
+        for (FunctionArgument pair : productOf(functionType, argumentType)) {
+            Type resultType = createVariable();
+            if (func(pair.argumentType, resultType).unify(pair.functionType)) {
+                resultTypes.add(resultType);
+                argumentTypes.add(pair.argumentType);
             }
         }
-        if (allowedTypes.isEmpty()) {
+        if (resultTypes.isEmpty()) {
             typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);
         }
-        argumentType.bind(set(constrainedArgumentType.decompose()));
-        return set(allowedTypes);
+        argumentType.bind(set(argumentTypes));
+        return set(resultTypes);
     }
 
     private boolean isAssignment(Symbol symbol) {
@@ -640,6 +632,16 @@ public class Translator implements SyntaxVisitor {
     private boolean outputOperator(Operator o1, Operator o2) {
         return o1.getFixity() == LEFT && o1.getPrecedence() <= o2.getPrecedence()
             || (o1.isPrefix() || o2.isPrefix()) && o1.getPrecedence() == o2.getPrecedence();
+    }
+
+    private Set<FunctionArgument> productOf(Type functionType, Type argumentType) {
+        Set<FunctionArgument> product = new HashSet<>();
+        for (Type ftype : functionType.decompose()) {
+            for (Type atype : argumentType.recompose(ftype, environment()).decompose()) {
+                product.add(new FunctionArgument(ftype, atype));
+            }
+        }
+        return product;
     }
 
     private Symbol reduceOperations(Deque<Symbol> output) {
@@ -797,6 +799,37 @@ public class Translator implements SyntaxVisitor {
             throw new TypeException("Type mismatch: " + targetType + " != " + valueType);
         }
         generify(targetType);
+    }
+
+    private static final class FunctionArgument {
+
+        final Type argumentType;
+        final Type functionType;
+
+        public FunctionArgument(Type functionType, Type argumentType) {
+            this.argumentType = argumentType;
+            this.functionType = functionType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof FunctionArgument) {
+                FunctionArgument other = (FunctionArgument) o;
+                return new EqualsBuilder()
+                    .append(argumentType, other.argumentType)
+                    .append(functionType, other.functionType)
+                    .isEquals();
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(argumentType, functionType);
+        }
     }
 
     private static final class NameSequence {

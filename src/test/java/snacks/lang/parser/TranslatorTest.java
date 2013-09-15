@@ -10,7 +10,6 @@ import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Set;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksLoader;
 import snacks.lang.Type;
@@ -255,7 +254,6 @@ public class TranslatorTest {
         translate("example = () -> True + True");
     }
 
-    @Ignore
     @Test
     public void shouldApplyFunctionToFunction() {
         translate(

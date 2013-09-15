@@ -199,7 +199,6 @@ public class CompilerTest {
         verifyOut("I like\n waffles waffles waffles and bananas\n");
     }
 
-    @Ignore
     @Test
     public void shouldPassFunctionIntoFunction() throws Exception {
         run(
