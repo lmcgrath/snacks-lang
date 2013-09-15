@@ -94,7 +94,7 @@ type_properties
     ;
 
 type_property
-    = IDENTIFIER.id COLON type_signature.t NEWLINE* {: return propDef(id, t); :}
+    = IDENTIFIER.id COLON type_signature.t nl* {: return propDef(id, t); :}
     ;
 
 type_signature
@@ -152,25 +152,25 @@ qualified_identifier
 
 statement
     = expression
-    | BREAK                                                             {: return new BreakExpression(); :}
-    | CONTINUE                                                          {: return new ContinueExpression(); :}
-    | expression.l ASSIGN statement.r                                   {: return msg(l, id("="), r); :}
-    | VAR IDENTIFIER.v                                                  {: return var(v); :}
-    | VAR IDENTIFIER.v ASSIGN expression.e                              {: return var(v, e); :}
-    | VAR QUOTED_IDENTIFIER.v                                           {: return var(v); :}
-    | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e                       {: return var(v, e); :}
-    | HURL expression.e                                                 {: return hurl(e); :}
-    | RETURN expression.e                                               {: return result(e); :}
-    | WHILE expression.c NEWLINE+ sequence.e term* END                  {: return loop(c, block(e)); :}
-    | WHILE expression.c DO sequence.e term* END                        {: return loop(c, block(e)); :}
-    | UNTIL expression.c NEWLINE+ sequence.e term* END                  {: return loop(unary("not", c), block(e)); :}
-    | UNTIL expression.c DO sequence.e term* END                        {: return loop(unary("not", c), block(e)); :}
-    | FOR IDENTIFIER.v IN expression.e NEWLINE+ sequence.s term* END    {: return loop(v, e, block(s)); :}
-    | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END          {: return loop(v, e, block(s)); :}
-    | statement.s COMMA IF expression.c                                 {: return suffix(s, c); :}
-    | statement.s COMMA UNLESS expression.c                             {: return suffix(s, unary("not", c)); :}
-    | statement.s COMMA WHILE expression.c                              {: return loop(c, s); :}
-    | statement.s COMMA UNTIL expression.c                              {: return loop(unary("not", c), s); :}
+    | BREAK                                                     {: return new BreakExpression(); :}
+    | CONTINUE                                                  {: return new ContinueExpression(); :}
+    | expression.l ASSIGN statement.r                           {: return msg(l, id("="), r); :}
+    | VAR IDENTIFIER.v                                          {: return var(v); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e                      {: return var(v, e); :}
+    | VAR QUOTED_IDENTIFIER.v                                   {: return var(v); :}
+    | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e               {: return var(v, e); :}
+    | HURL expression.e                                         {: return hurl(e); :}
+    | RETURN expression.e                                       {: return result(e); :}
+    | WHILE expression.c nl+ sequence.e term* END               {: return loop(c, block(e)); :}
+    | WHILE expression.c DO sequence.e term* END                {: return loop(c, block(e)); :}
+    | UNTIL expression.c nl+ sequence.e term* END               {: return loop(unary("not", c), block(e)); :}
+    | UNTIL expression.c DO sequence.e term* END                {: return loop(unary("not", c), block(e)); :}
+    | FOR IDENTIFIER.v IN expression.e nl+ sequence.s term* END {: return loop(v, e, block(s)); :}
+    | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END  {: return loop(v, e, block(s)); :}
+    | statement.s COMMA IF expression.c                         {: return suffix(s, c); :}
+    | statement.s COMMA UNLESS expression.c                     {: return suffix(s, unary("not", c)); :}
+    | statement.s COMMA WHILE expression.c                      {: return loop(c, s); :}
+    | statement.s COMMA UNTIL expression.c                      {: return loop(unary("not", c), s); :}
     ;
 
 expression
@@ -258,7 +258,7 @@ properties
     ;
 
 property
-    = IDENTIFIER.id ASSIGN expression.e NEWLINE* {: return property(id, e); :}
+    = IDENTIFIER.id ASSIGN expression.e nl* {: return property(id, e); :}
     ;
 
 list_literal
@@ -346,10 +346,10 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c NEWLINE+ sequence.e term*     {: return condition(c, block(e)); :}
-    | IF expression.c THEN sequence.e term*         {: return condition(c, block(e)); :}
-    | UNLESS expression.c NEWLINE+ sequence.e term* {: return condition(unary("not", c), block(e)); :}
-    | UNLESS expression.c THEN sequence.e term*     {: return condition(unary("not", c), block(e)); :}
+    = IF expression.c nl+ sequence.e term*      {: return condition(c, block(e)); :}
+    | IF expression.c THEN sequence.e term*     {: return condition(c, block(e)); :}
+    | UNLESS expression.c nl+ sequence.e term*  {: return condition(unary("not", c), block(e)); :}
+    | UNLESS expression.c THEN sequence.e term* {: return condition(unary("not", c), block(e)); :}
     ;
 
 alternative_cases
@@ -358,10 +358,10 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c NEWLINE+ sequence.e term*        {: return condition(c, block(e)); :}
-    | ELSE_IF expression.c THEN sequence.e term*            {: return condition(c, block(e)); :}
-    | ELSE_UNLESS expression.c NEWLINE+ sequence.e term*    {: return condition(unary("not", c), block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e term*        {: return condition(unary("not", c), block(e)); :}
+    = ELSE_IF expression.c nl+ sequence.e term*         {: return condition(c, block(e)); :}
+    | ELSE_IF expression.c THEN sequence.e term*        {: return condition(c, block(e)); :}
+    | ELSE_UNLESS expression.c nl+ sequence.e term*     {: return condition(unary("not", c), block(e)); :}
+    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return condition(unary("not", c), block(e)); :}
     ;
 
 default_case
