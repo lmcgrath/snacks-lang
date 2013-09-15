@@ -41,7 +41,7 @@ public class ParserRunner implements CommandLineRunner {
                             new Scanner("Command Line", new ByteArrayInputStream(line.getBytes(Charset.forName("UTF-8"))))
                         ));
                     }
-                } catch (ScannerException exception) {
+                } catch (ParseException exception) {
                     exception.printStackTrace(out);
                 }
                 out.print(">>> ");
