@@ -132,6 +132,30 @@ public class SnacksLoader extends URLClassLoader {
         }
     }
 
+    private void findClasses(URL zipResource, String module) throws IOException {
+        try (ZipInputStream zip = new ZipInputStream(zipResource.openStream(), UTF_8)) {
+            ZipEntry entry;
+            while (null != (entry = zip.getNextEntry())) {
+                try {
+                    if (!entry.isDirectory()) {
+                        String name = entry.getName();
+                        Pattern pattern = compile("(" + module.replace('.', '/') + "/[^.]+)\\.class");
+                        Matcher matcher = pattern.matcher(name);
+                        if (matcher.find()) {
+                            try {
+                                processClass(forName(matcher.group(1).replace('/', '.')));
+                            } catch (ClassNotFoundException exception) {
+                                // intentionally empty
+                            }
+                        }
+                    }
+                } finally {
+                    zip.closeEntry();
+                }
+            }
+        }
+    }
+
     private void findSnackClass(String qualifiedName) {
         String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
         String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
@@ -156,23 +180,7 @@ public class SnacksLoader extends URLClassLoader {
                 URL resource = resources.nextElement();
                 if (resource.getFile().contains("!")) {
                     String path = new File(resource.getFile()).getPath();
-                    path = path.substring(0, path.indexOf('!'));
-                    ZipInputStream zip = new ZipInputStream(new URL(path).openStream(), UTF_8);
-                    ZipEntry entry;
-                    while (null != (entry = zip.getNextEntry())) {
-                        if (!entry.isDirectory()) {
-                            String name = entry.getName();
-                            Pattern pattern = compile("(" + module.replace('.', '/') + "/[^.]+)\\.class");
-                            Matcher matcher = pattern.matcher(name);
-                            if (matcher.find()) {
-                                try {
-                                    processClass(forName(matcher.group(1).replace('/', '.')));
-                                } catch (ClassNotFoundException exception) {
-                                    // intentionally empty
-                                }
-                            }
-                        }
-                    }
+                    findClasses(new URL(path.substring(0, path.indexOf('!'))), module);
                 } else {
                     findClasses(new File(resource.getFile()), module);
                 }
