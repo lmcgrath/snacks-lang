@@ -35,10 +35,14 @@ public class JavaUtils {
     public static String javaClass(SnacksLoader loader, String module, String name) {
         Class<?> actualClass = loader.loadSnack(module + '.' + name);
         if (actualClass == null) {
-            return module.replace('.', '/') + '/' + capitalize(javaName(name));
+            return javaClass(module, name);
         } else {
             return actualClass.getName().replace('.', '/');
         }
+    }
+
+    public static String javaClass(String module, String name) {
+        return module.replace('.', '/') + '/' + capitalize(javaName(name));
     }
 
     public static String javaGetter(String snacksName) {

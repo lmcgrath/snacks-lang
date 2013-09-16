@@ -7,6 +7,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static snacks.lang.parser.CompilerUtil.translate;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -20,6 +23,7 @@ public class CompilerTest {
     @Rule
     public final OutResource out;
     private Compiler compiler;
+    private SnacksLoader loader;
 
     public CompilerTest() {
         out = new OutResource();
@@ -27,17 +31,18 @@ public class CompilerTest {
 
     @Before
     public void setUp() {
-        compiler = new Compiler(new SnacksLoader());
+        loader = new SnacksLoader();
+        compiler = new Compiler(loader);
     }
 
     @Test
-    public void shouldSayHello() throws Exception {
+    public void shouldSayHello() {
         run("main = () -> say 'Hello World!'");
         verifyOut("Hello World!");
     }
 
     @Test
-    public void shouldSpeakThroughReference() throws Exception {
+    public void shouldSpeakThroughReference() {
         run(
             "speak = () -> say 'Woof'",
             "main = () -> speak()"
@@ -46,13 +51,13 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldMultiplyInteger() throws Exception {
+    public void shouldMultiplyInteger() {
         run("main = () -> say $ 2 * 3");
         verifyOut(6);
     }
 
     @Test
-    public void shouldSayConstantReference() throws Exception {
+    public void shouldSayConstantReference() {
         run(
             "bananas = 2 + 2",
             "main = () -> say bananas"
@@ -61,7 +66,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayMultiplyFunction() throws Exception {
+    public void shouldSayMultiplyFunction() {
         run(
             "multiply = (x) -> x * 2",
             "main = () -> say $ multiply 4"
@@ -70,7 +75,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayMultiplyWithTwoArguments() throws Exception {
+    public void shouldSayMultiplyWithTwoArguments() {
         run(
             "main = () -> say $ 3 * 5"
         );
@@ -78,7 +83,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayTripleWithThreeArguments() throws Exception {
+    public void shouldSayTripleWithThreeArguments() {
         run(
             "triple = (x y z) -> x * y * z",
             "main = () -> say $ triple 9 3 348"
@@ -87,7 +92,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldSayQuadrupleWithFourArguments() throws Exception {
+    public void shouldSayQuadrupleWithFourArguments() {
         run(
             "quadruple = (w x y z) -> w * x * y * z",
             "main = () -> say $ quadruple 3 3 3 3"
@@ -96,7 +101,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileBlock() throws Exception {
+    public void shouldCompileBlock() {
         run(
             "main = {",
             "    say 'Hello'",
@@ -108,7 +113,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReferenceBlock() throws Exception {
+    public void shouldReferenceBlock() {
         run(
             "waffles = {",
             "    say $ (x y -> x + y) 2 3",
@@ -121,7 +126,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldStoreVariables() throws Exception {
+    public void shouldStoreVariables() {
         run(
             "main = {",
             "    var x = 12",
@@ -133,7 +138,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReturnVariables() throws Exception {
+    public void shouldReturnVariables() {
         run(
             "triple = { x ->",
             "    var y = 3",
@@ -145,7 +150,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldAllowDeadCodeAfterReturn() throws Exception {
+    public void shouldAllowDeadCodeAfterReturn() {
         run(
             "triple = { x ->",
             "    var y = 3",
@@ -159,7 +164,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReturnClosureFromFunction() throws Exception {
+    public void shouldReturnClosureFromFunction() {
         run(
             "closure = (x) -> {",
             "    var z = x + 1",
@@ -171,7 +176,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReferenceVariablesInParentScopes() throws Exception {
+    public void shouldReferenceVariablesInParentScopes() {
         run(
             "closure = (x) -> {",
             "    var y = x * 2",
@@ -187,7 +192,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileMultiLineString() throws Exception {
+    public void shouldCompileMultiLineString() {
         run(
             "value = 'waffles ' * 3",
             "multiline = \"\"\"",
@@ -200,7 +205,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldPassFunctionIntoFunction() throws Exception {
+    public void shouldPassFunctionIntoFunction() {
         run(
             "operate = (op) -> op 2 4",
             "main = {",
@@ -213,7 +218,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldOverridePlus() throws Exception {
+    public void shouldOverridePlus() {
         run(
             "main = {",
             "    var `+` = (x y) -> 'sneaky ninja (='",
@@ -224,25 +229,25 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldConcatenateStrings() throws Exception {
+    public void shouldConcatenateStrings() {
         run("main = () -> say $ 'Hello ' + 'World!'");
         verifyOut("Hello World!");
     }
 
     @Test
-    public void shouldConcatenateStringToInteger() throws Exception {
+    public void shouldConcatenateStringToInteger() {
         run("main = () -> say $ 'Answer = ' + 4 + 2");
         verifyOut("Answer = 42");
     }
 
     @Test
-    public void shouldMultiplyString() throws Exception {
+    public void shouldMultiplyString() {
         run("main = () -> say $ 'waffles ' * 3");
         verifyOut("waffles waffles waffles ");
     }
 
     @Test
-    public void shouldCompileConditional() throws Exception {
+    public void shouldCompileConditional() {
         run(
             "booleanizer = (name value) -> {",
             "    if value",
@@ -265,7 +270,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileVariableReassignment() throws Exception {
+    public void shouldCompileVariableReassignment() {
         run(
             "main = {",
             "    var x = 'apples'",
@@ -279,7 +284,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldNotBeTrueWhenNotted() throws Exception {
+    public void shouldNotBeTrueWhenNotted() {
         run(
             "main = () ->",
             "    if not True",
@@ -292,7 +297,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileHappyExceptional() throws Exception {
+    public void shouldCompileHappyExceptional() {
         run(
             "main = () -> begin",
             "    say 'oops'",
@@ -308,7 +313,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileSadExceptional() throws Exception {
+    public void shouldCompileSadExceptional() {
         run(
             "main = () -> begin",
             "    hurl 'oops'",
@@ -325,7 +330,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldRethrowException() throws Exception {
+    public void shouldRethrowException() {
         try {
             run(
                 "main = () -> begin",
@@ -346,7 +351,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileNestedExceptional() throws Exception {
+    public void shouldCompileNestedExceptional() {
         run(
             "main = () -> begin",
             "    say 'beginning!'",
@@ -364,40 +369,40 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileModulo() throws Exception {
+    public void shouldCompileModulo() {
         run("main = () -> say $ 5 % 2");
         verifyOut(1);
     }
 
     @Test
-    public void shouldCompileDivide() throws Exception {
+    public void shouldCompileDivide() {
         run("main = () -> say $ 6 / 2");
         verifyOut(3);
     }
 
     @Test
-    public void shouldCompileMinus() throws Exception {
+    public void shouldCompileMinus() {
         run("main = () -> say $ 5 - 2");
         verifyOut(3);
     }
 
     @Test
-    public void shouldCompileNegative() throws Exception {
+    public void shouldCompileNegative() {
         run("main = () -> assert $ -3 == 3 * -1");
     }
 
     @Test
-    public void shouldCompilePositive() throws Exception {
+    public void shouldCompilePositive() {
         run("main = () -> assert $ +3 == 3");
     }
 
     @Test
-    public void shouldCompileNegativeNegative() throws Exception {
+    public void shouldCompileNegativeNegative() {
         run("main = () -> assert $ -(-3) == 3");
     }
 
     @Test
-    public void shouldCompileIfWithoutElse() throws Exception {
+    public void shouldCompileIfWithoutElse() {
         run(
             "main = {",
             "    var x = 10",
@@ -410,7 +415,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileMultiIfWithoutElse() throws Exception {
+    public void shouldCompileMultiIfWithoutElse() {
         run(
             "main = {",
             "    var x = 9",
@@ -425,7 +430,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileSequentialAssign() throws Exception {
+    public void shouldCompileSequentialAssign() {
         run(
             "main = {",
             "    var x",
@@ -439,7 +444,7 @@ public class CompilerTest {
 
     @Ignore
     @Test
-    public void shouldCompileLoop() throws Exception {
+    public void shouldCompileLoop() {
         run(
             "main = {",
             "    var x = 0",
@@ -451,7 +456,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldBreakLoop() throws Exception {
+    public void shouldBreakLoop() {
         run(
             "main = {",
             "    var x = 0",
@@ -466,7 +471,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldContinueLoop() throws Exception {
+    public void shouldContinueLoop() {
         run(
             "main = {",
             "    var x = 0",
@@ -489,7 +494,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileNestedLoop() throws Exception {
+    public void shouldCompileNestedLoop() {
         run(
             "main = {",
             "    var x = 0",
@@ -508,7 +513,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldBeAbleToBreakLoopFromWithinEmbrace() throws Exception {
+    public void shouldBeAbleToBreakLoopFromWithinEmbrace() {
         run(
             "main = {",
             "    var counter = 0",
@@ -526,17 +531,17 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCreateTuple() throws Exception {
+    public void shouldCreateTuple() {
         run("main = () -> assert $ stringy ('waffles', 10, True) == '(Tuple3 waffles, 10, true)'");
     }
 
     @Test
-    public void shouldAccessSecondMemberOfTuple() throws Exception {
+    public void shouldAccessSecondMemberOfTuple() {
         run("main = () -> assert $ ('waffles', 10, True)._1 == 10");
     }
 
     @Test
-    public void shouldSpecifySignature() throws Exception {
+    public void shouldSpecifySignature() {
         run(
             "addIntegers :: Integer -> Integer -> Integer",
             "main = () -> assert $ addIntegers 2 4 == 6",
@@ -545,7 +550,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldPassTupleAsArgument() throws Exception {
+    public void shouldPassTupleAsArgument() {
         run(
             "something :: (String, Boolean, Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
@@ -554,7 +559,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReturnTupleAsResult() throws Exception {
+    public void shouldReturnTupleAsResult() {
         run(
             "pair :: String -> Integer -> (Integer, String)",
             "main = () -> assert $ (pair 'waffles' 2) == (2, 'waffles')",
@@ -563,7 +568,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileCustomOperator() throws Exception {
+    public void shouldCompileCustomOperator() {
         run(
             "<&> :: Integer -> Integer -> Integer",
             "<&> = (x y) -> x + y",
@@ -573,7 +578,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldResolveTypesWithFullyQualifiedNames() throws Exception {
+    public void shouldResolveTypesWithFullyQualifiedNames() {
         run(
             "something :: (snacks.lang.String, snacks.lang.Boolean, snacks.lang.Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
@@ -583,7 +588,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldBooleanizeLogic() throws Exception {
+    public void shouldBooleanizeLogic() {
         run(
             "main = {",
             "    assert ((3 == 4 or 5 >= 5 and True is False) is False, 'Was not false')",
@@ -593,7 +598,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCreatePrefixOperator() throws Exception {
+    public void shouldCreatePrefixOperator() {
         run(
             "?% :: Boolean -> String",
             "affix right 10 ?%",
@@ -606,7 +611,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldCompileRecord() throws Exception {
+    public void shouldCompileRecord() {
         run(
             "data BreakfastItem = BreakfastItem {",
             "    name: snacks.lang.String,",
@@ -623,7 +628,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldReferenceRecordProperty() throws Exception {
+    public void shouldReferenceRecordProperty() {
         run(
             "data BreakfastItem = BreakfastItem {",
             "    name: String,",
@@ -639,7 +644,7 @@ public class CompilerTest {
     }
 
     @Test
-    public void shouldAcceptRecordAsArgument() throws Exception {
+    public void shouldAcceptRecordAsArgument() {
         run(
             "data BreakfastItem = BreakfastItem {",
             "    name: String,",
@@ -652,8 +657,16 @@ public class CompilerTest {
         );
     }
 
-    private void run(String... inputs) throws Exception {
-        ((Invokable) compiler.compile(translate(inputs)).loadClass("test.Main").newInstance()).invoke();
+    private void run(String... inputs) {
+        try {
+            for (SnackDefinition definition : compiler.compile(translate(inputs))) {
+                loader.defineSnack(definition);
+                writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
+            }
+            ((Invokable) loader.loadClass("test.Main").newInstance()).invoke();
+        } catch (ReflectiveOperationException exception) {
+            throw new CompileException(exception);
+        }
     }
 
     private void verifyOut(int value) {
@@ -666,5 +679,18 @@ public class CompilerTest {
 
     private void verifyNever(String line) {
         verify(out.getStream(), never()).println(line);
+    }
+
+    private void writeClass(File file, byte[] bytes) {
+        try {
+            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
+                throw new IOException("Failed to mkdirs: " + file.getParentFile());
+            }
+            try (FileOutputStream output = new FileOutputStream(file)) {
+                output.write(bytes);
+            }
+        } catch (IOException exception) {
+            throw new CompileException(exception);
+        }
     }
 }

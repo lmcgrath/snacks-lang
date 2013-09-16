@@ -3,16 +3,23 @@ package snacks.lang.compiler;
 import java.util.*;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JiteClass;
+import snacks.lang.Type;
 import snacks.lang.ast.Exceptional;
 import snacks.lang.ast.Generator;
 
 class ClassBuilder {
 
+    private final String module;
+    private final String name;
+    private final Type type;
     private final JiteClass jiteClass;
     private final List<String> fields;
     private final Deque<BlockScope> scopes;
 
-    public ClassBuilder(JiteClass jiteClass) {
+    public ClassBuilder(String module, String name, Type type, JiteClass jiteClass) {
+        this.module = module;
+        this.name = name;
+        this.type = type;
         this.jiteClass = jiteClass;
         this.fields = new ArrayList<>();
         this.scopes = new ArrayDeque<>();
@@ -57,6 +64,10 @@ class ClassBuilder {
 
     public JiteClass getJiteClass() {
         return jiteClass;
+    }
+
+    public SnackClass getSnackClass() {
+        return new SnackClass(module, name, type, jiteClass);
     }
 
     public int getVariable(String name) {

@@ -14,9 +14,6 @@ import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
 import static snacks.lang.Type.isFunction;
 import static snacks.lang.Type.isInstantiable;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.*;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JDKVersion;
@@ -29,7 +26,7 @@ import snacks.lang.ast.*;
 public class Compiler implements Generator, Reducer {
 
     private final SnacksLoader loader;
-    private final List<JiteClass> acceptedClasses;
+    private final List<SnackClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
     private Reference currentReference;
 
@@ -39,16 +36,17 @@ public class Compiler implements Generator, Reducer {
         this.builders = new ArrayDeque<>();
     }
 
-    public ClassLoader compile(Set<AstNode> declarations) throws CompileException {
+    public Set<SnackDefinition> compile(Set<AstNode> declarations) {
         for (AstNode declaration : declarations) {
             generate(declaration);
         }
-        for (JiteClass jiteClass : acceptedClasses) {
+        Set<SnackDefinition> definitions = new HashSet<>();
+        for (SnackClass snack : acceptedClasses) {
+            JiteClass jiteClass = snack.getJiteClass();
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
-            loader.defineClass(c(jiteClass.getClassName()), bytes);
-            writeClass(new File(jiteClass.getClassName() + ".class"), bytes);
+            definitions.add(new SnackDefinition(snack.getModule() + '.' + snack.getName(), c(jiteClass.getClassName()), snack.getType(), bytes));
         }
-        return loader;
+        return definitions;
     }
 
     @Override
@@ -142,7 +140,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclaredExpression(DeclaredExpression node) {
-        beginClass(javaClass(loader, node.getModule(), node.getName()), interfacesFor(node.getType()));
+        beginClass(node.getModule(), node.getName(), node.getType(), interfacesFor(node.getType()));
         generate(node.getBody());
         acceptClass();
     }
@@ -461,16 +459,16 @@ public class Compiler implements Generator, Reducer {
     }
 
     private void acceptClass() {
-        acceptedClasses.add(builders.pop().getJiteClass());
+        acceptedClasses.add(builders.pop().getSnackClass());
     }
 
     private CodeBlock beginBlock() {
         return state().beginBlock();
     }
 
-    private JiteClass beginClass(String name, List<String> interfaces) {
-        JiteClass jiteClass = new JiteClass(name, p(Object.class), interfaces.toArray(new String[interfaces.size()]));
-        builders.push(new ClassBuilder(jiteClass));
+    private JiteClass beginClass(String module, String name, Type type, List<String> interfaces) {
+        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        builders.push(new ClassBuilder(module, name, type, jiteClass));
         return jiteClass;
     }
 
@@ -605,18 +603,5 @@ public class Compiler implements Generator, Reducer {
 
     private ClassBuilder state() {
         return builders.peek();
-    }
-
-    private void writeClass(File file, byte[] bytes) throws CompileException {
-        try {
-            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
-                throw new IOException("Failed to mkdirs: " + file.getParentFile());
-            }
-            try (FileOutputStream output = new FileOutputStream(file)) {
-                output.write(bytes);
-            }
-        } catch (IOException exception) {
-            throw new CompileException(exception);
-        }
     }
 }

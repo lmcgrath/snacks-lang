@@ -1,6 +1,6 @@
 package snacks.lang.compiler;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.io.PrintStream;
 import org.junit.rules.ExternalResource;
@@ -11,7 +11,7 @@ public final class OutResource extends ExternalResource {
     private final PrintStream systemOut;
 
     public OutResource() {
-        this.mockOut = mock(PrintStream.class);
+        this.mockOut = spy(System.out);
         this.systemOut = System.out;
     }
 
