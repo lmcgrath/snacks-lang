@@ -52,8 +52,6 @@ public interface SyntaxVisitor {
 
     void visitInvokableLiteral(InvokableLiteral node);
 
-    void visitIsExpression(IsExpression node);
-
     void visitIteratorLoop(IteratorLoop node);
 
     void visitListLiteral(ListLiteral node);

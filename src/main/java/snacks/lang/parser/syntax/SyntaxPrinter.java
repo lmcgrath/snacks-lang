@@ -179,12 +179,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitIsExpression(IsExpression node) {
-        print(node.getLeft());
-        print(node.getRight());
-    }
-
-    @Override
     public void visitIteratorLoop(IteratorLoop node) {
         print("variable: " + node.getVariable());
         print(node.getExpression());

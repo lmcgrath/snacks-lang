@@ -343,11 +343,6 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitIsExpression(IsExpression node) {
-        result = is(translate(node.getLeft()), translate(node.getRight()));
-    }
-
-    @Override
     public void visitIteratorLoop(IteratorLoop node) {
         throw new UnsupportedOperationException(); // TODO
     }

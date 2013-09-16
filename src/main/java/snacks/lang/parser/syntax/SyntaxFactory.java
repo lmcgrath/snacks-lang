@@ -155,10 +155,6 @@ public final class SyntaxFactory {
         return new InvokableLiteral(body);
     }
 
-    public static Symbol is(Symbol left, Symbol right) {
-        return new IsExpression(left, right);
-    }
-
     public static Symbol leftOp(String id, int precedence) {
         return new Operator(LEFT, precedence, 2, id);
     }
