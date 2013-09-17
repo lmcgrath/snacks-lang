@@ -108,7 +108,7 @@ public class Compiler implements Generator, Reducer {
     @Override
     public void generateClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
-        String className = javaClass(loader, locator.getModule(), locator.getName());
+        String className = javaClass(locator.getModule(), locator.getName());
         block.newobj(className);
         block.dup();
         for (String variable : locator.getEnvironment()) {
