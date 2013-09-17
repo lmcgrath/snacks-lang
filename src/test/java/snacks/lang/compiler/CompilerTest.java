@@ -570,7 +570,7 @@ public class CompilerTest {
         run(
             "<&> :: Integer -> Integer -> Integer",
             "<&> = (x y) -> x + y",
-            "infix left 3 <&>",
+            "<&> infix left 3",
             "main = () -> assert $ (3 <&> 5 * 2) == 13"
         );
     }
@@ -599,7 +599,7 @@ public class CompilerTest {
     public void shouldCreatePrefixOperator() {
         run(
             "?% :: Boolean -> String",
-            "affix right 10 ?%",
+            "?% affix right 10",
             "main = {",
             "    assert $ ?% True == 'Woot!'",
             "    assert $ ?% False == 'Aww...'",
@@ -659,7 +659,7 @@ public class CompilerTest {
     public void shouldDefineSignatureWithGenericArguments() {
         run(
             "<$ :: (a -> b) -> a -> b",
-            "infix right 1 <$",
+            "<$ infix right 1",
             "main = () -> assert <$ 1 + 2 == 3",
             "<$ = (a b) -> a b"
         );

@@ -73,10 +73,10 @@ module_expressions
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
     | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
-    | INFIX INTEGER.p IDENTIFIER.id                     {: return op(id, p); :}
-    | LEFT_INFIX INTEGER.p IDENTIFIER.id                {: return leftOp(id, p); :}
-    | RIGHT_INFIX INTEGER.p IDENTIFIER.id               {: return rightOp(id, p); :}
-    | PREFIX INTEGER.p IDENTIFIER.id                    {: return prefix(id, p); :}
+    | IDENTIFIER.id INFIX INTEGER.p                     {: return op(id, p); :}
+    | IDENTIFIER.id LEFT_INFIX INTEGER.p                {: return leftOp(id, p); :}
+    | IDENTIFIER.id RIGHT_INFIX INTEGER.p               {: return rightOp(id, p); :}
+    | IDENTIFIER.id PREFIX INTEGER.p                    {: return prefix(id, p); :}
     | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
