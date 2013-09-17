@@ -507,4 +507,33 @@ public class ParserTest {
             op("..", 7)
         )));
     }
+
+    @Test
+    public void shouldCreateLoopFromPostfixWhile() {
+        Symbol tree = parse(
+            "main = {",
+            "    var x = 0",
+            "    x = x + 1, while x < 10",
+            "}"
+        );
+        assertThat(tree, equalTo(module(
+            def("main", invokable(block(
+                var("x", literal(0)),
+                loop(
+                    msg(id("x"), id("<"), literal(10)),
+                    msg(id("x"), id("="), msg(id("x"), id("+"), literal(1)))
+                )
+            )))
+        )));
+    }
+
+    @Test
+    public void shouldParseAssignmentAsOneMsg() {
+        Symbol tree = parse(
+            "main = { x = x + 1 }"
+        );
+        assertThat(tree, equalTo(module(
+            def("main", invokable(block(msg(id("x"), id("="), msg(id("x"), id("+"), literal(1))))))
+        )));
+    }
 }

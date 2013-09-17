@@ -60,6 +60,9 @@
 %typeof qualified_fword = "QualifiedIdentifier";
 %typeof initializer_properties = "Symbol[]";
 
+%right ASSIGN;
+%left COMMA;
+
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
     |                                   {: return module(); :}

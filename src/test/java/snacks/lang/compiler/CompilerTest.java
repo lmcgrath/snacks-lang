@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import snacks.lang.Invokable;
@@ -442,7 +441,6 @@ public class CompilerTest {
         );
     }
 
-    @Ignore
     @Test
     public void shouldCompileLoop() {
         run(
