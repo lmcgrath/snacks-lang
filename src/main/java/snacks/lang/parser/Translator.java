@@ -507,6 +507,11 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitTypeVariable(TypeVariable node) {
+        type = environment().createVariable();
+    }
+
+    @Override
     public void visitUsing(Using node) {
         throw new UnsupportedOperationException(); // TODO
     }

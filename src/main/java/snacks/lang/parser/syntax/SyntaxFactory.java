@@ -123,6 +123,15 @@ public final class SyntaxFactory {
         return new FunctionSignature(argument, result);
     }
 
+    public static Symbol ftype(QualifiedIdentifier id) {
+        List<String> segments = id.getSegments();
+        if (segments.size() == 1 && Character.isLowerCase(segments.get(0).charAt(0))) {
+            return typeVar(segments.get(0));
+        } else {
+            return type(id);
+        }
+    }
+
     public static Symbol hurl(Symbol expression) {
         return new HurlExpression(expression);
     }
@@ -309,6 +318,10 @@ public final class SyntaxFactory {
 
     public static Symbol type(String... segments) {
         return type(qid(segments));
+    }
+
+    public static Symbol typeVar(String name) {
+        return new TypeVariable(name);
     }
 
     public static Symbol unary(String operator, Symbol operand) {

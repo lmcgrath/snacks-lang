@@ -103,15 +103,7 @@ type_signature
     ;
 
 primary_signature
-    = qualified_identifier.id
-        {:
-            List<String> segments = id.getSegments();
-            if (segments.size() == 1 && Character.isLowerCase(segments.get(0).charAt(0))) {
-                return type(id);
-            } else {
-                return type(id);
-            }
-        :}
+    = qualified_identifier.id           {: return ftype(id); :}
     | LFUNC RPAREN                      {: return type(qid("snacks", "lang", "Void")); :}
     | LFUNC function_signature.f RPAREN {: return f; :}
     | LPAREN RPAREN                     {: return type(qid("snacks", "lang", "Void")); :}
@@ -119,17 +111,17 @@ primary_signature
         {:
             List<Symbol> types = new ArrayList<>();
             for (QualifiedIdentifier id : t) {
-                types.add(type(id));
+                types.add(ftype(id));
             }
             return tsig(types);
         :}
     ;
 
 function_signature
-    = qualified_identifier.id                                   {: return type(id); :}
-    | qualified_fword.id                                        {: return type(id); :}
-    | qualified_identifier.id APPLIES_TO function_signature.f   {: return fsig(type(id), f); :}
-    | qualified_fword.id APPLIES_TO function_signature.f        {: return fsig(type(id), f); :}
+    = qualified_identifier.id                                   {: return ftype(id); :}
+    | qualified_fword.id                                        {: return ftype(id); :}
+    | qualified_identifier.id APPLIES_TO function_signature.f   {: return fsig(ftype(id), f); :}
+    | qualified_fword.id APPLIES_TO function_signature.f        {: return fsig(ftype(id), f); :}
     ;
 
 tuple_signature

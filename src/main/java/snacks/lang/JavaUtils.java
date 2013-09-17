@@ -26,9 +26,9 @@ public class JavaUtils {
         replacements.put("[]", "¢Sammich");
         replacements.put("..", "¢Dots");
         replacements.put("...", "¢Bore");
-        replacements.put("=", "¢Equal");
-        replacements.put("<", "¢Grow");
-        replacements.put(">", "¢Shrink");
+        replacements.put("=", "¢Same");
+        replacements.put("<", "¢Left");
+        replacements.put(">", "¢Right");
         replacements.put("~", "¢Wave");
     }
 

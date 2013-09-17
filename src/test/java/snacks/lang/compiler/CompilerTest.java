@@ -655,6 +655,16 @@ public class CompilerTest {
         );
     }
 
+    @Test
+    public void shouldDefineSignatureWithGenericArguments() {
+        run(
+            "<$ :: (a -> b) -> a -> b",
+            "infix right 1 <$",
+            "main = () -> assert <$ 1 + 2 == 3",
+            "<$ = (a b) -> a b"
+        );
+    }
+
     private void run(String... inputs) {
         try {
             for (SnackDefinition definition : compiler.compile(translate(inputs))) {

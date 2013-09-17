@@ -333,6 +333,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitTypeVariable(TypeVariable node) {
+        print("name: " + node.getName());
+    }
+
+    @Override
     public void visitUsing(Using node) {
         if (node.getName() != null) {
             print("name: " + node.getName());
