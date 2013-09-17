@@ -60,9 +60,6 @@
 %typeof qualified_fword = "QualifiedIdentifier";
 %typeof initializer_properties = "Symbol[]";
 
-%right ASSIGN;
-%left COMMA;
-
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
     |                                   {: return module(); :}
@@ -106,7 +103,15 @@ type_signature
     ;
 
 primary_signature
-    = qualified_identifier.id           {: return type(id); :}
+    = qualified_identifier.id
+        {:
+            List<String> segments = id.getSegments();
+            if (segments.size() == 1 && Character.isLowerCase(segments.get(0).charAt(0))) {
+                return type(id);
+            } else {
+                return type(id);
+            }
+        :}
     | LFUNC RPAREN                      {: return type(qid("snacks", "lang", "Void")); :}
     | LFUNC function_signature.f RPAREN {: return f; :}
     | LPAREN RPAREN                     {: return type(qid("snacks", "lang", "Void")); :}
@@ -154,26 +159,30 @@ qualified_identifier
     ;
 
 statement
-    = expression
-    | BREAK                                                     {: return new BreakExpression(); :}
-    | CONTINUE                                                  {: return new ContinueExpression(); :}
-    | expression.l ASSIGN statement.r                           {: return msg(l, id("="), r); :}
-    | VAR IDENTIFIER.v                                          {: return var(v); :}
-    | VAR IDENTIFIER.v ASSIGN expression.e                      {: return var(v, e); :}
-    | VAR QUOTED_IDENTIFIER.v                                   {: return var(v); :}
-    | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e               {: return var(v, e); :}
-    | HURL expression.e                                         {: return hurl(e); :}
-    | RETURN expression.e                                       {: return result(e); :}
+    = primary_statement
     | WHILE expression.c nl+ sequence.e term* END               {: return loop(c, block(e)); :}
     | WHILE expression.c DO sequence.e term* END                {: return loop(c, block(e)); :}
     | UNTIL expression.c nl+ sequence.e term* END               {: return loop(unary("not", c), block(e)); :}
     | UNTIL expression.c DO sequence.e term* END                {: return loop(unary("not", c), block(e)); :}
     | FOR IDENTIFIER.v IN expression.e nl+ sequence.s term* END {: return loop(v, e, block(s)); :}
     | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END  {: return loop(v, e, block(s)); :}
-    | statement.s COMMA IF expression.c                         {: return suffix(s, c); :}
-    | statement.s COMMA UNLESS expression.c                     {: return suffix(s, unary("not", c)); :}
-    | statement.s COMMA WHILE expression.c                      {: return loop(c, s); :}
-    | statement.s COMMA UNTIL expression.c                      {: return loop(unary("not", c), s); :}
+    | primary_statement.s COMMA IF expression.c                 {: return suffix(s, c); :}
+    | primary_statement.s COMMA UNLESS expression.c             {: return suffix(s, unary("not", c)); :}
+    | primary_statement.s COMMA WHILE expression.c              {: return loop(c, s); :}
+    | primary_statement.s COMMA UNTIL expression.c              {: return loop(unary("not", c), s); :}
+    ;
+
+primary_statement
+    = expression
+    | BREAK                                         {: return new BreakExpression(); :}
+    | CONTINUE                                      {: return new ContinueExpression(); :}
+    | expression.l ASSIGN primary_statement.r       {: return msg(l, id("="), r); :}
+    | VAR IDENTIFIER.v                              {: return var(v); :}
+    | VAR IDENTIFIER.v ASSIGN expression.e          {: return var(v, e); :}
+    | VAR QUOTED_IDENTIFIER.v                       {: return var(v); :}
+    | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e   {: return var(v, e); :}
+    | HURL expression.e                             {: return hurl(e); :}
+    | RETURN expression.e                           {: return result(e); :}
     ;
 
 expression
