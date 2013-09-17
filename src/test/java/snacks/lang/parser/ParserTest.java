@@ -497,9 +497,9 @@ public class ParserTest {
     @Test
     public void shouldParseOperatorSpec() {
         Symbol tree = parse(
-            "infix left 0 **",
-            "infix right 8 >>=",
-            "infix none 7 .."
+            "** infix left 0",
+            ">>= infix right 8",
+            ".. infix none 7"
         );
         assertThat(tree, equalTo(module(
             leftOp("**", 0),
