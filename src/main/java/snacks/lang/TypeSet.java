@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
+import snacks.lang.ast.Generator;
 
 public class TypeSet extends Type {
 
@@ -42,6 +43,11 @@ public class TypeSet extends Type {
             exposedTypes.add(type.expose());
         }
         return new TypeSet(exposedTypes);
+    }
+
+    @Override
+    public void generate(Generator generator) {
+        generator.generateTypeSet(this);
     }
 
     @Override

@@ -1,7 +1,9 @@
 package snacks.lang;
 
 import static java.lang.Class.forName;
+import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.JavaUtils.javaClass;
 
 import java.io.File;
@@ -13,9 +15,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.security.ProtectionDomain;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -116,7 +116,7 @@ public class SnacksLoader extends URLClassLoader {
     private Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
         byte[] bytes = definition.getBytes();
         Class<?> clazz = super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
-        snacks.put(definition.getSnackName(), new SnackEntry(clazz, clazz, definition.getType()));
+        processClass(clazz);
         return clazz;
     }
 
@@ -162,10 +162,11 @@ public class SnacksLoader extends URLClassLoader {
         Class<?> clazz = null;
         try {
             clazz = forName(javaClass(module, name));
+            processSnack(clazz);
         } catch (ClassNotFoundException exception) {
             // intentionally empty
         }
-        if (clazz == null || !processSnack(clazz)) {
+        if (clazz == null) {
             findSnackPackage(module);
             if (!snacks.containsKey(qualifiedName)) {
                 compileSnack(module);
@@ -213,14 +214,14 @@ public class SnacksLoader extends URLClassLoader {
         return snacks.containsKey(qualifiedName);
     }
 
-    private void processAnnotations(Class<?> snackClass, Snack snack) {
+    private void processAnnotations(Class<?> snackClass, String name) {
         Infix infix = snackClass.getAnnotation(Infix.class);
         if (infix != null) {
-            operators.registerInfix(infix.precedence(), infix.fixity(), snack.value());
+            operators.registerInfix(infix.precedence(), infix.fixity(), name);
         } else {
             Prefix prefix = snackClass.getAnnotation(Prefix.class);
             if (prefix != null) {
-                operators.registerPrefix(prefix.precedence(), snack.value());
+                operators.registerPrefix(prefix.precedence(), name);
             }
         }
     }
@@ -228,7 +229,9 @@ public class SnacksLoader extends URLClassLoader {
     private void processClass(Class<?> clazz) {
         Snack snack = clazz.getAnnotation(Snack.class);
         if (snack != null) {
-            String name = clazz.getPackage().getName() + '.' + snack.value();
+            List<String> segments = new ArrayList<>(asList(clazz.getName().split("\\.")));
+            segments.set(segments.size() - 1, snack.value());
+            String name = join(segments, '.');
             if (!snacks.containsKey(name)) {
                 JavaType javaType = clazz.getAnnotation(JavaType.class);
                 Class<?> javaClazz = (javaType == null) ? clazz : javaType.value();
@@ -250,7 +253,7 @@ public class SnacksLoader extends URLClassLoader {
         Snack snack = clazz.getAnnotation(Snack.class);
         if (snack != null) {
             Type type = resolveType(clazz);
-            processAnnotations(clazz, snack);
+            processAnnotations(clazz, snack.value());
             snacks.put(clazz.getPackage().getName() + "." + snack.value(), new SnackEntry(getJavaClazz(clazz), clazz, type));
             return true;
         } else {

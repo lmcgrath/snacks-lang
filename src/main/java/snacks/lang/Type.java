@@ -3,6 +3,7 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 
 import java.util.*;
+import snacks.lang.ast.Generator;
 
 public abstract class Type {
 
@@ -99,6 +100,8 @@ public abstract class Type {
     public abstract List<Type> decompose();
 
     public abstract Type expose();
+
+    public abstract void generate(Generator generator);
 
     public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
 

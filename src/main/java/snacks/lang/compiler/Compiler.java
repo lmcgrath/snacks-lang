@@ -18,10 +18,12 @@ import java.util.*;
 import me.qmx.jitescript.CodeBlock;
 import me.qmx.jitescript.JDKVersion;
 import me.qmx.jitescript.JiteClass;
+import me.qmx.jitescript.VisibleAnnotation;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
 import snacks.lang.ast.*;
+import snacks.lang.parser.syntax.Operator;
 
 public class Compiler implements Generator, Reducer {
 
@@ -140,7 +142,20 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclaredExpression(DeclaredExpression node) {
-        beginClass(node.getModule(), node.getName(), node.getType(), interfacesFor(node.getType()));
+        JiteClass jiteClass = beginClass(node.getModule(), node.getName(), node.getType(), interfacesFor(node.getType()));
+        if (node.isOperator()) {
+            Operator operator = node.getOperator();
+            if (operator.isPrefix()) {
+                jiteClass.addAnnotation(new VisibleAnnotation(Prefix.class)
+                    .value("precedence", operator.getPrecedence())
+                );
+            } else {
+                jiteClass.addAnnotation(new VisibleAnnotation(Infix.class)
+                    .enumValue("fixity", operator.getFixity())
+                    .value("precedence", operator.getPrecedence())
+                );
+            }
+        }
         generate(node.getBody());
         acceptClass();
     }
@@ -406,6 +421,44 @@ public class Compiler implements Generator, Reducer {
     }
 
     @Override
+    public void generateTypeOperator(TypeOperator type) {
+        CodeBlock block = block();
+        block.ldc(type.getName());
+        List<Type> parameters = type.getParameters();
+        block.ldc(parameters.size());
+        block.anewarray(p(Type.class));
+        for (int i = 0; i < parameters.size(); i++) {
+            block.dup();
+            block.ldc(i);
+            generate(parameters.get(i));
+            block.aastore();
+        }
+        block.invokestatic(p(Type.class), "type", sig(Type.class, String.class, Type[].class));
+    }
+
+    @Override
+    public void generateTypeSet(TypeSet type) {
+        CodeBlock block = block();
+        List<Type> members = new ArrayList<>(type.getMembers());
+        block.ldc(members.size());
+        block.anewarray(p(Type.class));
+        for (int i = 0; i < members.size(); i++) {
+            block.dup();
+            block.ldc(i);
+            generate(members.get(i));
+            block.aastore();
+        }
+        block.invokestatic(p(Type.class), "set", sig(Type.class, Type[].class));
+    }
+
+    @Override
+    public void generateTypeVariable(TypeVariable type) {
+        CodeBlock block = block();
+        block.ldc(type.getName());
+        block.invokestatic(p(Type.class), "var", sig(Type.class, String.class));
+    }
+
+    @Override
     public void generateVariableDeclaration(VariableDeclaration node) {
         getVariable(node.getName());
         block().aconst_null();
@@ -468,8 +521,18 @@ public class Compiler implements Generator, Reducer {
 
     private JiteClass beginClass(String module, String name, Type type, List<String> interfaces) {
         JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        jiteClass.addAnnotation(new VisibleAnnotation(Snack.class).value("value", name));
         builders.push(new ClassBuilder(module, name, type, jiteClass));
+        beginBlock();
+        generate(type);
+        block().areturn();
+        block().addAnnotation(new VisibleAnnotation(SnackType.class));
+        jiteClass.defineMethod("type", ACC_PUBLIC | ACC_STATIC, sig(Type.class), acceptBlock());
         return jiteClass;
+    }
+
+    private void generate(Type type) {
+        type.generate(this);
     }
 
     private CodeBlock block() {

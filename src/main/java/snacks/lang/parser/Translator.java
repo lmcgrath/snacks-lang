@@ -99,6 +99,9 @@ public class Translator implements SyntaxVisitor {
             if (nodes.contains(declaration)) {
                 throw new UndefinedSymbolException("Cannot redefine " + declaration.getName());
             } else {
+                if (environment().isOperator(declaration.getName())) {
+                    declaration.setOperator(environment().getOperator(declaration.getName()));
+                }
                 nodes.add(declaration);
             }
         }
@@ -207,7 +210,7 @@ public class Translator implements SyntaxVisitor {
             throw new TypeException(join(typeErrors, "; "));
         }
         if (environment().hasSignature(locator)) {
-            Type type = environment().typeOf(locator);
+            Type type = environment().getSignature(locator);
             if (declaration.getType().unify(type)) {
                 declaration.setType(type);
             } else {

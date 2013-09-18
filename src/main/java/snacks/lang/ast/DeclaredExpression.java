@@ -3,12 +3,14 @@ package snacks.lang.ast;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Type;
+import snacks.lang.parser.syntax.Operator;
 
 public class DeclaredExpression extends AstNode {
 
     private final String module;
     private final String name;
     private final AstNode body;
+    private Operator operator;
     private Type type;
 
     public DeclaredExpression(String module, String name, AstNode body) {
@@ -34,6 +36,11 @@ public class DeclaredExpression extends AstNode {
         }
     }
 
+    @Override
+    public void generate(Generator generator) {
+        generator.generateDeclaredExpression(this);
+    }
+
     public AstNode getBody() {
         return body;
     }
@@ -46,14 +53,12 @@ public class DeclaredExpression extends AstNode {
         return name;
     }
 
-    @Override
-    public void print(AstPrinter printer) {
-        printer.printDeclaredExpression(this);
+    public Operator getOperator() {
+        return operator;
     }
 
-    @Override
-    public void generate(Generator generator) {
-        generator.generateDeclaredExpression(this);
+    public void setOperator(Operator operator) {
+        this.operator = operator;
     }
 
     @Override
@@ -65,13 +70,22 @@ public class DeclaredExpression extends AstNode {
         }
     }
 
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(module, name, body);
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public boolean isOperator() {
+        return operator != null;
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printDeclaredExpression(this);
     }
 
     @Override

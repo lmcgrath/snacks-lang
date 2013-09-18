@@ -82,10 +82,8 @@ public class TranslatorTest {
 
     @Test
     public void identityFunctionShouldHaveTypeOfArgument() {
-        Type var = environment.createVariable();
-        define("identity", func(var, var));
         translate(
-            "import test.example._",
+            "identity = (a) -> a",
             "example = identity 12"
         );
         assertThat(typeOf("example"), equalTo(INTEGER_TYPE));

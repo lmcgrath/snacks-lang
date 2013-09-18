@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import java.util.*;
+import snacks.lang.ast.Generator;
 
 public class TypeVariable extends Type {
 
@@ -31,6 +32,11 @@ public class TypeVariable extends Type {
     @Override
     public Type expose() {
         return state.expose();
+    }
+
+    @Override
+    public void generate(Generator generator) {
+        generator.generateTypeVariable(this);
     }
 
     @Override

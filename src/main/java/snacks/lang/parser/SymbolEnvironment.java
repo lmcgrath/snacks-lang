@@ -83,6 +83,10 @@ public class SymbolEnvironment implements TypeFactory {
         return scope.getReference(locator);
     }
 
+    public Type getSignature(Locator locator) {
+        return scope.getSignature(locator);
+    }
+
     public Collection<String> getVariables() {
         return scope.getVariables();
     }
@@ -162,6 +166,10 @@ public class SymbolEnvironment implements TypeFactory {
 
         public Reference getReference(Locator locator) {
             return reference(locator, typeOf(locator));
+        }
+
+        public Type getSignature(Locator locator) {
+            return signatures.get(locator);
         }
 
         public Set<Type> getSpecializedTypes() {

@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.ast.Generator;
 
 public class TypeOperator extends Type {
 
@@ -47,6 +48,11 @@ public class TypeOperator extends Type {
             types.add(type.expose());
         }
         return new TypeOperator(name, types);
+    }
+
+    @Override
+    public void generate(Generator generator) {
+        generator.generateTypeOperator(this);
     }
 
     @Override
@@ -98,7 +104,7 @@ public class TypeOperator extends Type {
 
     @Override
     public String toString() {
-        if (parameters.size() == 2) {
+        if ("->".equals(name)) {
             return "(" + parameters.get(0) + " " + name + " " + parameters.get(1) + ")";
         } else if (parameters.isEmpty()) {
             return name;
