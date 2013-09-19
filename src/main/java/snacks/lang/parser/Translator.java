@@ -598,10 +598,6 @@ public class Translator implements SyntaxVisitor {
         return set(resultTypes);
     }
 
-    private boolean isAssignment(Symbol symbol) {
-        return getOperator(symbol).isAssignment();
-    }
-
     private boolean isOperator(Symbol node) {
         if (node instanceof Identifier) {
             String name = ((Identifier) node).getName();
@@ -659,11 +655,7 @@ public class Translator implements SyntaxVisitor {
                 } else {
                     Symbol right = stack.pop();
                     Symbol left = stack.pop();
-                    if (isAssignment(op)) {
-                        stack.push(new AssignmentExpression(left, right));
-                    } else {
-                        stack.push(new ApplyExpression(new ApplyExpression(op, left), right));
-                    }
+                    stack.push(new ApplyExpression(new ApplyExpression(op, left), right));
                 }
             } else {
                 stack.push(op);

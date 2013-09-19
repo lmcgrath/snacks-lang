@@ -53,10 +53,6 @@ public class Operator {
         return Objects.hash(fixity, precedence, name);
     }
 
-    public boolean isAssignment() {
-        return "=".equals(name);
-    }
-
     public boolean isPrefix() {
         return arity == 1 && fixity == RIGHT;
     }

@@ -9,7 +9,6 @@ public class OperatorRegistry {
 
     public OperatorRegistry() {
         operators = new HashMap<>();
-        operators.put("=", new OpEntry(Fixity.RIGHT, 0, 2));
     }
 
     public Operator getOperator(String name) {

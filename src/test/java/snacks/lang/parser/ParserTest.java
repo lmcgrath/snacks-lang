@@ -521,19 +521,19 @@ public class ParserTest {
                 var("x", literal(0)),
                 loop(
                     msg(id("x"), id("<"), literal(10)),
-                    msg(id("x"), id("="), msg(id("x"), id("+"), literal(1)))
+                    assign(id("x"), msg(id("x"), id("+"), literal(1)))
                 )
             )))
         )));
     }
 
     @Test
-    public void shouldParseAssignmentAsOneMsg() {
+    public void shouldParseRightHandOfAssignmentAsOneMsg() {
         Symbol tree = parse(
             "main = { x = x + 1 }"
         );
         assertThat(tree, equalTo(module(
-            def("main", invokable(block(msg(id("x"), id("="), msg(id("x"), id("+"), literal(1))))))
+            def("main", invokable(block(assign(id("x"), msg(id("x"), id("+"), literal(1))))))
         )));
     }
 }

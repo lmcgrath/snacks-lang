@@ -168,7 +168,7 @@ primary_statement
     = expression
     | BREAK                                         {: return new BreakExpression(); :}
     | CONTINUE                                      {: return new ContinueExpression(); :}
-    | expression.l ASSIGN primary_statement.r       {: return msg(l, id("="), r); :}
+    | expression.l ASSIGN primary_statement.r       {: return assign(l, r); :}
     | VAR IDENTIFIER.v                              {: return var(v); :}
     | VAR IDENTIFIER.v ASSIGN expression.e          {: return var(v, e); :}
     | VAR QUOTED_IDENTIFIER.v                       {: return var(v); :}
