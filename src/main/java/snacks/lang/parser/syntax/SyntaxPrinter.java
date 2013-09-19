@@ -6,6 +6,7 @@ import static org.apache.commons.lang.StringUtils.join;
 import java.io.PrintStream;
 import java.util.Collection;
 import beaver.Symbol;
+import snacks.lang.Operator;
 import snacks.lang.util.PrinterState;
 
 public class SyntaxPrinter implements SyntaxVisitor {
@@ -231,10 +232,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitOperator(Operator node) {
-        print("name: `" + node.getName() + "`");
-        print("fixity: " + node.getFixity());
-        print("precedence: " + node.getPrecedence());
+    public void visitOperatorDeclaration(OperatorDeclaration node) {
+        Operator operator = node.getOperator();
+        print("name: `" + operator.getName() + "`");
+        print("fixity: " + operator.getFixity());
+        print("precedence: " + operator.getPrecedence());
     }
 
     @Override

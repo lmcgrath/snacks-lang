@@ -32,8 +32,8 @@ public class JavaUtils {
         replacements.put("~", "¢Wave");
     }
 
-    public static String javaClass(SnacksLoader loader, String module, String name) {
-        Class<?> actualClass = loader.loadSnack(module + '.' + name);
+    public static String javaClass(SnacksRegistry registry, String module, String name) {
+        Class<?> actualClass = registry.classOf(module + '.' + name);
         if (actualClass == null) {
             return javaClass(module, name);
         } else {

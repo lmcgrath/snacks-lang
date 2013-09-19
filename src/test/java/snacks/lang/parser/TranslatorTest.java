@@ -11,7 +11,7 @@ import static snacks.lang.parser.TranslatorMatcher.defines;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
-import snacks.lang.SnacksLoader;
+import snacks.lang.runtime.SnacksClassLoader;
 import snacks.lang.Type;
 import snacks.lang.ast.AstNode;
 
@@ -21,7 +21,7 @@ public class TranslatorTest {
 
     @Before
     public void setUp() {
-        environment = new SymbolEnvironment(new SnacksLoader());
+        environment = new SymbolEnvironment(new SnacksClassLoader());
     }
 
     @Test

@@ -1,3 +1,2 @@
 snacks.lang.parser.ParserRunner
-snacks.lang.parser.TranslatorRunner
-snacks.lang.SnacksRunner
+snacks.lang.runtime.SnacksRunner

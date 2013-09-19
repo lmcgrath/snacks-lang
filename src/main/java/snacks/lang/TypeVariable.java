@@ -3,8 +3,10 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-import java.util.*;
-import snacks.lang.ast.Generator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class TypeVariable extends Type {
 
@@ -35,7 +37,7 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public void generate(Generator generator) {
+    public void generate(TypeGenerator generator) {
         generator.generateTypeVariable(this);
     }
 

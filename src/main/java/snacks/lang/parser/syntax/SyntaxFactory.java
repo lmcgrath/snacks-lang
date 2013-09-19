@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import beaver.Symbol;
+import snacks.lang.Operator;
 
 public final class SyntaxFactory {
 
@@ -165,7 +166,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol leftOp(String id, int precedence) {
-        return new Operator(LEFT, precedence, 2, id);
+        return new OperatorDeclaration(new Operator(LEFT, precedence, 2, id));
     }
 
     public static Symbol list(Symbol... elements) {
@@ -221,11 +222,11 @@ public final class SyntaxFactory {
     }
 
     public static Symbol op(String name, int precedence) {
-        return new Operator(NONE, precedence, 2, name);
+        return new OperatorDeclaration(new Operator(NONE, precedence, 2, name));
     }
 
     public static Symbol prefix(String name, int precedence) {
-        return new Operator(RIGHT, precedence, 1, name);
+        return new OperatorDeclaration(new Operator(RIGHT, precedence, 1, name));
     }
 
     public static Symbol propDef(String name, Symbol type) {
@@ -261,7 +262,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol rightOp(String id, int precedence) {
-        return new Operator(RIGHT, precedence, 2, id);
+        return new OperatorDeclaration(new Operator(RIGHT, precedence, 2, id));
     }
 
     public static Symbol set(Symbol element, Symbol[] elements) {

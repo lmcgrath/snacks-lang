@@ -23,17 +23,16 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
 import snacks.lang.ast.*;
-import snacks.lang.parser.syntax.Operator;
 
-public class Compiler implements Generator, Reducer {
+public class Compiler implements Generator, TypeGenerator, Reducer {
 
-    private final SnacksLoader loader;
+    private final SnacksRegistry registry;
     private final List<SnackClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
     private Reference currentReference;
 
-    public Compiler(SnacksLoader loader) {
-        this.loader = loader;
+    public Compiler(SnacksRegistry registry) {
+        this.registry = registry;
         this.acceptedClasses = new ArrayList<>();
         this.builders = new ArrayDeque<>();
     }
@@ -46,7 +45,7 @@ public class Compiler implements Generator, Reducer {
         for (SnackClass snack : acceptedClasses) {
             JiteClass jiteClass = snack.getJiteClass();
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
-            definitions.add(new SnackDefinition(snack.getModule() + '.' + snack.getName(), c(jiteClass.getClassName()), snack.getType(), bytes));
+            definitions.add(new SnackDefinition(c(jiteClass.getClassName()), bytes));
         }
         return definitions;
     }
@@ -126,7 +125,7 @@ public class Compiler implements Generator, Reducer {
 
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
-        String className = javaClass(loader, locator.getModule(), locator.getName());
+        String className = javaClass(registry, locator.getModule(), locator.getName());
         Type type = currentReference.getType();
         if (isFunction(type)) {
             block().invokestatic(className, "instance", "()L" + className + ";");
@@ -221,7 +220,7 @@ public class Compiler implements Generator, Reducer {
     }
 
     private Class<?> propertyType(DeclaredProperty property) {
-        return loader.classOf(property.getType().getParameters().get(0).getName());
+        return registry.classOf(property.getType().getParameters().get(0).getName());
     }
 
     @Override
@@ -325,7 +324,7 @@ public class Compiler implements Generator, Reducer {
         });
         Class<?>[] types = new Class<?>[parameters.size()];
         for (int i = 0; i < parameters.size(); i++) {
-            types[i] = loader.classOf(parameters.get(i).getParameters().get(0).getName());
+            types[i] = registry.classOf(parameters.get(i).getParameters().get(0).getName());
             generate(properties.get(parameters.get(i).getName()).getValue());
         }
         block.invokespecial(className, "<init>", sig(void.class, types));

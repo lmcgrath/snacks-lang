@@ -1,12 +1,11 @@
-package snacks.lang.parser.syntax;
+package snacks.lang;
 
 import static snacks.lang.Fixity.RIGHT;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Fixity;
 
-public class Operator extends VisitableSymbol {
+public class Operator {
 
     private final Fixity fixity;
     private final int precedence;
@@ -18,11 +17,6 @@ public class Operator extends VisitableSymbol {
         this.precedence = precedence;
         this.arity = arity;
         this.name = name;
-    }
-
-    @Override
-    public void accept(SyntaxVisitor visitor) {
-        visitor.visitOperator(this);
     }
 
     @Override

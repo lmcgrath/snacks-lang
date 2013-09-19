@@ -10,14 +10,15 @@ import static snacks.lang.Type.set;
 
 import org.junit.Before;
 import org.junit.Test;
+import snacks.lang.runtime.SnacksClassLoader;
 
-public class SnacksLoaderTest {
+public class SnacksClassLoaderTest {
 
-    private SnacksLoader loader;
+    private SnacksClassLoader loader;
 
     @Before
     public void setUp() {
-        loader = new SnacksLoader();
+        loader = new SnacksClassLoader();
     }
 
     @Test

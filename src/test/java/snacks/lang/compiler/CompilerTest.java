@@ -13,16 +13,15 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import snacks.lang.Invokable;
-import snacks.lang.SnacksException;
-import snacks.lang.SnacksLoader;
+import snacks.lang.*;
+import snacks.lang.runtime.SnacksClassLoader;
 
 public class CompilerTest {
 
     @Rule
     public final OutResource out;
     private Compiler compiler;
-    private SnacksLoader loader;
+    private SnacksClassLoader loader;
 
     public CompilerTest() {
         out = new OutResource();
@@ -30,7 +29,7 @@ public class CompilerTest {
 
     @Before
     public void setUp() {
-        loader = new SnacksLoader();
+        loader = new SnacksClassLoader();
         compiler = new Compiler(loader);
     }
 

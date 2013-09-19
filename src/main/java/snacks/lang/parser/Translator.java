@@ -15,6 +15,7 @@ import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
+import snacks.lang.Operator;
 
 public class Translator implements SyntaxVisitor {
 
@@ -391,11 +392,12 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitOperator(Operator node) {
-        if (node.isPrefix()) {
-            environment().registerPrefix(node.getPrecedence(), node.getName());
+    public void visitOperatorDeclaration(OperatorDeclaration node) {
+        Operator operator = node.getOperator();
+        if (operator.isPrefix()) {
+            environment().registerPrefix(operator.getPrecedence(), operator.getName());
         } else {
-            environment().registerInfix(node.getPrecedence(), node.getFixity(), node.getName());
+            environment().registerInfix(operator.getPrecedence(), operator.getFixity(), operator.getName());
         }
     }
 

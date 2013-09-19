@@ -68,7 +68,7 @@ public interface SyntaxVisitor {
 
     void visitNopExpression(NopExpression node);
 
-    void visitOperator(Operator node);
+    void visitOperatorDeclaration(OperatorDeclaration node);
 
     void visitPropertyDeclaration(PropertyDeclaration node);
 

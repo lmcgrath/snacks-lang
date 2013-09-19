@@ -1,10 +1,7 @@
 package snacks.lang;
 
-import static snacks.lang.Fixity.RIGHT;
-
 import java.util.HashMap;
 import java.util.Map;
-import snacks.lang.parser.syntax.Operator;
 
 public class OperatorRegistry {
 
@@ -12,7 +9,7 @@ public class OperatorRegistry {
 
     public OperatorRegistry() {
         operators = new HashMap<>();
-        operators.put("=", new OpEntry(RIGHT, 0, 2));
+        operators.put("=", new OpEntry(Fixity.RIGHT, 0, 2));
     }
 
     public Operator getOperator(String name) {
@@ -30,7 +27,7 @@ public class OperatorRegistry {
 
     public void registerPrefix(int precedence, String... names) {
         for (String name : names) {
-            operators.put(name, new OpEntry(RIGHT, precedence, 1));
+            operators.put(name, new OpEntry(Fixity.RIGHT, precedence, 1));
         }
     }
 

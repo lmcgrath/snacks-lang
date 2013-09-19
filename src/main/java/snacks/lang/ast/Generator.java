@@ -1,9 +1,5 @@
 package snacks.lang.ast;
 
-import snacks.lang.TypeOperator;
-import snacks.lang.TypeSet;
-import snacks.lang.TypeVariable;
-
 public interface Generator {
 
     void generate(AstNode node);
@@ -71,12 +67,6 @@ public interface Generator {
     void generateSymbol(SymbolConstant node);
 
     void generateTupleInitializer(TupleInitializer node);
-
-    void generateTypeOperator(TypeOperator type);
-
-    void generateTypeSet(TypeSet type);
-
-    void generateTypeVariable(TypeVariable type);
 
     void generateVariableDeclaration(VariableDeclaration node);
 

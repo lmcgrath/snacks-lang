@@ -8,22 +8,21 @@ import static snacks.lang.ast.AstFactory.reference;
 import java.util.*;
 import snacks.lang.*;
 import snacks.lang.ast.*;
-import snacks.lang.parser.syntax.Operator;
 
 public class SymbolEnvironment implements TypeFactory {
 
-    private final SnacksLoader loader;
+    private final SnacksRegistry registry;
     private final OperatorRegistry operators;
     private final Scope scope;
 
-    public SymbolEnvironment(SnacksLoader loader) {
-        this.loader = loader;
+    public SymbolEnvironment(SnacksRegistry registry) {
+        this.registry = registry;
         this.operators = new OperatorRegistry();
-        this.scope = new HeadScope(loader);
+        this.scope = new HeadScope(registry);
     }
 
     private SymbolEnvironment(SymbolEnvironment parent) {
-        this.loader = parent.loader;
+        this.registry = parent.registry;
         this.operators = parent.operators;
         this.scope = new TailScope(parent.scope);
     }
@@ -76,7 +75,7 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     public Operator getOperator(String name) {
-        return operators.isOperator(name) ? operators.getOperator(name) : loader.getOperator(name);
+        return operators.isOperator(name) ? operators.getOperator(name) : registry.getOperator(name);
     }
 
     public Reference getReference(Locator locator) {
@@ -100,11 +99,11 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     public boolean isOperator(String name) {
-        return operators.isOperator(name) || loader.isOperator(name);
+        return operators.isOperator(name) || registry.isOperator(name);
     }
 
     public void registerInfix(int precedence, Fixity fixity, String name) {
-        if (loader.isOperator(name)) {
+        if (registry.isOperator(name)) {
             throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
         } else {
             operators.registerInfix(precedence, fixity, name);
@@ -112,7 +111,7 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     public void registerPrefix(int precedence, String name) {
-        if (loader.isOperator(name)) {
+        if (registry.isOperator(name)) {
             throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
         } else {
             operators.registerPrefix(precedence, name);
@@ -220,11 +219,11 @@ public class SymbolEnvironment implements TypeFactory {
 
     private static final class HeadScope extends Scope implements LocatorVisitor {
 
-        private final SnacksLoader loader;
+        private final SnacksRegistry registry;
         private int nextId = 1;
 
-        public HeadScope(SnacksLoader loader) {
-            this.loader = loader;
+        public HeadScope(SnacksRegistry registry) {
+            this.registry = registry;
         }
 
         @Override
@@ -239,7 +238,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public void visitDeclarationLocator(DeclarationLocator locator) {
-            Type type = loader.typeOf(locator.getModule() + "." + locator.getName());
+            Type type = registry.typeOf(locator.getModule() + "." + locator.getName());
             if (type != null) {
                 define(new Reference(locator, type));
             }

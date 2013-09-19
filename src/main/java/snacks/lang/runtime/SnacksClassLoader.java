@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.runtime;
 
 import static java.lang.Class.forName;
 import static java.util.Arrays.asList;
@@ -20,28 +20,32 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import snacks.lang.*;
 import snacks.lang.compiler.Compiler;
-import snacks.lang.compiler.SnackDefinition;
 import snacks.lang.parser.Parser;
 import snacks.lang.parser.Scanner;
 import snacks.lang.parser.SymbolEnvironment;
 import snacks.lang.parser.Translator;
-import snacks.lang.parser.syntax.Operator;
+import snacks.lang.Operator;
+import snacks.lang.OperatorRegistry;
+import snacks.lang.SnacksRegistry;
+import snacks.lang.Type;
 
-public class SnacksLoader extends URLClassLoader {
+public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
     private final Map<String, SnackEntry> snacks = new HashMap<>();
     private final OperatorRegistry operators = new OperatorRegistry();
 
-    public SnacksLoader() {
+    public SnacksClassLoader() {
         super(new URL[0]);
     }
 
-    public SnacksLoader(ClassLoader parent) {
+    public SnacksClassLoader(ClassLoader parent) {
         super(new URL[0], parent);
     }
 
+    @Override
     public Class<?> classOf(String qualifiedName) {
         if (hasSnack(qualifiedName)) {
             return getSnack(qualifiedName).getJavaClazz();
@@ -50,29 +54,30 @@ public class SnacksLoader extends URLClassLoader {
         }
     }
 
+    @Override
     public Class<?> defineSnack(SnackDefinition definition) {
-        return defineSnack(definition, SnacksLoader.class.getProtectionDomain());
+        return defineSnack(definition, SnacksClassLoader.class.getProtectionDomain());
     }
 
+    @Override
+    public Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
+        byte[] bytes = definition.getBytes();
+        Class<?> clazz = super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
+        processClass(clazz);
+        return clazz;
+    }
+
+    @Override
     public Operator getOperator(String name) {
         return operators.getOperator(name);
     }
 
+    @Override
     public boolean isOperator(String name) {
         return operators.isOperator(name);
     }
 
-    public Class<?> loadSnack(String qualifiedName) {
-        if (!snacks.containsKey(qualifiedName)) {
-            findSnackClass(qualifiedName);
-        }
-        if (snacks.containsKey(qualifiedName)) {
-            return snacks.get(qualifiedName).getClazz();
-        } else {
-            return null;
-        }
-    }
-
+    @Override
     public Type typeOf(String qualifiedName) {
         if (hasSnack(qualifiedName)) {
             return getSnack(qualifiedName).getType();
@@ -111,13 +116,6 @@ public class SnacksLoader extends URLClassLoader {
         } catch (IOException exception) {
             throw new ResolutionException(exception);
         }
-    }
-
-    private Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
-        byte[] bytes = definition.getBytes();
-        Class<?> clazz = super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
-        processClass(clazz);
-        return clazz;
     }
 
     private void findClasses(File directory, String packageName) {
@@ -212,6 +210,17 @@ public class SnacksLoader extends URLClassLoader {
     private boolean hasSnack(String qualifiedName) {
         loadSnack(qualifiedName);
         return snacks.containsKey(qualifiedName);
+    }
+
+    private Class<?> loadSnack(String qualifiedName) {
+        if (!snacks.containsKey(qualifiedName)) {
+            findSnackClass(qualifiedName);
+        }
+        if (snacks.containsKey(qualifiedName)) {
+            return snacks.get(qualifiedName).getClazz();
+        } else {
+            return null;
+        }
     }
 
     private void processAnnotations(Class<?> snackClass, String name) {

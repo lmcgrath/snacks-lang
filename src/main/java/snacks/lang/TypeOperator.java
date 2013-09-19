@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.ast.Generator;
 
 public class TypeOperator extends Type {
 
@@ -51,7 +50,7 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public void generate(Generator generator) {
+    public void generate(TypeGenerator generator) {
         generator.generateTypeOperator(this);
     }
 
