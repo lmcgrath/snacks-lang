@@ -16,7 +16,7 @@ public abstract class Type {
         VOID_TYPE = type("snacks.lang.Void")
     ;
 
-    public static Type argument(Type type) {
+    public static Type argumentOf(Type type) {
         return isFunction(type) ? ((FunctionType) type).getArgument() : null;
     }
 
@@ -34,7 +34,7 @@ public abstract class Type {
     }
 
     public static boolean isInstantiable(Type type) {
-        return isFunction(type) && VOID_TYPE == argument(type.decompose().get(0));
+        return isFunction(type) && VOID_TYPE == argumentOf(type.decompose().get(0));
     }
 
     public static PropertyType property(String name, Type type) {
@@ -49,7 +49,7 @@ public abstract class Type {
         return new RecordType(name, properties);
     }
 
-    public static Type result(Type type) {
+    public static Type resultOf(Type type) {
         return isFunction(type) ? ((FunctionType) type).getResult() : null;
     }
 
@@ -104,10 +104,6 @@ public abstract class Type {
     public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
 
     public abstract String getName();
-
-    public boolean isEmpty() {
-        return false;
-    }
 
     public boolean occursIn(Type type) {
         Type actualVariable = expose();

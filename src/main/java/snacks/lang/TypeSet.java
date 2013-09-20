@@ -68,11 +68,6 @@ public class TypeSet extends Type {
     }
 
     @Override
-    public boolean isEmpty() {
-        return types.isEmpty();
-    }
-
-    @Override
     public Type recompose(Type functionType, TypeFactory types) {
         return this;
     }
