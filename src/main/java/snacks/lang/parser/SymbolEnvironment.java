@@ -1,8 +1,6 @@
 package snacks.lang.parser;
 
-import static snacks.lang.Type.set;
-import static snacks.lang.Type.type;
-import static snacks.lang.Type.var;
+import static snacks.lang.Type.*;
 import static snacks.lang.ast.AstFactory.reference;
 
 import java.util.*;
@@ -62,12 +60,27 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type genericCopy(TypeOperator type, Map<Type, Type> mappings) {
-        List<Type> parameters = new ArrayList<>();
-        for (Type parameter : type.getParameters()) {
-            parameters.add(genericCopy(parameter, mappings));
+    public Type genericCopy(RecordType type, Map<Type, Type> mappings) {
+        List<PropertyType> parameters = new ArrayList<>();
+        for (PropertyType parameter : type.getProperties()) {
+            parameters.add((PropertyType) genericCopy(parameter, mappings));
         }
-        return type(type.getName(), parameters);
+        return record(type.getName(), parameters);
+    }
+
+    @Override
+    public Type genericCopy(FunctionType type, Map<Type, Type> mappings) {
+        return func(genericCopy(type.getArgument(), mappings), genericCopy(type.getResult(), mappings));
+    }
+
+    @Override
+    public Type genericCopy(SimpleType type, Map<Type, Type> mappings) {
+        return type;
+    }
+
+    @Override
+    public Type genericCopy(PropertyType type, Map<Type, Type> mappings) {
+        return property(type.getName(), genericCopy(type.getType(), mappings));
     }
 
     public void generify(Type type) {

@@ -1,6 +1,5 @@
 package snacks.lang.compiler;
 
-import static java.util.Collections.sort;
 import static me.qmx.jitescript.util.CodegenUtils.*;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
@@ -163,12 +162,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     public void generateDeclaredRecord(final DeclaredRecord node) {
         final List<DeclaredProperty> properties = node.getProperties();
         final JiteClass jiteClass = jiteClass();
-        sort(properties, new Comparator<DeclaredProperty>() {
-            @Override
-            public int compare(DeclaredProperty o1, DeclaredProperty o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
         for (final DeclaredProperty property : properties) {
             final Class<?> type = propertyType(property);
             jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, ci(type), null);
@@ -217,10 +210,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             invokevirtual(p(StringBuilder.class), "toString", sig(String.class));
             areturn();
         }});
-    }
-
-    private Class<?> propertyType(DeclaredProperty property) {
-        return registry.classOf(property.getType().getParameters().get(0).getName());
     }
 
     @Override
@@ -277,6 +266,22 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateFunctionType(FunctionType type) {
+        CodeBlock block = block();
+        generate(type.getArgument());
+        generate(type.getResult());
+        block.invokestatic(p(Type.class), "func", sig(Type.class, Type.class, Type.class));
+    }
+
+    @Override
+    public void generatePropertyType(PropertyType type) {
+        CodeBlock block = block();
+        block.ldc(type.getName());
+        generate(type.getType());
+        block.invokestatic(p(Type.class), "property", sig(PropertyType.class, String.class, Type.class));
+    }
+
+    @Override
     public void generateGuardCase(GuardCase node) {
         CodeBlock block = block();
         LabelNode skipLabel = new LabelNode();
@@ -315,16 +320,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.newobj(className);
         block.dup();
         Map<String, PropertyInitializer> properties = node.getProperties();
-        List<Type> parameters = node.getType().getParameters();
-        sort(parameters, new Comparator<Type>() {
-            @Override
-            public int compare(Type o1, Type o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        List<PropertyType> parameters = node.getType().getProperties();
         Class<?>[] types = new Class<?>[parameters.size()];
         for (int i = 0; i < parameters.size(); i++) {
-            types[i] = registry.classOf(parameters.get(i).getParameters().get(0).getName());
+            types[i] = registry.classOf(parameters.get(i).getType().getName());
             generate(properties.get(parameters.get(i).getName()).getValue());
         }
         block.invokespecial(className, "<init>", sig(void.class, types));
@@ -349,6 +348,22 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateNop(Nop nop) {
         block().aconst_null();
+    }
+
+    @Override
+    public void generateRecordType(RecordType type) {
+        CodeBlock block = block();
+        block.ldc(type.getName());
+        List<PropertyType> parameters = type.getProperties();
+        block.ldc(parameters.size());
+        block.anewarray(p(PropertyType.class));
+        for (int i = 0; i < parameters.size(); i++) {
+            block.dup();
+            block.ldc(i);
+            generate(parameters.get(i));
+            block.aastore();
+        }
+        block.invokestatic(p(Type.class), "record", sig(Type.class, String.class, PropertyType[].class));
     }
 
     @Override
@@ -392,6 +407,13 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateSimpleType(SimpleType type) {
+        CodeBlock block = block();
+        block.ldc(type.getName());
+        block.invokestatic(p(Type.class), "type", sig(Type.class, String.class));
+    }
+
+    @Override
     public void generateStringConstant(StringConstant node) {
         block().ldc(node.getValue());
     }
@@ -417,22 +439,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         } catch (ClassNotFoundException exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    @Override
-    public void generateTypeOperator(TypeOperator type) {
-        CodeBlock block = block();
-        block.ldc(type.getName());
-        List<Type> parameters = type.getParameters();
-        block.ldc(parameters.size());
-        block.anewarray(p(Type.class));
-        for (int i = 0; i < parameters.size(); i++) {
-            block.dup();
-            block.ldc(i);
-            generate(parameters.get(i));
-            block.aastore();
-        }
-        block.invokestatic(p(Type.class), "type", sig(Type.class, String.class, Type[].class));
     }
 
     @Override
@@ -530,24 +536,12 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return jiteClass;
     }
 
-    private void generate(Type type) {
-        type.generate(this);
-    }
-
     private CodeBlock block() {
         return state().block();
     }
 
-    private void enterGuard() {
-        state().enterGuard();
-    }
-
     private EmbraceScope currentEmbrace() {
         return state().currentEmbrace();
-    }
-
-    private void exitGuard() {
-        state().exitGuard();
     }
 
     private LoopScope currentLoop() {
@@ -599,8 +593,20 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         state().enterEmbrace(getVariable("$snacks$~exception"), node);
     }
 
+    private void enterGuard() {
+        state().enterGuard();
+    }
+
     private LoopScope enterLoop() {
         return state().enterLoop();
+    }
+
+    private void exitGuard() {
+        state().exitGuard();
+    }
+
+    private void generate(Type type) {
+        type.generate(this);
     }
 
     private void generate(Locator locator) {
@@ -644,6 +650,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         state().leaveEmbrace(this);
     }
 
+    private void leaveGuard() {
+        state().leaveGuard();
+    }
+
     private void leaveLoop() {
         state().leaveLoop();
     }
@@ -659,8 +669,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }
     }
 
-    private void leaveGuard() {
-        state().leaveGuard();
+    private Class<?> propertyType(DeclaredProperty property) {
+        return registry.classOf(property.getType().getType().getName());
     }
 
     private ClassBuilder state() {

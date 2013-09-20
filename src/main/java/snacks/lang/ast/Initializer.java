@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Type;
+import snacks.lang.RecordType;
 
 public class Initializer extends AstNode {
 
@@ -41,8 +41,8 @@ public class Initializer extends AstNode {
     }
 
     @Override
-    public Type getType() {
-        return constructor.getType();
+    public RecordType getType() {
+        return (RecordType) constructor.getType();
     }
 
     @Override

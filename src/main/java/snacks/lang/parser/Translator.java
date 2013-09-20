@@ -11,6 +11,8 @@ import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 import java.util.*;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.PropertyType;
+import snacks.lang.RecordType;
 import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
@@ -114,10 +116,12 @@ public class Translator implements SyntaxVisitor {
         AstNode expression = translate(node.getExpression());
         String property = node.getProperty();
         for (Type type : expression.getType().decompose()) {
-            for (Type parameter : type.getParameters()) {
-                if (parameter.getName().equals(property)) {
-                    result = access(expression, property, parameter.getParameters().get(0));
-                    return;
+            if (type instanceof RecordType) {
+                for (PropertyType propertyType : ((RecordType) type).getProperties()) {
+                    if (propertyType.getName().equals(property)) {
+                        result = access(expression, property, propertyType.getType());
+                        return;
+                    }
                 }
             }
         }
@@ -295,7 +299,7 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitInitializerExpression(InitializerExpression node) {
         Reference reference = reference(node.getConstructor());
-        Type recordType = reference.getType();
+        RecordType recordType = (RecordType) reference.getType();
         Map<String, PropertyInitializer> properties = new HashMap<>();
         List<Type> matchedProperties = new ArrayList<>();
         for (Symbol n : node.getProperties()) {
@@ -304,7 +308,7 @@ public class Translator implements SyntaxVisitor {
                 throw new DuplicatePropertyException("Duplicate property initializer: " + property.getName());
             }
             boolean found = false;
-            for (Type propertyType : recordType.getParameters()) {
+            for (PropertyType propertyType : recordType.getProperties()) {
                 if (propertyType.getName().equals(property.getName())) {
                     verifyAssignmentType(propertyType, property.getType());
                     matchedProperties.add(propertyType);
@@ -317,7 +321,7 @@ public class Translator implements SyntaxVisitor {
             }
             properties.put(property.getName(), property);
         }
-        for (Type propertyType : recordType.getParameters()) {
+        for (PropertyType propertyType : recordType.getProperties()) {
             if (!matchedProperties.contains(propertyType)) {
                 throw new MissingPropertyException("Missing property: " + propertyType);
             }
@@ -771,7 +775,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     private boolean unifyFunctionResult(Type functionType, Type declaredResultType) {
-        if (functionType.size() == 1) {
+        if (functionType.decompose().size() == 1) {
             Type actualResultType = result(functionType);
             return actualResultType.unify(declaredResultType);
         } else {

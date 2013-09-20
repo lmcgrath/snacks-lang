@@ -1,12 +1,13 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.type;
+import static snacks.lang.Type.record;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.PropertyType;
 import snacks.lang.Type;
 
 public class DeclaredRecord extends AstNode {
@@ -49,11 +50,11 @@ public class DeclaredRecord extends AstNode {
 
     @Override
     public Type getType() {
-        List<Type> propTypes = new ArrayList<>();
-        for (AstNode property : properties) {
+        List<PropertyType> propTypes = new ArrayList<>();
+        for (DeclaredProperty property : properties) {
             propTypes.add(property.getType());
         }
-        return type(name, propTypes);
+        return record(name, propTypes);
     }
 
     @Override

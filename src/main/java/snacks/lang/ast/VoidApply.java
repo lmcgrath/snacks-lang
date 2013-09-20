@@ -1,5 +1,7 @@
 package snacks.lang.ast;
 
+import static snacks.lang.Type.result;
+
 import snacks.lang.Type;
 
 public class VoidApply extends AstNode {
@@ -26,7 +28,7 @@ public class VoidApply extends AstNode {
 
     @Override
     public Type getType() {
-        return invokable.getType().getParameters().get(1);
+        return result(invokable.getType());
     }
 
     @Override

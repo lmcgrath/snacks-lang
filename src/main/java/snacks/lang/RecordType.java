@@ -1,23 +1,18 @@
 package snacks.lang;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
-public class TypeOperator extends Type {
+public class RecordType extends Type {
 
     private final String name;
-    private final List<Type> parameters;
+    private final List<PropertyType> properties;
 
-    public TypeOperator(String name, Type... parameters) {
-        this(name, asList(parameters));
-    }
-
-    public TypeOperator(String name, Collection<Type> parameters) {
+    public RecordType(String name, Collection<PropertyType> properties) {
         this.name = name;
-        this.parameters = new ArrayList<>(parameters);
+        this.properties = new ArrayList<>(properties);
     }
 
     @Override
@@ -29,11 +24,11 @@ public class TypeOperator extends Type {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof TypeOperator) {
-            TypeOperator other = (TypeOperator) o;
+        } else if (o instanceof RecordType) {
+            RecordType other = (RecordType) o;
             return new EqualsBuilder()
                 .append(name, other.name)
-                .append(parameters, other.parameters)
+                .append(properties, other.properties)
                 .isEquals();
         } else {
             return false;
@@ -42,16 +37,16 @@ public class TypeOperator extends Type {
 
     @Override
     public Type expose() {
-        List<Type> types = new ArrayList<>();
-        for (Type type : getParameters()) {
-            types.add(type.expose());
+        List<PropertyType> exposedProperties = new ArrayList<>();
+        for (PropertyType property : properties) {
+            exposedProperties.add(property.expose());
         }
-        return new TypeOperator(name, types);
+        return new RecordType(name, exposedProperties);
     }
 
     @Override
     public void generate(TypeGenerator generator) {
-        generator.generateTypeOperator(this);
+        generator.generateRecordType(this);
     }
 
     @Override
@@ -60,13 +55,17 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public List<Type> getParameters() {
-        return new ArrayList<>(parameters);
+    protected boolean contains(Type type) {
+        return type.occursIn(new ArrayList<Type>(properties));
+    }
+
+    public List<PropertyType> getProperties() {
+        return properties;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, parameters);
+        return Objects.hash(properties);
     }
 
     @Override
@@ -78,7 +77,18 @@ public class TypeOperator extends Type {
 
     @Override
     public boolean unifyRight(Type other) {
-        return unifyParameters(other);
+        if (other instanceof RecordType) {
+            RecordType otherRecord = (RecordType) other;
+            if (name.equals(otherRecord.name)) {
+                for (int i = 0; i < properties.size(); i++) {
+                    if (!properties.get(i).unify(otherRecord.properties.get(i))) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -97,18 +107,7 @@ public class TypeOperator extends Type {
     }
 
     @Override
-    public int size() {
-        return 1;
-    }
-
-    @Override
     public String toString() {
-        if ("->".equals(name)) {
-            return "(" + parameters.get(0) + " " + name + " " + parameters.get(1) + ")";
-        } else if (parameters.isEmpty()) {
-            return name;
-        } else {
-            return "(" + name + "[" + join(parameters, ", ") + "])";
-        }
+        return "(" + name + properties + ")";
     }
 }

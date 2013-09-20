@@ -1,6 +1,5 @@
 package snacks.lang;
 
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
@@ -64,23 +63,18 @@ public class TypeSet extends Type {
     }
 
     @Override
-    public List<Type> getParameters() {
-        return emptyList();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(types);
     }
 
     @Override
-    public Type recompose(Type functionType, TypeFactory types) {
-        return this;
+    public boolean isEmpty() {
+        return types.isEmpty();
     }
 
     @Override
-    public int size() {
-        return types.size();
+    public Type recompose(Type functionType, TypeFactory types) {
+        return this;
     }
 
     @Override
@@ -102,6 +96,11 @@ public class TypeSet extends Type {
 
     @Override
     public boolean unifyRight(Type other) {
-        return unifyParameters(other);
+        return other instanceof TypeSet; // TODO should verify type overlap
+    }
+
+    @Override
+    protected boolean contains(Type type) {
+        return false;
     }
 }

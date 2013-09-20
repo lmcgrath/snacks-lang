@@ -2,7 +2,13 @@ package snacks.lang;
 
 public interface TypeGenerator {
 
-    void generateTypeOperator(TypeOperator type);
+    void generateFunctionType(FunctionType type);
+
+    void generatePropertyType(PropertyType type);
+
+    void generateSimpleType(SimpleType type);
+
+    void generateRecordType(RecordType type);
 
     void generateTypeSet(TypeSet type);
 

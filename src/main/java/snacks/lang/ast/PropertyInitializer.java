@@ -1,6 +1,6 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.type;
+import static snacks.lang.Type.property;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -37,7 +37,7 @@ public class PropertyInitializer extends AstNode {
 
     @Override
     public Type getType() {
-        return type(name, value.getType());
+        return property(name, value.getType());
     }
 
     public AstNode getValue() {

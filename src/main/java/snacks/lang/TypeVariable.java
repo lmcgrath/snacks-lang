@@ -1,7 +1,6 @@
 package snacks.lang;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,11 +51,6 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public List<Type> getParameters() {
-        return state.getParameters();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(state);
     }
@@ -64,11 +58,6 @@ public class TypeVariable extends Type {
     @Override
     public Type recompose(Type functionType, TypeFactory types) {
         return state.recompose(functionType, types);
-    }
-
-    @Override
-    public int size() {
-        return state.size();
     }
 
     @Override
@@ -93,9 +82,16 @@ public class TypeVariable extends Type {
         return unify(other);
     }
 
+    @Override
+    protected boolean contains(Type type) {
+        return state.contains(type);
+    }
+
     private interface State {
 
         void bind(Type type);
+
+        boolean contains(Type type);
 
         List<Type> decompose();
 
@@ -103,11 +99,7 @@ public class TypeVariable extends Type {
 
         String getName();
 
-        List<Type> getParameters();
-
         Type recompose(Type functionType, TypeFactory environment);
-
-        int size();
     }
 
     private static final class BoundState implements State {
@@ -121,6 +113,11 @@ public class TypeVariable extends Type {
         @Override
         public void bind(Type type) {
             // intentionally empty
+        }
+
+        @Override
+        public boolean contains(Type type) {
+            return this.type.contains(type);
         }
 
         @Override
@@ -144,11 +141,6 @@ public class TypeVariable extends Type {
         }
 
         @Override
-        public List<Type> getParameters() {
-            return type.getParameters();
-        }
-
-        @Override
         public int hashCode() {
             return Objects.hash(type);
         }
@@ -156,11 +148,6 @@ public class TypeVariable extends Type {
         @Override
         public Type recompose(Type functionType, TypeFactory environment) {
             return type;
-        }
-
-        @Override
-        public int size() {
-            return type.size();
         }
 
         @Override
@@ -185,6 +172,11 @@ public class TypeVariable extends Type {
         }
 
         @Override
+        public boolean contains(Type type) {
+            return false;
+        }
+
+        @Override
         public List<Type> decompose() {
             return asList((Type) parent);
         }
@@ -205,28 +197,18 @@ public class TypeVariable extends Type {
         }
 
         @Override
-        public List<Type> getParameters() {
-            return emptyList();
-        }
-
-        @Override
         public int hashCode() {
             return Objects.hash(name);
         }
 
         @Override
         public Type recompose(Type functionType, TypeFactory environment) {
-            int size = functionType.size();
+            int size = functionType.decompose().size();
             List<Type> variables = new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 variables.add(environment.createVariable());
             }
             return set(variables);
-        }
-
-        @Override
-        public int size() {
-            return 1;
         }
 
         @Override

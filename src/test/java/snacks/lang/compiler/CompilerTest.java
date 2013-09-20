@@ -621,7 +621,7 @@ public class CompilerTest {
             "    pairsWithBacon? = True",
             "}"
         );
-        verifyOut("BreakfastItem{name=Waffles, pairsWithBacon?=true, tasteIndex=10}");
+        verifyOut("BreakfastItem{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
     }
 
     @Test

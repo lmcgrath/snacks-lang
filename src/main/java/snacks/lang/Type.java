@@ -16,13 +16,17 @@ public abstract class Type {
         VOID_TYPE = type("snacks.lang.Void")
     ;
 
+    public static Type argument(Type type) {
+        return isFunction(type) ? ((FunctionType) type).getArgument() : null;
+    }
+
     public static Type func(Type argument, Type result) {
-        return type("->", argument, result);
+        return new FunctionType(argument, result);
     }
 
     public static boolean isFunction(Type type) {
         for (Type t : type.decompose()) {
-            if ("->".equals(t.getName())) {
+            if (t instanceof FunctionType) {
                 return true;
             }
         }
@@ -30,20 +34,23 @@ public abstract class Type {
     }
 
     public static boolean isInstantiable(Type type) {
-        return isFunction(type) && VOID_TYPE == type.decompose().get(0).getParameters().get(0);
+        return isFunction(type) && VOID_TYPE == argument(type.decompose().get(0));
     }
 
-    public static Type property(String name, Type type) {
-        return type(name, type);
+    public static PropertyType property(String name, Type type) {
+        return new PropertyType(name, type);
     }
 
-    public static Type result(Type functionType) {
-        List<Type> parameters = functionType.getParameters();
-        if (parameters.isEmpty()) {
-            return functionType;
-        } else {
-            return result(parameters.get(1));
-        }
+    public static Type record(String name, PropertyType... properties) {
+        return new RecordType(name, asList(properties));
+    }
+
+    public static Type record(String name, Collection<PropertyType> properties) {
+        return new RecordType(name, properties);
+    }
+
+    public static Type result(Type type) {
+        return isFunction(type) ? ((FunctionType) type).getResult() : null;
     }
 
     public static Type set(Type... possibilities) {
@@ -63,25 +70,17 @@ public abstract class Type {
     }
 
     public static Type tuple(Collection<Type> types) {
-        List<Type> properties = new ArrayList<>();
+        List<PropertyType> properties = new ArrayList<>();
         Iterator<Type> iterator = types.iterator();
         int index = 0;
         while (iterator.hasNext()) {
-            properties.add(property("_" + index++, iterator.next()));
+            properties.add(new PropertyType("_" + index++, iterator.next()));
         }
-        return type("snacks.lang.Tuple" + types.size(), properties);
+        return record("snacks.lang.Tuple" + types.size(), properties);
     }
 
     public static Type type(String name) {
-        return new TypeOperator(name);
-    }
-
-    public static Type type(String name, Type... parameters) {
-        return type(name, asList(parameters));
-    }
-
-    public static Type type(String name, Collection<Type> parameters) {
-        return new TypeOperator(name, parameters);
+        return new SimpleType(name);
     }
 
     public static Type var(Type type) {
@@ -106,10 +105,14 @@ public abstract class Type {
 
     public abstract String getName();
 
-    public abstract List<Type> getParameters();
-
     public boolean isEmpty() {
-        return size() == 0;
+        return false;
+    }
+
+    public boolean occursIn(Type type) {
+        Type actualVariable = expose();
+        Type actualType = type.expose();
+        return actualVariable.equals(actualType) || actualType.contains(type);
     }
 
     public boolean occursIn(Collection<Type> types) {
@@ -121,15 +124,7 @@ public abstract class Type {
         return false;
     }
 
-    public boolean occursIn(Type type) {
-        Type actualVariable = expose();
-        Type actualType = type.expose();
-        return actualVariable.equals(actualType) || occursIn(actualType.getParameters());
-    }
-
     public abstract Type recompose(Type functionType, TypeFactory types);
-
-    public abstract int size();
 
     public boolean unify(Type other) {
         Type left = expose();
@@ -139,20 +134,7 @@ public abstract class Type {
 
     public abstract boolean unifyLeft(Type other);
 
-    public boolean unifyParameters(Type other) {
-        List<Type> leftParameters = getParameters();
-        List<Type> rightParameters = other.getParameters();
-        if (getName().equals(other.getName()) && leftParameters.size() == rightParameters.size()) {
-            for (int i = 0; i < leftParameters.size(); i++) {
-                if (!leftParameters.get(i).unify(rightParameters.get(i))) {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        }
-        return true;
-    }
-
     public abstract boolean unifyRight(Type other);
+
+    protected abstract boolean contains(Type type);
 }
