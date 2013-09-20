@@ -1,8 +1,5 @@
 package snacks.lang;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,16 +9,6 @@ public class SimpleType extends Type {
 
     public SimpleType(String name) {
         this.name = name;
-    }
-
-    @Override
-    public void bind(Type type) {
-        // intentionally empty
-    }
-
-    @Override
-    public List<Type> decompose() {
-        return asList((Type) this);
     }
 
     @Override
@@ -41,7 +28,7 @@ public class SimpleType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopy(this, mappings);
+        return types.genericCopyOfSimpleType(this, mappings);
     }
 
     @Override
@@ -50,18 +37,8 @@ public class SimpleType extends Type {
     }
 
     @Override
-    protected boolean contains(Type type) {
-        return false;
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(name);
-    }
-
-    @Override
-    public Type recompose(Type functionType, TypeFactory types) {
-        return this;
     }
 
     @Override
@@ -70,14 +47,7 @@ public class SimpleType extends Type {
     }
 
     @Override
-    public boolean unifyLeft(Type other) {
-        Type left = expose();
-        Type right = other.expose();
-        return right.unifyRight(left);
-    }
-
-    @Override
-    public boolean unifyRight(Type other) {
+    protected boolean unifyRight(Type other) {
         return other instanceof SimpleType && name.equals(other.getName());
     }
 }

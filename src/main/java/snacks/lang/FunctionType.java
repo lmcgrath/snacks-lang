@@ -1,8 +1,5 @@
 package snacks.lang;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -15,16 +12,6 @@ public class FunctionType extends Type {
     public FunctionType(Type argument, Type result) {
         this.argument = argument;
         this.result = result;
-    }
-
-    @Override
-    public void bind(Type type) {
-        // intentionally empty
-    }
-
-    @Override
-    public List<Type> decompose() {
-        return asList((Type) this);
     }
 
     @Override
@@ -54,7 +41,7 @@ public class FunctionType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopy(this, mappings);
+        return types.genericCopyOfFunctionType(this, mappings);
     }
 
     public Type getArgument() {
@@ -81,20 +68,8 @@ public class FunctionType extends Type {
     }
 
     @Override
-    public Type recompose(Type functionType, TypeFactory types) {
-        return this;
-    }
-
-    @Override
     public String toString() {
         return "(" + argument + " -> " + result + ")";
-    }
-
-    @Override
-    public boolean unifyLeft(Type other) {
-        Type left = expose();
-        Type right = other.expose();
-        return right.unifyRight(left);
     }
 
     @Override

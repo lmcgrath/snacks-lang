@@ -50,7 +50,7 @@ public class TypeSet extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopy(this, mappings);
+        return types.genericCopyOfTypeSet(this, mappings);
     }
 
     public Set<Type> getMembers() {
@@ -65,11 +65,6 @@ public class TypeSet extends Type {
     @Override
     public int hashCode() {
         return Objects.hash(types);
-    }
-
-    @Override
-    public Type recompose(Type functionType, TypeFactory types) {
-        return this;
     }
 
     @Override
@@ -92,10 +87,5 @@ public class TypeSet extends Type {
     @Override
     public boolean unifyRight(Type other) {
         return other instanceof TypeSet; // TODO should verify type overlap
-    }
-
-    @Override
-    protected boolean contains(Type type) {
-        return false;
     }
 }

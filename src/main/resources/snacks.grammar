@@ -53,7 +53,6 @@
 %typeof import_alias = "String";
 %typeof sub_import = "SubImport";
 %typeof suffix_typespec = "TypeSpec";
-%typeof function_typespec = "TypeSpec";
 %typeof opt_function_arguments = "Symbol[]";
 %typeof begin_case = "Symbol[]";
 %typeof qualified_identifier = "QualifiedIdentifier";
@@ -299,24 +298,24 @@ sequence
     ;
 
 function_literal
-    = LFUNC function_arguments.a function_typespec.t APPLIES_TO expression.e RPAREN
+    = LFUNC function_arguments.a APPLIES_TO expression.e RPAREN
         {:
             Symbol expression = e;
             for (int i = a.length - 1; i >= 1; i--) {
                 expression = func(a[i], expression);
             }
-            expression = func(a[0], expression, t);
+            expression = func(a[0], expression);
             return expression;
         :}
     | LFUNC APPLIES_TO expression.e RPAREN
         {: return invokable(e); :}
-    | LFUNC_MULTILINE function_arguments.a function_typespec.t APPLIES_TO sequence.e term* RCURLY
+    | LFUNC_MULTILINE function_arguments.a APPLIES_TO sequence.e term* RCURLY
         {:
             Symbol expression = block(e);
             for (int i = a.length - 1; i >= 1; i--) {
                 expression = func(a[i], expression);
             }
-            expression = func(a[0], expression, t);
+            expression = func(a[0], expression);
             return expression;
         :}
     | LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
@@ -332,11 +331,6 @@ function_literal
             }
             return expression;
         :}
-    ;
-
-function_typespec
-    = DOUBLE_COLON FWORD.t {: return type(qid(t)); :}
-    |
     ;
 
 opt_function_arguments

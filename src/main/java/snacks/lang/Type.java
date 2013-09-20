@@ -3,6 +3,7 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 
 import java.util.*;
+import snacks.lang.RecordType.Property;
 
 public abstract class Type {
 
@@ -37,15 +38,15 @@ public abstract class Type {
         return isFunction(type) && VOID_TYPE == argumentOf(type.decompose().get(0));
     }
 
-    public static PropertyType property(String name, Type type) {
-        return new PropertyType(name, type);
+    public static Property property(String name, Type type) {
+        return new Property(name, type);
     }
 
-    public static Type record(String name, PropertyType... properties) {
+    public static Type record(String name, Property... properties) {
         return new RecordType(name, asList(properties));
     }
 
-    public static Type record(String name, Collection<PropertyType> properties) {
+    public static Type record(String name, Collection<Property> properties) {
         return new RecordType(name, properties);
     }
 
@@ -70,11 +71,11 @@ public abstract class Type {
     }
 
     public static Type tuple(Collection<Type> types) {
-        List<PropertyType> properties = new ArrayList<>();
+        List<Property> properties = new ArrayList<>();
         Iterator<Type> iterator = types.iterator();
         int index = 0;
         while (iterator.hasNext()) {
-            properties.add(new PropertyType("_" + index++, iterator.next()));
+            properties.add(property("_" + index++, iterator.next()));
         }
         return record("snacks.lang.Tuple" + types.size(), properties);
     }
@@ -93,9 +94,16 @@ public abstract class Type {
         return new TypeVariable(name);
     }
 
-    public abstract void bind(Type type);
+    public void bind(Type type) {
+        // intentionally empty
+    }
 
-    public abstract List<Type> decompose();
+    public List<Type> decompose() {
+        return asList(this);
+    }
+
+    @Override
+    public abstract boolean equals(Object o);
 
     public abstract Type expose();
 
@@ -104,6 +112,9 @@ public abstract class Type {
     public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
 
     public abstract String getName();
+
+    @Override
+    public abstract int hashCode();
 
     public boolean occursIn(Type type) {
         Type actualVariable = expose();
@@ -120,7 +131,12 @@ public abstract class Type {
         return false;
     }
 
-    public abstract Type recompose(Type functionType, TypeFactory types);
+    public Type recompose(Type functionType, TypeFactory types) {
+        return this;
+    }
+
+    @Override
+    public abstract String toString();
 
     public boolean unify(Type other) {
         Type left = expose();
@@ -128,9 +144,13 @@ public abstract class Type {
         return left.unifyLeft(right);
     }
 
-    public abstract boolean unifyLeft(Type other);
+    protected boolean contains(Type type) {
+        return false;
+    }
 
-    public abstract boolean unifyRight(Type other);
+    protected boolean unifyLeft(Type other) {
+        return other.unifyRight(this);
+    }
 
-    protected abstract boolean contains(Type type);
+    protected abstract boolean unifyRight(Type other);
 }

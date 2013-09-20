@@ -1,23 +1,16 @@
 package snacks.lang;
 
-import static java.util.Arrays.asList;
-
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class RecordType extends Type {
 
     private final String name;
-    private final List<PropertyType> properties;
+    private final List<Property> properties;
 
-    public RecordType(String name, Collection<PropertyType> properties) {
+    public RecordType(String name, Collection<Property> properties) {
         this.name = name;
         this.properties = new ArrayList<>(properties);
-    }
-
-    @Override
-    public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopy(this, mappings);
     }
 
     @Override
@@ -37,8 +30,8 @@ public class RecordType extends Type {
 
     @Override
     public Type expose() {
-        List<PropertyType> exposedProperties = new ArrayList<>();
-        for (PropertyType property : properties) {
+        List<Property> exposedProperties = new ArrayList<>();
+        for (Property property : properties) {
             exposedProperties.add(property.expose());
         }
         return new RecordType(name, exposedProperties);
@@ -50,16 +43,16 @@ public class RecordType extends Type {
     }
 
     @Override
+    public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
+        return types.genericCopyOfRecordType(this, mappings);
+    }
+
+    @Override
     public String getName() {
         return name;
     }
 
-    @Override
-    protected boolean contains(Type type) {
-        return type.occursIn(new ArrayList<Type>(properties));
-    }
-
-    public List<PropertyType> getProperties() {
+    public List<Property> getProperties() {
         return properties;
     }
 
@@ -69,14 +62,12 @@ public class RecordType extends Type {
     }
 
     @Override
-    public boolean unifyLeft(Type other) {
-        Type left = expose();
-        Type right = other.expose();
-        return right.unifyRight(left);
+    public String toString() {
+        return "(" + name + properties + ")";
     }
 
     @Override
-    public boolean unifyRight(Type other) {
+    protected boolean unifyRight(Type other) {
         if (other instanceof RecordType) {
             RecordType otherRecord = (RecordType) other;
             if (name.equals(otherRecord.name)) {
@@ -91,23 +82,50 @@ public class RecordType extends Type {
         return false;
     }
 
-    @Override
-    public void bind(Type type) {
-        // intentionally empty
-    }
+    public static final class Property {
 
-    @Override
-    public List<Type> decompose() {
-        return asList((Type) this);
-    }
+        private final String name;
+        private final Type type;
 
-    @Override
-    public Type recompose(Type functionType, TypeFactory types) {
-        return this;
-    }
+        public Property(String name, Type type) {
+            this.name = name;
+            this.type = type;
+        }
 
-    @Override
-    public String toString() {
-        return "(" + name + properties + ")";
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof Property) {
+                Property other = (Property) o;
+                return new EqualsBuilder()
+                    .append(name, other.name)
+                    .append(type, other.type)
+                    .isEquals();
+            } else {
+                return false;
+            }
+        }
+
+        public Property expose() {
+            return new Property(name, type.expose());
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, type);
+        }
+
+        public boolean unify(Property property) {
+            return Objects.equals(name, property.name) && type.unify(property.type);
+        }
     }
 }

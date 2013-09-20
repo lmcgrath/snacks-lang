@@ -141,13 +141,12 @@ public class ParserTest {
 
     @Test
     public void shouldParseTypedFunction() {
-        assertThat(expression("(a:x b:y :: z -> a b)"), equalTo(func(
+        assertThat(expression("(a:x b:y -> a b)"), equalTo(func(
             arg("a", type(qid("x"))),
             func(
                 arg("b", type(qid("y"))),
                 msg(id("a"), id("b"))
-            ),
-            type(qid("z"))
+            )
         )));
     }
 
@@ -176,7 +175,7 @@ public class ParserTest {
     @Test
     public void shouldParseTypedMultiLineFunction() {
         Symbol tree = expression(
-            "{ x:a y:b :: z ->",
+            "{ x:a y:b ->",
             "    print x",
             "    return x y",
             "}"
@@ -189,8 +188,7 @@ public class ParserTest {
                     msg(id("print"), id("x")),
                     result(msg(id("x"), id("y")))
                 )
-            ),
-            type(qid("z"))
+            )
         )));
     }
 

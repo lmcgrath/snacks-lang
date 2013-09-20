@@ -1,10 +1,7 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.property;
-
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.PropertyType;
 import snacks.lang.Type;
 
 public class DeclaredProperty extends AstNode {
@@ -42,7 +39,7 @@ public class DeclaredProperty extends AstNode {
     }
 
     @Override
-    public PropertyType getType() {
-        return property(name, type);
+    public Type getType() {
+        return type;
     }
 }

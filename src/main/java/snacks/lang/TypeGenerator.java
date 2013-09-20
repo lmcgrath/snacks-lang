@@ -4,8 +4,6 @@ public interface TypeGenerator {
 
     void generateFunctionType(FunctionType type);
 
-    void generatePropertyType(PropertyType type);
-
     void generateSimpleType(SimpleType type);
 
     void generateRecordType(RecordType type);

@@ -1,5 +1,6 @@
 package snacks.lang.ast;
 
+import static snacks.lang.Type.property;
 import static snacks.lang.Type.record;
 
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.PropertyType;
+import snacks.lang.RecordType.Property;
 import snacks.lang.Type;
 
 public class DeclaredRecord extends AstNode {
@@ -50,9 +51,9 @@ public class DeclaredRecord extends AstNode {
 
     @Override
     public Type getType() {
-        List<PropertyType> propTypes = new ArrayList<>();
+        List<Property> propTypes = new ArrayList<>();
         for (DeclaredProperty property : properties) {
-            propTypes.add(property.getType());
+            propTypes.add(property(property.getName(), property.getType()));
         }
         return record(name, propTypes);
     }

@@ -11,13 +11,13 @@ import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 import java.util.*;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.PropertyType;
+import snacks.lang.Operator;
 import snacks.lang.RecordType;
+import snacks.lang.RecordType.Property;
 import snacks.lang.Type;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
-import snacks.lang.Operator;
 
 public class Translator implements SyntaxVisitor {
 
@@ -117,7 +117,7 @@ public class Translator implements SyntaxVisitor {
         String property = node.getProperty();
         for (Type type : expression.getType().decompose()) {
             if (type instanceof RecordType) {
-                for (PropertyType propertyType : ((RecordType) type).getProperties()) {
+                for (Property propertyType : ((RecordType) type).getProperties()) {
                     if (propertyType.getName().equals(property)) {
                         result = access(expression, property, propertyType.getType());
                         return;
@@ -301,16 +301,16 @@ public class Translator implements SyntaxVisitor {
         Reference reference = reference(node.getConstructor());
         RecordType recordType = (RecordType) reference.getType();
         Map<String, PropertyInitializer> properties = new HashMap<>();
-        List<Type> matchedProperties = new ArrayList<>();
+        List<Property> matchedProperties = new ArrayList<>();
         for (Symbol n : node.getProperties()) {
             PropertyInitializer property = (PropertyInitializer) translate(n);
             if (properties.containsKey(property.getName())) {
                 throw new DuplicatePropertyException("Duplicate property initializer: " + property.getName());
             }
             boolean found = false;
-            for (PropertyType propertyType : recordType.getProperties()) {
+            for (Property propertyType : recordType.getProperties()) {
                 if (propertyType.getName().equals(property.getName())) {
-                    verifyAssignmentType(propertyType, property.getType());
+                    verifyAssignmentType(propertyType.getType(), property.getType());
                     matchedProperties.add(propertyType);
                     found = true;
                     break;
@@ -321,7 +321,7 @@ public class Translator implements SyntaxVisitor {
             }
             properties.put(property.getName(), property);
         }
-        for (PropertyType propertyType : recordType.getProperties()) {
+        for (Property propertyType : recordType.getProperties()) {
             if (!matchedProperties.contains(propertyType)) {
                 throw new MissingPropertyException("Missing property: " + propertyType);
             }

@@ -21,6 +21,7 @@ import me.qmx.jitescript.VisibleAnnotation;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
+import snacks.lang.RecordType.Property;
 import snacks.lang.ast.*;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
@@ -274,14 +275,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
-    public void generatePropertyType(PropertyType type) {
-        CodeBlock block = block();
-        block.ldc(type.getName());
-        generate(type.getType());
-        block.invokestatic(p(Type.class), "property", sig(PropertyType.class, String.class, Type.class));
-    }
-
-    @Override
     public void generateGuardCase(GuardCase node) {
         CodeBlock block = block();
         LabelNode skipLabel = new LabelNode();
@@ -320,7 +313,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.newobj(className);
         block.dup();
         Map<String, PropertyInitializer> properties = node.getProperties();
-        List<PropertyType> parameters = node.getType().getProperties();
+        List<Property> parameters = node.getType().getProperties();
         Class<?>[] types = new Class<?>[parameters.size()];
         for (int i = 0; i < parameters.size(); i++) {
             types[i] = registry.classOf(parameters.get(i).getType().getName());
@@ -354,16 +347,18 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     public void generateRecordType(RecordType type) {
         CodeBlock block = block();
         block.ldc(type.getName());
-        List<PropertyType> parameters = type.getProperties();
+        List<Property> parameters = type.getProperties();
         block.ldc(parameters.size());
-        block.anewarray(p(PropertyType.class));
+        block.anewarray(p(Property.class));
         for (int i = 0; i < parameters.size(); i++) {
             block.dup();
             block.ldc(i);
-            generate(parameters.get(i));
+            block.ldc(parameters.get(i).getName());
+            generate(parameters.get(i).getType());
+            block.invokestatic(p(Type.class), "property", sig(Property.class, String.class, Type.class));
             block.aastore();
         }
-        block.invokestatic(p(Type.class), "record", sig(Type.class, String.class, PropertyType[].class));
+        block.invokestatic(p(Type.class), "record", sig(Type.class, String.class, Property[].class));
     }
 
     @Override
@@ -670,7 +665,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private Class<?> propertyType(DeclaredProperty property) {
-        return registry.classOf(property.getType().getType().getName());
+        return registry.classOf(property.getType().getName());
     }
 
     private ClassBuilder state() {

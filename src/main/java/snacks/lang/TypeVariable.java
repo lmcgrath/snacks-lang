@@ -42,7 +42,7 @@ public class TypeVariable extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopy(this, mappings);
+        return types.genericCopyOfTypeVariable(this, mappings);
     }
 
     @Override

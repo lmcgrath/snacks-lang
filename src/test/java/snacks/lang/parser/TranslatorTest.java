@@ -130,7 +130,7 @@ public class TranslatorTest {
 
     @Test(expected = TypeException.class)
     public void shouldNotApplyToDouble() {
-        translate("double = (x:Integer :: Integer -> x * 2) 2.2");
+        translate("double = (x:Integer -> x * 2) 2.2");
     }
 
     @Test
@@ -277,7 +277,7 @@ public class TranslatorTest {
     }
 
     @Test(expected = MissingPropertyException.class)
-    public void shouldRequireAllPropertiesOnRecord() throws Exception {
+    public void shouldRequireAllPropertiesOnRecord() {
         translate(
             "data BreakfastItem = BreakfastItem {",
             "    name: String,",
@@ -292,7 +292,7 @@ public class TranslatorTest {
     }
 
     @Test(expected = TypeException.class)
-    public void shouldRequirePropertyTypesToMatch() throws Exception {
+    public void shouldRequirePropertyTypesToMatch() {
         translate(
             "data BreakfastItem = BreakfastItem {",
             "    name: String,",
@@ -308,7 +308,7 @@ public class TranslatorTest {
     }
 
     @Test(expected = DuplicatePropertyException.class)
-    public void shouldNotAllowDuplicateProperties() throws Exception {
+    public void shouldNotAllowDuplicateProperties() {
         translate(
             "data BreakfastItem = BreakfastItem {",
             "    name: String,",

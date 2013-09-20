@@ -1,10 +1,15 @@
 package snacks.lang.parser;
 
-import static snacks.lang.Type.*;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.property;
+import static snacks.lang.Type.record;
+import static snacks.lang.Type.set;
+import static snacks.lang.Type.var;
 import static snacks.lang.ast.AstFactory.reference;
 
 import java.util.*;
 import snacks.lang.*;
+import snacks.lang.RecordType.Property;
 import snacks.lang.ast.*;
 
 public class SymbolEnvironment implements TypeFactory {
@@ -39,7 +44,7 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type genericCopy(TypeSet type, Map<Type, Type> mappings) {
+    public Type genericCopyOfTypeSet(TypeSet type, Map<Type, Type> mappings) {
         List<Type> types = new ArrayList<>();
         for (Type member : type.getMembers()) {
             types.add(genericCopy(member, mappings));
@@ -48,7 +53,7 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type genericCopy(TypeVariable type, Map<Type, Type> mappings) {
+    public Type genericCopyOfTypeVariable(TypeVariable type, Map<Type, Type> mappings) {
         if (isGeneric(type)) {
             if (!mappings.containsKey(type)) {
                 mappings.put(type, createVariable());
@@ -60,27 +65,22 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type genericCopy(RecordType type, Map<Type, Type> mappings) {
-        List<PropertyType> parameters = new ArrayList<>();
-        for (PropertyType parameter : type.getProperties()) {
-            parameters.add((PropertyType) genericCopy(parameter, mappings));
+    public Type genericCopyOfRecordType(RecordType type, Map<Type, Type> mappings) {
+        List<Property> properties = new ArrayList<>();
+        for (Property property : type.getProperties()) {
+            properties.add(property(property.getName(), genericCopy(property.getType(), mappings)));
         }
-        return record(type.getName(), parameters);
+        return record(type.getName(), properties);
     }
 
     @Override
-    public Type genericCopy(FunctionType type, Map<Type, Type> mappings) {
+    public Type genericCopyOfFunctionType(FunctionType type, Map<Type, Type> mappings) {
         return func(genericCopy(type.getArgument(), mappings), genericCopy(type.getResult(), mappings));
     }
 
     @Override
-    public Type genericCopy(SimpleType type, Map<Type, Type> mappings) {
+    public Type genericCopyOfSimpleType(SimpleType type, Map<Type, Type> mappings) {
         return type;
-    }
-
-    @Override
-    public Type genericCopy(PropertyType type, Map<Type, Type> mappings) {
-        return property(type.getName(), genericCopy(type.getType(), mappings));
     }
 
     public void generify(Type type) {
