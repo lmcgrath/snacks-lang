@@ -1,4 +1,4 @@
-package snacks.lang.compiler;
+package snacks.lang.runtime;
 
 import static org.mockito.Mockito.spy;
 

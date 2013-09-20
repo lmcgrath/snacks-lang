@@ -1,4 +1,4 @@
-package snacks.lang.compiler;
+package snacks.lang.runtime;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -14,16 +14,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import snacks.lang.*;
-import snacks.lang.runtime.SnacksClassLoader;
+import snacks.lang.compiler.*;
+import snacks.lang.compiler.Compiler;
 
-public class CompilerTest {
+public class RuntimeTest {
 
     @Rule
     public final OutResource out;
-    private Compiler compiler;
+    private snacks.lang.compiler.Compiler compiler;
     private SnacksClassLoader loader;
 
-    public CompilerTest() {
+    public RuntimeTest() {
         out = new OutResource();
     }
 
