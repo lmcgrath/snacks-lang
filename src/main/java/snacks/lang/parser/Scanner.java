@@ -151,6 +151,12 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 case QUOTED_IDENTIFIER:
                     action = scanQuotedIdentifier();
                     break;
+                case DATA_DECLARATION:
+                    action = scanDataDeclaration();
+                    break;
+                case TYPE_SIGNATURE:
+                    action = scanTypeSignature();
+                    break;
                 default:
                     throw new ParseException("Unhandled state: " + state());
             }
@@ -499,10 +505,11 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private Action scanColon() {
-        read();
+        require(':');
         if (peek() == ':') {
             read();
             detectNewlines();
+            enterState(State.TYPE_SIGNATURE);
             return accept(DOUBLE_COLON);
         } else if (isIdentifier(peek())) {
             while (isIdentifier(peek())) {
@@ -518,6 +525,60 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         } else {
             detectNewlines();
             return accept(COLON);
+        }
+    }
+
+    private Action scanDataDeclaration() {
+        switch (peek()) {
+            case '-':
+                read();
+                require('>');
+                detectNewlines();
+                return accept(APPLIES_TO);
+            case '(':
+                read();
+                detectNewlines();
+                return accept(LPAREN);
+            case ')':
+                read();
+                return accept(RPAREN);
+            case ',':
+                read();
+                detectNewlines();
+                return accept(COMMA);
+            case '=':
+                read();
+                detectNewlines();
+                return accept(ASSIGN);
+            case '{':
+                read();
+                detectNewlines();
+                return accept(LCURLY);
+            case '}':
+                read();
+                return accept(RCURLY);
+            case ':':
+                read();
+                return accept(COLON);
+            case '.':
+                read();
+                return accept(DOT);
+        }
+        if (isWhitespace(peek())) {
+            if (peek() == '\r' || peek() == '\n') {
+                read();
+                if (peek() == '\n') {
+                    read();
+                }
+                leaveState();
+                return accept(NEWLINE);
+            }
+            read();
+            return keepGoing();
+        } else if (isIdentifier(peek())) {
+            return scanIdentifier();
+        } else {
+            return error();
         }
     }
 
@@ -648,7 +709,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private Action scanDoubleQuote() {
-        read();
+        require('"');
         if (peek() == '"' && lookAhead(1) == '"') {
             read(2);
             if (peek() == '\n') {
@@ -713,12 +774,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         switch (peek()) {
             case ':':
                 read();
-                if (peek() == ':') {
-                    read();
-                    return accept(DOUBLE_COLON);
-                } else {
-                    return accept(COLON);
-                }
+                return accept(COLON);
             case ')':
                 read();
                 return accept(RPAREN);
@@ -854,6 +910,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             if (newlineWords.contains(text)) {
                 detectNewlines();
             }
+            if (dictionary.get(text) == DATA) {
+                enterState(State.DATA_DECLARATION);
+            }
             return accept(dictionary.get(text));
         }
         detectSuffix();
@@ -976,7 +1035,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private Action scanSingleQuote() {
-        read();
+        require('\'');
         if (peek() == '\'' && lookAhead(1) == '\'') {
             read(2);
             if (peek() == '\n') {
@@ -1025,6 +1084,46 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         } else {
             leaveState();
             return keepGoing();
+        }
+    }
+
+    private Action scanTypeSignature() {
+        switch (peek()) {
+            case '-':
+                read();
+                require('>');
+                detectNewlines();
+                return accept(APPLIES_TO);
+            case '(':
+                read();
+                detectNewlines();
+                return accept(LPAREN);
+            case ')':
+                read();
+                return accept(RPAREN);
+            case ',':
+                read();
+                detectNewlines();
+                return accept(COMMA);
+            case '.':
+                read();
+                return accept(DOT);
+        }
+        if (isWhitespace(peek())) {
+            if (peek() == '\r' || peek() == '\n') {
+                read();
+                if (peek() == '\n') {
+                    read();
+                }
+                leaveState();
+                return accept(NEWLINE);
+            }
+            read();
+            return keepGoing();
+        } else if (isIdentifier(peek())) {
+            return scanIdentifier();
+        } else {
+            return error();
         }
     }
 
@@ -1083,6 +1182,8 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         SKIP_NEWLINES,
         EMBRACE,
         QUOTED_IDENTIFIER,
+        DATA_DECLARATION,
+        TYPE_SIGNATURE,
     }
 
     private class LookAhead implements AutoCloseable {

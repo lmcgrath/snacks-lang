@@ -124,6 +124,11 @@ public class RecordType extends Type {
             return Objects.hash(name, type);
         }
 
+        @Override
+        public String toString() {
+            return "(" + name + ": " + type + ")";
+        }
+
         public boolean unify(Property property) {
             return Objects.equals(name, property.name) && type.unify(property.type);
         }
