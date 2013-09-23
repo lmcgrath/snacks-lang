@@ -16,12 +16,13 @@ import org.junit.Test;
 import snacks.lang.*;
 import snacks.lang.compiler.*;
 import snacks.lang.compiler.Compiler;
+import snacks.lang.parser.SymbolEnvironment;
 
 public class RuntimeTest {
 
     @Rule
     public final OutResource out;
-    private snacks.lang.compiler.Compiler compiler;
+    private Compiler compiler;
     private SnacksClassLoader loader;
 
     public RuntimeTest() {
@@ -425,7 +426,7 @@ public class RuntimeTest {
             "    end",
             "}"
         );
-        verifyOut("9 or bigger" );
+        verifyOut("9 or bigger");
     }
 
     @Test
@@ -667,9 +668,9 @@ public class RuntimeTest {
 
     private void run(String... inputs) {
         try {
-            for (SnackDefinition definition : compiler.compile(translate(inputs))) {
-                loader.defineSnack(definition);
+            for (SnackDefinition definition : compiler.compile(translate(new SymbolEnvironment(loader), inputs))) {
                 writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
+                loader.defineSnack(definition);
             }
             ((Invokable) loader.loadClass("test.Main").newInstance()).invoke();
         } catch (ReflectiveOperationException exception) {

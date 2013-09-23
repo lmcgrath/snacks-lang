@@ -5,7 +5,6 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static snacks.lang.JavaUtils.javaClass;
 import static snacks.lang.JavaUtils.javaGetter;
 import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
@@ -635,6 +634,14 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private boolean isVariable(String name) {
         return state().isVariable(name);
+    }
+
+    private String javaClass(String module, String name) {
+        return JavaUtils.javaClass(module, name).replace('.', '/');
+    }
+
+    private String javaClass(SnacksRegistry registry, String module, String name) {
+        return JavaUtils.javaClass(registry, module, name).replace('.', '/');
     }
 
     private JiteClass jiteClass() {

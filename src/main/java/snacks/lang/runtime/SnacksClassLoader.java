@@ -1,9 +1,6 @@
 package snacks.lang.runtime;
 
-import static java.lang.Class.forName;
-import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
-import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.JavaUtils.javaClass;
 
 import java.io.File;
@@ -15,7 +12,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -26,10 +25,6 @@ import snacks.lang.parser.Parser;
 import snacks.lang.parser.Scanner;
 import snacks.lang.parser.SymbolEnvironment;
 import snacks.lang.parser.Translator;
-import snacks.lang.Operator;
-import snacks.lang.OperatorRegistry;
-import snacks.lang.SnacksRegistry;
-import snacks.lang.Type;
 
 public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 
@@ -54,16 +49,14 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    @Override
-    public Class<?> defineSnack(SnackDefinition definition) {
+    Class<?> defineSnack(SnackDefinition definition) {
         return defineSnack(definition, SnacksClassLoader.class.getProtectionDomain());
     }
 
-    @Override
-    public Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
+    Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
         byte[] bytes = definition.getBytes();
         Class<?> clazz = super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
-        processClass(clazz);
+        processSnack(clazz);
         return clazz;
     }
 
@@ -101,13 +94,13 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         return files == null ? new File[0] : files;
     }
 
-    private void compileSnack(String packageName) {
+    private void resolveSnackSource(String module) {
         try {
-            URL url = getResource(packageName.replace('.', '/') + ".snack");
+            URL url = getResource(module.replace('.', '/') + ".snack");
             if (url != null) {
                 Scanner scanner = new Scanner(url.getFile(), url.openStream());
                 Parser parser = new Parser();
-                Translator translator = new Translator(new SymbolEnvironment(this), packageName);
+                Translator translator = new Translator(new SymbolEnvironment(this), module);
                 Compiler compiler = new Compiler(this);
                 for (SnackDefinition definition : compiler.compile(translator.translateModule(parser.parse(scanner)))) {
                     defineSnack(definition);
@@ -118,11 +111,11 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private void findClasses(File directory, String packageName) {
+    private void resolveClasses(File directory, String module) {
         if (directory.exists()) {
             for (File file : classFiles(directory)) {
                 try {
-                    processClass(forName(packageName + '.' + baseName(file)));
+                    processSnack(loadClass(module + '.' + baseName(file)));
                 } catch (ClassNotFoundException exception) {
                     // intentionally empty
                 }
@@ -130,7 +123,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private void findClasses(URL zipResource, String module) throws IOException {
+    private void resolveClasses(URL zipResource, String module) throws IOException {
         try (ZipInputStream zip = new ZipInputStream(zipResource.openStream(), UTF_8)) {
             ZipEntry entry;
             while (null != (entry = zip.getNextEntry())) {
@@ -141,7 +134,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
                         Matcher matcher = pattern.matcher(name);
                         if (matcher.find()) {
                             try {
-                                processClass(forName(matcher.group(1).replace('/', '.')));
+                                processSnack(loadClass(matcher.group(1).replace('/', '.')));
                             } catch (ClassNotFoundException exception) {
                                 // intentionally empty
                             }
@@ -154,34 +147,29 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private void findSnackClass(String qualifiedName) {
+    private void resolveSnackClass(String qualifiedName) {
         String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
         String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        Class<?> clazz = null;
         try {
-            clazz = forName(javaClass(module, name));
-            processSnack(clazz);
+            processSnack(loadClass(javaClass(module, name)));
         } catch (ClassNotFoundException exception) {
-            // intentionally empty
-        }
-        if (clazz == null) {
-            findSnackPackage(module);
+            resolveSnackPackage(module);
             if (!snacks.containsKey(qualifiedName)) {
-                compileSnack(module);
+                resolveSnackSource(module);
             }
         }
     }
 
-    private void findSnackPackage(String module) {
+    private void resolveSnackPackage(String module) {
         try {
             Enumeration<URL> resources = getResources(module.replace('.', '/'));
             while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
                 if (resource.getFile().contains("!")) {
                     String path = new File(resource.getFile()).getPath();
-                    findClasses(new URL(path.substring(0, path.indexOf('!'))), module);
+                    resolveClasses(new URL(path.substring(0, path.indexOf('!'))), module);
                 } else {
-                    findClasses(new File(resource.getFile()), module);
+                    resolveClasses(new File(resource.getFile()), module);
                 }
             }
         } catch (IOException exception) {
@@ -199,7 +187,6 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     }
 
     private SnackEntry getSnack(String qualifiedName) {
-        loadSnack(qualifiedName);
         if (hasSnack(qualifiedName)) {
             return snacks.get(qualifiedName);
         } else {
@@ -208,19 +195,10 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     }
 
     private boolean hasSnack(String qualifiedName) {
-        loadSnack(qualifiedName);
-        return snacks.containsKey(qualifiedName);
-    }
-
-    private Class<?> loadSnack(String qualifiedName) {
         if (!snacks.containsKey(qualifiedName)) {
-            findSnackClass(qualifiedName);
+            resolveSnackClass(qualifiedName);
         }
-        if (snacks.containsKey(qualifiedName)) {
-            return snacks.get(qualifiedName).getClazz();
-        } else {
-            return null;
-        }
+        return snacks.containsKey(qualifiedName);
     }
 
     private void processAnnotations(Class<?> snackClass, String name) {
@@ -235,38 +213,16 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private void processClass(Class<?> clazz) {
+    private void processSnack(Class<?> clazz) {
         Snack snack = clazz.getAnnotation(Snack.class);
         if (snack != null) {
-            List<String> segments = new ArrayList<>(asList(clazz.getName().split("\\.")));
-            segments.set(segments.size() - 1, snack.value());
-            String name = join(segments, '.');
-            if (!snacks.containsKey(name)) {
-                JavaType javaType = clazz.getAnnotation(JavaType.class);
-                Class<?> javaClazz = (javaType == null) ? clazz : javaType.value();
-                snacks.put(name, new SnackEntry(javaClazz, clazz, resolveType(clazz)));
-                Infix infix = clazz.getAnnotation(Infix.class);
-                if (infix != null) {
-                    operators.registerInfix(infix.precedence(), infix.fixity(), snack.value());
-                } else {
-                    Prefix prefix = clazz.getAnnotation(Prefix.class);
-                    if (prefix != null) {
-                        operators.registerPrefix(prefix.precedence(), snack.value());
-                    }
-                }
+            String module = clazz.getName().substring(0, clazz.getName().lastIndexOf('.'));
+            String qualifiedName = module + "." + snack.value();
+            if (!snacks.containsKey(qualifiedName)) {
+                Type type = resolveType(clazz);
+                processAnnotations(clazz, snack.value());
+                snacks.put(qualifiedName, new SnackEntry(getJavaClazz(clazz), type));
             }
-        }
-    }
-
-    private boolean processSnack(Class<?> clazz) {
-        Snack snack = clazz.getAnnotation(Snack.class);
-        if (snack != null) {
-            Type type = resolveType(clazz);
-            processAnnotations(clazz, snack.value());
-            snacks.put(clazz.getPackage().getName() + "." + snack.value(), new SnackEntry(getJavaClazz(clazz), clazz, type));
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -290,20 +246,21 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        Class<?> clazz = super.loadClass(name, resolve);
+        processSnack(clazz);
+        return clazz;
+    }
+
     private static final class SnackEntry {
 
         private final Type type;
         private final Class<?> javaClazz;
-        private final Class<?> clazz;
 
-        public SnackEntry(Class<?> javaClazz, Class<?> clazz, Type type) {
+        public SnackEntry(Class<?> javaClazz, Type type) {
             this.javaClazz = javaClazz;
-            this.clazz = clazz;
             this.type = type;
-        }
-
-        public Class<?> getClazz() {
-            return clazz;
         }
 
         public Class<?> getJavaClazz() {

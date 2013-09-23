@@ -37,12 +37,12 @@ public class JavaUtils {
         if (actualClass == null) {
             return javaClass(module, name);
         } else {
-            return actualClass.getName().replace('.', '/');
+            return actualClass.getName();
         }
     }
 
     public static String javaClass(String module, String name) {
-        return module.replace('.', '/') + '/' + capitalize(javaName(name));
+        return module + '.' + capitalize(javaName(name));
     }
 
     public static String javaGetter(String snacksName) {

@@ -6,9 +6,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Set;
 import beaver.Symbol;
-import snacks.lang.runtime.SnacksClassLoader;
-import snacks.lang.parser.Parser.AltGoals;
 import snacks.lang.ast.AstNode;
+import snacks.lang.parser.Parser.AltGoals;
 
 public final class CompilerUtil {
 
@@ -23,10 +22,6 @@ public final class CompilerUtil {
         return new Parser().parse(
             new Scanner("test", new ByteArrayInputStream(join(inputs, "\n").getBytes(Charset.forName("UTF-8"))))
         );
-    }
-
-    public static Set<AstNode> translate(String... inputs) {
-        return translate(new SymbolEnvironment(new SnacksClassLoader()), inputs);
     }
 
     public static Set<AstNode> translate(SymbolEnvironment environment, String... inputs) {
