@@ -179,7 +179,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateVar() {
-        translate("waffles = { var test = 2; return test; }()");
+        translate("waffles = { var test = 2; return test; } ()");
         assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
     }
 
@@ -205,7 +205,7 @@ public class TranslatorTest {
     public void mainShouldBeVoidToVoid() {
         translate(
             "speak = () -> say 'Woof'",
-            "main = () -> speak()"
+            "main = () -> speak ()"
         );
         assertThat(typeOf("main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
     }

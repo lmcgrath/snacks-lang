@@ -442,6 +442,11 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateUnitConstant(UnitConstant node) {
+        block().getstatic(p(Unit.class), "UNIT", ci(Unit.class));
+    }
+
+    @Override
     public void generateTypeSet(TypeSet type) {
         CodeBlock block = block();
         List<Type> members = new ArrayList<>(type.getMembers());
@@ -483,12 +488,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateVoidFunction(VoidFunction node) {
         defineFunctionInitializer();
-        CodeBlock block = beginBlock();
-        generate(node.getBody());
-        if (!block.returns()) {
-            block.areturn();
-        }
-        jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
+        generateInvoke(node.getBody());
     }
 
     @Override
@@ -624,12 +624,19 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private void generateInvoke(AstNode body) {
+        final JiteClass jiteClass = jiteClass();
         CodeBlock block = beginBlock();
         generate(body);
         if (!block.returns()) {
             block.areturn();
         }
-        jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
+        jiteClass.defineMethod("apply", ACC_PUBLIC, sig(Object.class, Unit.class), acceptBlock());
+        jiteClass.defineMethod("invoke", ACC_PUBLIC, sig(Object.class), new CodeBlock() {{
+            aload(0);
+            getstatic(p(Unit.class), "UNIT", ci(Unit.class));
+            invokevirtual(jiteClass.getClassName(), "apply", sig(Object.class, Unit.class));
+            areturn();
+        }});
     }
 
     private int getVariable(String name) {

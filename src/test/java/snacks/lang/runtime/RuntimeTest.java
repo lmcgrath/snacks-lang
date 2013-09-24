@@ -670,7 +670,7 @@ public class RuntimeTest {
     public void shouldReturnInvokableFromFunction() {
         run(
             "test = (x y) -> () -> x + y",
-            "main = () -> assert $ (test 1 2)() == 3"
+            "main = () -> assert $ test 1 2 () == 3"
         );
     }
 

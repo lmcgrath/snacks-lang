@@ -15,8 +15,8 @@
     AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL, IMPORT, RETURN, THEN,
     UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE,
     CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA,
-    RINTERPOLATE, LINDEX, LARG, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX,
-    PREFIX, QUOTED_IDENTIFIER
+    RINTERPOLATE, LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX,
+    QUOTED_IDENTIFIER, UNIT
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -53,7 +53,6 @@
 %typeof import_alias = "String";
 %typeof sub_import = "SubImport";
 %typeof suffix_typespec = "TypeSpec";
-%typeof opt_function_arguments = "Symbol[]";
 %typeof begin_case = "Symbol[]";
 %typeof qualified_identifier = "QualifiedIdentifier";
 %typeof qualified_fword = "QualifiedIdentifier";
@@ -103,7 +102,7 @@ type_signature
 
 primary_signature
     = qualified_identifier.id               {: return ftype(id); :}
-    | LPAREN RPAREN                         {: return type(qid("snacks", "lang", "Void")); :}
+    | UNIT                                  {: return type(qid("snacks", "lang", "Void")); :}
     | LPAREN secondary_signature.f RPAREN   {: return f; :}
     ;
 
@@ -189,7 +188,6 @@ message
 postfix_expression
     = primary_expression
     | postfix_expression.e DOT IDENTIFIER.id                {: return access(e, id); :}
-    | postfix_expression.e LARG RPAREN                      {: return invocation(e); :}
     | postfix_expression.e LINDEX message.a COMMA? RSQUARE  {:
                                                                 Symbol result = apply(id("[]"), e);
                                                                 for (Symbol arg : a) {
@@ -197,26 +195,6 @@ postfix_expression
                                                                 }
                                                                 return result;
                                                             :}
-    | postfix_expression.e LARG message.a RPAREN            {:
-                                                                Symbol result = e;
-                                                                for (Symbol arg : a) {
-                                                                    result = apply(result, arg);
-                                                                }
-                                                                return result;
-                                                            :}
-    | LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
-        {:
-            Symbol expression = e;
-            if (a == null) {
-                expression = invokable(expression);
-            } else {
-                for (int i = a.length - 1; i >= 1; i--) {
-                    expression = func(a[i], expression);
-                }
-                expression = func(a[0], expression, t);
-            }
-            return expression;
-        :}
     ;
 
 list
@@ -236,6 +214,7 @@ primary_expression
     | LPAREN expression.e RPAREN    {: return e; :}
     | QUOTE STRING.val QUOTE        {: return literal(val); :}
     | QUOTE QUOTE                   {: return literal(""); :}
+    | UNIT                          {: return unit(); :}
     | function_literal
     | map_literal
     | list_literal
@@ -299,7 +278,10 @@ sequence
     ;
 
 function_literal
-    = LFUNC function_arguments.a APPLIES_TO expression.e RPAREN
+    = UNIT APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM  {: return invokable(block(e)); :}
+    | UNIT APPLIES_TO expression.e                              {: return invokable(e); :}
+    | LFUNC APPLIES_TO expression.e RPAREN                      {: return invokable(e); :}
+    | LFUNC function_arguments.a APPLIES_TO expression.e RPAREN
         {:
             Symbol expression = e;
             for (int i = a.length - 1; i >= 1; i--) {
@@ -308,35 +290,30 @@ function_literal
             expression = func(a[0], expression);
             return expression;
         :}
-    | LFUNC APPLIES_TO expression.e RPAREN
-        {: return invokable(e); :}
     | LFUNC_MULTILINE function_arguments.a APPLIES_TO sequence.e term* RCURLY
         {:
             Symbol expression = block(e);
             for (int i = a.length - 1; i >= 1; i--) {
                 expression = func(a[i], expression);
             }
-            expression = func(a[0], expression);
-            return expression;
+            return func(a[0], expression);
         :}
-    | LFUNC opt_function_arguments.a RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
+    | LFUNC function_arguments.a RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
         {:
             Symbol expression = block(e);
-            if (a == null) {
-                expression = invokable(expression);
-            } else {
-                for (int i = a.length - 1; i >= 1; i--) {
-                    expression = func(a[i], expression);
-                }
-                expression = func(a[0], expression, t);
+            for (int i = a.length - 1; i >= 1; i--) {
+                expression = func(a[i], expression);
             }
-            return expression;
+            return func(a[0], expression, t);
         :}
-    ;
-
-opt_function_arguments
-    = function_arguments.a {: return new Symbol(a); :}
-    |
+    | LFUNC function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
+        {:
+            Symbol expression = e;
+            for (int i = a.length - 1; i >= 1; i--) {
+                expression = func(a[i], expression);
+            }
+            return func(a[0], expression, t);
+        :}
     ;
 
 conditional

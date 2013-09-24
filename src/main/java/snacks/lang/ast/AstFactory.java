@@ -173,6 +173,10 @@ public final class AstFactory {
         return new DeclaredArgument(name, type);
     }
 
+    public static AstNode unit() {
+        return UnitConstant.INSTANCE;
+    }
+
     private AstFactory() {
         // intentionally empty
     }

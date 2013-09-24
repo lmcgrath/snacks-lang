@@ -329,6 +329,10 @@ public final class SyntaxFactory {
         return apply(id(operator), operand);
     }
 
+    public static Symbol unit() {
+        return UnitLiteral.INSTANCE;
+    }
+
     public static Symbol use(String var, Symbol value) {
         return new Using(var, value);
     }

@@ -70,6 +70,8 @@ public interface Generator {
 
     void generateTupleInitializer(TupleInitializer node);
 
+    void generateUnitConstant(UnitConstant node);
+
     void generateVariableDeclaration(VariableDeclaration node);
 
     void generateVariableLocator(VariableLocator locator);

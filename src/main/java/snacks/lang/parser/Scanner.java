@@ -283,7 +283,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private void detectSuffix() {
-        if (peek() == '[' || peek() == '(') {
+        if (peek() == '[') {
             enterState(State.SUFFIX);
         }
     }
@@ -537,6 +537,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 return accept(APPLIES_TO);
             case '(':
                 read();
+                if (peek() == ')') {
+                    read();
+                    return accept(UNIT);
+                }
                 detectNewlines();
                 return accept(LPAREN);
             case ')':
@@ -623,6 +627,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 return accept(COMMA);
             case '(':
                 read();
+                if (peek() == ')') {
+                    read();
+                    return accept(UNIT);
+                }
                 return detectFunctionParen();
             case ')':
                 read();
@@ -1078,9 +1086,6 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         if (peek() == '[') {
             read();
             return accept(LINDEX);
-        } else if (peek() == '(') {
-            read();
-            return accept(LARG);
         } else {
             leaveState();
             return keepGoing();
@@ -1096,6 +1101,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 return accept(APPLIES_TO);
             case '(':
                 read();
+                if (peek() == ')') {
+                    read();
+                    return accept(UNIT);
+                }
                 detectNewlines();
                 return accept(LPAREN);
             case ')':

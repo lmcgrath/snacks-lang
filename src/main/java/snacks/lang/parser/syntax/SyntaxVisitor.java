@@ -104,6 +104,8 @@ public interface SyntaxVisitor {
 
     void visitTypeVariable(TypeVariable node);
 
+    void visitUnitLiteral(UnitLiteral node);
+
     void visitUsing(Using node);
 
     void visitVar(Var node);

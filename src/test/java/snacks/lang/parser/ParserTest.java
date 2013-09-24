@@ -27,12 +27,6 @@ public class ParserTest {
     }
 
     @Test
-    public void shouldParseEmptyTuple() {
-        assertThat(expression("()"), equalTo(tuple()));
-        assertThat(expression("(,)"), equalTo(tuple()));
-    }
-
-    @Test
     public void shouldParseList() {
         assertThat(expression("[a]"), equalTo(list(id("a"))));
         assertThat(expression("[a, b,]"), equalTo(list(id("a"), id("b"))));
@@ -91,11 +85,6 @@ public class ParserTest {
     @Test
     public void shouldParseMultipleArgumentsExpression() {
         assertThat(expression("fruits 1 2 3"), equalTo(msg(id("fruits"), literal(1), literal(2), literal(3))));
-    }
-
-    @Test
-    public void shouldParseParenthesizedArgumentsExpression() {
-        assertThat(expression("fruits(1 2 3)"), equalTo(apply(apply(apply(id("fruits"), literal(1)), literal(2)), literal(3))));
     }
 
     @Test
@@ -282,11 +271,6 @@ public class ParserTest {
         assertThat(parse("test = a b c"), equalTo(module(
             def("test", msg(id("a"), id("b"), id("c")))
         )));
-    }
-
-    @Test
-    public void shouldParseFunctionCalledWithZeroArgs() {
-        assertThat(expression("test()"), equalTo(invocation(id("test"))));
     }
 
     @Test

@@ -183,13 +183,6 @@ public class ScannerTest {
     }
 
     @Test
-    public void shouldGetLArg() {
-        Scanner scanner = scan("bananas(");
-        scanner.nextToken();
-        assertThat(scanner.nextToken(), hasKind(LARG));
-    }
-
-    @Test
     public void shouldGetComma() {
         assertThat(scan(", bananas").nextToken(), hasKind(COMMA));
     }

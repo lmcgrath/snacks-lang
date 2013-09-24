@@ -4,7 +4,12 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Type.*;
+import static snacks.lang.Type.func;
+import static snacks.lang.Type.tuple;
 import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.tuple;
+import static snacks.lang.ast.AstFactory.var;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 
@@ -539,6 +544,11 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitTypeVariable(TypeVariable node) {
         type = environment().createVariable();
+    }
+
+    @Override
+    public void visitUnitLiteral(UnitLiteral node) {
+        result = unit();
     }
 
     @Override

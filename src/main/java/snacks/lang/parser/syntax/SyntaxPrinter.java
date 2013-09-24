@@ -340,6 +340,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitUnitLiteral(UnitLiteral node) {
+        print("unit: ()");
+    }
+
+    @Override
     public void visitUsing(Using node) {
         if (node.getName() != null) {
             print("name: " + node.getName());
