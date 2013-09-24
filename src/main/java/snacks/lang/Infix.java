@@ -16,4 +16,6 @@ public @interface Infix {
     Fixity fixity() default NONE;
 
     int precedence();
+
+    boolean shortCircuit() default false;
 }

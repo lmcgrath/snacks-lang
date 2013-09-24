@@ -99,9 +99,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateClosure(Closure node) {
-        state().setFields(node.getEnvironment());
-        defineClosureFields(node);
-        defineClosureConstructor(node);
+        defineClosureFields(node.getEnvironment());
+        defineClosureConstructor(node.getEnvironment());
+        generateInvoke(node.getBody());
+    }
+
+    @Override
+    public void generateFunctionClosure(FunctionClosure node) {
+        defineClosureFields(node.getEnvironment());
+        defineClosureConstructor(node.getEnvironment());
         generateApply(node.getBody());
     }
 
@@ -542,26 +548,27 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return state().currentLoop();
     }
 
-    private void defineClosureConstructor(Closure closure) {
-        String signature = sig(params(void.class, Object.class, closure.getEnvironment().size()));
+    private void defineClosureFields(List<String> environment) {
+        state().setFields(environment);
+        JiteClass jiteClass = jiteClass();
+        for (String field : environment) {
+            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
+        }
+    }
+
+    private void defineClosureConstructor(List<String> environment) {
+        String signature = sig(params(void.class, Object.class, environment.size()));
         CodeBlock block = beginBlock();
         block.aload(0);
         block.invokespecial(p(Object.class), "<init>", sig(void.class));
         int i = 1;
-        for (String field : closure.getEnvironment()) {
+        for (String field : environment) {
             block.aload(0);
             block.aload(i++);
             block.putfield(jiteClass().getClassName(), field, ci(Object.class));
         }
         block.voidreturn();
         jiteClass().defineMethod("<init>", ACC_PUBLIC, signature, acceptBlock());
-    }
-
-    private void defineClosureFields(Closure closure) {
-        JiteClass jiteClass = jiteClass();
-        for (String field : closure.getEnvironment()) {
-            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
-        }
     }
 
     private void defineFunctionInitializer() {
@@ -614,6 +621,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             block.areturn();
         }
         jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
+    }
+
+    private void generateInvoke(AstNode body) {
+        CodeBlock block = beginBlock();
+        generate(body);
+        if (!block.returns()) {
+            block.areturn();
+        }
+        jiteClass().defineMethod("invoke", ACC_PUBLIC, sig(Object.class), acceptBlock());
     }
 
     private int getVariable(String name) {

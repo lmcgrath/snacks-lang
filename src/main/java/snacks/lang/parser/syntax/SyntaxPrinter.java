@@ -176,7 +176,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
 
     @Override
     public void visitInvokableLiteral(InvokableLiteral node) {
-        value(node.getExpression());
+        value(node.getBody());
     }
 
     @Override

@@ -52,6 +52,11 @@ public class AstPrinter {
 
     public void printClosure(Closure node) {
         print("type: " + node.getType());
+        print(node.getBody());
+    }
+
+    public void printFunctionClosure(FunctionClosure node) {
+        print("type: " + node.getType());
         print("variable: " + node.getVariable());
         print(node.getBody());
     }

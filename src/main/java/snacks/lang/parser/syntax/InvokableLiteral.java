@@ -5,10 +5,10 @@ import beaver.Symbol;
 
 public class InvokableLiteral extends VisitableSymbol {
 
-    private final Symbol expression;
+    private final Symbol body;
 
-    public InvokableLiteral(Symbol expression) {
-        this.expression = expression;
+    public InvokableLiteral(Symbol body) {
+        this.body = body;
     }
 
     @Override
@@ -18,20 +18,20 @@ public class InvokableLiteral extends VisitableSymbol {
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof InvokableLiteral && Objects.equals(expression, ((InvokableLiteral) o).expression);
+        return o == this || o instanceof InvokableLiteral && Objects.equals(body, ((InvokableLiteral) o).body);
     }
 
-    public Symbol getExpression() {
-        return expression;
+    public Symbol getBody() {
+        return body;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression);
+        return Objects.hash(body);
     }
 
     @Override
     public String toString() {
-        return "(-> " + expression.toString() + ")";
+        return "(-> " + body.toString() + ")";
     }
 }

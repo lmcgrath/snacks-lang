@@ -204,7 +204,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     private void processAnnotations(Class<?> snackClass, String name) {
         Infix infix = snackClass.getAnnotation(Infix.class);
         if (infix != null) {
-            operators.registerInfix(infix.precedence(), infix.fixity(), name);
+            operators.registerInfix(infix.precedence(), infix.fixity(), infix.shortCircuit(), name);
         } else {
             Prefix prefix = snackClass.getAnnotation(Prefix.class);
             if (prefix != null) {

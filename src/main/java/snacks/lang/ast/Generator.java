@@ -18,6 +18,8 @@ public interface Generator {
 
     void generateClosure(Closure node);
 
+    void generateFunctionClosure(FunctionClosure node);
+
     void generateClosureLocator(ClosureLocator locator);
 
     void generateContinue(Continue node);

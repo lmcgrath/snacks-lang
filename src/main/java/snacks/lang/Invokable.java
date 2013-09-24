@@ -1,6 +1,6 @@
 package snacks.lang;
 
-public interface Invokable {
+public interface Invokable<T> {
 
-    Object invoke();
+    T invoke();
 }

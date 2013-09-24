@@ -666,6 +666,11 @@ public class RuntimeTest {
         );
     }
 
+    @Test
+    public void shouldUseAndAsFunction() {
+        run("main = () -> assert $ not (`and` True False)");
+    }
+
     private void run(String... inputs) {
         try {
             for (SnackDefinition definition : compiler.compile(translate(new SymbolEnvironment(loader), inputs))) {

@@ -342,12 +342,26 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitInvokableLiteral(InvokableLiteral node) {
         beginFunction();
-        AstNode invokable = invokable(translate(node.getExpression()));
-        leaveFunction();
-        if (resultOf(invokable.getType()).decompose().isEmpty()) {
-            throw new TypeException("Could not determine type of invokable");
+        enterScope();
+        String name = generateName();
+        AstNode body = translate(node.getBody());
+        leaveScope();
+        Type functionType = func(VOID_TYPE, body.getType());
+        if (functionLevel > 1) {
+            leaveFunction();
+            Locator locator = names.get(node);
+            if (locator == null) {
+                Collection<String> environment = environment().getVariables();
+                register(name, functionType);
+                declarations.add(declaration(module, name, invokable(body)));
+                locator = new ClosureLocator(module, name, environment);
+                names.put(node, locator);
+            }
+            register(locator.getName(), functionType);
+            result = new Reference(locator, functionType);
+        } else {
+            result = invokable(body);
         }
-        result = invokable;
     }
 
     @Override
@@ -659,6 +673,10 @@ public class Translator implements SyntaxVisitor {
                 } else {
                     Symbol right = stack.pop();
                     Symbol left = stack.pop();
+                    if (getOperator(op).isShortCircuit()) {
+                        right = new InvokableLiteral(right);
+                        left = new InvokableLiteral(left);
+                    }
                     stack.push(new ApplyExpression(new ApplyExpression(op, left), right));
                 }
             } else {
@@ -740,7 +758,6 @@ public class Translator implements SyntaxVisitor {
         beginFunction();
         enterScope();
         DeclaredArgument argument = (DeclaredArgument) translate(node.getArgument());
-        String name = generateName();
         AstNode body = translate(node.getBody());
         leaveScope();
         Type functionType = inferenceFunctionType(node, argument);
@@ -748,6 +765,7 @@ public class Translator implements SyntaxVisitor {
             leaveFunction();
             Locator locator = names.get(node);
             if (locator == null) {
+                String name = generateName();
                 Collection<String> environment = environment().getVariables();
                 register(name, functionType);
                 declarations.add(declaration(module, name, closure(argument.getName(), environment, body, functionType)));

@@ -1,8 +1,5 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.VOID_TYPE;
-import static snacks.lang.Type.func;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,30 +7,36 @@ import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Type;
 
-public class Closure extends AstNode {
+public class FunctionClosure extends AstNode {
 
+    private final String variable;
     private final List<String> environment;
     private final AstNode body;
+    private final Type type;
 
-    public Closure(Collection<String> environment, AstNode body) {
+    public FunctionClosure(String variable, Collection<String> environment, AstNode body, Type type) {
+        this.variable = variable;
         this.environment = new ArrayList<>(environment);
         this.body = body;
+        this.type = type;
     }
 
     @Override
     public void print(AstPrinter printer) {
-        printer.printClosure(this);
+        printer.printFunctionClosure(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o instanceof Closure) {
-            Closure other = (Closure) o;
+        } else if (o instanceof FunctionClosure) {
+            FunctionClosure other = (FunctionClosure) o;
             return new EqualsBuilder()
+                .append(variable, other.variable)
                 .append(environment, other.environment)
                 .append(body, other.body)
+                .append(type, other.type)
                 .isEquals();
         } else {
             return false;
@@ -50,12 +53,12 @@ public class Closure extends AstNode {
 
     @Override
     public void generate(Generator generator) {
-        generator.generateClosure(this);
+        generator.generateFunctionClosure(this);
     }
 
     @Override
     public Type getType() {
-        return func(VOID_TYPE, body.getType());
+        return type;
     }
 
     @Override
@@ -63,13 +66,17 @@ public class Closure extends AstNode {
         return true;
     }
 
+    public String getVariable() {
+        return variable;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(body);
+        return Objects.hash(variable, body, type);
     }
 
     @Override
     public String toString() {
-        return "(-> " + body + ")";
+        return "(" + variable + " -> " + body + ")";
     }
 }

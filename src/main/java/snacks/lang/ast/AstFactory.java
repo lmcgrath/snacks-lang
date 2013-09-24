@@ -26,7 +26,7 @@ public final class AstFactory {
     }
 
     public static AstNode closure(String variable, Collection<String> environment, AstNode expression, Type type) {
-        return new Closure(variable, environment, expression, type);
+        return new FunctionClosure(variable, environment, expression, type);
     }
 
     public static AstNode constant(boolean value) {
