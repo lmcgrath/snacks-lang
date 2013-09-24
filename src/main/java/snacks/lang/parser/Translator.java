@@ -203,6 +203,10 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitDeclaration(Declaration node) {
+        functionLevel = 0;
+        if (node.getBody() instanceof InvokableLiteral) {
+            functionLevel++; // TODO hack
+        }
         typeErrors.clear();
         reserveName(node.getName());
         AstNode body = translate(node.getBody());
@@ -343,17 +347,20 @@ public class Translator implements SyntaxVisitor {
     public void visitInvokableLiteral(InvokableLiteral node) {
         beginFunction();
         enterScope();
-        String name = generateName();
         AstNode body = translate(node.getBody());
-        leaveScope();
+        if (body.getType().decompose().isEmpty()) {
+            throw new TypeException("Unable to determine type of invokable");
+        }
         Type functionType = func(VOID_TYPE, body.getType());
+        leaveScope();
+        leaveFunction();
         if (functionLevel > 1) {
-            leaveFunction();
             Locator locator = names.get(node);
             if (locator == null) {
+                String name = generateName();
                 Collection<String> environment = environment().getVariables();
                 register(name, functionType);
-                declarations.add(declaration(module, name, invokable(body)));
+                declarations.add(declaration(module, name, closure(environment, body)));
                 locator = new ClosureLocator(module, name, environment);
                 names.put(node, locator);
             }

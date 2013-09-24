@@ -667,6 +667,14 @@ public class RuntimeTest {
     }
 
     @Test
+    public void shouldReturnInvokableFromFunction() {
+        run(
+            "test = (x y) -> () -> x + y",
+            "main = () -> assert $ (test 1 2)() == 3"
+        );
+    }
+
+    @Test
     public void shouldUseAndAsFunction() {
         run("main = () -> assert $ not (`and` True False)");
     }
