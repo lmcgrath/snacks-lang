@@ -335,6 +335,43 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateLogicalAnd(LogicalAnd node) {
+        CodeBlock block = block();
+        LabelNode skipLabel = new LabelNode();
+        LabelNode endLabel = new LabelNode();
+        generate(node.getLeft());
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.if_acmpne(skipLabel);
+        generate(node.getRight());
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.if_acmpne(skipLabel);
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.go_to(endLabel);
+        block.label(skipLabel);
+        block.getstatic(p(Boolean.class), "FALSE", ci(Boolean.class));
+        block.label(endLabel);
+    }
+
+    @Override
+    public void generateLogicalOr(LogicalOr node) {
+        CodeBlock block = block();
+        LabelNode skipLabel = new LabelNode();
+        LabelNode endLabel = new LabelNode();
+        generate(node.getLeft());
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.if_acmpeq(skipLabel);
+        generate(node.getRight());
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.if_acmpeq(skipLabel);
+        block.getstatic(p(Boolean.class), "FALSE", ci(Boolean.class));
+        block.go_to(endLabel);
+        block.label(skipLabel);
+        block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
+        block.label(endLabel);
+
+    }
+
+    @Override
     public void generateLoop(Loop node) {
         LoopScope loop = enterLoop();
         generate(node.getCondition());

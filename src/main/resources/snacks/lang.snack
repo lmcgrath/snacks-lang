@@ -1,3 +1,7 @@
 $ :: (a -> b) -> a -> b
 $ infix right 1
 $ = (a b) -> a b
+
+! :: Boolean -> Boolean
+! affix right 5
+! = (b) -> not b

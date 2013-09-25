@@ -119,7 +119,7 @@ public class SymbolEnvironment implements TypeFactory {
         if (registry.isOperator(name)) {
             throw new UndefinedSymbolException("Cannot redefine operator precedence for `" + name + "`");
         } else {
-            operators.registerInfix(precedence, fixity, false, name);
+            operators.registerInfix(precedence, fixity, name);
         }
     }
 

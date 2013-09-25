@@ -52,6 +52,10 @@ public interface Generator {
 
     void generateIntegerConstant(IntegerConstant node);
 
+    void generateLogicalAnd(LogicalAnd node);
+
+    void generateLogicalOr(LogicalOr node);
+
     void generateLoop(Loop node);
 
     void generateNop(Nop nop);

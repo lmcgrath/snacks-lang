@@ -679,6 +679,48 @@ public class RuntimeTest {
         run("main = () -> assert $ not (`and` True False)");
     }
 
+    @Test
+    public void shouldShortCircuitLogicalAnd() {
+        run(
+            "speakTruth = (message) -> { say message; True }",
+            "speakLies = (message) -> { say message; False }",
+            "main = () -> assert $ !(speakLies 'waffles' and speakTruth 'toast')"
+        );
+        verifyOut("waffles");
+        verifyNever("toast");
+    }
+
+    @Test
+    public void shouldShortCircuitLogicalOr() {
+        run(
+            "speakTruth = (message) -> { say message; True }",
+            "main = () -> assert $ speakTruth 'waffles' or speakTruth 'toast'"
+        );
+        verifyOut("waffles");
+        verifyNever("toast");
+    }
+
+    @Test
+    public void shouldExecuteBothSidesOfLogicalAnd_whenLeftSideIsTrue() {
+        run(
+            "speakTruth = (message) -> { say message; True }",
+            "main = () -> assert $ speakTruth 'waffles' and speakTruth 'toast'"
+        );
+        verifyOut("waffles");
+        verifyOut("toast");
+    }
+
+    @Test
+    public void shouldExecuteBothSidesOfLogicalOr_whenLeftSideIsFalse() {
+        run(
+            "speakTruth = (message) -> { say message; True }",
+            "speakLies = (message) -> { say message; False }",
+            "main = () -> assert $ speakLies 'waffles' or speakTruth 'toast'"
+        );
+        verifyOut("waffles");
+        verifyOut("toast");
+    }
+
     private void run(String... inputs) {
         try {
             for (SnackDefinition definition : compiler.compile(translate(new SymbolEnvironment(loader), inputs))) {

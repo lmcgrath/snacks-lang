@@ -34,6 +34,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitAndExpression(AndExpression node) {
+        print(node.getLeft());
+        print(node.getRight());
+    }
+
+    @Override
     public void visitApplyExpression(ApplyExpression node) {
         print(node.getExpression());
         print(node.getArgument());
@@ -237,6 +243,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
         print("name: `" + operator.getName() + "`");
         print("fixity: " + operator.getFixity());
         print("precedence: " + operator.getPrecedence());
+    }
+
+    @Override
+    public void visitOrExpression(OrExpression node) {
+        print(node.getLeft());
+        print(node.getRight());
     }
 
     @Override

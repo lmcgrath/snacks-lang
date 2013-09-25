@@ -134,6 +134,19 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitAndExpression(AndExpression node) {
+        AstNode left = translate(node.getLeft());
+        AstNode right = translate(node.getRight());
+        if (!left.getType().unify(BOOLEAN_TYPE)) {
+            throw new TypeException("Left-hand side of LOGICAL AND is not a boolean: got " + left.getType());
+        } else if (!right.getType().unify(BOOLEAN_TYPE)) {
+            throw new TypeException("Right-hand side of LOGICAL AND is not a boolean: got " + right.getType());
+        } else {
+            result = new LogicalAnd(left, right);
+        }
+    }
+
+    @Override
     public void visitApplyExpression(ApplyExpression node) {
         AstNode function = translate(node.getExpression());
         AstNode argument = translate(node.getArgument());
@@ -432,6 +445,19 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitOrExpression(OrExpression node) {
+        AstNode left = translate(node.getLeft());
+        AstNode right = translate(node.getRight());
+        if (!left.getType().unify(BOOLEAN_TYPE)) {
+            throw new TypeException("Left-hand side of LOGICAL OR is not a boolean: got " + left.getType());
+        } else if (!right.getType().unify(BOOLEAN_TYPE)) {
+            throw new TypeException("Right-hand side of LOGICAL OR is not a boolean: got " + right.getType());
+        } else {
+            result = new LogicalOr(left, right);
+        }
+    }
+
+    @Override
     public void visitPropertyDeclaration(PropertyDeclaration node) {
         result = propDef(node.getName(), translateType(node.getType()));
     }
@@ -690,11 +716,13 @@ public class Translator implements SyntaxVisitor {
                 } else {
                     Symbol right = stack.pop();
                     Symbol left = stack.pop();
-                    if (getOperator(op).isShortCircuit()) {
-                        right = new InvokableLiteral(right);
-                        left = new InvokableLiteral(left);
+                    Symbol symbol;
+                    switch (getOperator(op).getName()) {
+                        case "and": symbol = new AndExpression(left, right); break;
+                        case "or": symbol = new OrExpression(left, right); break;
+                        default: symbol = new ApplyExpression(new ApplyExpression(op, left), right);
                     }
-                    stack.push(new ApplyExpression(new ApplyExpression(op, left), right));
+                    stack.push(symbol);
                 }
             } else {
                 stack.push(op);

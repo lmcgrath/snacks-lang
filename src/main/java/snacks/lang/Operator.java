@@ -10,14 +10,12 @@ public class Operator {
     private final Fixity fixity;
     private final int precedence;
     private final int arity;
-    private final boolean shortCircuit;
     private final String name;
 
-    public Operator(Fixity fixity, int precedence, int arity, boolean shortCircuit, String name) {
+    public Operator(Fixity fixity, int precedence, int arity, String name) {
         this.fixity = fixity;
         this.precedence = precedence;
         this.arity = arity;
-        this.shortCircuit = shortCircuit;
         this.name = name;
     }
 
@@ -31,7 +29,6 @@ public class Operator {
                 .append(fixity, other.fixity)
                 .append(precedence, other.precedence)
                 .append(arity, other.arity)
-                .append(shortCircuit, other.shortCircuit)
                 .append(name, other.name)
                 .isEquals();
         } else {
@@ -60,12 +57,8 @@ public class Operator {
         return arity == 1 && fixity == RIGHT;
     }
 
-    public boolean isShortCircuit() {
-        return shortCircuit;
-    }
-
     public Operator toPrefix(String name) {
-        return new Operator(RIGHT, precedence, 1, false, name);
+        return new Operator(RIGHT, precedence, 1, name);
     }
 
     @Override

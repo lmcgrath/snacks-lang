@@ -12,9 +12,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.security.ProtectionDomain;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -31,6 +29,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
     private final Map<String, SnackEntry> snacks = new HashMap<>();
     private final OperatorRegistry operators = new OperatorRegistry();
+    private final Set<URL> sourceFiles = new HashSet<>();
 
     public SnacksClassLoader() {
         super(new URL[0]);
@@ -97,7 +96,8 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     private void resolveSnackSource(String module) {
         try {
             URL url = getResource(module.replace('.', '/') + ".snack");
-            if (url != null) {
+            if (url != null && !sourceFiles.contains(url)) {
+                sourceFiles.add(url);
                 Scanner scanner = new Scanner(url.getFile(), url.openStream());
                 Parser parser = new Parser();
                 Translator translator = new Translator(new SymbolEnvironment(this), module);
@@ -204,7 +204,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     private void processAnnotations(Class<?> snackClass, String name) {
         Infix infix = snackClass.getAnnotation(Infix.class);
         if (infix != null) {
-            operators.registerInfix(infix.precedence(), infix.fixity(), infix.shortCircuit(), name);
+            operators.registerInfix(infix.precedence(), infix.fixity(), name);
         } else {
             Prefix prefix = snackClass.getAnnotation(Prefix.class);
             if (prefix != null) {

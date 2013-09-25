@@ -4,6 +4,8 @@ public interface SyntaxVisitor {
 
     void visitAccessExpression(AccessExpression node);
 
+    void visitAndExpression(AndExpression node);
+
     void visitApplyExpression(ApplyExpression node);
 
     void visitArgument(Argument node);
@@ -69,6 +71,8 @@ public interface SyntaxVisitor {
     void visitNopExpression(NopExpression node);
 
     void visitOperatorDeclaration(OperatorDeclaration node);
+
+    void visitOrExpression(OrExpression node);
 
     void visitPropertyDeclaration(PropertyDeclaration node);
 

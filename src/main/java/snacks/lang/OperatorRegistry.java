@@ -25,11 +25,11 @@ public class OperatorRegistry {
     }
 
     public void registerPrefix(int precedence, String name) {
-        operators.put(name, new OpEntry(Fixity.RIGHT, precedence, 1, false));
+        operators.put(name, new OpEntry(Fixity.RIGHT, precedence, 1));
     }
 
-    public void registerInfix(int precedence, Fixity fixity, boolean shortCircuit, String name) {
-        operators.put(name, new OpEntry(fixity, precedence, 2, shortCircuit));
+    public void registerInfix(int precedence, Fixity fixity, String name) {
+        operators.put(name, new OpEntry(fixity, precedence, 2));
     }
 
     private static final class OpEntry {
@@ -37,17 +37,15 @@ public class OperatorRegistry {
         private final Fixity fixity;
         private final int precedence;
         private final int arity;
-        private final boolean shortCircuit;
 
-        public OpEntry(Fixity fixity, int precedence, int arity, boolean shortCircuit) {
+        public OpEntry(Fixity fixity, int precedence, int arity) {
             this.fixity = fixity;
             this.precedence = precedence;
             this.arity = arity;
-            this.shortCircuit = shortCircuit;
         }
 
         public Operator toOperator(String name) {
-            return new Operator(fixity, precedence, arity, shortCircuit, name);
+            return new Operator(fixity, precedence, arity, name);
         }
     }
 }
