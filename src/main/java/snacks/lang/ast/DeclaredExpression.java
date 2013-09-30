@@ -1,11 +1,14 @@
 package snacks.lang.ast;
 
+import static snacks.lang.SnackKind.EXPRESSION;
+
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Type;
+import snacks.lang.SnackKind;
+import snacks.lang.type.Type;
 import snacks.lang.Operator;
 
-public class DeclaredExpression extends AstNode {
+public class DeclaredExpression extends NamedNode {
 
     private final String module;
     private final String name;
@@ -45,10 +48,17 @@ public class DeclaredExpression extends AstNode {
         return body;
     }
 
+    @Override
+    public SnackKind getKind() {
+        return EXPRESSION;
+    }
+
+    @Override
     public String getModule() {
         return module;
     }
 
+    @Override
     public String getName() {
         return name;
     }

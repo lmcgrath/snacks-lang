@@ -93,12 +93,20 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConstructorExpression(ConstructorExpression node) {
+        print(node.getConstructor());
+        for (Symbol argument : node.getArguments()) {
+            print(argument);
+        }
+    }
+
+    @Override
     public void visitContinueExpression(ContinueExpression node) {
         // intentionally empty
     }
 
     @Override
-    public void visitDeclaration(Declaration node) {
+    public void visitExpressionDeclaration(ExpressionDeclaration node) {
         print("name: " + node.getName());
         print(node.getBody());
     }
@@ -173,11 +181,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitIntegerLiteral(IntegerLiteral node) {
         value(node.getValue());
-    }
-
-    @Override
-    public void visitInvocation(Invocation node) {
-        print(node.getExpression());
     }
 
     @Override
@@ -338,12 +341,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitTypeDeclaration(TypeDeclaration node) {
         print("name: " + node.getName());
-        print(node.getDefinition());
+        print(node.getVariants());
     }
 
     @Override
     public void visitTypeSpec(TypeSpec node) {
-        print(node.getType());
+        print(node.getName());
     }
 
     @Override

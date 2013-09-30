@@ -1,8 +1,8 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.VOID_TYPE;
+import static snacks.lang.type.Types.VOID_TYPE;
 
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class UnitConstant extends AstNode {
 

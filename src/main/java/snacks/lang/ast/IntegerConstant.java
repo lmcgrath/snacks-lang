@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.type.Types.INTEGER_TYPE;
 
 import java.util.Objects;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class IntegerConstant extends AstNode {
 

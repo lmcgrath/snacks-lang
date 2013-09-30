@@ -1,15 +1,12 @@
 package snacks.lang.parser;
 
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.property;
-import static snacks.lang.Type.record;
-import static snacks.lang.Type.set;
-import static snacks.lang.Type.var;
 import static snacks.lang.ast.AstFactory.reference;
+import static snacks.lang.type.Types.*;
 
 import java.util.*;
 import snacks.lang.*;
-import snacks.lang.RecordType.Property;
+import snacks.lang.type.*;
+import snacks.lang.type.RecordType.Property;
 import snacks.lang.ast.*;
 
 public class SymbolEnvironment implements TypeFactory {
@@ -31,29 +28,53 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type createVariable() {
-        return scope.createVariable();
-    }
-
-    public void define(Reference reference) {
-        scope.define(reference);
-    }
-
-    public SymbolEnvironment extend() {
-        return new SymbolEnvironment(this);
+    public Type copyAlgebraicType(AlgebraicType type, Map<Type, Type> mappings) {
+        List<Type> copiedTypes = new ArrayList<>();
+        for (Type t : type.getTypes()) {
+            copiedTypes.add(genericCopy(t, mappings));
+        }
+        return algebraic(type.getName(), copiedTypes);
     }
 
     @Override
-    public Type genericCopyOfTypeSet(TypeSet type, Map<Type, Type> mappings) {
+    public Type copyFunctionType(FunctionType type, Map<Type, Type> mappings) {
+        return func(genericCopy(type.getArgument(), mappings), genericCopy(type.getResult(), mappings));
+    }
+
+    @Override
+    public Type copyParameterizedType(ParameterizedType type, Map<Type, Type> mappings) {
+        List<Type> parameters = new ArrayList<>();
+        for (Type parameter : type.getParameters()) {
+            parameters.add(genericCopy(parameter, mappings));
+        }
+        return parameterized(genericCopy(type, mappings), parameters);
+    }
+
+    @Override
+    public Type copyRecordType(RecordType type, Map<Type, Type> mappings) {
+        List<Property> properties = new ArrayList<>();
+        for (Property property : type.getProperties()) {
+            properties.add(property(property.getName(), genericCopy(property.getType(), mappings)));
+        }
+        return record(type.getName(), properties);
+    }
+
+    @Override
+    public Type copySimpleType(SimpleType type, Map<Type, Type> mappings) {
+        return type;
+    }
+
+    @Override
+    public Type copyUnionType(UnionType type, Map<Type, Type> mappings) {
         List<Type> types = new ArrayList<>();
-        for (Type member : type.getMembers()) {
+        for (Type member : type.getTypes()) {
             types.add(genericCopy(member, mappings));
         }
-        return set(types);
+        return union(types);
     }
 
     @Override
-    public Type genericCopyOfTypeVariable(TypeVariable type, Map<Type, Type> mappings) {
+    public Type copyVariableType(VariableType type, Map<Type, Type> mappings) {
         if (isGeneric(type)) {
             if (!mappings.containsKey(type)) {
                 mappings.put(type, createVariable());
@@ -65,22 +86,16 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type genericCopyOfRecordType(RecordType type, Map<Type, Type> mappings) {
-        List<Property> properties = new ArrayList<>();
-        for (Property property : type.getProperties()) {
-            properties.add(property(property.getName(), genericCopy(property.getType(), mappings)));
-        }
-        return record(type.getName(), properties);
+    public Type createVariable() {
+        return scope.createVariable();
     }
 
-    @Override
-    public Type genericCopyOfFunctionType(FunctionType type, Map<Type, Type> mappings) {
-        return func(genericCopy(type.getArgument(), mappings), genericCopy(type.getResult(), mappings));
+    public void define(Reference reference) {
+        scope.define(reference);
     }
 
-    @Override
-    public Type genericCopyOfSimpleType(SimpleType type, Map<Type, Type> mappings) {
-        return type;
+    public SymbolEnvironment extend() {
+        return new SymbolEnvironment(this);
     }
 
     public void generify(Type type) {
@@ -149,6 +164,44 @@ public class SymbolEnvironment implements TypeFactory {
 
     private boolean isGeneric(Type type) {
         return !type.occursIn(scope.getSpecializedTypes());
+    }
+
+    private static final class HeadScope extends Scope implements LocatorVisitor {
+
+        private final SnacksRegistry registry;
+        private int nextId = 1;
+
+        public HeadScope(SnacksRegistry registry) {
+            this.registry = registry;
+        }
+
+        @Override
+        public Type createVariable() {
+            return var("#" + nextId++);
+        }
+
+        @Override
+        public void visitClosureLocator(ClosureLocator locator) {
+            // intentionally empty
+        }
+
+        @Override
+        public void visitDeclarationLocator(DeclarationLocator locator) {
+            Type type = registry.typeOf(locator.getModule() + "." + locator.getName(), locator.getKind());
+            if (type != null) {
+                define(new Reference(locator, type));
+            }
+        }
+
+        @Override
+        public void visitVariableLocator(VariableLocator locator) {
+            // intentionally empty
+        }
+
+        @Override
+        protected void resolve(Locator locator) {
+            locator.accept(this);
+        }
     }
 
     private static abstract class Scope {
@@ -228,44 +281,6 @@ public class SymbolEnvironment implements TypeFactory {
         }
 
         protected abstract void resolve(Locator locator);
-    }
-
-    private static final class HeadScope extends Scope implements LocatorVisitor {
-
-        private final SnacksRegistry registry;
-        private int nextId = 1;
-
-        public HeadScope(SnacksRegistry registry) {
-            this.registry = registry;
-        }
-
-        @Override
-        public Type createVariable() {
-            return var("#" + nextId++);
-        }
-
-        @Override
-        public void visitClosureLocator(ClosureLocator locator) {
-            // intentionally empty
-        }
-
-        @Override
-        public void visitDeclarationLocator(DeclarationLocator locator) {
-            Type type = registry.typeOf(locator.getModule() + "." + locator.getName());
-            if (type != null) {
-                define(new Reference(locator, type));
-            }
-        }
-
-        @Override
-        public void visitVariableLocator(VariableLocator locator) {
-            // intentionally empty
-        }
-
-        @Override
-        protected void resolve(Locator locator) {
-            locator.accept(this);
-        }
     }
 
     private static final class TailScope extends Scope {

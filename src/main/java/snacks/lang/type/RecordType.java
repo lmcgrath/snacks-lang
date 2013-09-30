@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.type;
 
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -44,7 +44,7 @@ public class RecordType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopyOfRecordType(this, mappings);
+        return types.copyRecordType(this, mappings);
     }
 
     @Override

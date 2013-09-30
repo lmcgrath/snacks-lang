@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.type;
 
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public class FunctionType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopyOfFunctionType(this, mappings);
+        return types.copyFunctionType(this, mappings);
     }
 
     public Type getArgument() {

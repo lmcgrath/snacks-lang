@@ -3,10 +3,11 @@ package snacks.lang;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.Type.DOUBLE_TYPE;
-import static snacks.lang.Type.INTEGER_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.set;
+import static snacks.lang.SnackKind.EXPRESSION;
+import static snacks.lang.type.Types.DOUBLE_TYPE;
+import static snacks.lang.type.Types.INTEGER_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.union;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +24,7 @@ public class SnacksClassLoaderTest {
 
     @Test
     public void shouldResolveDivideSnack() {
-        assertThat(loader.typeOf("snacks.lang./"), equalTo(set(
+        assertThat(loader.typeOf("snacks.lang./", EXPRESSION), equalTo(union(
             func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
             func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
             func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
@@ -33,6 +34,6 @@ public class SnacksClassLoaderTest {
 
     @Test
     public void shouldReturnNullIfSnackDoesNotExist() {
-        assertThat(loader.typeOf("snacks.lang.waffles"), nullValue());
+        assertThat(loader.typeOf("snacks.lang.waffles", EXPRESSION), nullValue());
     }
 }

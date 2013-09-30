@@ -1,8 +1,12 @@
 package snacks.lang;
 
-import static snacks.lang.Type.*;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.type.Types.VOID_TYPE;
+import static snacks.lang.type.Types.func;
 
-@Snack("assert")
+import snacks.lang.type.Type;
+
+@Snack(name = "assert")
 public class SnacksAssert {
 
     private static SnacksAssert instance;

@@ -1,19 +1,23 @@
 package snacks.lang.parser;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.Type.*;
-import static snacks.lang.Type.func;
+import static snacks.lang.SnackKind.EXPRESSION;
+import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.TranslatorMatcher.defines;
+import static snacks.lang.type.Types.*;
+import static snacks.lang.type.Types.func;
 
-import java.util.Set;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
+import snacks.lang.SnackKind;
+import snacks.lang.ast.NamedNode;
 import snacks.lang.runtime.SnacksClassLoader;
-import snacks.lang.Type;
-import snacks.lang.ast.AstNode;
+import snacks.lang.type.Type;
 
 public class TranslatorTest {
 
@@ -33,7 +37,7 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfPlusWithInteger() {
         translate("example = `+` 2");
-        assertThat(typeOf("example"), equalTo(set(
+        assertThat(typeOf("example"), equalTo(union(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(INTEGER_TYPE, INTEGER_TYPE)
@@ -51,7 +55,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldTranslateTwoPlusString() {
-        Set<AstNode> nodes = translate(
+        Collection<NamedNode> nodes = translate(
             "value = 'Hello, World!'",
             "example = 2 + value"
         );
@@ -60,7 +64,7 @@ public class TranslatorTest {
             apply(
                 environment.getReference(locator("snacks.lang", "+")),
                 constant(2),
-                set(
+                union(
                     func(STRING_TYPE, STRING_TYPE),
                     func(DOUBLE_TYPE, DOUBLE_TYPE),
                     func(INTEGER_TYPE, INTEGER_TYPE)
@@ -73,7 +77,7 @@ public class TranslatorTest {
 
     @Test(expected = TypeException.class)
     public void shouldThrowException_whenOperandTypesDontMatchOperator() {
-        define("oddball", type("Unknown"));
+        define("oddball", simple("Unknown"));
         translate(
             "import test.example.oddball",
             "example = 2 + oddball"
@@ -136,7 +140,7 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateUntypedFunction() {
         translate("double = (x) -> x * 2");
-        assertThat(typeOf("double"), equalTo(set(
+        assertThat(typeOf("double"), equalTo(union(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(STRING_TYPE, STRING_TYPE)
@@ -279,12 +283,12 @@ public class TranslatorTest {
     @Test(expected = MissingPropertyException.class)
     public void shouldRequireAllPropertiesOnRecord() {
         translate(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy BreakfastItem {",
+            "main = () -> say $ stringy SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "}"
@@ -294,12 +298,12 @@ public class TranslatorTest {
     @Test(expected = TypeException.class)
     public void shouldRequirePropertyTypesToMatch() {
         translate(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy BreakfastItem {",
+            "main = () -> say $ stringy SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = 'eewwwww bacon is grody'",
@@ -310,18 +314,105 @@ public class TranslatorTest {
     @Test(expected = DuplicatePropertyException.class)
     public void shouldNotAllowDuplicateProperties() {
         translate(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy BreakfastItem {",
+            "main = () -> say $ stringy SideForBacon {",
             "    pairsWithBacon? = True,",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = False // can't make up my mind! )=",
             "}"
         );
+    }
+
+    @Test
+    public void recordShouldCreateAlgebraicType() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}"
+        );
+        assertThat(typeOf("BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem")));
+    }
+
+    @Test
+    public void recordShouldCreateInstanceType() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}"
+        );
+        assertThat(typeOf("SideForBacon", TYPE), equalTo(record("test.SideForBacon", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ))));
+    }
+
+    @Test
+    public void recordShouldCreateConstructorReturningInstanceType() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}"
+        );
+        assertThat(typeOf("SideForBacon", EXPRESSION), equalTo(
+            func(STRING_TYPE, func(INTEGER_TYPE, func(BOOLEAN_TYPE, record("test.SideForBacon", asList(
+                property("name", STRING_TYPE),
+                property("tasteIndex", INTEGER_TYPE),
+                property("pairsWithBacon?", BOOLEAN_TYPE)
+            )))))
+        ));
+    }
+
+    @Test
+    public void appliedConstructorShouldHaveRecordType() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}",
+            "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }"
+        );
+        assertThat(typeOf("waffles"), equalTo(record("test.SideForBacon", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ))));
+    }
+
+    @Test
+    public void shouldAcceptRecordTypeAsArgument() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "bacon? = (x:SideForBacon) -> x.pairsWithBacon?"
+        );
+        assertThat(typeOf("bacon?"), equalTo(func(
+            record("test.SideForBacon", asList(
+                property("name", STRING_TYPE),
+                property("tasteIndex", INTEGER_TYPE),
+                property("pairsWithBacon?", BOOLEAN_TYPE)
+            )),
+            BOOLEAN_TYPE
+        )));
+    }
+
+    private Type typeOf(String name, SnackKind kind) {
+        return environment.getReference(locator("test", name, kind)).getType();
     }
 
     private Type typeOf(String name) {
@@ -333,10 +424,10 @@ public class TranslatorTest {
     }
 
     private void define(String name, Type type) {
-        environment.define(reference("test.example", name, type));
+        environment.define(reference(locator("test.example", name, EXPRESSION), type));
     }
 
-    private Set<AstNode> translate(String... inputs) {
+    private Collection<NamedNode> translate(String... inputs) {
         return CompilerUtil.translate(environment, inputs);
     }
 }

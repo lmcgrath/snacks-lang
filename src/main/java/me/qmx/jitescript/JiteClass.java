@@ -196,7 +196,10 @@ public class JiteClass implements Opcodes {
     public byte[] toBytes(JDKVersion version) {
         ClassNode node = new ClassNode();
         node.version = version.getVer();
-        node.access = this.access | ACC_SUPER;
+        node.access = this.access;
+        if ((node.access & ACC_INTERFACE) == 0) {
+            node.access |= ACC_SUPER;
+        }
         node.name = this.className;
         node.superName = this.superClassName;
         node.sourceFile = this.sourceFile;

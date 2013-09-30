@@ -1,6 +1,6 @@
 package snacks.lang.ast;
 
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class Access extends AstNode {
 

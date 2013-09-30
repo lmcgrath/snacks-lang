@@ -1,5 +1,7 @@
 package snacks.lang.runtime;
 
+import static snacks.lang.SnackKind.EXPRESSION;
+
 import java.util.List;
 import snacks.lang.Invokable;
 import snacks.lang.cli.CommandLineRunner;
@@ -26,7 +28,7 @@ public class SnacksRunner implements CommandLineRunner {
     @Override
     public void run(List<String> args) {
         String name = args.remove(0) + ".main";
-        Class<?> clazz = loader.classOf(name);
+        Class<?> clazz = loader.classOf(name, EXPRESSION);
         try {
             ((Invokable) clazz.newInstance()).invoke();
         } catch (ReflectiveOperationException exception) {

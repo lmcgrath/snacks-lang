@@ -1,12 +1,14 @@
 package snacks.lang;
 
+import snacks.lang.type.Type;
+
 public interface SnacksRegistry {
 
-    Class<?> classOf(String qualifiedName);
+    Class<?> classOf(String qualifiedName, SnackKind kind);
 
     Operator getOperator(String name);
 
     boolean isOperator(String name);
 
-    Type typeOf(String qualifiedName);
+    Type typeOf(String qualifiedName, SnackKind kind);
 }

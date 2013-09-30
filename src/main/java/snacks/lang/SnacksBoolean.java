@@ -1,8 +1,11 @@
 package snacks.lang;
 
-import static snacks.lang.Type.BOOLEAN_TYPE;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
 
-@Snack("Boolean")
+import snacks.lang.type.Type;
+
+@Snack(name = "Boolean", kind = TYPE)
 @JavaType(Boolean.class)
 public class SnacksBoolean {
 

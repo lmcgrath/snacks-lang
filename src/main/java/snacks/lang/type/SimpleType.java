@@ -1,4 +1,4 @@
-package snacks.lang;
+package snacks.lang.type;
 
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +28,7 @@ public class SimpleType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopyOfSimpleType(this, mappings);
+        return types.copySimpleType(this, mappings);
     }
 
     @Override

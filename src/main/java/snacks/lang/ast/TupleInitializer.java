@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.tuple;
+import static snacks.lang.type.Types.tuple;
 
 import java.util.ArrayList;
 import java.util.List;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class TupleInitializer extends AstNode {
 

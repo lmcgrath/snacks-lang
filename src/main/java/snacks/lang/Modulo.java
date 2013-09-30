@@ -1,10 +1,12 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.INTEGER_TYPE;
-import static snacks.lang.Type.func;
+import static snacks.lang.type.Types.INTEGER_TYPE;
+import static snacks.lang.type.Types.func;
 
-@Snack("%")
+import snacks.lang.type.Type;
+
+@Snack(name = "%")
 @Infix(fixity = LEFT, precedence = 13)
 public class Modulo {
 

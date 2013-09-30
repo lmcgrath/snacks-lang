@@ -1,8 +1,11 @@
 package snacks.lang;
 
-import static snacks.lang.Type.CHARACTER_TYPE;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.CHARACTER_TYPE;
 
-@Snack("Character")
+import snacks.lang.type.Type;
+
+@Snack(name = "Character", kind = TYPE)
 @JavaType(Character.class)
 public class SnacksCharacter {
 

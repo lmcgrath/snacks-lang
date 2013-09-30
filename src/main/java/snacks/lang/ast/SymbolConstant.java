@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.SYMBOL_TYPE;
+import static snacks.lang.type.Types.SYMBOL_TYPE;
 
 import java.util.Objects;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class SymbolConstant extends AstNode {
 

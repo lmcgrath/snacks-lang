@@ -11,10 +11,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import snacks.lang.*;
-import snacks.lang.compiler.*;
+import snacks.lang.Invokable;
+import snacks.lang.SnackDefinition;
+import snacks.lang.SnacksException;
+import snacks.lang.compiler.CompileException;
 import snacks.lang.compiler.Compiler;
 import snacks.lang.parser.SymbolEnvironment;
 
@@ -250,9 +253,9 @@ public class RuntimeTest {
     public void shouldCompileConditional() {
         run(
             "booleanizer = (name value) -> {",
-            "    if value",
+            "    if value:",
             "        say \"#{name} is true!\"",
-            "    else if value is 'oranges'",
+            "    else if value is 'oranges':",
             "        say 'We have oranges!'",
             "    else",
             "        say \"#{name} is false!\"",
@@ -287,7 +290,7 @@ public class RuntimeTest {
     public void shouldNotBeTrueWhenNotted() {
         run(
             "main = () ->",
-            "    if not True",
+            "    if not True:",
             "        say 'It\\'s not true!'",
             "    else",
             "        say 'It\\'s true!'",
@@ -406,7 +409,7 @@ public class RuntimeTest {
         run(
             "main = {",
             "    var x = 10",
-            "    if x >= 10",
+            "    if x >= 10:",
             "        say 'got it!'",
             "    end",
             "}"
@@ -419,9 +422,9 @@ public class RuntimeTest {
         run(
             "main = {",
             "    var x = 9",
-            "    if x >= 10",
+            "    if x >= 10:",
             "        say '10 or bigger'",
-            "    else if x >= 9",
+            "    else if x >= 9:",
             "        say '9 or bigger'",
             "    end",
             "}"
@@ -447,7 +450,7 @@ public class RuntimeTest {
         run(
             "main = {",
             "    var x = 0",
-            "    x = x + 1, while x < 10",
+            "    x = x + 1 while x < 10",
             "    var expected = 10",
             "    assert $ x is expected",
             "}"
@@ -459,9 +462,9 @@ public class RuntimeTest {
         run(
             "main = {",
             "    var x = 0",
-            "    while True",
+            "    while True:",
             "        x = x + 1",
-            "        break, if x > 10",
+            "        break if x > 10",
             "    end",
             "    var expected = 11",
             "    assert $ x is expected",
@@ -475,9 +478,9 @@ public class RuntimeTest {
             "main = {",
             "    var x = 0",
             "    var last = 0",
-            "    while x < 8",
+            "    while x < 8:",
             "        x = x + 1",
-            "        continue, if x % 2 == 0",
+            "        continue if x % 2 == 0",
             "        say \"x is #{x}\"",
             "    end",
             "}"
@@ -498,9 +501,9 @@ public class RuntimeTest {
             "main = {",
             "    var x = 0",
             "    var total = 0",
-            "    while x < 10",
+            "    while x < 10:",
             "        var y = 0",
-            "        while y < 10",
+            "        while y < 10:",
             "            y = y + 1",
             "            total = total + 1",
             "        end",
@@ -516,10 +519,10 @@ public class RuntimeTest {
         run(
             "main = {",
             "    var counter = 0",
-            "    while counter < 10",
+            "    while counter < 10:",
             "        begin",
             "            counter = counter + 1",
-            "            hurl 'oops', if counter > 8",
+            "            hurl 'oops' if counter > 8",
             "        embrace error ->",
             "            break",
             "        end",
@@ -605,36 +608,36 @@ public class RuntimeTest {
             "    assert $ ?% True == 'Woot!'",
             "    assert $ ?% False == 'Aww...'",
             "}",
-            "?% = (x) -> if x is True then 'Woot!' else 'Aww...' end"
+            "?% = (x) -> if x is True: 'Woot!' else 'Aww...' end"
         );
     }
 
     @Test
     public void shouldCompileRecord() {
         run(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: snacks.lang.String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy BreakfastItem {",
+            "main = () -> say $ stringy SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = True",
             "}"
         );
-        verifyOut("BreakfastItem{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
+        verifyOut("SideForBacon{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
     }
 
     @Test
     public void shouldReferenceRecordProperty() {
         run(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
             "main = {",
             "    assert waffles.pairsWithBacon?",
             "    assert $ waffles.name + 10 == 'Waffles' + waffles.tasteIndex",
@@ -645,14 +648,41 @@ public class RuntimeTest {
     @Test
     public void shouldAcceptRecordAsArgument() {
         run(
-            "data BreakfastItem = BreakfastItem {",
+            "data BreakfastItem = SideForBacon {",
             "    name: String,",
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "bacon? = (x:BreakfastItem) -> x.pairsWithBacon?",
-            "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "bacon? = (x:SideForBacon) -> x.pairsWithBacon?",
+            "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
             "main = () -> assert $ bacon? waffles"
+        );
+    }
+
+    @Ignore
+    @Test
+    public void shouldDeconstructRecord() {
+        run(
+            "data BreakfastItem = SideForBacon {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "bacon? :: BreakfastItem -> Boolean",
+            "bacon? = ?(SideForBacon { pairsWithBacon? = x }) -> x",
+            "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "main = () -> assert $ bacon? waffles"
+        );
+    }
+
+    @Ignore
+    @Test
+    public void shouldDeconstructJust() {
+        run(
+            "require :: Maybe a -> a",
+            "require = ?(Just value) -> value",
+            "require = ?(Nothing) -> { hurl 'Got nothin!' }",
+            "main = () -> assert $ require (Just 1) == 1"
         );
     }
 

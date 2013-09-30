@@ -1,10 +1,12 @@
 package snacks.lang;
 
-import static snacks.lang.Type.STRING_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.STRING_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.var;
 
-@Snack("stringy")
+import snacks.lang.type.Type;
+
+@Snack(name = "stringy")
 public class Stringy {
 
     private static Stringy instance;

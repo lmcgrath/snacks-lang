@@ -160,10 +160,6 @@ public class AstPrinter {
         print("name: " + locator.getName());
     }
 
-    public void printVoidApply(VoidApply node) {
-        print(node.getInstantiable());
-    }
-
     public void printVoidFunction(VoidFunction node) {
         print(node.getBody());
     }

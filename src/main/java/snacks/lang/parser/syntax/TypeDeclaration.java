@@ -1,5 +1,8 @@
 package snacks.lang.parser.syntax;
 
+import static java.util.Arrays.asList;
+
+import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -7,11 +10,11 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class TypeDeclaration extends VisitableSymbol {
 
     private final String name;
-    private final Symbol definition;
+    private final List<Symbol> variants;
 
-    public TypeDeclaration(String name, Symbol definition) {
+    public TypeDeclaration(String name, Symbol... variants) {
         this.name = name;
-        this.definition = definition;
+        this.variants = asList(variants);
     }
 
     @Override
@@ -27,15 +30,15 @@ public class TypeDeclaration extends VisitableSymbol {
             TypeDeclaration other = (TypeDeclaration) o;
             return new EqualsBuilder()
                 .append(name, other.name)
-                .append(definition, other.definition)
+                .append(variants, other.variants)
                 .isEquals();
         } else {
             return false;
         }
     }
 
-    public Symbol getDefinition() {
-        return definition;
+    public List<Symbol> getVariants() {
+        return variants;
     }
 
     public String getName() {
@@ -44,11 +47,11 @@ public class TypeDeclaration extends VisitableSymbol {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, definition);
+        return Objects.hash(name, variants);
     }
 
     @Override
     public String toString() {
-        return "(Type " + name + " " + definition + ")";
+        return "(Type " + name + " " + variants + ")";
     }
 }

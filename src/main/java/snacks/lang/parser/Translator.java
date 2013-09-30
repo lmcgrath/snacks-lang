@@ -3,33 +3,41 @@ package snacks.lang.parser;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.*;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.tuple;
+import static snacks.lang.SnackKind.EXPRESSION;
+import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.record;
 import static snacks.lang.ast.AstFactory.tuple;
-import static snacks.lang.ast.AstFactory.var;
+import static snacks.lang.parser.syntax.SyntaxFactory.id;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
+import static snacks.lang.parser.syntax.SyntaxFactory.type;
+import static snacks.lang.type.Types.*;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.record;
+import static snacks.lang.type.Types.tuple;
 
 import java.util.*;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Operator;
-import snacks.lang.RecordType;
-import snacks.lang.RecordType.Property;
-import snacks.lang.Type;
+import snacks.lang.SnackKind;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
+import snacks.lang.type.FunctionType;
+import snacks.lang.type.RecordType;
+import snacks.lang.type.RecordType.Property;
+import snacks.lang.type.Type;
+import snacks.lang.type.Types;
 
 public class Translator implements SyntaxVisitor {
 
     private final String module;
     private final Deque<SymbolEnvironment> environments;
-    private final Set<DeclaredExpression> declarations;
-    private final Map<String, Locator> aliases;
+    private final List<NamedNode> declarations;
+    private final Map<String, AliasEntry> aliases;
     private final List<String> wildcardImports;
     private final List<String> typeErrors;
     private final Map<Symbol, Locator> names;
@@ -41,79 +49,16 @@ public class Translator implements SyntaxVisitor {
     public Translator(SymbolEnvironment environment, String module) {
         this.module = module;
         this.environments = new ArrayDeque<>(asList(environment));
-        this.declarations = new HashSet<>();
+        this.declarations = new ArrayList<>();
         this.aliases = new HashMap<>();
         this.typeErrors = new ArrayList<>();
         this.names = new IdentityHashMap<>();
         this.wildcardImports = new ArrayList<>(asList("snacks.lang"));
     }
 
-    public void addAlias(String alias, Locator locator) {
-        aliases.put(alias, locator);
-    }
-
-    public void addWildcardImport(String wildcardImport) {
-        wildcardImports.add(wildcardImport);
-    }
-
-    public Type createVariable() {
-        return environment().createVariable();
-    }
-
-    public void define(Locator locator, Type type) {
-        environment().define(new Reference(locator, type));
-    }
-
-    public void enterScope() {
-        environments.push(environment().extend());
-    }
-
-    public SymbolEnvironment environment() {
-        return environments.peek();
-    }
-
-    public void generify(Type type) {
-        environment().generify(type);
-    }
-
-    public String getModule() {
-        return module;
-    }
-
-    public void leaveScope() {
-        environments.pop();
-    }
-
-    public Reference reference(String value) {
-        Locator locator = new VariableLocator(value);
-        if (!environment().isDefined(locator)) {
-            if (aliases.containsKey(value)) {
-                locator = aliases.get(value);
-            } else {
-                locator = findWildcard(value);
-            }
-        }
-        return new Reference(locator, environment().typeOf(locator));
-    }
-
-    public void specialize(Type type) {
-        environment().specialize(type);
-    }
-
-    public Set<AstNode> translateModule(Symbol node) {
+    public List<NamedNode> translateModule(Symbol node) {
         translate(node);
-        Set<AstNode> nodes = new HashSet<>();
-        for (DeclaredExpression declaration : declarations) {
-            if (nodes.contains(declaration)) {
-                throw new UndefinedSymbolException("Cannot redefine " + declaration.getName());
-            } else {
-                if (environment().isOperator(declaration.getName())) {
-                    declaration.setOperator(environment().getOperator(declaration.getName()));
-                }
-                nodes.add(declaration);
-            }
-        }
-        return nodes;
+        return new ArrayList<>(declarations);
     }
 
     @Override
@@ -215,38 +160,17 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
-    public void visitContinueExpression(ContinueExpression node) {
-        result = Continue.INSTANCE;
+    public void visitConstructorExpression(ConstructorExpression node) {
+        List<AstNode> arguments = new ArrayList<>();
+        for (Symbol argument : node.getArguments()) {
+            arguments.add(translate(argument));
+        }
+        result = initializer(translate(node.getConstructor()), arguments);
     }
 
     @Override
-    public void visitDeclaration(Declaration node) {
-        functionLevel = 0;
-        if (node.getBody() instanceof InvokableLiteral) {
-            functionLevel++; // TODO hack
-        }
-        typeErrors.clear();
-        reserveName(node.getName());
-        AstNode body = translate(node.getBody());
-        if (!body.isInvokable()) {
-            body = expression(body);
-        }
-        Locator locator = locator(module, node.getName());
-        DeclaredExpression declaration = declaration(module, node.getName(), body);
-        if (declaration.getType().decompose().isEmpty()) {
-            throw new TypeException(join(typeErrors, "; "));
-        }
-        if (environment().hasSignature(locator)) {
-            Type type = environment().getSignature(locator);
-            if (declaration.getType().unify(type)) {
-                declaration.setType(type);
-            } else {
-                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + environment().typeOf(locator));
-            }
-        }
-        addAlias(node.getName(), locator);
-        environment().define(new Reference(locator, declaration.getType()));
-        declarations.add(declaration);
+    public void visitContinueExpression(ContinueExpression node) {
+        result = Continue.INSTANCE;
     }
 
     @Override
@@ -256,7 +180,7 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitEmbraceCase(EmbraceCase node) {
-        define(locator(node.getArgument()), Type.var("E"));
+        define(locator(node.getArgument()), Types.var("E"));
         result = embrace(node.getArgument(), javaClass(node.getType()), translate(node.getExpression()));
     }
 
@@ -277,6 +201,46 @@ public class Translator implements SyntaxVisitor {
         }
         leaveScope();
         result = exceptional(begin, embraces, ensure);
+    }
+
+    @Override
+    public void visitExpressionDeclaration(ExpressionDeclaration node) {
+        declarations.add(namedDeclaration(node.getName(), node.getBody()));
+    }
+
+    private DeclaredExpression namedDeclaration(String name, Symbol expression) {
+        functionLevel = 0;
+        if (expression instanceof InvokableLiteral) {
+            functionLevel++; // TODO hack
+        }
+        typeErrors.clear();
+        reserveName(name);
+        AstNode body = translate(expression);
+        if (!body.isInvokable()) {
+            body = expression(body);
+        }
+        Locator locator = locator(module, name);
+        DeclaredExpression declaration = declaration(module, name, body);
+        if (declaration.getType().decompose().isEmpty()) {
+            throw new TypeException(join(typeErrors, "; "));
+        }
+        if (environment().hasSignature(locator)) {
+            Type type = environment().getSignature(locator);
+            if (declaration.getType().unify(type)) {
+                declaration.setType(type);
+            } else {
+                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + environment().typeOf(locator));
+            }
+        }
+        if (declarations.contains(declaration)) {
+            throw new UndefinedSymbolException("Cannot redefine " + declaration.getName());
+        }
+        if (environment().isOperator(declaration.getName())) {
+            declaration.setOperator(environment().getOperator(declaration.getName()));
+        }
+        addAlias(name, module, name);
+        environment().define(new Reference(locator, declaration.getType()));
+        return declaration;
     }
 
     @Override
@@ -307,58 +271,67 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitIdentifier(Identifier node) {
-        result = reference(node.getName());
+        result = reference(node.getName(), EXPRESSION);
     }
 
     @Override
     public void visitImport(Import node) {
         QualifiedIdentifier identifier = (QualifiedIdentifier) node.getModule();
         List<String> segments = identifier.getSegments();
-        Locator locator = locator(join(segments.subList(0, segments.size() - 1), '.'), identifier.getLastSegment());
-        addAlias(node.getAlias(), locator);
+        addAlias(node.getAlias(), join(segments.subList(0, segments.size() - 1), '.'), identifier.getLastSegment());
     }
 
     @Override
     public void visitInitializerExpression(InitializerExpression node) {
-        Reference reference = reference(node.getConstructor());
-        RecordType recordType = (RecordType) reference.getType();
-        Map<String, PropertyInitializer> properties = new HashMap<>();
-        List<Property> matchedProperties = new ArrayList<>();
-        for (Symbol n : node.getProperties()) {
-            PropertyInitializer property = (PropertyInitializer) translate(n);
-            if (properties.containsKey(property.getName())) {
-                throw new DuplicatePropertyException("Duplicate property initializer: " + property.getName());
+        AstNode constructor = translate(node.getConstructor());
+        Type type = constructor.getType();
+        if (type instanceof RecordType) {
+            throw new UnsupportedOperationException(); // TODO implement record copy syntax
+        } else if (type instanceof FunctionType) {
+            while (!(type instanceof RecordType)) {
+                type = resultOf(type);
             }
-            boolean found = false;
-            for (Property propertyType : recordType.getProperties()) {
-                if (propertyType.getName().equals(property.getName())) {
-                    verifyAssignmentType(propertyType.getType(), property.getType());
-                    matchedProperties.add(propertyType);
-                    found = true;
-                    break;
+            RecordType recordType = (RecordType) type; // TODO hack
+            Map<String, PropertyInitializer> properties = new HashMap<>();
+            List<Property> matchedProperties = new ArrayList<>();
+            for (Symbol n : node.getProperties()) {
+                PropertyInitializer property = (PropertyInitializer) translate(n);
+                if (properties.containsKey(property.getName())) {
+                    throw new DuplicatePropertyException("Duplicate property initializer: " + property.getName());
+                }
+                boolean found = false;
+                for (Property propertyType : recordType.getProperties()) {
+                    if (propertyType.getName().equals(property.getName())) {
+                        verifyAssignmentType(propertyType.getType(), property.getType());
+                        matchedProperties.add(propertyType);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new TypeException("Property " + recordType.getName() + "#" + property.getName() + " does not exist");
+                }
+                properties.put(property.getName(), property);
+            }
+            List<Property> propertyTypes = recordType.getProperties();
+            for (int i = propertyTypes.size() - 1; i >= 0; i--) {
+                if (matchedProperties.contains(propertyTypes.get(i))) {
+                    Type resultType = null;
+                    if (i == 0) {
+                        resultType = type;
+                    }
+                    constructor = apply(constructor, properties.get(propertyTypes.get(i).getName()).getValue(), resultType);
+                } else {
+                    throw new MissingPropertyException("Missing property: " + propertyTypes.get(i));
                 }
             }
-            if (!found) {
-                throw new TypeException("Property " + reference.getLocator() + "#" + property.getName() + " does not exist");
-            }
-            properties.put(property.getName(), property);
+            result = constructor;
         }
-        for (Property propertyType : recordType.getProperties()) {
-            if (!matchedProperties.contains(propertyType)) {
-                throw new MissingPropertyException("Missing property: " + propertyType);
-            }
-        }
-        result = initializer(reference, properties);
     }
 
     @Override
     public void visitIntegerLiteral(IntegerLiteral node) {
         result = constant(node.getValue());
-    }
-
-    @Override
-    public void visitInvocation(Invocation node) {
-        result = invoke(translate(node.getExpression()));
     }
 
     @Override
@@ -469,33 +442,25 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
-        List<String> segments = node.getSegments();
-        if (segments.size() > 1) {
-            String module = join(segments.subList(0, segments.size() - 1), '.');
-            String name = segments.get(segments.size() - 1);
-            Locator locator = locator(module, name);
-            if (environment().isDefined(locator(module, name))) {
-                result = new Reference(locator, environment().typeOf(locator));
-            } else {
-                throw new UndefinedSymbolException("Symbol " + join(segments, '.') + " is not defined");
-            }
-        } else {
-            result = reference(segments.get(0));
-        }
+        result = referenceQualifiedIdentifier(node, EXPRESSION);
     }
 
     @Override
     public void visitQuotedIdentifier(QuotedIdentifier node) {
-        result = reference(node.getName());
+        result = reference(node.getName(), EXPRESSION);
     }
 
     @Override
     public void visitRecordDeclaration(RecordDeclaration node) {
-        List<DeclaredProperty> properties = new ArrayList<>();
+        List<Property> properties = new ArrayList<>();
         for (Symbol property : node.getProperties()) {
-            properties.add((DeclaredProperty) translate(property));
+            DeclaredProperty p = (DeclaredProperty) translate(property);
+            properties.add(property(p.getName(), p.getType()));
         }
-        result = recordDeclaration(module + "." + node.getName(), properties);
+        define(locator(module, node.getName(), TYPE), record(module + '.' + node.getName(), properties));
+        addAlias(node.getName(), module, node.getName());
+        defineConstructor(node.getName(), properties);
+        result = record(module, node.getName(), properties);
     }
 
     @Override
@@ -516,7 +481,7 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitSignature(Signature node) {
         Reference reference = new Reference(locator(module, node.getIdentifier()), translateType(node.getType()));
-        addAlias(reference.getLocator().getName(), reference.getLocator());
+        addAlias(reference.getLocator().getName(), module, reference.getLocator().getName());
         environment().signature(reference);
     }
 
@@ -555,16 +520,19 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitTypeDeclaration(TypeDeclaration node) {
-        Locator locator = locator(module, node.getName());
-        DeclaredExpression declaration = declaration(module, node.getName(), translate(node.getDefinition()));
-        addAlias(node.getName(), locator);
+        Locator locator = locator(module, node.getName(), TYPE);
+        DeclaredType declaration = new DeclaredType(module, node.getName());
+        addAlias(node.getName(), module, node.getName());
         environment().define(new Reference(locator, declaration.getType()));
+        for (Symbol variant : node.getVariants()) {
+            declaration.addVariant(translate(variant));
+        }
         declarations.add(declaration);
     }
 
     @Override
     public void visitTypeSpec(TypeSpec node) {
-        result = translate(node.getType());
+        result = referenceQualifiedIdentifier(node.getName(), TYPE);
     }
 
     @Override
@@ -590,7 +558,7 @@ public class Translator implements SyntaxVisitor {
         specialize(varType);
         varType.unify(value.getType());
         generify(varType);
-        result = var(node.getName(), value);
+        result = AstFactory.var(node.getName(), value);
     }
 
     @Override
@@ -606,14 +574,60 @@ public class Translator implements SyntaxVisitor {
         addWildcardImport(join(((QualifiedIdentifier) node.getModule()).getSegments(), '.'));
     }
 
+    private void addAlias(String alias, String module, String name) {
+        aliases.put(alias, new AliasEntry(module, name));
+    }
+
+    private void addWildcardImport(String wildcardImport) {
+        wildcardImports.add(wildcardImport);
+    }
+
     private void beginFunction() {
         functionLevel++;
     }
 
-    private Locator findWildcard(String value) {
+    private Type createVariable() {
+        return environment().createVariable();
+    }
+
+    private void define(Locator locator, Type type) {
+        environment().define(new Reference(locator, type));
+    }
+
+    private void defineConstructor(String name, List<Property> properties) {
+        Type constructorType = record(module + '.' + name, properties);
+        for (int i = properties.size() - 1; i >= 0; i--) {
+            constructorType = func(properties.get(i).getType(), constructorType);
+        }
+        define(locator(module, name, EXPRESSION), constructorType);
+        Symbol constructor = type(qid(module, name));
+        List<Symbol> arguments = new ArrayList<>();
+        for (Property property : properties) {
+            arguments.add(id(property.getName()));
+        }
+        constructor = new ConstructorExpression(constructor, arguments);
+        for (int i = 0; i < properties.size(); i++) {
+            constructor = new FunctionLiteral(
+                new Argument(properties.get(i).getName(), type(properties.get(i).getType().getName().split("\\."))),
+                constructor,
+                null
+            );
+        }
+        declarations.add(new DeclaredConstructor(module, name, namedDeclaration(name + "Constructor", constructor).getBody()));
+    }
+
+    private void enterScope() {
+        environments.push(environment().extend());
+    }
+
+    private SymbolEnvironment environment() {
+        return environments.peek();
+    }
+
+    private Locator findWildcard(String value, SnackKind kind) {
         for (String module : wildcardImports) {
-            if (environment().isDefined(locator(module, value))) {
-                return locator(module, value);
+            if (environment().isDefined(locator(module, value, kind))) {
+                return locator(module, value, kind);
             }
         }
         throw new UndefinedSymbolException("Symbol '" + value + "' is undefined");
@@ -621,6 +635,10 @@ public class Translator implements SyntaxVisitor {
 
     private String generateName() {
         return currentName.generateName();
+    }
+
+    private void generify(Type type) {
+        environment().generify(type);
     }
 
     private Operator getOperator(Symbol node) {
@@ -639,7 +657,7 @@ public class Translator implements SyntaxVisitor {
                 allowedTypes.add(func(argumentSubType, bodySubType));
             }
         }
-        return set(allowedTypes);
+        return union(allowedTypes);
     }
 
     private Type inferenceResultType(Type functionType, Type argumentType) {
@@ -655,15 +673,15 @@ public class Translator implements SyntaxVisitor {
         if (resultTypes.isEmpty()) {
             typeErrors.add("Could not apply function " + functionType + " to argument " + argumentType);
         }
-        argumentType.bind(set(argumentTypes));
-        return set(resultTypes);
+        argumentType.bind(union(argumentTypes));
+        return union(resultTypes);
     }
 
     private boolean isOperator(Symbol node) {
         if (node instanceof Identifier) {
             String name = ((Identifier) node).getName();
             if (!"=".equals(name)) {
-                reference(name);
+                reference(name, EXPRESSION);
             }
             return environment().isOperator(name);
         } else {
@@ -677,12 +695,16 @@ public class Translator implements SyntaxVisitor {
 
     private String javaClass(Symbol symbol) {
         TypeSpec type = (TypeSpec) symbol;
-        QualifiedIdentifier id = (QualifiedIdentifier) type.getType();
+        QualifiedIdentifier id = type.getName();
         return join(id.getSegments(), ".");
     }
 
     private void leaveFunction() {
         functionLevel--;
+    }
+
+    private void leaveScope() {
+        environments.pop();
     }
 
     private void matchTypes(AstNode left, AstNode right) {
@@ -731,9 +753,38 @@ public class Translator implements SyntaxVisitor {
         return stack.pop();
     }
 
+    private Reference reference(String value, SnackKind kind) {
+        Locator locator = new VariableLocator(value);
+        if (!environment().isDefined(locator)) {
+            if (aliases.containsKey(value)) {
+                AliasEntry entry = aliases.get(value);
+                locator = locator(entry.getModule(), entry.getName(), kind);
+            } else {
+                locator = findWildcard(value, kind);
+            }
+        }
+        return new Reference(locator, environment().typeOf(locator));
+    }
+
+    private AstNode referenceQualifiedIdentifier(QualifiedIdentifier node, SnackKind kind) {
+        List<String> segments = node.getSegments();
+        if (segments.size() > 1) {
+            String module = join(segments.subList(0, segments.size() - 1), '.');
+            String name = segments.get(segments.size() - 1);
+            Locator locator = locator(module, name, kind);
+            if (environment().isDefined(locator)) {
+                return new Reference(locator, environment().typeOf(locator));
+            } else {
+                throw new UndefinedSymbolException("Symbol " + join(segments, '.') + " is not defined");
+            }
+        } else {
+            return reference(segments.get(0), kind);
+        }
+    }
+
     private void register(String name, Type type) {
         Locator locator = locator(module, name);
-        addAlias(name, locator);
+        addAlias(name, module, name);
         environment().define(new Reference(locator, type));
     }
 
@@ -772,6 +823,10 @@ public class Translator implements SyntaxVisitor {
             output.push(new Identifier(operators.pop().getName()));
         }
         return reduceOperations(output);
+    }
+
+    private void specialize(Type type) {
+        environment().specialize(type);
     }
 
     private Operator toPrefix(Operator op) {
@@ -865,6 +920,25 @@ public class Translator implements SyntaxVisitor {
         generify(targetType);
     }
 
+    private static final class AliasEntry {
+
+        private final String module;
+        private final String name;
+
+        private AliasEntry(String module, String name) {
+            this.module = module;
+            this.name = name;
+        }
+
+        private String getModule() {
+            return module;
+        }
+
+        private String getName() {
+            return name;
+        }
+    }
+
     private static final class FunctionArgument {
 
         final Type argumentType;
@@ -907,10 +981,6 @@ public class Translator implements SyntaxVisitor {
 
         public String generateName() {
             return name + "_" + nextId++;
-        }
-
-        public String getName() {
-            return name;
         }
     }
 }

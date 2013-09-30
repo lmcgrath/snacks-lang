@@ -1,48 +1,50 @@
 package snacks.lang.compiler;
 
 import static me.qmx.jitescript.util.CodegenUtils.*;
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static snacks.lang.JavaUtils.javaGetter;
+import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.objectweb.asm.Opcodes.*;
 import static snacks.lang.JavaUtils.javaName;
+import static snacks.lang.SnackKind.EXPRESSION;
+import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
-import static snacks.lang.Type.isFunction;
-import static snacks.lang.Type.isInstantiable;
+import static snacks.lang.type.Types.isFunction;
+import static snacks.lang.type.Types.isInvokable;
+import static snacks.lang.type.Types.isType;
 
 import java.util.*;
-import me.qmx.jitescript.CodeBlock;
-import me.qmx.jitescript.JDKVersion;
-import me.qmx.jitescript.JiteClass;
-import me.qmx.jitescript.VisibleAnnotation;
+import me.qmx.jitescript.*;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
-import snacks.lang.RecordType.Property;
 import snacks.lang.ast.*;
+import snacks.lang.type.*;
+import snacks.lang.type.RecordType.Property;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private final SnacksRegistry registry;
-    private final List<SnackClass> acceptedClasses;
+    private final List<JiteClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
-    private Reference currentReference;
+    private final Map<Locator, NamedNode> declarations;
 
     public Compiler(SnacksRegistry registry) {
         this.registry = registry;
         this.acceptedClasses = new ArrayList<>();
         this.builders = new ArrayDeque<>();
+        this.declarations = new HashMap<>();
     }
 
-    public Set<SnackDefinition> compile(Set<AstNode> declarations) {
-        for (AstNode declaration : declarations) {
+    public Set<SnackDefinition> compile(Collection<NamedNode> declarations) {
+        this.declarations.clear();
+        for (NamedNode declaration : declarations) {
+            this.declarations.put(declaration.locator(), declaration);
+        }
+        for (NamedNode declaration : declarations) {
             generate(declaration);
         }
         Set<SnackDefinition> definitions = new HashSet<>();
-        for (SnackClass snack : acceptedClasses) {
-            JiteClass jiteClass = snack.getJiteClass();
+        for (JiteClass jiteClass : acceptedClasses) {
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
             definitions.add(new SnackDefinition(c(jiteClass.getClassName()), bytes));
         }
@@ -56,9 +58,30 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateAccess(Access node) {
+        CodeBlock block = block();
         generate(node.getExpression());
-        block().ldc(node.getProperty());
-        block().invokedynamic("get", sig(Object.class, Object.class, String.class), BOOTSTRAP_GET);
+        block.ldc(node.getProperty());
+        block.invokedynamic("get", sig(Object.class, Object.class, String.class), BOOTSTRAP_GET);
+    }
+
+    @Override
+    public void generateAlgebraicType(AlgebraicType type) {
+        CodeBlock block = block();
+        Set<Type> types = type.getTypes();
+        block.newobj(p(AlgebraicType.class));
+        block.dup();
+        block.ldc(type.getName());
+        block.ldc(types.size());
+        block.anewarray(p(Type.class));
+        int i = 0;
+        for (Type t : types) {
+            block.dup();
+            generate(t);
+            block.ldc(i++);
+            block.aastore();
+        }
+        block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
+        block.invokespecial(p(AlgebraicType.class), "<init>", sig(void.class, String.class, Collection.class));
     }
 
     @Override
@@ -88,8 +111,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateBooleanConstant(BooleanConstant node) {
-        block().ldc(node.getValue());
-        block().invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
+        CodeBlock block = block();
+        block.ldc(node.getValue());
+        block.invokestatic(p(Boolean.class), "valueOf", sig(Boolean.class, boolean.class));
     }
 
     @Override
@@ -102,13 +126,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         defineClosureFields(node.getEnvironment());
         defineClosureConstructor(node.getEnvironment());
         generateInvoke(node.getBody());
-    }
-
-    @Override
-    public void generateFunctionClosure(FunctionClosure node) {
-        defineClosureFields(node.getEnvironment());
-        defineClosureConstructor(node.getEnvironment());
-        generateApply(node.getBody());
     }
 
     @Override
@@ -130,9 +147,22 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
-        String className = javaClass(registry, locator.getModule(), locator.getName());
-        Type type = currentReference.getType();
-        if (isFunction(type)) {
+        Class<?> clazz = registry.classOf(locator.getQualifiedName(), locator.getKind());
+        String className;
+        if (clazz == null) {
+            if (declarations.containsKey(locator)) {
+                if (declarations.get(locator) instanceof DeclaredConstructor) {
+                    className = locator.getJavaName() + "Constructor";
+                } else {
+                    className = locator.getJavaName();
+                }
+            } else {
+                throw new UndefinedSymbolException("Cannot find " + locator);
+            }
+        } else {
+            className = p(clazz);
+        }
+        if (isFunction(typeOf(locator))) {
             block().invokestatic(className, "instance", "()L" + className + ";");
         } else {
             block().invokestatic(className, "instance", sig(Object.class));
@@ -140,13 +170,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
-    public void generateDeclaredArgument(DeclaredArgument node) {
-        // intentionally empty
+    public void generateDeclaredConstructor(DeclaredConstructor node) {
+        beginClass(node, node.getName(), interfacesFor(node.getType()));
+        generate(node.getBody());
+        acceptClass();
     }
 
     @Override
     public void generateDeclaredExpression(DeclaredExpression node) {
-        JiteClass jiteClass = beginClass(node.getModule(), node.getName(), node.getType(), interfacesFor(node.getType()));
+        JiteClass jiteClass = beginClass(node, interfacesFor(node.getType()));
         if (node.isOperator()) {
             Operator operator = node.getOperator();
             if (operator.isPrefix()) {
@@ -166,9 +198,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclaredRecord(final DeclaredRecord node) {
-        final List<DeclaredProperty> properties = node.getProperties();
-        final JiteClass jiteClass = jiteClass();
-        for (final DeclaredProperty property : properties) {
+        final List<Property> properties = node.getProperties();
+        final JiteClass jiteClass = beginSubType(node.getModule(), node.getName(), node.getType());
+        for (final Property property : properties) {
             final Class<?> type = propertyType(property);
             jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, ci(type), null);
             jiteClass.defineMethod(javaGetter(property.getName()), ACC_PUBLIC, sig(type), new CodeBlock() {{
@@ -185,7 +217,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             aload(0);
             invokespecial(p(Object.class), "<init>", sig(void.class));
             int arg = 1;
-            for (DeclaredProperty property : properties) {
+            for (Property property : properties) {
                 Class<?> type = propertyType(property);
                 aload(0);
                 aload(arg++);
@@ -200,7 +232,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             ldc(node.getName().substring(node.getName().lastIndexOf('.') + 1) + "{");
             invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
             for (int i = 0; i < properties.size(); i++) {
-                DeclaredProperty property = properties.get(i);
+                Property property = properties.get(i);
                 if (i > 0) {
                     ldc(", " + property.getName() + "=");
                 } else {
@@ -216,6 +248,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             invokevirtual(p(StringBuilder.class), "toString", sig(String.class));
             areturn();
         }});
+    }
+
+    @Override
+    public void generateDeclaredType(DeclaredType node) {
+        beginType(node.getModule(), node.getName(), node.getType());
+        for (AstNode variant : node.getVariants()) {
+            generate(variant);
+        }
+        acceptClass();
     }
 
     @Override
@@ -272,11 +313,20 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateFunctionClosure(FunctionClosure node) {
+        defineClosureFields(node.getEnvironment());
+        defineClosureConstructor(node.getEnvironment());
+        generateApply(node.getBody());
+    }
+
+    @Override
     public void generateFunctionType(FunctionType type) {
         CodeBlock block = block();
+        block.newobj(p(FunctionType.class));
+        block.dup();
         generate(type.getArgument());
         generate(type.getResult());
-        block.invokestatic(p(Type.class), "func", sig(Type.class, Type.class, Type.class));
+        block.invokespecial(p(FunctionType.class), "<init>", sig(void.class, Type.class, Type.class));
     }
 
     @Override
@@ -314,15 +364,16 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateInitializer(Initializer node) {
         CodeBlock block = block();
-        String className = node.getType().getName().replace('.', '/');
+        String className = javaName(node.getType().getName()).replace('.', '/');
         block.newobj(className);
         block.dup();
-        Map<String, PropertyInitializer> properties = node.getProperties();
-        List<Property> parameters = node.getType().getProperties();
-        Class<?>[] types = new Class<?>[parameters.size()];
-        for (int i = 0; i < parameters.size(); i++) {
-            types[i] = registry.classOf(parameters.get(i).getType().getName());
-            generate(properties.get(parameters.get(i).getName()).getValue());
+        List<Property> properties = ((RecordType) node.getType()).getProperties();
+        List<AstNode> arguments = node.getArguments();
+        Class<?>[] types = new Class<?>[arguments.size()];
+        for (int i = 0; i < properties.size(); i++) {
+            types[i] = propertyType(properties.get(i));
+            generate(arguments.get(i));
+            block.checkcast(p(types[i]));
         }
         block.invokespecial(className, "<init>", sig(void.class, types));
     }
@@ -368,7 +419,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.label(skipLabel);
         block.getstatic(p(Boolean.class), "TRUE", ci(Boolean.class));
         block.label(endLabel);
-
     }
 
     @Override
@@ -386,8 +436,28 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateParameterizedType(ParameterizedType type) {
+        List<Type> parameters = type.getParameters();
+        CodeBlock block = block();
+        block.newobj(p(ParameterizedType.class));
+        block.dup();
+        block.ldc(type.getName());
+        block.ldc(parameters.size());
+        block.anewarray(p(Type.class));
+        for (int i = 0; i < parameters.size(); i++) {
+            block.dup();
+            generate(parameters.get(i));
+            block.ldc(i);
+            block.aastore();
+        }
+        block.invokespecial(p(ParameterizedType.class), "<init>", sig(void.class, String.class, Type[].class));
+    }
+
+    @Override
     public void generateRecordType(RecordType type) {
         CodeBlock block = block();
+        block.newobj(p(RecordType.class));
+        block.dup();
         block.ldc(type.getName());
         List<Property> parameters = type.getProperties();
         block.ldc(parameters.size());
@@ -395,19 +465,20 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         for (int i = 0; i < parameters.size(); i++) {
             block.dup();
             block.ldc(i);
+            block.newobj(p(Property.class));
+            block.dup();
             block.ldc(parameters.get(i).getName());
             generate(parameters.get(i).getType());
-            block.invokestatic(p(Type.class), "property", sig(Property.class, String.class, Type.class));
+            block.invokespecial(p(Property.class), "<init>", sig(void.class, String.class, Type.class));
             block.aastore();
         }
-        block.invokestatic(p(Type.class), "record", sig(Type.class, String.class, Property[].class));
+        block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
+        block.invokespecial(p(RecordType.class), "<init>", sig(void.class, String.class, Collection.class));
     }
 
     @Override
     public void generateReference(Reference node) {
-        currentReference = node; // TODO hack
         generate(node.getLocator());
-        currentReference = null;
     }
 
     @Override
@@ -446,8 +517,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateSimpleType(SimpleType type) {
         CodeBlock block = block();
+        block.newobj(p(SimpleType.class));
+        block.dup();
         block.ldc(type.getName());
-        block.invokestatic(p(Type.class), "type", sig(Type.class, String.class));
+        block.invokespecial(p(SimpleType.class), "<init>", sig(void.class, String.class));
     }
 
     @Override
@@ -457,8 +530,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateSymbol(SymbolConstant node) {
-        block().ldc(node.getName());
-        block().invokestatic(p(Symbol.class), "valueOf", sig(Symbol.class, String.class));
+        CodeBlock block = block();
+        block.ldc(node.getName());
+        block.invokestatic(p(Symbol.class), "valueOf", sig(Symbol.class, String.class));
     }
 
     @Override
@@ -479,14 +553,11 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
-    public void generateUnitConstant(UnitConstant node) {
-        block().getstatic(p(Unit.class), "UNIT", ci(Unit.class));
-    }
-
-    @Override
-    public void generateTypeSet(TypeSet type) {
+    public void generateUnionType(UnionType type) {
+        List<Type> members = new ArrayList<>(type.getTypes());
         CodeBlock block = block();
-        List<Type> members = new ArrayList<>(type.getMembers());
+        block.newobj(p(UnionType.class));
+        block.dup();
         block.ldc(members.size());
         block.anewarray(p(Type.class));
         for (int i = 0; i < members.size(); i++) {
@@ -495,14 +566,13 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             generate(members.get(i));
             block.aastore();
         }
-        block.invokestatic(p(Type.class), "set", sig(Type.class, Type[].class));
+        block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
+        block.invokespecial(p(UnionType.class), "<init>", sig(void.class, Collection.class));
     }
 
     @Override
-    public void generateTypeVariable(TypeVariable type) {
-        CodeBlock block = block();
-        block.ldc(type.getName());
-        block.invokestatic(p(Type.class), "var", sig(Type.class, String.class));
+    public void generateUnitConstant(UnitConstant node) {
+        block().getstatic(p(Unit.class), "UNIT", ci(Unit.class));
     }
 
     @Override
@@ -517,9 +587,12 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
-    public void generateVoidApply(VoidApply node) {
-        generate(node.getInstantiable());
-        block().invokeinterface(p(Invokable.class), "invoke", sig(Object.class));
+    public void generateVariableType(VariableType type) {
+        CodeBlock block = block();
+        block.newobj(p(VariableType.class));
+        block.dup();
+        block.ldc(type.getName());
+        block.invokespecial(p(VariableType.class), "<init>", sig(void.class, String.class));
     }
 
     @Override
@@ -545,8 +618,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void visitCharacterConstant(CharacterConstant node) {
-        block().ldc(node.getValue());
-        block().invokestatic(p(Character.class), "valueOf", sig(Character.class, char.class));
+        CodeBlock block = block();
+        block.ldc(node.getValue());
+        block.invokestatic(p(Character.class), "valueOf", sig(Character.class, char.class));
     }
 
     private CodeBlock acceptBlock() {
@@ -554,22 +628,70 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private void acceptClass() {
-        acceptedClasses.add(builders.pop().getSnackClass());
+        acceptedClasses.add(builders.pop().getJiteClass());
     }
 
     private CodeBlock beginBlock() {
         return state().beginBlock();
     }
 
-    private JiteClass beginClass(String module, String name, Type type, List<String> interfaces) {
-        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
-        jiteClass.addAnnotation(new VisibleAnnotation(Snack.class).value("value", name));
-        builders.push(new ClassBuilder(module, name, type, jiteClass));
-        beginBlock();
-        generate(type);
-        block().areturn();
-        block().addAnnotation(new VisibleAnnotation(SnackType.class));
-        jiteClass.defineMethod("type", ACC_PUBLIC | ACC_STATIC, sig(Type.class), acceptBlock());
+    private JiteClass beginClass(NamedNode node, List<String> interfaces) {
+        return beginClass(node, node.getName(), interfaces);
+    }
+
+    private JiteClass beginClass(NamedNode node, String internalName, List<String> interfaces) {
+        JiteClass jiteClass = new JiteClass(
+            javaClass(node.getModule(), internalName),
+            p(Object.class),
+            interfaces.toArray(new String[interfaces.size()])
+        );
+        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
+        AnnotationArrayValue kind = snack.arrayValue("kind");
+        snack.value("name", node.getName());
+        if (isType(node.getType())) {
+            kind.addEnum(TYPE);
+        } else {
+            kind.addEnum(EXPRESSION);
+        }
+        jiteClass.addAnnotation(snack);
+        builders.push(new ClassBuilder(jiteClass));
+        defineType(node.getType());
+        return jiteClass;
+    }
+
+    private JiteClass beginSubType(String module, String name, Type type) {
+        JiteClass parentClass = jiteClass();
+        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), new String[0]);
+        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
+        AnnotationArrayValue kind = snack.arrayValue("kind");
+        snack.value("name", name);
+        if (isType(type)) {
+            kind.addEnum(TYPE);
+        } else {
+            kind.addEnum(EXPRESSION);
+        }
+        jiteClass.addAnnotation(snack);
+        builders.push(new ClassBuilder(jiteClass));
+        defineType(type);
+        jiteClass.setAccess(ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
+        parentClass.addChildClass(jiteClass);
+        return jiteClass;
+    }
+
+    private JiteClass beginType(String module, String name, Type type) {
+        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), new String[0]);
+        jiteClass.setAccess(ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT);
+        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
+        AnnotationArrayValue parameters = snack.arrayValue("parameters");
+        snack.value("name", name);
+        snack.arrayValue("kind").addEnum(TYPE);
+        jiteClass.addAnnotation(snack);
+        if (type instanceof ParameterizedType) {
+            for (Type parameter : ((ParameterizedType) type).getParameters()) {
+                parameters.add(module + '.' + name + '#' + parameter.getName());
+            }
+        }
+        builders.push(new ClassBuilder(jiteClass));
         return jiteClass;
     }
 
@@ -585,14 +707,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return state().currentLoop();
     }
 
-    private void defineClosureFields(List<String> environment) {
-        state().setFields(environment);
-        JiteClass jiteClass = jiteClass();
-        for (String field : environment) {
-            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
-        }
-    }
-
     private void defineClosureConstructor(List<String> environment) {
         String signature = sig(params(void.class, Object.class, environment.size()));
         CodeBlock block = beginBlock();
@@ -606,6 +720,14 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }
         block.voidreturn();
         jiteClass().defineMethod("<init>", ACC_PUBLIC, signature, acceptBlock());
+    }
+
+    private void defineClosureFields(List<String> environment) {
+        state().setFields(environment);
+        JiteClass jiteClass = jiteClass();
+        for (String field : environment) {
+            jiteClass.defineField(field, ACC_PRIVATE | ACC_FINAL, ci(Object.class), null);
+        }
     }
 
     private void defineFunctionInitializer() {
@@ -625,6 +747,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.areturn();
         jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, "()" + className, acceptBlock());
         jiteClass.defineDefaultConstructor();
+    }
+
+    private void defineType(Type type) {
+        JiteClass jiteClass = jiteClass();
+        CodeBlock block = beginBlock();
+        block.addAnnotation(new VisibleAnnotation(SnackType.class));
+        generate(type);
+        block.areturn();
+        jiteClass.defineMethod("type", ACC_PUBLIC | ACC_STATIC, sig(Type.class), acceptBlock());
     }
 
     private void enterEmbrace(Exceptional node) {
@@ -682,7 +813,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private List<String> interfacesFor(Type type) {
         List<String> interfaces = new ArrayList<>();
-        if (isInstantiable(type)) {
+        if (isInvokable(type)) {
             interfaces.add(p(Invokable.class));
         }
         return interfaces;
@@ -700,8 +831,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return JavaUtils.javaClass(module, name).replace('.', '/');
     }
 
-    private String javaClass(SnacksRegistry registry, String module, String name) {
-        return JavaUtils.javaClass(registry, module, name).replace('.', '/');
+    private String javaGetter(String name) {
+        return "get" + capitalize(javaName(name));
     }
 
     private JiteClass jiteClass() {
@@ -721,21 +852,33 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private void loadVariable(String name) {
+        CodeBlock block = block();
         if (isField(name)) {
-            block().aload(0);
-            block().getfield(jiteClass().getClassName(), name, ci(Object.class));
+            block.aload(0);
+            block.getfield(jiteClass().getClassName(), name, ci(Object.class));
         } else if (isVariable(name)) {
-            block().aload(getVariable(name));
+            block.aload(getVariable(name));
         } else {
-            block().aload(1);
+            block.aload(1);
         }
     }
 
-    private Class<?> propertyType(DeclaredProperty property) {
-        return registry.classOf(property.getType().getName());
+    private Class<?> propertyType(Property property) {
+        return registry.classOf(property.getType().getName(), TYPE);
     }
 
     private ClassBuilder state() {
         return builders.peek();
+    }
+
+    private Type typeOf(DeclarationLocator locator) {
+        Type type = registry.typeOf(locator.getQualifiedName(), locator.getKind());
+        if (type == null) {
+            if (!declarations.containsKey(locator)) {
+                throw new CompileException("Unable to determine type of " + locator);
+            }
+            return declarations.get(locator).getType();
+        }
+        return type;
     }
 }

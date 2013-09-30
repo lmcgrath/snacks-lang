@@ -4,8 +4,9 @@ import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import snacks.lang.Type;
+import snacks.lang.SnackKind;
+import snacks.lang.type.RecordType.Property;
+import snacks.lang.type.Type;
 
 public final class AstFactory {
 
@@ -85,16 +86,12 @@ public final class AstFactory {
         return new Hurl(body);
     }
 
-    public static AstNode initializer(AstNode constructor, Map<String, PropertyInitializer> properties) {
-        return new Initializer(constructor, properties);
+    public static AstNode initializer(AstNode constructor, List<AstNode> arguments) {
+        return new Initializer(constructor, arguments);
     }
 
     public static AstNode invokable(AstNode body) {
         return new VoidFunction(body);
-    }
-
-    public static AstNode invoke(AstNode invokable) {
-        return new VoidApply(invokable);
     }
 
     public static AstNode is(AstNode left, AstNode right) {
@@ -107,6 +104,10 @@ public final class AstFactory {
 
     public static Locator locator(String module, String name) {
         return new DeclarationLocator(module, name);
+    }
+
+    public static Locator locator(String module, String name, SnackKind kind) {
+        return new DeclarationLocator(module, name, kind);
     }
 
     public static AstNode loop(AstNode condition, AstNode body) {
@@ -130,15 +131,15 @@ public final class AstFactory {
     }
 
     public static Reference reference(String module, String name, Type type) {
-        return reference(new DeclarationLocator(module, name), type);
+        return reference(locator(module, name), type);
     }
 
     public static Reference reference(Locator locator, Type type) {
         return new Reference(locator, type);
     }
 
-    public static AstNode recordDeclaration(String name, Collection<DeclaredProperty> properties) {
-        return new DeclaredRecord(name, properties);
+    public static AstNode record(String module, String name, Collection<Property> properties) {
+        return new DeclaredRecord(module, name, properties);
     }
 
     public static AstNode result(AstNode value) {

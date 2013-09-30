@@ -1,14 +1,14 @@
-package snacks.lang;
+package snacks.lang.type;
 
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
 
-public class TypeSet extends Type {
+public class UnionType extends Type {
 
     private final Set<Type> types;
 
-    public TypeSet(Collection <Type> types) {
+    public UnionType(Collection<Type> types) {
         this.types = new HashSet<>();
         for (Type type : types) {
             if (!this.types.contains(type)) {
@@ -31,7 +31,7 @@ public class TypeSet extends Type {
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof TypeSet && Objects.equals(types, ((TypeSet) o).types);
+        return o == this || o instanceof UnionType && Objects.equals(types, ((UnionType) o).types);
     }
 
     @Override
@@ -40,26 +40,30 @@ public class TypeSet extends Type {
         for (Type type : types) {
             exposedTypes.add(type.expose());
         }
-        return new TypeSet(exposedTypes);
+        return new UnionType(exposedTypes);
     }
 
     @Override
     public void generate(TypeGenerator generator) {
-        generator.generateTypeSet(this);
+        generator.generateUnionType(this);
     }
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopyOfTypeSet(this, mappings);
+        return types.copyUnionType(this, mappings);
     }
 
-    public Set<Type> getMembers() {
+    public Set<Type> getTypes() {
         return types;
     }
 
     @Override
     public String getName() {
-        return "set";
+        List<String> names = new ArrayList<>();
+        for (Type type : types) {
+            names.add(type.getName());
+        }
+        return "Union<" + join(names, ", ") + ">";
     }
 
     @Override
@@ -69,7 +73,7 @@ public class TypeSet extends Type {
 
     @Override
     public String toString() {
-        return "(set[" + join(types, ", ") + "])";
+        return "(Union [" + join(types, ", ") + "])";
     }
 
     @Override
@@ -86,6 +90,6 @@ public class TypeSet extends Type {
 
     @Override
     public boolean unifyRight(Type other) {
-        return other instanceof TypeSet; // TODO should verify type overlap
+        return other instanceof UnionType; // TODO should verify type overlap
     }
 }

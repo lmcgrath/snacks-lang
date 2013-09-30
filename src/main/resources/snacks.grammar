@@ -5,18 +5,18 @@
 %import "java.io.IOException",
         "java.util.List",
         "java.util.Set",
-        "snacks.lang.Type",
+        "snacks.lang.type.Type",
         "snacks.lang.parser.syntax.*",
         "static snacks.lang.parser.syntax.SyntaxFactory.*",
         "static java.util.Arrays.*",
         "static org.apache.commons.lang.StringUtils.join";
 
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL, DOT, TRUE, FALSE,
-    AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL, IMPORT, RETURN, THEN,
-    UNTIL, VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE,
-    CHARACTER, DO, BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA,
-    RINTERPOLATE, LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX,
-    QUOTED_IDENTIFIER, UNIT
+    AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL, IMPORT, RETURN, UNTIL,
+    VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE, CHARACTER,
+    BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE,
+    LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
+    QUOTED_IDENTIFIER, LPATTERN
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -70,6 +70,7 @@ module_expressions
 
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
+    | IDENTIFIER.id ASSIGN pattern.e                    {: return null; //patternCase(id, e); :}
     | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
     | IDENTIFIER.id INFIX INTEGER.p                     {: return op(id, p); :}
     | IDENTIFIER.id LEFT_INFIX INTEGER.p                {: return leftOp(id, p); :}
@@ -95,15 +96,21 @@ type_property
     = IDENTIFIER.id COLON type_signature.t nl* {: return propDef(id, t); :}
     ;
 
+type_parameters
+    = IDENTIFIER.id
+    | type_parameters IDENTIFIER.id
+    ;
+
 type_signature
     = primary_signature
     | primary_signature.t APPLIES_TO type_signature.f {: return fsig(t, f); :}
     ;
 
 primary_signature
-    = qualified_identifier.id               {: return ftype(id); :}
-    | UNIT                                  {: return type(qid("snacks", "lang", "Void")); :}
-    | LPAREN secondary_signature.f RPAREN   {: return f; :}
+    = qualified_identifier.id                   {: return ftype(id); :}
+    | qualified_identifier.id type_parameters.p {: return ftype(id); :}
+    | UNIT                                      {: return type(qid("snacks", "lang", "Void")); :}
+    | LPAREN secondary_signature.f RPAREN       {: return f; :}
     ;
 
 secondary_signature
@@ -149,18 +156,34 @@ qualified_identifier
     | qualified_identifier.ids DOT QUOTED_IDENTIFIER.id {: return qid(ids, id); :}
     ;
 
+pattern
+    = LPATTERN pattern_arguments COMMA? RPAREN APPLIES_TO expression
+    ;
+
+pattern_arguments
+    = pattern_argument
+    | pattern_arguments COMMA pattern_argument
+    ;
+
+pattern_argument
+    = qualified_identifier.id
+    | qualified_identifier.id pattern_parameters.p
+    ;
+
+pattern_parameters
+    = IDENTIFIER
+    | pattern_parameters IDENTIFIER
+    ;
+
 statement
     = primary_statement
-    | WHILE expression.c nl+ sequence.e term* END               {: return loop(c, block(e)); :}
-    | WHILE expression.c DO sequence.e term* END                {: return loop(c, block(e)); :}
-    | UNTIL expression.c nl+ sequence.e term* END               {: return loop(unary("not", c), block(e)); :}
-    | UNTIL expression.c DO sequence.e term* END                {: return loop(unary("not", c), block(e)); :}
-    | FOR IDENTIFIER.v IN expression.e nl+ sequence.s term* END {: return loop(v, e, block(s)); :}
-    | FOR IDENTIFIER.v IN expression.e DO sequence.s term* END  {: return loop(v, e, block(s)); :}
-    | primary_statement.s COMMA IF expression.c                 {: return suffix(s, c); :}
-    | primary_statement.s COMMA UNLESS expression.c             {: return suffix(s, unary("not", c)); :}
-    | primary_statement.s COMMA WHILE expression.c              {: return loop(c, s); :}
-    | primary_statement.s COMMA UNTIL expression.c              {: return loop(unary("not", c), s); :}
+    | WHILE expression.c COLON sequence.e term* END                 {: return loop(c, block(e)); :}
+    | UNTIL expression.c COLON sequence.e term* END                 {: return loop(unary("not", c), block(e)); :}
+    | FOR IDENTIFIER.v IN expression.e COLON sequence.s term* END   {: return loop(v, e, block(s)); :}
+    | primary_statement.s IF expression.c                           {: return suffix(s, c); :}
+    | primary_statement.s UNLESS expression.c                       {: return suffix(s, unary("not", c)); :}
+    | primary_statement.s WHILE expression.c                        {: return loop(c, s); :}
+    | primary_statement.s UNTIL expression.c                        {: return loop(unary("not", c), s); :}
     ;
 
 primary_statement
@@ -172,7 +195,8 @@ primary_statement
     | VAR IDENTIFIER.v ASSIGN expression.e          {: return var(v, e); :}
     | VAR QUOTED_IDENTIFIER.v                       {: return var(v); :}
     | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e   {: return var(v, e); :}
-    | HURL expression.e                             {: return hurl(e); :}
+    | HURL string_literal.m                         {: return hurl(m); :}
+    | HURL IDENTIFIER.m                             {: return hurl(id(m)); :}
     | RETURN expression.e                           {: return result(e); :}
     ;
 
@@ -187,6 +211,7 @@ message
 
 postfix_expression
     = primary_expression
+    | postfix_expression.e initializer_properties.p         {: return initializer(e, p); :}
     | postfix_expression.e DOT IDENTIFIER.id                {: return access(e, id); :}
     | postfix_expression.e LINDEX message.a COMMA? RSQUARE  {:
                                                                 Symbol result = apply(id("[]"), e);
@@ -212,9 +237,8 @@ primary_expression
     | CHARACTER.c                   {: return literal(c); :}
     | SYMBOL.s                      {: return symbol(s); :}
     | LPAREN expression.e RPAREN    {: return e; :}
-    | QUOTE STRING.val QUOTE        {: return literal(val); :}
-    | QUOTE QUOTE                   {: return literal(""); :}
     | UNIT                          {: return unit(); :}
+    | string_literal
     | function_literal
     | map_literal
     | list_literal
@@ -223,11 +247,15 @@ primary_expression
     | block
     | conditional
     | exceptional
-    | DQUOTE interpolation_list.e DQUOTE                    {: return e; :}
-    | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE                  {: return literal(val); :}
-    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE      {: return e; :}
     | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
-    | IDENTIFIER.id initializer_properties.p                {: return initializer(id, p); :}
+    ;
+
+string_literal
+    = QUOTE STRING.val QUOTE                            {: return literal(val); :}
+    | QUOTE QUOTE                                       {: return literal(""); :}
+    | DQUOTE interpolation_list.e DQUOTE                {: return e; :}
+    | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE              {: return literal(val); :}
+    | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE  {: return e; :}
     ;
 
 initializer_properties
@@ -322,10 +350,8 @@ conditional
     ;
 
 conditional_case
-    = IF expression.c nl+ sequence.e term*      {: return condition(c, block(e)); :}
-    | IF expression.c THEN sequence.e term*     {: return condition(c, block(e)); :}
-    | UNLESS expression.c nl+ sequence.e term*  {: return condition(unary("not", c), block(e)); :}
-    | UNLESS expression.c THEN sequence.e term* {: return condition(unary("not", c), block(e)); :}
+    = IF expression.c COLON sequence.e term*        {: return condition(c, block(e)); :}
+    | UNLESS expression.c COLON sequence.e term*    {: return condition(unary("not", c), block(e)); :}
     ;
 
 alternative_cases
@@ -334,10 +360,8 @@ alternative_cases
     ;
 
 alternative_case
-    = ELSE_IF expression.c nl+ sequence.e term*         {: return condition(c, block(e)); :}
-    | ELSE_IF expression.c THEN sequence.e term*        {: return condition(c, block(e)); :}
-    | ELSE_UNLESS expression.c nl+ sequence.e term*     {: return condition(unary("not", c), block(e)); :}
-    | ELSE_UNLESS expression.c THEN sequence.e term*    {: return condition(unary("not", c), block(e)); :}
+    = ELSE_IF expression.c COLON sequence.e term*       {: return condition(c, block(e)); :}
+    | ELSE_UNLESS expression.c COLON sequence.e term*   {: return condition(unary("not", c), block(e)); :}
     ;
 
 default_case

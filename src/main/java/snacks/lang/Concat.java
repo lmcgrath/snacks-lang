@@ -1,10 +1,12 @@
 package snacks.lang;
 
-import static snacks.lang.Type.STRING_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.STRING_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.var;
 
-@Snack("concat")
+import snacks.lang.type.Type;
+
+@Snack(name = "concat")
 public class Concat {
 
     private static Concat instance;

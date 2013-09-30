@@ -1,14 +1,13 @@
 package snacks.lang.parser.syntax;
 
 import java.util.Objects;
-import beaver.Symbol;
 
 public class TypeSpec extends VisitableSymbol {
 
-    private final Symbol type;
+    private final QualifiedIdentifier name;
 
-    public TypeSpec(Symbol type) {
-        this.type = type;
+    public TypeSpec(QualifiedIdentifier name) {
+        this.name = name;
     }
 
     @Override
@@ -18,20 +17,20 @@ public class TypeSpec extends VisitableSymbol {
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof TypeSpec && Objects.equals(type, ((TypeSpec) o).type);
+        return o == this || o instanceof TypeSpec && Objects.equals(name, ((TypeSpec) o).name);
     }
 
-    public Symbol getType() {
-        return type;
+    public QualifiedIdentifier getName() {
+        return name;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type);
+        return Objects.hash(name);
     }
 
     @Override
     public String toString() {
-        return type.toString();
+        return name.toString();
     }
 }

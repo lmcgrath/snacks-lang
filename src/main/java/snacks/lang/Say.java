@@ -1,11 +1,13 @@
 package snacks.lang;
 
 import static java.lang.System.out;
-import static snacks.lang.Type.VOID_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.VOID_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.var;
 
-@Snack("say")
+import snacks.lang.type.Type;
+
+@Snack(name = "say")
 public class Say {
 
     private static Say instance;

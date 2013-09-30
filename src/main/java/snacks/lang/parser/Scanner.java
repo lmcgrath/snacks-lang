@@ -25,9 +25,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     static {
         newlineWords.addAll(asList(
             "begin",
-            "do",
             "ensure",
-            "then",
             "->",
             "=>",
             "else"
@@ -42,7 +40,6 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         dictionary.put("break", BREAK);
         dictionary.put("continue", CONTINUE);
         dictionary.put("data", DATA);
-        dictionary.put("do", DO);
         dictionary.put("else", ELSE);
         dictionary.put("if", IF);
         dictionary.put("unless", UNLESS);
@@ -54,7 +51,6 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         dictionary.put("hurl", HURL);
         dictionary.put("import", IMPORT);
         dictionary.put("return", RETURN);
-        dictionary.put("then", THEN);
         dictionary.put("until", UNTIL);
         dictionary.put("use", USE);
         dictionary.put("var", VAR);
@@ -710,6 +706,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 } else {
                     return action;
                 }
+            } else if (peek() == '?' && lookAhead(1) == '(') {
+                read(2);
+                return accept(LPATTERN);
             }
             return scanIdentifier();
         }

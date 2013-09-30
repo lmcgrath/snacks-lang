@@ -18,6 +18,10 @@ public interface Generator {
 
     void generateClosure(Closure node);
 
+    void generateDeclaredConstructor(DeclaredConstructor node);
+
+    void generateDeclaredType(DeclaredType node);
+
     void generateFunctionClosure(FunctionClosure node);
 
     void generateClosureLocator(ClosureLocator locator);
@@ -25,8 +29,6 @@ public interface Generator {
     void generateContinue(Continue node);
 
     void generateDeclarationLocator(DeclarationLocator locator);
-
-    void generateDeclaredArgument(DeclaredArgument node);
 
     void generateDeclaredExpression(DeclaredExpression node);
 
@@ -79,8 +81,6 @@ public interface Generator {
     void generateVariableDeclaration(VariableDeclaration node);
 
     void generateVariableLocator(VariableLocator locator);
-
-    void generateVoidApply(VoidApply node);
 
     void generateVoidFunction(VoidFunction node);
 

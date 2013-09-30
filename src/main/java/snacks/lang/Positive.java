@@ -1,11 +1,13 @@
 package snacks.lang;
 
-import static snacks.lang.Type.DOUBLE_TYPE;
-import static snacks.lang.Type.INTEGER_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.set;
+import static snacks.lang.type.Types.DOUBLE_TYPE;
+import static snacks.lang.type.Types.INTEGER_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.union;
 
-@Snack("unary+")
+import snacks.lang.type.Type;
+
+@Snack(name = "unary+")
 @Prefix(precedence = 15)
 public class Positive {
 
@@ -20,7 +22,7 @@ public class Positive {
 
     @SnackType
     public static Type type() {
-        return set(
+        return union(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE)
         );

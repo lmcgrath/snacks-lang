@@ -1,6 +1,5 @@
 package snacks.lang.parser.syntax;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.List;
@@ -14,10 +13,6 @@ public class QualifiedIdentifier extends VisitableSymbol {
 
     public QualifiedIdentifier(String... segments) {
         this.segments = ImmutableList.copyOf(segments);
-    }
-
-    public QualifiedIdentifier(String segment) {
-        segments = asList(segment);
     }
 
     public QualifiedIdentifier(QualifiedIdentifier head, String segment) {

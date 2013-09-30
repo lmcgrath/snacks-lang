@@ -31,6 +31,6 @@ public class TypeVariable extends VisitableSymbol {
 
     @Override
     public String toString() {
-        return "(TypeVariable " + name + ")";
+        return "(VariableType " + name + ")";
     }
 }

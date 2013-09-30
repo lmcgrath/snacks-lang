@@ -1,11 +1,13 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.BOOLEAN_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.set;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.type.Types.func;
 
-@Snack("and")
+import snacks.lang.type.Type;
+import snacks.lang.type.Types;
+
+@Snack(name = "and")
 @Infix(fixity = LEFT, precedence = 4)
 public class And {
 
@@ -20,7 +22,7 @@ public class And {
 
     @SnackType
     public static Type type() {
-        return set(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
+        return Types.union(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
     }
 
     public Closure apply(Boolean left) {

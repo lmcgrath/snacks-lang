@@ -1,11 +1,13 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.BOOLEAN_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.set;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.union;
 
-@Snack("or")
+import snacks.lang.type.Type;
+
+@Snack(name = "or")
 @Infix(fixity = LEFT, precedence = 3, shortCircuit = true)
 public class Or {
 
@@ -20,7 +22,7 @@ public class Or {
 
     @SnackType
     public static Type type() {
-        return set(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
+        return union(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
     }
 
     public Closure apply(Boolean left) {

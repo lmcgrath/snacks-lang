@@ -1,14 +1,14 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.VOID_TYPE;
-import static snacks.lang.Type.func;
+import static snacks.lang.type.Types.VOID_TYPE;
+import static snacks.lang.type.Types.func;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class Closure extends AstNode {
 

@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.var;
 
 import java.util.Objects;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class Hurl extends AstNode {
 

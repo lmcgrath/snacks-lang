@@ -1,9 +1,11 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.*;
+import static snacks.lang.type.Types.*;
 
-@Snack("+")
+import snacks.lang.type.Type;
+
+@Snack(name = "+")
 @Infix(fixity = LEFT, precedence = 12)
 public class Plus {
 
@@ -18,7 +20,7 @@ public class Plus {
 
     @SnackType
     public static Type type() {
-        return set(
+        return union(
             func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)),
             func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
             func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),

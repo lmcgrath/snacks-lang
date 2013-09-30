@@ -1,11 +1,13 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.BOOLEAN_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.var;
 
-@Snack("is not")
+import snacks.lang.type.Type;
+
+@Snack(name = "is not")
 @Infix(fixity = LEFT, precedence = 6)
 public class NotIdentical {
 

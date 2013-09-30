@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.Type.CHARACTER_TYPE;
+import static snacks.lang.type.Types.CHARACTER_TYPE;
 
 import java.util.Objects;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class CharacterConstant extends AstNode {
 

@@ -93,7 +93,7 @@ public final class SyntaxFactory {
     }
 
     public static Symbol def(String name, Symbol expression) {
-        return new Declaration(name, expression);
+        return new ExpressionDeclaration(name, expression);
     }
 
     public static Symbol embrace(String var, Symbol expression) {
@@ -153,12 +153,8 @@ public final class SyntaxFactory {
         return new WildcardImport(id);
     }
 
-    public static Symbol initializer(String type, Symbol... properties) {
-        return new InitializerExpression(type, properties);
-    }
-
-    public static Symbol invocation(Symbol function) {
-        return new Invocation(function);
+    public static Symbol initializer(Symbol constructor, Symbol... properties) {
+        return new InitializerExpression(constructor, properties);
     }
 
     public static Symbol invokable(Symbol body) {
@@ -241,7 +237,7 @@ public final class SyntaxFactory {
         return new QualifiedIdentifier(id, segment);
     }
 
-    public static Symbol qid(String... ids) {
+    public static QualifiedIdentifier qid(String... ids) {
         return new QualifiedIdentifier(ids);
     }
 
@@ -309,11 +305,11 @@ public final class SyntaxFactory {
         return new TupleLiteral(element, elements);
     }
 
-    public static Symbol typeDef(String name, Symbol definition) {
+    public static Symbol typeDef(String name, Symbol... definition) {
         return new TypeDeclaration(name, definition);
     }
 
-    public static Symbol type(Symbol id) {
+    public static Symbol type(QualifiedIdentifier id) {
         return new TypeSpec(id);
     }
 

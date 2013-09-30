@@ -4,9 +4,9 @@ import static org.apache.commons.lang.StringUtils.join;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
-import java.util.Set;
+import java.util.Collection;
 import beaver.Symbol;
-import snacks.lang.ast.AstNode;
+import snacks.lang.ast.NamedNode;
 import snacks.lang.parser.Parser.AltGoals;
 
 public final class CompilerUtil {
@@ -24,7 +24,7 @@ public final class CompilerUtil {
         );
     }
 
-    public static Set<AstNode> translate(SymbolEnvironment environment, String... inputs) {
+    public static Collection<NamedNode> translate(SymbolEnvironment environment, String... inputs) {
         return new Translator(environment, "test").translateModule(parse(inputs));
     }
 

@@ -1,8 +1,11 @@
 package snacks.lang;
 
-import static snacks.lang.Type.INTEGER_TYPE;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.INTEGER_TYPE;
 
-@Snack("Integer")
+import snacks.lang.type.Type;
+
+@Snack(name = "Integer", kind = TYPE)
 @JavaType(Integer.class)
 public class SnacksInteger {
 

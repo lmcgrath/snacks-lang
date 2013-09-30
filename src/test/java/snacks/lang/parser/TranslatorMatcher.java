@@ -1,22 +1,22 @@
 package snacks.lang.parser;
 
-import java.util.Set;
+import java.util.Collection;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import snacks.lang.ast.AstNode;
+import snacks.lang.ast.NamedNode;
 
-public class TranslatorMatcher extends TypeSafeMatcher<Set<AstNode>> {
+public class TranslatorMatcher extends TypeSafeMatcher<Collection<NamedNode>> {
 
     @Factory
-    public static Matcher<Set<AstNode>> defines(AstNode expectedNode) {
+    public static Matcher<Collection<NamedNode>> defines(NamedNode expectedNode) {
         return new TranslatorMatcher(expectedNode);
     }
 
-    private final AstNode expectedNode;
+    private final NamedNode expectedNode;
 
-    private TranslatorMatcher(AstNode expectedNode) {
+    private TranslatorMatcher(NamedNode expectedNode) {
         this.expectedNode = expectedNode;
     }
 
@@ -26,7 +26,7 @@ public class TranslatorMatcher extends TypeSafeMatcher<Set<AstNode>> {
     }
 
     @Override
-    protected boolean matchesSafely(Set<AstNode> item) {
+    protected boolean matchesSafely(Collection<NamedNode> item) {
         return item.contains(expectedNode);
     }
 }

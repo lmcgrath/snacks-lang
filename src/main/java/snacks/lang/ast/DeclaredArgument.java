@@ -2,7 +2,7 @@ package snacks.lang.ast;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class DeclaredArgument extends AstNode {
 
@@ -40,11 +40,6 @@ public class DeclaredArgument extends AstNode {
 
     public String getName() {
         return name;
-    }
-
-    @Override
-    public void generate(Generator generator) {
-        generator.generateDeclaredArgument(this);
     }
 
     @Override

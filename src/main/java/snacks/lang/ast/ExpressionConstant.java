@@ -1,7 +1,7 @@
 package snacks.lang.ast;
 
 import java.util.Objects;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class ExpressionConstant extends AstNode {
 

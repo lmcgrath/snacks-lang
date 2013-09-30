@@ -1,13 +1,15 @@
 package snacks.lang;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.Type.SYMBOL_TYPE;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.SYMBOL_TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import snacks.lang.type.Type;
 
-@Snack("Symbol")
+@Snack(name = "Symbol", kind = TYPE)
 public class Symbol {
 
     @SnackType

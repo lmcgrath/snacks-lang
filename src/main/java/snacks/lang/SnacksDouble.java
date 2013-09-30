@@ -1,8 +1,11 @@
 package snacks.lang;
 
-import static snacks.lang.Type.DOUBLE_TYPE;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.DOUBLE_TYPE;
 
-@Snack("Double")
+import snacks.lang.type.Type;
+
+@Snack(name = "Double", kind = TYPE)
 @JavaType(Double.class)
 public class SnacksDouble {
 

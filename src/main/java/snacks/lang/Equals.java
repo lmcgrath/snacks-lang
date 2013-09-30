@@ -1,13 +1,14 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.BOOLEAN_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.var;
 
 import java.util.Objects;
+import snacks.lang.type.Type;
 
-@Snack("==")
+@Snack(name = "==")
 @Infix(fixity = LEFT, precedence = 6)
 public class Equals {
 

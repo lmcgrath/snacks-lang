@@ -1,17 +1,18 @@
-package snacks.lang;
+package snacks.lang.type;
 
 import static java.util.Arrays.asList;
+import static snacks.lang.type.Types.union;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class TypeVariable extends Type {
+public class VariableType extends Type {
 
     private State state;
 
-    public TypeVariable(String name) {
+    public VariableType(String name) {
         this.state = new UnboundState(this, name);
     }
 
@@ -27,7 +28,7 @@ public class TypeVariable extends Type {
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof TypeVariable && Objects.equals(state, ((TypeVariable) o).state);
+        return o == this || o instanceof VariableType && Objects.equals(state, ((VariableType) o).state);
     }
 
     @Override
@@ -37,12 +38,12 @@ public class TypeVariable extends Type {
 
     @Override
     public void generate(TypeGenerator generator) {
-        generator.generateTypeVariable(this);
+        generator.generateVariableType(this);
     }
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.genericCopyOfTypeVariable(this, mappings);
+        return types.copyVariableType(this, mappings);
     }
 
     @Override
@@ -158,10 +159,10 @@ public class TypeVariable extends Type {
 
     private static final class UnboundState implements State {
 
-        private final TypeVariable parent;
+        private final VariableType parent;
         private final String name;
 
-        public UnboundState(TypeVariable parent, String name) {
+        public UnboundState(VariableType parent, String name) {
             this.parent = parent;
             this.name = name;
         }
@@ -208,7 +209,7 @@ public class TypeVariable extends Type {
             for (int i = 0; i < size; i++) {
                 variables.add(environment.createVariable());
             }
-            return set(variables);
+            return union(variables);
         }
 
         @Override

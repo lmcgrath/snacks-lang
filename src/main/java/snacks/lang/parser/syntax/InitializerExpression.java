@@ -9,10 +9,10 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class InitializerExpression extends VisitableSymbol {
 
-    private final String constructor;
+    private final Symbol constructor;
     private final List<Symbol> properties;
 
-    public InitializerExpression(String constructor, Symbol... properties) {
+    public InitializerExpression(Symbol constructor, Symbol... properties) {
         this.constructor = constructor;
         this.properties = asList(properties);
     }
@@ -37,12 +37,12 @@ public class InitializerExpression extends VisitableSymbol {
         }
     }
 
-    public List<Symbol> getProperties() {
-        return properties;
+    public Symbol getConstructor() {
+        return constructor;
     }
 
-    public String getConstructor() {
-        return constructor;
+    public List<Symbol> getProperties() {
+        return properties;
     }
 
     @Override

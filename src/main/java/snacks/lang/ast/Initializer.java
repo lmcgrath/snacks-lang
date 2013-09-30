@@ -1,19 +1,18 @@
 package snacks.lang.ast;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.RecordType;
+import snacks.lang.type.Type;
 
 public class Initializer extends AstNode {
 
     private final AstNode constructor;
-    private final Map<String, PropertyInitializer> properties;
+    private final List<AstNode> arguments;
 
-    public Initializer(AstNode constructor, Map<String, PropertyInitializer> properties) {
+    public Initializer(AstNode constructor, List<AstNode> arguments) {
         this.constructor = constructor;
-        this.properties = new HashMap<>(properties);
+        this.arguments = arguments;
     }
 
     @Override
@@ -24,7 +23,7 @@ public class Initializer extends AstNode {
             Initializer other = (Initializer) o;
             return new EqualsBuilder()
                 .append(constructor, other.constructor)
-                .append(properties, other.properties)
+                .append(arguments, other.arguments)
                 .isEquals();
         } else {
             return false;
@@ -36,17 +35,21 @@ public class Initializer extends AstNode {
         generator.generateInitializer(this);
     }
 
-    public Map<String, PropertyInitializer> getProperties() {
-        return properties;
+    public List<AstNode> getArguments() {
+        return arguments;
+    }
+
+    public AstNode getConstructor() {
+        return constructor;
     }
 
     @Override
-    public RecordType getType() {
-        return (RecordType) constructor.getType();
+    public Type getType() {
+        return constructor.getType();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(constructor, properties);
+        return Objects.hash(constructor, arguments);
     }
 }

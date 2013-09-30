@@ -292,9 +292,9 @@ public class ParserTest {
     @Test
     public void shouldParseConditionalCase() {
         Symbol tree = parse(
-            "test = if bananas then",
+            "test = if bananas:",
             "           waffles 1 2 3",
-            "       else if toast then",
+            "       else if toast:",
             "           ducks 4 5 6",
             "       else",
             "           waffles anyway!",
@@ -495,7 +495,7 @@ public class ParserTest {
         Symbol tree = parse(
             "main = {",
             "    var x = 0",
-            "    x = x + 1, while x < 10",
+            "    x = x + 1 while x < 10",
             "}"
         );
         assertThat(tree, equalTo(module(

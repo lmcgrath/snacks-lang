@@ -12,7 +12,7 @@ public class JavaUtils {
     static {
         replacements = new LinkedHashMap<>();
         replacements.put("¢", "¢Jingle");
-        replacements.put("$", "¢Bank");
+        replacements.put("$", "¢Bux");
         replacements.put("?", "¢Query");
         replacements.put("!", "¢Bang");
         replacements.put("+", "¢Plus");
@@ -32,15 +32,6 @@ public class JavaUtils {
         replacements.put("~", "¢Wave");
     }
 
-    public static String javaClass(SnacksRegistry registry, String module, String name) {
-        Class<?> actualClass = registry.classOf(module + '.' + name);
-        if (actualClass == null) {
-            return javaClass(module, name);
-        } else {
-            return actualClass.getName();
-        }
-    }
-
     public static String javaClass(String module, String name) {
         return module + '.' + capitalize(javaName(name));
     }
@@ -50,7 +41,7 @@ public class JavaUtils {
     }
 
     public static String javaName(String snacksName) {
-        String javaName= snacksName;
+        String javaName = snacksName;
         for (String replacement : replacements.keySet()) {
             javaName = javaName.replace(replacement, replacements.get(replacement));
         }

@@ -24,9 +24,11 @@ public interface SyntaxVisitor {
 
     void visitConditional(Conditional node);
 
+    void visitConstructorExpression(ConstructorExpression node);
+
     void visitContinueExpression(ContinueExpression node);
 
-    void visitDeclaration(Declaration node);
+    void visitExpressionDeclaration(ExpressionDeclaration node);
 
     void visitDoubleLiteral(DoubleLiteral node);
 
@@ -49,8 +51,6 @@ public interface SyntaxVisitor {
     void visitInitializerExpression(InitializerExpression node);
 
     void visitIntegerLiteral(IntegerLiteral node);
-
-    void visitInvocation(Invocation node);
 
     void visitInvokableLiteral(InvokableLiteral node);
 

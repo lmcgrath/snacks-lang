@@ -1,8 +1,8 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.var;
+import static snacks.lang.type.Types.var;
 
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class Break extends AstNode {
 

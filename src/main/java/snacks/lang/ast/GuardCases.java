@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Type.set;
+import static snacks.lang.type.Types.union;
 
 import java.util.*;
-import snacks.lang.Type;
+import snacks.lang.type.Type;
 
 public class GuardCases extends AstNode {
 
@@ -28,7 +28,7 @@ public class GuardCases extends AstNode {
         for (AstNode c : cases) {
             types.add(c.getType());
         }
-        return set(types);
+        return union(types);
     }
 
     @Override

@@ -1,13 +1,11 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Type.BOOLEAN_TYPE;
-import static snacks.lang.Type.DOUBLE_TYPE;
-import static snacks.lang.Type.INTEGER_TYPE;
-import static snacks.lang.Type.func;
-import static snacks.lang.Type.set;
+import static snacks.lang.type.Types.*;
 
-@Snack(">=")
+import snacks.lang.type.Type;
+
+@Snack(name = ">=")
 @Infix(fixity = LEFT, precedence = 6)
 public class GreaterThanEquals {
 
@@ -22,7 +20,7 @@ public class GreaterThanEquals {
 
     @SnackType
     public static Type type() {
-        return set(
+        return union(
             func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
             func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)),
             func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),

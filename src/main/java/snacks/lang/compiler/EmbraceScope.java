@@ -48,10 +48,6 @@ class EmbraceScope {
         return end;
     }
 
-    public AstNode getEnsure() {
-        return ensure;
-    }
-
     public LabelNode getError() {
         return error;
     }
