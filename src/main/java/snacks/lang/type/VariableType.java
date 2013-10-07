@@ -16,6 +16,27 @@ public class VariableType extends Type {
         this.state = new UnboundState(this, name);
     }
 
+    public VariableType(Type type) {
+        this.state = new BoundState(type);
+    }
+
+    @Override
+    public boolean acceptLeft(Type other) {
+        if (!equals(other)) {
+            if (occursIn(other)) {
+                return false;
+            } else {
+                bind(other);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean acceptRight(Type other) {
+        return accepts(other);
+    }
+
     @Override
     public void bind(Type type) {
         state.bind(type);
@@ -64,23 +85,6 @@ public class VariableType extends Type {
     @Override
     public String toString() {
         return state.toString();
-    }
-
-    @Override
-    public boolean unifyLeft(Type other) {
-        if (!equals(other)) {
-            if (occursIn(other)) {
-                return false;
-            } else {
-                bind(other);
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean unifyRight(Type other) {
-        return unify(other);
     }
 
     @Override

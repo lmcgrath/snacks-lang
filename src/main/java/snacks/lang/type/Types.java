@@ -24,8 +24,8 @@ public final class Types {
         return new AlgebraicType(name, new ArrayList<Type>());
     }
 
-    public static Type algebraic(String name, Collection<Type> parents) {
-        return new AlgebraicType(name, parents);
+    public static Type algebraic(String name, Collection<Type> types) {
+        return new AlgebraicType(name, types);
     }
 
     public static Type argumentOf(Type type) {
@@ -57,16 +57,16 @@ public final class Types {
         return new ParameterizedType(type, params);
     }
 
-    public static Type parameterized(Type type, Type... params) {
-        return new ParameterizedType(type, params);
-    }
-
     public static Property property(String name, Type type) {
         return new Property(name, type);
     }
 
     public static Type record(String name, Collection<Property> properties) {
         return new RecordType(name, properties);
+    }
+
+    public static Type recur(String name) {
+        return new RecursiveType(name);
     }
 
     public static Type resultOf(Type type) {
@@ -101,6 +101,10 @@ public final class Types {
 
     public static Type var(String name) {
         return new VariableType(name);
+    }
+
+    public static Type var(Type type) {
+        return new VariableType(type);
     }
 
     private Types() {

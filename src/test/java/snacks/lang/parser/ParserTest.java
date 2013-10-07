@@ -1,5 +1,6 @@
 package snacks.lang.parser;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.parser.CompilerUtil.expression;
@@ -516,6 +517,84 @@ public class ParserTest {
         );
         assertThat(tree, equalTo(module(
             def("main", invokable(block(assign(id("x"), msg(id("x"), id("+"), literal(1))))))
+        )));
+    }
+
+    @Test
+    public void shouldParseAlgebraicType() {
+        Symbol tree = parse("data Tree = Leaf | Node Integer Tree Tree");
+        assertThat(tree, equalTo(module(
+            typeDef("Tree", asList(
+                constDef("Leaf"),
+                recordDef("Node", asList(
+                    propDef("_0", type("Integer")),
+                    propDef("_1", type("Tree")),
+                    propDef("_2", type("Tree"))
+                ))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseAlgebraicTypeWithFunction() {
+        Symbol tree = parse("data FunctionOrValue a b = Value b | Function a -> b");
+        assertThat(tree, equalTo(module(
+            typeDef("FunctionOrValue", asList("a", "b"), asList(
+                recordDef("Value", asList(
+                    propDef("_0", typeVar("b"))
+                )),
+                recordDef("Function", asList(
+                    propDef("_0", fsig(typeVar("a"), typeVar("b")))
+                ))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseAlgebraicTypeWithTuple() {
+        Symbol tree = parse("data OneOrTwo a = One a | Two (a, a)");
+        assertThat(tree, equalTo(module(
+            typeDef("OneOrTwo", asList("a"), asList(
+                recordDef("One", asList(
+                    propDef("_0", typeVar("a"))
+                )),
+                recordDef("Two", asList(
+                    propDef("_0", tsig(typeVar("a"), typeVar("a")))
+                ))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseParameterizedRecordType() {
+        Symbol tree = parse(
+            "data TaggedRecord a = {",
+            "    name: String,",
+            "    value: Maybe a,",
+            "}"
+        );
+        assertThat(tree, equalTo(module(
+            typeDef("TaggedRecord", asList("a"), asList(
+                recordDef("TaggedRecord", asList(
+                    propDef("name", type("String")),
+                    propDef("value", typeRef(type("Maybe"), asList(typeVar("a"))))
+                ))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParseParameterizedAlgebraicType() {
+        Symbol tree = parse("data Tree a = Leaf | Node a Tree Tree");
+        assertThat(tree, equalTo(module(
+            typeDef("Tree", asList("a"), asList(
+                constDef("Leaf"),
+                recordDef("Node", asList(
+                    propDef("_0", typeVar("a")),
+                    propDef("_1", type("Tree")),
+                    propDef("_2", type("Tree"))
+                ))
+            ))
         )));
     }
 }

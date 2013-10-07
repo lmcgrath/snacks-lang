@@ -67,10 +67,10 @@ public class RecordType extends Type {
     }
 
     @Override
-    protected boolean unifyRight(Type other) {
+    protected boolean acceptRight(Type other) {
         if (other instanceof RecordType) {
             RecordType otherRecord = (RecordType) other;
-            if (name.equals(otherRecord.name)) {
+            if (name.equals(otherRecord.name) && properties.size() == otherRecord.properties.size()) {
                 for (int i = 0; i < properties.size(); i++) {
                     if (!properties.get(i).unify(otherRecord.properties.get(i))) {
                         return false;
@@ -129,8 +129,8 @@ public class RecordType extends Type {
             return "(" + name + ": " + type + ")";
         }
 
-        public boolean unify(Property property) {
-            return Objects.equals(name, property.name) && type.unify(property.type);
+        public boolean unify(Property other) {
+            return Objects.equals(name, other.name) && other.type.accepts(type);
         }
     }
 }

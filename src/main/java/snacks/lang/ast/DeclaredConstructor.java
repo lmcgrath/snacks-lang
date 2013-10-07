@@ -50,4 +50,9 @@ public class DeclaredConstructor extends NamedNode {
     public Locator locator() {
         return new DeclarationLocator(module, name, getKind());
     }
+
+    @Override
+    public String toString() {
+        return "(Constructor " + module + "." + name + " " + body + ")";
+    }
 }

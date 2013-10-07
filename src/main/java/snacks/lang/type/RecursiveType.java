@@ -3,17 +3,17 @@ package snacks.lang.type;
 import java.util.Map;
 import java.util.Objects;
 
-public class SimpleType extends Type {
+public class RecursiveType extends Type {
 
     private final String name;
 
-    public SimpleType(String name) {
+    public RecursiveType(String name) {
         this.name = name;
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof SimpleType && Objects.equals(name, ((SimpleType) o).name);
+        return o == this || o instanceof RecursiveType && Objects.equals(name, ((RecursiveType) o).name);
     }
 
     @Override
@@ -23,12 +23,12 @@ public class SimpleType extends Type {
 
     @Override
     public void generate(TypeGenerator generator) {
-        generator.generateSimpleType(this);
+        generator.generateRecursiveType(this);
     }
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return types.copySimpleType(this, mappings);
+        return this;
     }
 
     @Override
@@ -43,11 +43,11 @@ public class SimpleType extends Type {
 
     @Override
     public String toString() {
-        return "(" + name + ")";
+        return "(Recur " + name + ")";
     }
 
     @Override
     protected boolean acceptRight(Type other) {
-        return other instanceof SimpleType && name.equals(other.getName()) || other.isMember(this);
+        return Objects.equals(name, other.getName());
     }
 }

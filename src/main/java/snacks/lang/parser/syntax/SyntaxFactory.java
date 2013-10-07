@@ -92,6 +92,10 @@ public final class SyntaxFactory {
         return new Conditional(elements);
     }
 
+    public static Symbol constDef(String name) {
+        return new ConstantDeclaration(name);
+    }
+
     public static Symbol def(String name, Symbol expression) {
         return new ExpressionDeclaration(name, expression);
     }
@@ -112,14 +116,6 @@ public final class SyntaxFactory {
         return new FromImport(module, subImports);
     }
 
-    public static Symbol func(Symbol arg, Symbol body) {
-        return new FunctionLiteral(arg, body, null);
-    }
-
-    public static Symbol func(Symbol arg, Symbol body, Symbol type) {
-        return new FunctionLiteral(arg, body, type);
-    }
-
     public static Symbol fsig(Symbol argument, Symbol result) {
         return new FunctionSignature(argument, result);
     }
@@ -131,6 +127,14 @@ public final class SyntaxFactory {
         } else {
             return type(id);
         }
+    }
+
+    public static Symbol func(Symbol arg, Symbol body) {
+        return new FunctionLiteral(arg, body, null);
+    }
+
+    public static Symbol func(Symbol arg, Symbol body, Symbol type) {
+        return new FunctionLiteral(arg, body, type);
     }
 
     public static Symbol hurl(Symbol expression) {
@@ -233,7 +237,7 @@ public final class SyntaxFactory {
         return new PropertyExpression(name, value);
     }
 
-    public static Symbol qid(QualifiedIdentifier id, String segment) {
+    public static QualifiedIdentifier qid(QualifiedIdentifier id, String segment) {
         return new QualifiedIdentifier(id, segment);
     }
 
@@ -246,6 +250,10 @@ public final class SyntaxFactory {
     }
 
     public static Symbol recordDef(String name, Symbol... properties) {
+        return recordDef(name, asList(properties));
+    }
+
+    public static Symbol recordDef(String name, Collection<Symbol> properties) {
         return new RecordDeclaration(name, properties);
     }
 
@@ -305,16 +313,24 @@ public final class SyntaxFactory {
         return new TupleLiteral(element, elements);
     }
 
-    public static Symbol typeDef(String name, Symbol... definition) {
-        return new TypeDeclaration(name, definition);
-    }
-
     public static Symbol type(QualifiedIdentifier id) {
         return new TypeSpec(id);
     }
 
     public static Symbol type(String... segments) {
         return type(qid(segments));
+    }
+
+    public static Symbol typeRef(Symbol type, Collection<Symbol> parameters) {
+        return new TypeReference(type, parameters);
+    }
+
+    public static Symbol typeDef(String name, Collection<Symbol> definition) {
+        return typeDef(name, new ArrayList<String>(), definition);
+    }
+
+    public static Symbol typeDef(String name, Collection<String> parameters, Collection<Symbol> definition) {
+        return new TypeDeclaration(name, parameters, definition);
     }
 
     public static Symbol typeVar(String name) {

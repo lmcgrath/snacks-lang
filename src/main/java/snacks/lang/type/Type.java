@@ -6,6 +6,12 @@ import java.util.*;
 
 public abstract class Type {
 
+    public boolean accepts(Type other) {
+        Type left = expose();
+        Type right = other.expose();
+        return left.acceptLeft(right);
+    }
+
     public void bind(Type type) {
         // intentionally empty
     }
@@ -27,6 +33,10 @@ public abstract class Type {
 
     @Override
     public abstract int hashCode();
+
+    public boolean isMember(Type type) {
+        return false;
+    }
 
     public boolean occursIn(Type type) {
         Type actualVariable = expose();
@@ -50,19 +60,13 @@ public abstract class Type {
     @Override
     public abstract String toString();
 
-    public boolean unify(Type other) {
-        Type left = expose();
-        Type right = other.expose();
-        return left.unifyLeft(right);
+    protected boolean acceptLeft(Type other) {
+        return other.acceptRight(this);
     }
+
+    protected abstract boolean acceptRight(Type other);
 
     protected boolean contains(Type type) {
         return false;
     }
-
-    protected boolean unifyLeft(Type other) {
-        return other.unifyRight(this);
-    }
-
-    protected abstract boolean unifyRight(Type other);
 }

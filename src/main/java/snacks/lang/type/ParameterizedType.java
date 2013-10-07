@@ -1,6 +1,5 @@
 package snacks.lang.type;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.*;
@@ -10,11 +9,6 @@ public class ParameterizedType extends Type {
 
     private final Type type;
     private final List<Type> parameters;
-
-    public ParameterizedType(Type type, Type... parameters) {
-        this.type = type;
-        this.parameters = asList(parameters);
-    }
 
     public ParameterizedType(Type type, Collection<Type> parameters) {
         this.type = type;
@@ -68,6 +62,10 @@ public class ParameterizedType extends Type {
         return parameters;
     }
 
+    public Type getType() {
+        return type;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(type, parameters);
@@ -79,12 +77,12 @@ public class ParameterizedType extends Type {
     }
 
     @Override
-    protected boolean unifyRight(Type other) {
+    protected boolean acceptRight(Type other) {
         if (other instanceof ParameterizedType) {
             ParameterizedType otherType = (ParameterizedType) other;
-            if (parameters.size() == otherType.parameters.size() && type.unify(otherType.type)) {
+            if (parameters.size() == otherType.parameters.size() && otherType.type.accepts(type)) {
                 for (int i = 0; i < parameters.size(); i++) {
-                    if (!parameters.get(i).unify(otherType.parameters.get(i))) {
+                    if (!parameters.get(i).accepts(otherType.parameters.get(i))) {
                         return false;
                     }
                 }

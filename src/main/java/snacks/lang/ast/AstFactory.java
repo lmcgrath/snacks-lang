@@ -54,6 +54,10 @@ public final class AstFactory {
         return new StringConstant(value);
     }
 
+    public static AstNode constantDef(String module, String name) {
+        return new DeclaredConstant(module, name);
+    }
+
     public static DeclaredExpression declaration(String module, String name, AstNode body) {
         return new DeclaredExpression(module, name, body);
     }
@@ -138,7 +142,7 @@ public final class AstFactory {
         return new Reference(locator, type);
     }
 
-    public static AstNode record(String module, String name, Collection<Property> properties) {
+    public static NamedNode record(String module, String name, Collection<Property> properties) {
         return new DeclaredRecord(module, name, properties);
     }
 

@@ -2,15 +2,14 @@ package snacks.lang.compiler;
 
 import static me.qmx.jitescript.util.CodegenUtils.*;
 import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang.StringUtils.join;
 import static org.objectweb.asm.Opcodes.*;
 import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
-import static snacks.lang.type.Types.isFunction;
-import static snacks.lang.type.Types.isInvokable;
-import static snacks.lang.type.Types.isType;
+import static snacks.lang.type.Types.*;
 
 import java.util.*;
 import me.qmx.jitescript.*;
@@ -27,15 +26,18 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     private final List<JiteClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
     private final Map<Locator, NamedNode> declarations;
+    private final List<JiteClass> childClasses;
+    private String parentClass;
 
     public Compiler(SnacksRegistry registry) {
         this.registry = registry;
         this.acceptedClasses = new ArrayList<>();
         this.builders = new ArrayDeque<>();
         this.declarations = new HashMap<>();
+        this.childClasses = new ArrayList<>();
     }
 
-    public Set<SnackDefinition> compile(Collection<NamedNode> declarations) {
+    public List<SnackDefinition> compile(Collection<NamedNode> declarations) {
         this.declarations.clear();
         for (NamedNode declaration : declarations) {
             this.declarations.put(declaration.locator(), declaration);
@@ -43,7 +45,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         for (NamedNode declaration : declarations) {
             generate(declaration);
         }
-        Set<SnackDefinition> definitions = new HashSet<>();
+        List<SnackDefinition> definitions = new ArrayList<>();
         for (JiteClass jiteClass : acceptedClasses) {
             byte[] bytes = jiteClass.toBytes(JDKVersion.V1_7);
             definitions.add(new SnackDefinition(c(jiteClass.getClassName()), bytes));
@@ -67,7 +69,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateAlgebraicType(AlgebraicType type) {
         CodeBlock block = block();
-        Set<Type> types = type.getTypes();
+        List<Type> types = type.getTypes();
         block.newobj(p(AlgebraicType.class));
         block.dup();
         block.ldc(type.getName());
@@ -76,8 +78,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         int i = 0;
         for (Type t : types) {
             block.dup();
-            generate(t);
             block.ldc(i++);
+            generate(t);
             block.aastore();
         }
         block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
@@ -170,6 +172,31 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     @Override
+    public void generateDeclaredConstant(final DeclaredConstant node) {
+        List<String> interfaces = new ArrayList<>();
+        if (hasParent()) {
+            interfaces.add(parentClass());
+        }
+        JiteClass jiteClass = new JiteClass(javaClass(node.getModule(), node.getName()), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
+        snack.value("name", node.getName());
+        snack.arrayValue("kind").addEnum(TYPE);
+        jiteClass.addAnnotation(snack);
+        jiteClass.setAccess(ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
+        jiteClass.defineDefaultConstructor();
+        if (hasParent()) {
+            childClasses.add(jiteClass);
+        }
+        builders.push(new ClassBuilder(jiteClass));
+        defineType(node.getType());
+        jiteClass.defineMethod("toString", ACC_PUBLIC, sig(String.class), new CodeBlock() {{
+            ldc(node.getName());
+            areturn();
+        }});
+        acceptClass();
+    }
+
+    @Override
     public void generateDeclaredConstructor(DeclaredConstructor node) {
         beginClass(node, node.getName(), interfacesFor(node.getType()));
         generate(node.getBody());
@@ -201,27 +228,27 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         final List<Property> properties = node.getProperties();
         final JiteClass jiteClass = beginSubType(node.getModule(), node.getName(), node.getType());
         for (final Property property : properties) {
-            final Class<?> type = propertyType(property);
-            jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, ci(type), null);
-            jiteClass.defineMethod(javaGetter(property.getName()), ACC_PUBLIC, sig(type), new CodeBlock() {{
+            final String type = propertyClass(property);
+            jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, "L" + type + ";", null);
+            jiteClass.defineMethod(javaGetter(property.getName()), ACC_PUBLIC, "()L" + type + ";", new CodeBlock() {{
                 aload(0);
-                getfield(jiteClass.getClassName(), javaName(property.getName()), ci(type));
+                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + type + ";");
                 areturn();
             }});
         }
-        Class<?>[] types = new Class<?>[properties.size()];
-        for (int i = 0; i < properties.size(); i++) {
-            types[i] = propertyType(properties.get(i));
+        List<String> types = new ArrayList<>();
+        for (Property property : properties) {
+            types.add(propertyClass(property));
         }
-        jiteClass.defineMethod("<init>", ACC_PUBLIC, sig(void.class, params(types)), new CodeBlock() {{
+        jiteClass.defineMethod("<init>", ACC_PUBLIC, "(L" + join(types, ";L") + ";)V", new CodeBlock() {{
             aload(0);
             invokespecial(p(Object.class), "<init>", sig(void.class));
             int arg = 1;
             for (Property property : properties) {
-                Class<?> type = propertyType(property);
+                String type = propertyClass(property);
                 aload(0);
                 aload(arg++);
-                putfield(jiteClass.getClassName(), javaName(property.getName()), ci(type));
+                putfield(jiteClass.getClassName(), javaName(property.getName()), "L" + type + ";");
             }
             voidreturn();
         }});
@@ -240,7 +267,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
                 }
                 invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
                 aload(0);
-                getfield(jiteClass.getClassName(), javaName(property.getName()), ci(propertyType(property)));
+                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
                 invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
             }
             ldc("}");
@@ -248,15 +275,27 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             invokevirtual(p(StringBuilder.class), "toString", sig(String.class));
             areturn();
         }});
+        acceptClass();
     }
 
     @Override
     public void generateDeclaredType(DeclaredType node) {
-        beginType(node.getModule(), node.getName(), node.getType());
-        for (AstNode variant : node.getVariants()) {
-            generate(variant);
+        List<NamedNode> variants = node.getVariants();
+        if (variants.size() == 1 && Objects.equals(variants.get(0).getName(), node.getName())) {
+            generate(variants.get(0));
+        } else {
+            beginType(node.getModule(), node.getName(), node.getType());
+            parentClass = jiteClass().getClassName();
+            JiteClass jiteClass = acceptClass();
+            for (NamedNode variant : node.getVariants()) {
+                generate(variant);
+            }
+            for (JiteClass childClass : childClasses) {
+                jiteClass.addChildClass(childClass);
+            }
+            parentClass = null;
+            childClasses.clear();
         }
-        acceptClass();
     }
 
     @Override
@@ -367,15 +406,19 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         String className = javaName(node.getType().getName()).replace('.', '/');
         block.newobj(className);
         block.dup();
-        List<Property> properties = ((RecordType) node.getType()).getProperties();
-        List<AstNode> arguments = node.getArguments();
-        Class<?>[] types = new Class<?>[arguments.size()];
-        for (int i = 0; i < properties.size(); i++) {
-            types[i] = propertyType(properties.get(i));
-            generate(arguments.get(i));
-            block.checkcast(p(types[i]));
+        if (node.getType() instanceof RecordType) {
+            List<Property> properties = ((RecordType) node.getType()).getProperties();
+            List<AstNode> arguments = node.getArguments();
+            String[] types = new String[arguments.size()];
+            for (int i = 0; i < properties.size(); i++) {
+                types[i] = propertyClass(properties.get(i));
+                generate(arguments.get(i));
+                block.checkcast(types[i]);
+            }
+            block.invokespecial(className, "<init>", "(L" + join(types, ";L") + ";)V");
+        } else {
+            block.invokespecial(className, "<init>", sig(void.class));
         }
-        block.invokespecial(className, "<init>", sig(void.class, types));
     }
 
     @Override
@@ -446,11 +489,12 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.anewarray(p(Type.class));
         for (int i = 0; i < parameters.size(); i++) {
             block.dup();
-            generate(parameters.get(i));
             block.ldc(i);
+            generate(parameters.get(i));
             block.aastore();
         }
-        block.invokespecial(p(ParameterizedType.class), "<init>", sig(void.class, String.class, Type[].class));
+        block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
+        block.invokespecial(p(ParameterizedType.class), "<init>", sig(void.class, String.class, Collection.class));
     }
 
     @Override
@@ -474,6 +518,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }
         block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
         block.invokespecial(p(RecordType.class), "<init>", sig(void.class, String.class, Collection.class));
+    }
+
+    @Override
+    public void generateRecursiveType(RecursiveType type) {
+        CodeBlock block = block();
+        block.newobj(p(RecursiveType.class));
+        block.dup();
+        block.ldc(type.getName());
+        block.invokespecial(p(RecursiveType.class), "<init>", sig(void.class, String.class));
     }
 
     @Override
@@ -627,8 +680,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return state().acceptBlock();
     }
 
-    private void acceptClass() {
-        acceptedClasses.add(builders.pop().getJiteClass());
+    private JiteClass acceptClass() {
+        JiteClass jiteClass = builders.pop().getJiteClass();
+        acceptedClasses.add(jiteClass);
+        return jiteClass;
     }
 
     private CodeBlock beginBlock() {
@@ -660,21 +715,21 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private JiteClass beginSubType(String module, String name, Type type) {
-        JiteClass parentClass = jiteClass();
-        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), new String[0]);
-        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
-        AnnotationArrayValue kind = snack.arrayValue("kind");
-        snack.value("name", name);
-        if (isType(type)) {
-            kind.addEnum(TYPE);
-        } else {
-            kind.addEnum(EXPRESSION);
+        List<String> interfaces = new ArrayList<>();
+        if (hasParent()) {
+            interfaces.add(parentClass());
         }
+        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
+        snack.arrayValue("kind").addEnum(EXPRESSION);
+        snack.value("name", name);
         jiteClass.addAnnotation(snack);
+        if (hasParent()) {
+            childClasses.add(jiteClass);
+        }
         builders.push(new ClassBuilder(jiteClass));
         defineType(type);
         jiteClass.setAccess(ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
-        parentClass.addChildClass(jiteClass);
         return jiteClass;
     }
 
@@ -811,6 +866,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return state().getVariable(name);
     }
 
+    private boolean hasParent() {
+        return parentClass != null;
+    }
+
     private List<String> interfacesFor(Type type) {
         List<String> interfaces = new ArrayList<>();
         if (isInvokable(type)) {
@@ -863,8 +922,17 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }
     }
 
-    private Class<?> propertyType(Property property) {
-        return registry.classOf(property.getType().getName(), TYPE);
+    private String parentClass() {
+        return parentClass;
+    }
+
+    private String propertyClass(Property property) {
+        Class<?> clazz = registry.classOf(property.getType().getName(), TYPE);
+        if (clazz == null) {
+            return javaName(property.getType().getName()).replace('.', '/');
+        } else {
+            return p(clazz);
+        }
     }
 
     private ClassBuilder state() {

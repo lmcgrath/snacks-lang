@@ -18,6 +18,8 @@ public interface Generator {
 
     void generateClosure(Closure node);
 
+    void generateDeclaredConstant(DeclaredConstant node);
+
     void generateDeclaredConstructor(DeclaredConstructor node);
 
     void generateDeclaredType(DeclaredType node);

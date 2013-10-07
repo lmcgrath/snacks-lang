@@ -56,6 +56,16 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
+    public void defineClasses(Collection<SnackDefinition> definitions) {
+        List<Class<?>> classes = new ArrayList<>();
+        for (SnackDefinition definition : definitions) {
+            classes.add(defineClass(definition));
+        }
+        for (Class<?> clazz : classes) {
+            processSnack(clazz);
+        }
+    }
+
     @Override
     public Operator getOperator(String name) {
         return operators.getOperator(name);
@@ -119,39 +129,6 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
             Prefix prefix = snackClass.getAnnotation(Prefix.class);
             if (prefix != null) {
                 operators.registerPrefix(prefix.precedence(), name);
-            }
-        }
-    }
-
-    private void processSnack(Class<?> clazz) {
-        Snack snack = clazz.getAnnotation(Snack.class);
-        if (snack != null) {
-            String module = clazz.getName().substring(0, clazz.getName().lastIndexOf('.'));
-            String qualifiedName = module + "." + snack.name();
-            Set<SnackKind> kinds = copyOf(asList(snack.kind()));
-            for (SnackKind kind : SnackKind.values()) {
-                if (!kinds.contains(kind)) {
-                    continue;
-                }
-                Type type;
-                switch (kind) {
-                    case TYPE:
-                        if (snack.parameters().length == 0) {
-                            type = simple(qualifiedName);
-                        } else {
-                            List<Type> parameters = new ArrayList<>();
-                            for (String parameter : snack.parameters()) {
-                                parameters.add(var(parameter));
-                            }
-                            type = parameterized(simple(qualifiedName), parameters);
-                        }
-                        break;
-                    default:
-                        type = resolveType(clazz);
-                        processAnnotations(clazz, snack.name());
-                        break;
-                }
-                snacks.put(new SnackKey(qualifiedName, kind), new SnackValue(getJavaClazz(clazz), type));
             }
         }
     }
@@ -231,9 +208,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
                 Parser parser = new Parser();
                 Translator translator = new Translator(new SymbolEnvironment(this), module);
                 Compiler compiler = new Compiler(this);
-                for (SnackDefinition definition : compiler.compile(translator.translateModule(parser.parse(scanner)))) {
-                    defineSnack(definition);
-                }
+                defineClasses(compiler.compile(translator.translateModule(parser.parse(scanner))));
             }
         } catch (IOException exception) {
             throw new ResolutionException(exception);
@@ -267,15 +242,46 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         return clazz;
     }
 
-    Class<?> defineSnack(SnackDefinition definition) {
-        return defineSnack(definition, SnacksClassLoader.class.getProtectionDomain());
+    Class<?> defineClass(SnackDefinition definition) {
+        return defineClass(definition, SnacksClassLoader.class.getProtectionDomain());
     }
 
-    Class<?> defineSnack(SnackDefinition definition, ProtectionDomain protectionDomain) {
+    Class<?> defineClass(SnackDefinition definition, ProtectionDomain protectionDomain) {
         byte[] bytes = definition.getBytes();
-        Class<?> clazz = super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
-        processSnack(clazz);
-        return clazz;
+        return super.defineClass(definition.getJavaName(), bytes, 0, bytes.length, protectionDomain);
+    }
+
+    void processSnack(Class<?> clazz) {
+        Snack snack = clazz.getAnnotation(Snack.class);
+        if (snack != null) {
+            String module = clazz.getName().substring(0, clazz.getName().lastIndexOf('.'));
+            String qualifiedName = module + "." + snack.name();
+            Set<SnackKind> kinds = copyOf(asList(snack.kind()));
+            for (SnackKind kind : SnackKind.values()) {
+                if (!kinds.contains(kind)) {
+                    continue;
+                }
+                Type type;
+                switch (kind) {
+                    case TYPE:
+                        if (snack.parameters().length == 0) {
+                            type = simple(qualifiedName);
+                        } else {
+                            List<Type> parameters = new ArrayList<>();
+                            for (String parameter : snack.parameters()) {
+                                parameters.add(var(parameter));
+                            }
+                            type = parameterized(simple(qualifiedName), parameters);
+                        }
+                        break;
+                    default:
+                        type = resolveType(clazz);
+                        processAnnotations(clazz, snack.name());
+                        break;
+                }
+                snacks.put(new SnackKey(qualifiedName, kind), new SnackValue(getJavaClazz(clazz), type));
+            }
+        }
     }
 
     private static final class SnackKey {

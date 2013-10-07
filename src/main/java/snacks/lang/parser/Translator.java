@@ -26,11 +26,8 @@ import snacks.lang.SnackKind;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
-import snacks.lang.type.FunctionType;
-import snacks.lang.type.RecordType;
+import snacks.lang.type.*;
 import snacks.lang.type.RecordType.Property;
-import snacks.lang.type.Type;
-import snacks.lang.type.Types;
 
 public class Translator implements SyntaxVisitor {
 
@@ -82,9 +79,9 @@ public class Translator implements SyntaxVisitor {
     public void visitAndExpression(AndExpression node) {
         AstNode left = translate(node.getLeft());
         AstNode right = translate(node.getRight());
-        if (!left.getType().unify(BOOLEAN_TYPE)) {
+        if (!isBoolean(left)) {
             throw new TypeException("Left-hand side of LOGICAL AND is not a boolean: got " + left.getType());
-        } else if (!right.getType().unify(BOOLEAN_TYPE)) {
+        } else if (!isBoolean(right)) {
             throw new TypeException("Right-hand side of LOGICAL AND is not a boolean: got " + right.getType());
         } else {
             result = new LogicalAnd(left, right);
@@ -160,6 +157,14 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConstantDeclaration(ConstantDeclaration node) {
+        result = constantDef(module, node.getName());
+        addAlias(node.getName(), module, node.getName());
+        define(locator(module, node.getName(), EXPRESSION), result.getType());
+        define(locator(module, node.getName(), TYPE), result.getType());
+    }
+
+    @Override
     public void visitConstructorExpression(ConstructorExpression node) {
         List<AstNode> arguments = new ArrayList<>();
         for (Symbol argument : node.getArguments()) {
@@ -206,41 +211,6 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitExpressionDeclaration(ExpressionDeclaration node) {
         declarations.add(namedDeclaration(node.getName(), node.getBody()));
-    }
-
-    private DeclaredExpression namedDeclaration(String name, Symbol expression) {
-        functionLevel = 0;
-        if (expression instanceof InvokableLiteral) {
-            functionLevel++; // TODO hack
-        }
-        typeErrors.clear();
-        reserveName(name);
-        AstNode body = translate(expression);
-        if (!body.isInvokable()) {
-            body = expression(body);
-        }
-        Locator locator = locator(module, name);
-        DeclaredExpression declaration = declaration(module, name, body);
-        if (declaration.getType().decompose().isEmpty()) {
-            throw new TypeException(join(typeErrors, "; "));
-        }
-        if (environment().hasSignature(locator)) {
-            Type type = environment().getSignature(locator);
-            if (declaration.getType().unify(type)) {
-                declaration.setType(type);
-            } else {
-                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + environment().typeOf(locator));
-            }
-        }
-        if (declarations.contains(declaration)) {
-            throw new UndefinedSymbolException("Cannot redefine " + declaration.getName());
-        }
-        if (environment().isOperator(declaration.getName())) {
-            declaration.setOperator(environment().getOperator(declaration.getName()));
-        }
-        addAlias(name, module, name);
-        environment().define(new Reference(locator, declaration.getType()));
-        return declaration;
     }
 
     @Override
@@ -314,10 +284,10 @@ public class Translator implements SyntaxVisitor {
                 properties.put(property.getName(), property);
             }
             List<Property> propertyTypes = recordType.getProperties();
-            for (int i = propertyTypes.size() - 1; i >= 0; i--) {
+            for (int i = 0; i < propertyTypes.size(); i++) {
                 if (matchedProperties.contains(propertyTypes.get(i))) {
                     Type resultType = null;
-                    if (i == 0) {
+                    if (i == propertyTypes.size() - 1) {
                         resultType = type;
                     }
                     constructor = apply(constructor, properties.get(propertyTypes.get(i).getName()).getValue(), resultType);
@@ -340,7 +310,7 @@ public class Translator implements SyntaxVisitor {
         enterScope();
         AstNode body = translate(node.getBody());
         if (body.getType().decompose().isEmpty()) {
-            throw new TypeException("Unable to determine type of invokable");
+            throw new TypeException("Unable to determine type of invokable:\n\u2022 " + join(typeErrors, "\n\u2022 "));
         }
         Type functionType = func(VOID_TYPE, body.getType());
         leaveScope();
@@ -421,9 +391,9 @@ public class Translator implements SyntaxVisitor {
     public void visitOrExpression(OrExpression node) {
         AstNode left = translate(node.getLeft());
         AstNode right = translate(node.getRight());
-        if (!left.getType().unify(BOOLEAN_TYPE)) {
+        if (!isBoolean(left)) {
             throw new TypeException("Left-hand side of LOGICAL OR is not a boolean: got " + left.getType());
-        } else if (!right.getType().unify(BOOLEAN_TYPE)) {
+        } else if (!isBoolean(right)) {
             throw new TypeException("Right-hand side of LOGICAL OR is not a boolean: got " + right.getType());
         } else {
             result = new LogicalOr(left, right);
@@ -457,9 +427,6 @@ public class Translator implements SyntaxVisitor {
             DeclaredProperty p = (DeclaredProperty) translate(property);
             properties.add(property(p.getName(), p.getType()));
         }
-        define(locator(module, node.getName(), TYPE), record(module + '.' + node.getName(), properties));
-        addAlias(node.getName(), module, node.getName());
-        defineConstructor(node.getName(), properties);
         result = record(module, node.getName(), properties);
     }
 
@@ -521,13 +488,41 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitTypeDeclaration(TypeDeclaration node) {
         Locator locator = locator(module, node.getName(), TYPE);
-        DeclaredType declaration = new DeclaredType(module, node.getName());
         addAlias(node.getName(), module, node.getName());
-        environment().define(new Reference(locator, declaration.getType()));
-        for (Symbol variant : node.getVariants()) {
-            declaration.addVariant(translate(variant));
+        environment().signature(new Reference(locator, recur(module + '.' + node.getName())));
+        List<NamedNode> variants = new ArrayList<>();
+        if (isSingularType(node)) {
+            NamedNode variant = (NamedNode) translate(node.getVariants().get(0));
+            DeclaredType declaration = new DeclaredType(module, node.getName(), asList(variant));
+            define(locator, variant.getType());
+            defineConstructor(variant.getName(), ((RecordType) variant.getType()).getProperties());
+            declarations.add(declaration);
+        } else {
+            for (Symbol variant : node.getVariants()) {
+                variants.add((NamedNode) translate(variant));
+            }
+            List<Type> types = new ArrayList<>();
+            for (NamedNode variant : variants) {
+                types.add(variant.getType());
+            }
+            Type parentType = new AlgebraicType(module + '.' + node.getName(), types);
+            for (int i = 0; i < types.size(); i++) {
+                NamedNode variant = variants.get(i);
+                addAlias(variant.getName(), module, variant.getName());
+                if (types.get(i) instanceof RecordType) {
+                    RecordType type = (RecordType) new TypeUnroller(types.get(i), parentType).unroll();
+                    define(locator(module, variant.getName(), TYPE), record(module + '.' + variant.getName(), type.getProperties()));
+                    defineConstructor(variant.getName(), type.getProperties());
+                    variants.set(i, new DeclaredRecord(module, variant.getName(), type.getProperties()));
+                } else {
+                    define(locator(module, variant.getName(), TYPE), variant.getType());
+                    defineConstant(variant.getName(), variant.getType());
+                }
+            }
+            DeclaredType declaration = new DeclaredType(module, node.getName(), variants);
+            define(locator, parentType);
+            declarations.add(declaration);
         }
-        declarations.add(declaration);
     }
 
     @Override
@@ -556,7 +551,7 @@ public class Translator implements SyntaxVisitor {
         Type varType = createVariable();
         define(locator(node.getName()), varType);
         specialize(varType);
-        varType.unify(value.getType());
+        varType.accepts(value.getType());
         generify(varType);
         result = AstFactory.var(node.getName(), value);
     }
@@ -594,19 +589,25 @@ public class Translator implements SyntaxVisitor {
         environment().define(new Reference(locator, type));
     }
 
+    private void defineConstant(String name, Type type) {
+        define(locator(module, name, EXPRESSION), type);
+        Symbol constructor = new ConstructorExpression(type(qid(qid(module.split("\\.")), name)), new ArrayList<Symbol>());
+        declarations.add(new DeclaredConstructor(module, name, namedDeclaration(name + "Constructor", constructor).getBody()));
+    }
+
     private void defineConstructor(String name, List<Property> properties) {
         Type constructorType = record(module + '.' + name, properties);
         for (int i = properties.size() - 1; i >= 0; i--) {
             constructorType = func(properties.get(i).getType(), constructorType);
         }
         define(locator(module, name, EXPRESSION), constructorType);
-        Symbol constructor = type(qid(module, name));
+        Symbol constructor = type(qid(qid(module.split("\\.")), name));
         List<Symbol> arguments = new ArrayList<>();
         for (Property property : properties) {
             arguments.add(id(property.getName()));
         }
         constructor = new ConstructorExpression(constructor, arguments);
-        for (int i = 0; i < properties.size(); i++) {
+        for (int i = properties.size() - 1; i >= 0; i--) {
             constructor = new FunctionLiteral(
                 new Argument(properties.get(i).getName(), type(properties.get(i).getType().getName().split("\\."))),
                 constructor,
@@ -665,8 +666,8 @@ public class Translator implements SyntaxVisitor {
         Set<Type> resultTypes = new HashSet<>();
         for (FunctionArgument pair : productOf(functionType, argumentType)) {
             Type resultType = createVariable();
-            if (func(pair.argumentType, resultType).unify(pair.functionType)) {
-                resultTypes.add(resultType);
+            if (func(pair.argumentType, resultType).accepts(pair.functionType)) {
+                resultTypes.add(resultType.expose());
                 argumentTypes.add(pair.argumentType);
             }
         }
@@ -675,6 +676,10 @@ public class Translator implements SyntaxVisitor {
         }
         argumentType.bind(union(argumentTypes));
         return union(resultTypes);
+    }
+
+    private boolean isBoolean(AstNode expression) {
+        return BOOLEAN_TYPE.accepts(expression.getType());
     }
 
     private boolean isOperator(Symbol node) {
@@ -693,6 +698,13 @@ public class Translator implements SyntaxVisitor {
         return getOperator(symbol).isPrefix();
     }
 
+    private boolean isSingularType(TypeDeclaration node) {
+        List<Symbol> variants = node.getVariants();
+        return variants.size() == 1
+            && variants.get(0) instanceof RecordDeclaration
+            && ((RecordDeclaration) variants.get(0)).getName().equals(node.getName());
+    }
+
     private String javaClass(Symbol symbol) {
         TypeSpec type = (TypeSpec) symbol;
         QualifiedIdentifier id = type.getName();
@@ -708,9 +720,44 @@ public class Translator implements SyntaxVisitor {
     }
 
     private void matchTypes(AstNode left, AstNode right) {
-        if (!left.getType().unify(right.getType())) {
+        if (!left.getType().accepts(right.getType())) {
             throw new TypeException("Type mismatch: " + left.getType() + " != " + right.getType());
         }
+    }
+
+    private DeclaredExpression namedDeclaration(String name, Symbol expression) {
+        functionLevel = 0;
+        if (expression instanceof InvokableLiteral) {
+            functionLevel++; // TODO hack
+        }
+        typeErrors.clear();
+        reserveName(name);
+        AstNode body = translate(expression);
+        if (!body.isInvokable()) {
+            body = expression(body);
+        }
+        Locator locator = locator(module, name);
+        DeclaredExpression declaration = declaration(module, name, body);
+        if (declaration.getType().decompose().isEmpty()) {
+            throw new TypeException(join(typeErrors, "; "));
+        }
+        if (environment().hasSignature(locator)) {
+            Type type = environment().getSignature(locator);
+            if (declaration.getType().accepts(type)) {
+                declaration.setType(type);
+            } else {
+                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + environment().typeOf(locator));
+            }
+        }
+        if (declarations.contains(declaration)) {
+            throw new UndefinedSymbolException("Cannot redefine " + declaration.getName());
+        }
+        if (environment().isOperator(declaration.getName())) {
+            declaration.setOperator(environment().getOperator(declaration.getName()));
+        }
+        addAlias(name, module, name);
+        environment().define(new Reference(locator, declaration.getType()));
+        return declaration;
     }
 
     private boolean outputOperator(Operator o1, Operator o2) {
@@ -895,7 +942,7 @@ public class Translator implements SyntaxVisitor {
     private boolean unifyFunctionResult(Type functionType, Type declaredResultType) {
         if (functionType.decompose().size() == 1) {
             Type actualResultType = resultOf(functionType);
-            return actualResultType.unify(declaredResultType);
+            return declaredResultType.accepts(actualResultType);
         } else {
             return false;
         }
@@ -914,7 +961,7 @@ public class Translator implements SyntaxVisitor {
 
     private void verifyAssignmentType(Type targetType, Type valueType) {
         specialize(targetType);
-        if (!targetType.unify(valueType)) {
+        if (!targetType.accepts(valueType)) {
             throw new TypeException("Type mismatch: " + targetType + " != " + valueType);
         }
         generify(targetType);

@@ -52,4 +52,9 @@ public class Initializer extends AstNode {
     public int hashCode() {
         return Objects.hash(constructor, arguments);
     }
+
+    @Override
+    public String toString() {
+        return "(Initializer " + constructor + " " + arguments + ")";
+    }
 }

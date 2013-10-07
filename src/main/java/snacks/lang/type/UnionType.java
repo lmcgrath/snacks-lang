@@ -18,6 +18,23 @@ public class UnionType extends Type {
     }
 
     @Override
+    public boolean acceptLeft(Type other) {
+        if (!equals(other)) {
+            if (occursIn(other)) {
+                return false;
+            } else {
+                bind(other);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean acceptRight(Type other) {
+        return other instanceof UnionType; // TODO should verify type overlap
+    }
+
+    @Override
     public void bind(Type type) {
         if (!types.contains(type) && !equals(type)) {
             types.add(type);
@@ -53,10 +70,6 @@ public class UnionType extends Type {
         return types.copyUnionType(this, mappings);
     }
 
-    public Set<Type> getTypes() {
-        return types;
-    }
-
     @Override
     public String getName() {
         List<String> names = new ArrayList<>();
@@ -64,6 +77,10 @@ public class UnionType extends Type {
             names.add(type.getName());
         }
         return "Union<" + join(names, ", ") + ">";
+    }
+
+    public Set<Type> getTypes() {
+        return types;
     }
 
     @Override
@@ -74,22 +91,5 @@ public class UnionType extends Type {
     @Override
     public String toString() {
         return "(Union [" + join(types, ", ") + "])";
-    }
-
-    @Override
-    public boolean unifyLeft(Type other) {
-        if (!equals(other)) {
-            if (occursIn(other)) {
-                return false;
-            } else {
-                bind(other);
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean unifyRight(Type other) {
-        return other instanceof UnionType; // TODO should verify type overlap
     }
 }

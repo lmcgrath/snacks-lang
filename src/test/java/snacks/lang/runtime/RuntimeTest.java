@@ -10,6 +10,7 @@ import static snacks.lang.parser.CompilerUtil.translate;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -630,6 +631,36 @@ public class RuntimeTest {
     }
 
     @Test
+    public void shouldCompileSingularRecord() {
+        run(
+            "data BreakfastItem = {",
+            "    name: snacks.lang.String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "main = () -> say $ stringy BreakfastItem {",
+            "    name = 'Waffles',",
+            "    tasteIndex = 10,",
+            "    pairsWithBacon? = True",
+            "}"
+        );
+        verifyOut("BreakfastItem{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
+    }
+
+    @Test
+    public void shouldCreateRecordWithPositionalArguments() {
+        run(
+            "data BreakfastItem = SideForBacon {",
+            "    name: snacks.lang.String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "main = () -> say $ stringy $ SideForBacon 'Waffles' 10 True"
+        );
+        verifyOut("SideForBacon{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
+    }
+
+    @Test
     public void shouldReferenceRecordProperty() {
         run(
             "data BreakfastItem = SideForBacon {",
@@ -657,6 +688,29 @@ public class RuntimeTest {
             "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
             "main = () -> assert $ bacon? waffles"
         );
+    }
+
+    @Test
+    public void recordWithoutConstructorShouldDefineConstructorWithNameOfType() {
+        run(
+            "data BreakfastItem = {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}",
+            "bacon? = (x:BreakfastItem) -> x.pairsWithBacon?",
+            "waffles = BreakfastItem { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }",
+            "main = () -> assert $ bacon? waffles"
+        );
+    }
+
+    @Test
+    public void shouldCreateRecursiveNamedTuple() {
+        run(
+            "data Tree = Leaf | Node Integer Tree Tree",
+            "main = () -> say $ stringy $ Node 3 Leaf Leaf"
+        );
+        verifyOut("Node{_0=3, _1=Leaf, _2=Leaf}");
     }
 
     @Ignore
@@ -753,10 +807,11 @@ public class RuntimeTest {
 
     private void run(String... inputs) {
         try {
-            for (SnackDefinition definition : compiler.compile(translate(new SymbolEnvironment(loader), inputs))) {
+            List<SnackDefinition> definitions = compiler.compile(translate(new SymbolEnvironment(loader), inputs));
+            for (SnackDefinition definition : definitions) {
                 writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
-                loader.defineSnack(definition);
             }
+            loader.defineClasses(definitions);
             ((Invokable) loader.loadClass("test.Main").newInstance()).invoke();
         } catch (ReflectiveOperationException exception) {
             throw new CompileException(exception);

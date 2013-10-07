@@ -10,6 +10,7 @@ import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.parser.TranslatorMatcher.defines;
 import static snacks.lang.type.Types.*;
 import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.record;
 
 import java.util.Collection;
 import org.junit.Before;
@@ -337,7 +338,45 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem")));
+        assertThat(typeOf("BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem", asList(
+            record("test.SideForBacon", asList(
+                property("name", STRING_TYPE),
+                property("tasteIndex", INTEGER_TYPE),
+                property("pairsWithBacon?", BOOLEAN_TYPE)
+            ))
+        ))));
+    }
+
+    @Test
+    public void recordWithSameConstructorAsTypeShouldBeSingleType() {
+        translate(
+            "data BreakfastItem = BreakfastItem {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}"
+        );
+        assertThat(typeOf("BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ))));
+    }
+
+    @Test
+    public void recordWithoutConstructorShouldDefineConstructorWithNameOfType() {
+        translate(
+            "data BreakfastItem = {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean",
+            "}"
+        );
+        assertThat(typeOf("BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ))));
     }
 
     @Test
@@ -375,6 +414,23 @@ public class TranslatorTest {
     }
 
     @Test
+    public void shouldCreateRecordWithPositionalArguments() {
+        translate(
+            "data BreakfastItem = SideForBacon {",
+            "    name: snacks.lang.String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "waffles = SideForBacon 'Waffles' 10 True"
+        );
+        assertThat(typeOf("waffles", EXPRESSION), equalTo(record("test.SideForBacon", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ))));
+    }
+
+    @Test
     public void appliedConstructorShouldHaveRecordType() {
         translate(
             "data BreakfastItem = SideForBacon {",
@@ -409,6 +465,63 @@ public class TranslatorTest {
             )),
             BOOLEAN_TYPE
         )));
+    }
+
+    @Test
+    public void shouldCreateRecursiveType() {
+        translate("data Tree = Leaf | Node Integer Tree Tree");
+        assertThat(typeOf("Tree", TYPE), equalTo(algebraic("test.Tree", asList(
+            simple("test.Leaf"),
+            record("test.Node", asList(
+                property("_0", simple("snacks.lang.Integer")),
+                property("_1", recur("test.Tree")),
+                property("_2", recur("test.Tree"))
+            ))
+        ))));
+    }
+
+    @Test
+    public void shouldCreateConstantWhenConstructorTakesNoArguments() {
+        translate("data Tree = Leaf | Node Integer Tree Tree");
+        assertThat(typeOf("Leaf", TYPE), equalTo(simple("test.Leaf")));
+        assertThat(typeOf("Leaf", EXPRESSION), equalTo(typeOf("Leaf", TYPE)));
+    }
+
+    @Test
+    public void shouldCreateNamedTupleIfConstructorTakesPositionalArguments() {
+        Type treeType = algebraic("test.Tree", asList(
+            simple("test.Leaf"),
+            recur("test.Node")
+        ));
+        Type nodeType = record("test.Node", asList(
+            property("_0", simple("snacks.lang.Integer")),
+            property("_1", treeType),
+            property("_2", treeType)
+        ));
+        translate("data Tree = Leaf | Node Integer Tree Tree");
+        assertThat(typeOf("Node", TYPE), equalTo(nodeType));
+        assertThat(typeOf("Node", EXPRESSION), equalTo(
+            func(INTEGER_TYPE, func(treeType, func(treeType, nodeType)))
+        ));
+    }
+
+    @Test
+    public void test() {
+        translate(
+            "data Tree = Leaf | Node Integer Tree Tree",
+            "node = Node 3 Leaf Leaf"
+        );
+        assertThat(typeOf("node"), equalTo(record("test.Node", asList(
+            property("_0", simple("snacks.lang.Integer")),
+            property("_1", algebraic("test.Tree", asList(
+                simple("test.Leaf"),
+                recur("test.Node")
+            ))),
+            property("_2", algebraic("test.Tree", asList(
+                simple("test.Leaf"),
+                recur("test.Node")
+            )))
+        ))));
     }
 
     private Type typeOf(String name, SnackKind kind) {

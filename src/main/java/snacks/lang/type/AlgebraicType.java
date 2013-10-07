@@ -1,25 +1,16 @@
 package snacks.lang.type;
 
-import static com.google.common.collect.ImmutableSortedSet.copyOf;
-
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class AlgebraicType extends Type {
 
-    private static final Comparator<Type> comparator = new Comparator<Type>() {
-        @Override
-        public int compare(Type o1, Type o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
-
     private final String name;
-    private final Set<Type> types;
+    private final List<Type> types;
 
     public AlgebraicType(String name, Collection<Type> types) {
         this.name = name;
-        this.types = copyOf(comparator, types);
+        this.types = new ArrayList<>(types);
     }
 
     @Override
@@ -71,7 +62,7 @@ public class AlgebraicType extends Type {
         return name;
     }
 
-    public Set<Type> getTypes() {
+    public List<Type> getTypes() {
         return types;
     }
 
@@ -81,35 +72,39 @@ public class AlgebraicType extends Type {
     }
 
     @Override
-    public String toString() {
-        return "(AlgebraicType " + name + ")";
-    }
-
-    @Override
-    public boolean unifyLeft(Type other) {
-        if (!equals(other)) {
-            if (occursIn(other)) {
-                return false;
-            } else {
-                bind(other);
+    public boolean isMember(Type type) {
+        for (Type t : types) {
+            if (t.accepts(type)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     @Override
-    public boolean unifyRight(Type other) {
+    public String toString() {
+        return "(AlgebraicType " + name + " " + types + ")";
+    }
+
+    @Override
+    public boolean acceptRight(Type other) {
         if (other instanceof AlgebraicType) {
             AlgebraicType otherType = (AlgebraicType) other;
             if (Objects.equals(name, otherType.name) && types.size() == otherType.types.size()) {
                 Iterator<Type> theseTypes = types.iterator();
                 Iterator<Type> thoseTypes = otherType.types.iterator();
                 while (theseTypes.hasNext()) {
-                    if (!theseTypes.next().unify(thoseTypes.next())) {
+                    if (!thoseTypes.next().accepts(theseTypes.next())) {
                         return false;
                     }
                 }
                 return true;
+            }
+        } else {
+            for (Type type : types) {
+                if (other.accepts(type)) {
+                    return true;
+                }
             }
         }
         return false;

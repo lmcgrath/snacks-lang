@@ -93,6 +93,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConstantDeclaration(ConstantDeclaration node) {
+        print("name: " + node.getName());
+    }
+
+    @Override
     public void visitConstructorExpression(ConstructorExpression node) {
         print(node.getConstructor());
         for (Symbol argument : node.getArguments()) {

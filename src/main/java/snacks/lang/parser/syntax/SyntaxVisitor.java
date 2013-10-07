@@ -24,6 +24,8 @@ public interface SyntaxVisitor {
 
     void visitConditional(Conditional node);
 
+    void visitConstantDeclaration(ConstantDeclaration node);
+
     void visitConstructorExpression(ConstructorExpression node);
 
     void visitContinueExpression(ContinueExpression node);

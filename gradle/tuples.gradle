@@ -12,12 +12,28 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
             def content = [
                 'package snacks.lang;',
                 '',
+                'import static java.util.Arrays.asList;',
+                'import static snacks.lang.SnackKind.TYPE;',
+                '',
                 'import java.util.Objects;',
                 'import org.apache.commons.lang.builder.EqualsBuilder;',
+                'import snacks.lang.type.RecordType;',
+                'import snacks.lang.type.RecordType.Property;',
+                'import snacks.lang.type.Type;',
+                'import snacks.lang.type.VariableType;',
                 '',
             ]
 
+            content << "@Snack(name = \"Tuple$size\", kind = TYPE)"
             content << "public class Tuple$size<${range.collect { t -> "T$t" }.join(', ')}> {"
+
+            content << ''
+            content << '    @SnackType'
+            content << '    public static Type type() {'
+            content << "        return new RecordType(\"snacks.lang.Tuple$size\", asList("
+            content << range.collect { t -> "            new Property(\"_$t\", new VariableType(\"snacks.lang.Tuple$size#_$t\"))" }.join(',\n')
+            content << "        ));"
+            content << '    }'
 
             content << ''
             range.each { f ->

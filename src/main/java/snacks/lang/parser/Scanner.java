@@ -559,10 +559,15 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 return accept(RCURLY);
             case ':':
                 read();
+                detectNewlines();
                 return accept(COLON);
             case '.':
                 read();
                 return accept(DOT);
+            case '|':
+                read();
+                detectNewlines();
+                return accept(PIPE);
         }
         if (isWhitespace(peek())) {
             if (peek() == '\r' || peek() == '\n') {

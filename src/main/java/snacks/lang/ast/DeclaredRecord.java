@@ -73,4 +73,9 @@ public class DeclaredRecord extends NamedNode {
     public int hashCode() {
         return Objects.hash(module, name, properties);
     }
+
+    @Override
+    public String toString() {
+        return "(Record " + module + "." + name + " " + properties + ")";
+    }
 }

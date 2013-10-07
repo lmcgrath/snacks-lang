@@ -17,4 +17,9 @@ public class SnackDefinition {
     public String getJavaName() {
         return javaName;
     }
+
+    @Override
+    public String toString() {
+        return "(SnackDefinition '" + javaName + "')";
+    }
 }

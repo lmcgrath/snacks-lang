@@ -1,7 +1,9 @@
 package snacks.lang.parser.syntax;
 
-import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.join;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
@@ -10,11 +12,13 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class TypeDeclaration extends VisitableSymbol {
 
     private final String name;
+    private final List<String> parameters;
     private final List<Symbol> variants;
 
-    public TypeDeclaration(String name, Symbol... variants) {
+    public TypeDeclaration(String name, Collection<String> parameters, Collection<Symbol> variants) {
         this.name = name;
-        this.variants = asList(variants);
+        this.parameters = new ArrayList<>(parameters);
+        this.variants = new ArrayList<>(variants);
     }
 
     @Override
@@ -30,6 +34,7 @@ public class TypeDeclaration extends VisitableSymbol {
             TypeDeclaration other = (TypeDeclaration) o;
             return new EqualsBuilder()
                 .append(name, other.name)
+                .append(parameters, other.parameters)
                 .append(variants, other.variants)
                 .isEquals();
         } else {
@@ -47,11 +52,15 @@ public class TypeDeclaration extends VisitableSymbol {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, variants);
+        return Objects.hash(name, parameters, variants);
     }
 
     @Override
     public String toString() {
-        return "(Type " + name + " " + variants + ")";
+        if (parameters.isEmpty()) {
+            return "(Type " + name + " " + variants + ")";
+        } else {
+            return "(Type " + name + "<" + join(parameters, ", ") + ">" + variants + ")";
+        }
     }
 }

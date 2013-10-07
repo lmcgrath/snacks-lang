@@ -14,7 +14,7 @@
 %terminals LPAREN, RPAREN, DQUOTE, STRING, IDENTIFIER, DOUBLE, LREGEX, RREGEX, REGEX_OPTIONS, SYMBOL, DOT, TRUE, FALSE,
     AS, BEGIN, ELSE_IF, ELSE_UNLESS, ELSE, IF, UNLESS, EMBRACE, END, ENSURE, FOR, FROM, HURL, IMPORT, RETURN, UNTIL,
     VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE, CHARACTER,
-    BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE,
+    BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE, PIPE,
     LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
     QUOTED_IDENTIFIER, LPATTERN
 ;
@@ -57,6 +57,7 @@
 %typeof qualified_identifier = "QualifiedIdentifier";
 %typeof qualified_fword = "QualifiedIdentifier";
 %typeof initializer_properties = "Symbol[]";
+%typeof type_members = "Symbol[]";
 
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
@@ -80,11 +81,47 @@ module_expression
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
-    | DATA IDENTIFIER.id ASSIGN type_declaration.t      {: return typeDef(id, t); :}
+    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN LCURLY type_properties.p COMMA? RCURLY
+        {: return typeDef(id, asList(t), asList(recordDef(id, p))); :}
+    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN type_declarations.d
+        {: return typeDef(id, asList(t), asList(d)); :}
+    ;
+
+type_declarations
+    = type_declaration
+    | type_declarations PIPE type_declaration
     ;
 
 type_declaration
-    = IDENTIFIER.id LCURLY type_properties.p COMMA? RCURLY {: return recordDef(id, p); :}
+    = IDENTIFIER.id                                         {: return constDef(id); :}
+    | IDENTIFIER.id LCURLY type_properties.p COMMA? RCURLY  {: return recordDef(id, p); :}
+    | IDENTIFIER.id type_members.p
+        {:
+            List<Symbol> properties = new ArrayList<>();
+            int i = 0;
+            for (Symbol type : p) {
+                properties.add(propDef("_" + i++, type));
+            }
+            return recordDef(id, properties);
+        :}
+    ;
+
+type_members
+    = type_signature.ts+
+        {:
+            List<Symbol> members = new ArrayList<>();
+            for (Symbol t : ts) {
+                if (t instanceof TypeConstructor) {
+                    List<Symbol> properties = new ArrayList<>();
+                    properties.add(((TypeConstructor) t).getType());
+                    properties.addAll(((TypeConstructor) t).getParameters());
+                    members.addAll(properties);
+                } else {
+                    members.add(t);
+                }
+            }
+            return new Symbol(members.toArray(new Symbol[members.size()]));
+        :}
     ;
 
 type_properties
@@ -96,21 +133,26 @@ type_property
     = IDENTIFIER.id COLON type_signature.t nl* {: return propDef(id, t); :}
     ;
 
-type_parameters
-    = IDENTIFIER.id
-    | type_parameters IDENTIFIER.id
-    ;
-
 type_signature
     = primary_signature
     | primary_signature.t APPLIES_TO type_signature.f {: return fsig(t, f); :}
     ;
 
 primary_signature
-    = qualified_identifier.id                   {: return ftype(id); :}
-    | qualified_identifier.id type_parameters.p {: return ftype(id); :}
-    | UNIT                                      {: return type(qid("snacks", "lang", "Void")); :}
-    | LPAREN secondary_signature.f RPAREN       {: return f; :}
+    = qualified_identifier.id+
+        {:
+            if (id.length == 1) {
+                return ftype(id[0]);
+            } else {
+                List<Symbol> parameters = new ArrayList<>();
+                for (int i = 1; i < id.length; i++) {
+                    parameters.add(ftype(id[i]));
+                }
+                return typeCtor(ftype(id[0]), parameters);
+            }
+        :}
+    | UNIT                                  {: return type(qid("snacks", "lang", "Void")); :}
+    | LPAREN secondary_signature.f RPAREN   {: return f; :}
     ;
 
 secondary_signature

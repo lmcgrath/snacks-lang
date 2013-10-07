@@ -15,6 +15,17 @@ public class FunctionType extends Type {
     }
 
     @Override
+    public boolean acceptRight(Type other) {
+        if (other instanceof FunctionType) {
+            FunctionType otherFunction = (FunctionType) other;
+            return argument.accepts(otherFunction.argument)
+                && result.accepts(otherFunction.result);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -53,11 +64,6 @@ public class FunctionType extends Type {
         return "->";
     }
 
-    @Override
-    protected boolean contains(Type type) {
-        return type.occursIn(argument) || type.occursIn(result);
-    }
-
     public Type getResult() {
         return result;
     }
@@ -73,13 +79,7 @@ public class FunctionType extends Type {
     }
 
     @Override
-    public boolean unifyRight(Type other) {
-        if (other instanceof FunctionType) {
-            FunctionType otherFunction = (FunctionType) other;
-            return argument.unify(otherFunction.argument)
-                && result.unify(otherFunction.result);
-        } else {
-            return false;
-        }
+    protected boolean contains(Type type) {
+        return type.occursIn(argument) || type.occursIn(result);
     }
 }

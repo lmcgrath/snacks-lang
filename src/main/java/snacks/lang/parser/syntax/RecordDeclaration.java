@@ -1,8 +1,7 @@
 package snacks.lang.parser.syntax;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.join;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import beaver.Symbol;
@@ -13,9 +12,9 @@ public class RecordDeclaration extends VisitableSymbol {
     private final String name;
     private final List<Symbol> properties;
 
-    public RecordDeclaration(String name, Symbol... properties) {
+    public RecordDeclaration(String name, Collection<Symbol> properties) {
         this.name = name;
-        this.properties = asList(properties);
+        this.properties = new ArrayList<>(properties);
     }
 
     @Override
@@ -53,6 +52,6 @@ public class RecordDeclaration extends VisitableSymbol {
 
     @Override
     public String toString() {
-        return "Record:" + name + "{" + join(properties, ", ") + "}";
+        return "(Record " + name + " " + properties + ")";
     }
 }
