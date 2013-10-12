@@ -111,10 +111,10 @@ type_members
         {:
             List<Symbol> members = new ArrayList<>();
             for (Symbol t : ts) {
-                if (t instanceof TypeConstructor) {
+                if (t instanceof TypeReference) {
                     List<Symbol> properties = new ArrayList<>();
-                    properties.add(((TypeConstructor) t).getType());
-                    properties.addAll(((TypeConstructor) t).getParameters());
+                    properties.add(((TypeReference) t).getType());
+                    properties.addAll(((TypeReference) t).getParameters());
                     members.addAll(properties);
                 } else {
                     members.add(t);
@@ -148,7 +148,7 @@ primary_signature
                 for (int i = 1; i < id.length; i++) {
                     parameters.add(ftype(id[i]));
                 }
-                return typeCtor(ftype(id[0]), parameters);
+                return typeRef(ftype(id[0]), parameters);
             }
         :}
     | UNIT                                  {: return type(qid("snacks", "lang", "Void")); :}
