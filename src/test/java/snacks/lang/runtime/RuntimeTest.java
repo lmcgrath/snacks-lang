@@ -710,7 +710,16 @@ public class RuntimeTest {
             "data Tree = Leaf | Node Integer Tree Tree",
             "main = () -> say $ stringy $ Node 3 Leaf Leaf"
         );
-        verifyOut("Node{_0=3, _1=Leaf, _2=Leaf}");
+        verifyOut("Node(3, Leaf, Leaf)");
+    }
+
+    @Test
+    public void shouldCreateParameterizedType() {
+        run(
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "main = () -> say $ stringy $ Node 'Waffles' Leaf Leaf"
+        );
+        verifyOut("Node(Waffles, Leaf, Leaf)");
     }
 
     @Ignore

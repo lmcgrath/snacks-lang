@@ -522,44 +522,14 @@ public class ParserTest {
 
     @Test
     public void shouldParseAlgebraicType() {
-        Symbol tree = parse("data Tree = Leaf | Node Integer Tree Tree");
+        Symbol tree = parse("data Tree a = Leaf | Node a (Tree a) (Tree a)");
         assertThat(tree, equalTo(module(
-            typeDef("Tree", asList(
+            typeDef("Tree", asList("a"), asList(
                 constDef("Leaf"),
                 recordDef("Node", asList(
-                    propDef("_0", type("Integer")),
-                    propDef("_1", type("Tree")),
-                    propDef("_2", type("Tree"))
-                ))
-            ))
-        )));
-    }
-
-    @Test
-    public void shouldParseAlgebraicTypeWithFunction() {
-        Symbol tree = parse("data FunctionOrValue a b = Value b | Function a -> b");
-        assertThat(tree, equalTo(module(
-            typeDef("FunctionOrValue", asList("a", "b"), asList(
-                recordDef("Value", asList(
-                    propDef("_0", typeVar("b"))
-                )),
-                recordDef("Function", asList(
-                    propDef("_0", fsig(typeVar("a"), typeVar("b")))
-                ))
-            ))
-        )));
-    }
-
-    @Test
-    public void shouldParseAlgebraicTypeWithTuple() {
-        Symbol tree = parse("data OneOrTwo a = One a | Two (a, a)");
-        assertThat(tree, equalTo(module(
-            typeDef("OneOrTwo", asList("a"), asList(
-                recordDef("One", asList(
-                    propDef("_0", typeVar("a"))
-                )),
-                recordDef("Two", asList(
-                    propDef("_0", tsig(typeVar("a"), typeVar("a")))
+                    propDef("_0", typeVar("a")),
+                    propDef("_1", typeRef(type("Tree"), asList(typeVar("a")))),
+                    propDef("_2", typeRef(type("Tree"), asList(typeVar("a"))))
                 ))
             ))
         )));
@@ -585,14 +555,14 @@ public class ParserTest {
 
     @Test
     public void shouldParseParameterizedAlgebraicType() {
-        Symbol tree = parse("data Tree a = Leaf | Node a Tree Tree");
+        Symbol tree = parse("data Tree a = Leaf | Node a (Tree a) (Tree a)");
         assertThat(tree, equalTo(module(
             typeDef("Tree", asList("a"), asList(
                 constDef("Leaf"),
                 recordDef("Node", asList(
                     propDef("_0", typeVar("a")),
-                    propDef("_1", type("Tree")),
-                    propDef("_2", type("Tree"))
+                    propDef("_1", typeRef(type("Tree"), asList(typeVar("a")))),
+                    propDef("_2", typeRef(type("Tree"), asList(typeVar("a"))))
                 ))
             ))
         )));

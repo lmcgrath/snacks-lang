@@ -1,5 +1,6 @@
 package snacks.lang.parser;
 
+import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.reference;
 import static snacks.lang.type.Types.*;
 
@@ -47,7 +48,7 @@ public class SymbolEnvironment implements TypeFactory {
         for (Type parameter : type.getParameters()) {
             parameters.add(genericCopy(parameter, mappings));
         }
-        return parameterized(genericCopy(type, mappings), parameters);
+        return parameterized(genericCopy(type.getType(), mappings), parameters);
     }
 
     @Override
@@ -88,6 +89,11 @@ public class SymbolEnvironment implements TypeFactory {
     @Override
     public Type createVariable() {
         return scope.createVariable();
+    }
+
+    @Override
+    public Type expand(RecursiveType type) {
+        return typeOf(new DeclarationLocator(type.getName(), TYPE));
     }
 
     public void define(Reference reference) {
@@ -159,11 +165,11 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     private Type genericCopy(Type type, Map<Type, Type> mappings) {
-        return type.expose().genericCopy(this, mappings);
+        return type.expose().genericCopy(this, mappings).expose();
     }
 
     private boolean isGeneric(Type type) {
-        return !type.occursIn(scope.getSpecializedTypes());
+        return !type.occursIn(scope.getSpecializedTypes(), this);
     }
 
     private static final class HeadScope extends Scope implements LocatorVisitor {
@@ -187,7 +193,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         public void visitDeclarationLocator(DeclarationLocator locator) {
-            Type type = registry.typeOf(locator.getModule() + "." + locator.getName(), locator.getKind());
+            Type type = registry.typeOf(locator.getName(), locator.getKind());
             if (type != null) {
                 define(new Reference(locator, type));
             }
@@ -339,7 +345,7 @@ public class SymbolEnvironment implements TypeFactory {
 
         @Override
         protected void resolve(Locator locator) {
-            // intentionally empty
+            parent.resolve(locator);
         }
     }
 }

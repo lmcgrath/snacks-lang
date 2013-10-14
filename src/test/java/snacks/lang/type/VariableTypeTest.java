@@ -23,26 +23,26 @@ public class VariableTypeTest {
 
     @Test
     public void expectationOfConcreteTypeShouldBindVariableType() {
-        assertTrue(variableType.accepts(concreteType));
+        assertTrue(variableType.accepts(concreteType, null));
         assertThat(variableType, equalTo(var(simple("Integer"))));
     }
 
     @Test
     public void expectationOfVariableTypeShouldBindVariableType() {
-        assertTrue(concreteType.accepts(variableType));
+        assertTrue(concreteType.accepts(variableType, null));
         assertThat(variableType, equalTo(var(simple("Integer"))));
     }
 
     @Test
     public void variableTypeShouldNotRebind() {
         Type differentType = simple("Boolean");
-        variableType.accepts(concreteType);
-        assertFalse(variableType.accepts(differentType));
+        variableType.accepts(concreteType, null);
+        assertFalse(variableType.accepts(differentType, null));
     }
 
     @Test
     public void variableShouldBindToVariable() {
         Type differentVariable = var("b");
-        assertTrue(variableType.accepts(differentVariable));
+        assertTrue(variableType.accepts(differentVariable, null));
     }
 }

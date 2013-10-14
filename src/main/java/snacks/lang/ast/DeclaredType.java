@@ -11,13 +11,11 @@ import snacks.lang.type.Type;
 
 public class DeclaredType extends NamedNode {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final List<NamedNode> variants;
 
-    public DeclaredType(String module, String name, Collection<NamedNode> variants) {
-        this.module = module;
-        this.name = name;
+    public DeclaredType(String qualifiedName, Collection<NamedNode> variants) {
+        this.qualifiedName = qualifiedName;
         this.variants = new ArrayList<>(variants);
     }
 
@@ -32,13 +30,8 @@ public class DeclaredType extends NamedNode {
     }
 
     @Override
-    public String getModule() {
-        return module;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+    public String getQualifiedName() {
+        return qualifiedName;
     }
 
     @Override
@@ -47,7 +40,7 @@ public class DeclaredType extends NamedNode {
         for (NamedNode variant : variants) {
             types.add(variant.getType());
         }
-        return algebraic(module + '.' + name, types);
+        return algebraic(qualifiedName, types);
     }
 
     public List<NamedNode> getVariants() {
@@ -56,6 +49,6 @@ public class DeclaredType extends NamedNode {
 
     @Override
     public String toString() {
-        return "(Type " + module + "." + name + " " + variants + ")";
+        return "(Type " + qualifiedName + " " + variants + ")";
     }
 }

@@ -1,6 +1,7 @@
 package snacks.lang.type;
 
 import java.util.*;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class RecordType extends Type {
@@ -10,7 +11,7 @@ public class RecordType extends Type {
 
     public RecordType(String name, Collection<Property> properties) {
         this.name = name;
-        this.properties = new ArrayList<>(properties);
+        this.properties = ImmutableList.copyOf(properties);
     }
 
     @Override
@@ -67,12 +68,12 @@ public class RecordType extends Type {
     }
 
     @Override
-    protected boolean acceptRight(Type other) {
+    protected boolean acceptRight(Type other, TypeFactory factory) {
         if (other instanceof RecordType) {
             RecordType otherRecord = (RecordType) other;
             if (name.equals(otherRecord.name) && properties.size() == otherRecord.properties.size()) {
                 for (int i = 0; i < properties.size(); i++) {
-                    if (!properties.get(i).unify(otherRecord.properties.get(i))) {
+                    if (!properties.get(i).accepts(otherRecord.properties.get(i), factory)) {
                         return false;
                     }
                 }
@@ -129,8 +130,8 @@ public class RecordType extends Type {
             return "(" + name + ": " + type + ")";
         }
 
-        public boolean unify(Property other) {
-            return Objects.equals(name, other.name) && other.type.accepts(type);
+        public boolean accepts(Property other, TypeFactory factory) {
+            return Objects.equals(name, other.name) && other.type.accepts(type, factory);
         }
     }
 }

@@ -14,13 +14,11 @@ import snacks.lang.type.Type;
 
 public class DeclaredRecord extends NamedNode {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final List<Property> properties;
 
-    public DeclaredRecord(String module, String name, Collection<Property> properties) {
-        this.module = module;
-        this.name = name;
+    public DeclaredRecord(String qualifiedName, Collection<Property> properties) {
+        this.qualifiedName = qualifiedName;
         this.properties = new ArrayList<>(properties);
     }
 
@@ -31,8 +29,7 @@ public class DeclaredRecord extends NamedNode {
         } else if (o instanceof DeclaredRecord) {
             DeclaredRecord other = (DeclaredRecord) o;
             return new EqualsBuilder()
-                .append(module, other.module)
-                .append(name, other.name)
+                .append(qualifiedName, other.qualifiedName)
                 .append(properties, other.properties)
                 .isEquals();
         } else {
@@ -51,13 +48,8 @@ public class DeclaredRecord extends NamedNode {
     }
 
     @Override
-    public String getModule() {
-        return module;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+    public String getQualifiedName() {
+        return qualifiedName;
     }
 
     public List<Property> getProperties() {
@@ -66,16 +58,16 @@ public class DeclaredRecord extends NamedNode {
 
     @Override
     public Type getType() {
-        return record(module + '.' + name, properties);
+        return record(qualifiedName, properties);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(module, name, properties);
+        return Objects.hash(qualifiedName, properties);
     }
 
     @Override
     public String toString() {
-        return "(Record " + module + "." + name + " " + properties + ")";
+        return "(Record " + qualifiedName + " " + properties + ")";
     }
 }

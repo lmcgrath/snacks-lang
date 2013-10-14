@@ -6,10 +6,10 @@ import java.util.*;
 
 public abstract class Type {
 
-    public boolean accepts(Type other) {
+    public boolean accepts(Type other, TypeFactory factory) {
         Type left = expose();
         Type right = other.expose();
-        return left.acceptLeft(right);
+        return left.acceptLeft(right, factory);
     }
 
     public void bind(Type type) {
@@ -34,19 +34,19 @@ public abstract class Type {
     @Override
     public abstract int hashCode();
 
-    public boolean isMember(Type type) {
+    public boolean isMember(Type type, TypeFactory factory) {
         return false;
     }
 
-    public boolean occursIn(Type type) {
+    public boolean occursIn(Type type, TypeFactory factory) {
         Type actualVariable = expose();
         Type actualType = type.expose();
-        return actualVariable.equals(actualType) || actualType.contains(type);
+        return actualVariable.equals(actualType) || actualType.contains(type, factory);
     }
 
-    public boolean occursIn(Collection<Type> types) {
+    public boolean occursIn(Collection<Type> types, TypeFactory factory) {
         for (Type type : types) {
-            if (occursIn(type)) {
+            if (occursIn(type, factory)) {
                 return true;
             }
         }
@@ -60,13 +60,13 @@ public abstract class Type {
     @Override
     public abstract String toString();
 
-    protected boolean acceptLeft(Type other) {
-        return other.acceptRight(this);
+    protected boolean acceptLeft(Type other, TypeFactory factory) {
+        return other.acceptRight(this, factory);
     }
 
-    protected abstract boolean acceptRight(Type other);
+    protected abstract boolean acceptRight(Type other, TypeFactory factory);
 
-    protected boolean contains(Type type) {
+    protected boolean contains(Type type, TypeFactory factory) {
         return false;
     }
 }

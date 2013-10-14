@@ -10,15 +10,13 @@ import snacks.lang.Operator;
 
 public class DeclaredExpression extends NamedNode {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final AstNode body;
     private Operator operator;
     private Type type;
 
-    public DeclaredExpression(String module, String name, AstNode body) {
-        this.module = module;
-        this.name = name;
+    public DeclaredExpression(String qualifiedName, AstNode body) {
+        this.qualifiedName = qualifiedName;
         this.body = body;
     }
 
@@ -29,8 +27,7 @@ public class DeclaredExpression extends NamedNode {
         } else if (o instanceof DeclaredExpression) {
             DeclaredExpression other = (DeclaredExpression) o;
             return new EqualsBuilder()
-                .append(module, other.module)
-                .append(name, other.name)
+                .append(qualifiedName, other.qualifiedName)
                 .append(body, other.body)
                 .append(type, other.type)
                 .isEquals();
@@ -54,13 +51,8 @@ public class DeclaredExpression extends NamedNode {
     }
 
     @Override
-    public String getModule() {
-        return module;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+    public String getQualifiedName() {
+        return qualifiedName;
     }
 
     public Operator getOperator() {
@@ -86,7 +78,7 @@ public class DeclaredExpression extends NamedNode {
 
     @Override
     public int hashCode() {
-        return Objects.hash(module, name, body);
+        return Objects.hash(qualifiedName, body);
     }
 
     public boolean isOperator() {
@@ -100,6 +92,6 @@ public class DeclaredExpression extends NamedNode {
 
     @Override
     public String toString() {
-        return "(" + module + "#" + name + " = " + body + ")";
+        return "(Declare " + qualifiedName + " = " + body + ")";
     }
 }

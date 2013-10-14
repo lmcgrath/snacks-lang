@@ -21,9 +21,9 @@ public class VariableType extends Type {
     }
 
     @Override
-    public boolean acceptLeft(Type other) {
+    public boolean acceptLeft(Type other, TypeFactory factory) {
         if (!equals(other)) {
-            if (occursIn(other)) {
+            if (occursIn(other, factory)) {
                 return false;
             } else {
                 bind(other);
@@ -33,8 +33,8 @@ public class VariableType extends Type {
     }
 
     @Override
-    public boolean acceptRight(Type other) {
-        return accepts(other);
+    public boolean acceptRight(Type other, TypeFactory factory) {
+        return accepts(other, factory);
     }
 
     @Override
@@ -88,15 +88,15 @@ public class VariableType extends Type {
     }
 
     @Override
-    protected boolean contains(Type type) {
-        return state.contains(type);
+    protected boolean contains(Type type, TypeFactory factory) {
+        return state.contains(type, factory);
     }
 
     private interface State {
 
         void bind(Type type);
 
-        boolean contains(Type type);
+        boolean contains(Type type, TypeFactory factory);
 
         List<Type> decompose();
 
@@ -121,8 +121,8 @@ public class VariableType extends Type {
         }
 
         @Override
-        public boolean contains(Type type) {
-            return this.type.contains(type);
+        public boolean contains(Type type, TypeFactory factory) {
+            return this.type.contains(type, factory);
         }
 
         @Override
@@ -177,7 +177,7 @@ public class VariableType extends Type {
         }
 
         @Override
-        public boolean contains(Type type) {
+        public boolean contains(Type type, TypeFactory factory) {
             return false;
         }
 

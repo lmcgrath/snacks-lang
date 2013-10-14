@@ -42,12 +42,17 @@ public class RecursiveType extends Type {
     }
 
     @Override
+    public boolean isMember(Type type, TypeFactory factory) {
+        return factory.expand(this).isMember(type, factory);
+    }
+
+    @Override
     public String toString() {
         return "(Recur " + name + ")";
     }
 
     @Override
-    protected boolean acceptRight(Type other) {
+    protected boolean acceptRight(Type other, TypeFactory factory) {
         return Objects.equals(name, other.getName());
     }
 }

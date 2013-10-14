@@ -62,13 +62,11 @@ public class AstPrinter {
     }
 
     public void printClosureLocator(ClosureLocator locator) {
-        print("module: " + locator.getModule());
         print("name: " + locator.getName());
         print("environment: " + locator.getEnvironment());
     }
 
     public void printDeclarationLocator(DeclarationLocator locator) {
-        print("module: " + locator.getModule());
         print("name: " + locator.getName());
     }
 
@@ -78,7 +76,7 @@ public class AstPrinter {
     }
 
     public void printDeclaredExpression(DeclaredExpression node) {
-        print("name: '" + node.getName() + "'");
+        print("name: '" + node.getQualifiedName() + "'");
         print(node.getBody());
     }
 

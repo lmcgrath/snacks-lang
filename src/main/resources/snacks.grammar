@@ -57,7 +57,6 @@
 %typeof qualified_identifier = "QualifiedIdentifier";
 %typeof qualified_fword = "QualifiedIdentifier";
 %typeof initializer_properties = "Symbol[]";
-%typeof type_members = "Symbol[]";
 
 module_declaration
     = module_expressions.e opt_terms    {: return module(e); :}
@@ -80,48 +79,45 @@ module_expression
     | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
-    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN {: return from(id, s); :}
+    | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN
+        {: return from(id, s); :}
+    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN constructors.c
+        {: return typeDef(id, asList(t), asList(c)); :}
     | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN LCURLY type_properties.p COMMA? RCURLY
         {: return typeDef(id, asList(t), asList(recordDef(id, p))); :}
-    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN type_declarations.d
-        {: return typeDef(id, asList(t), asList(d)); :}
     ;
 
-type_declarations
-    = type_declaration
-    | type_declarations PIPE type_declaration
+constructors
+    = constructor
+    | constructors PIPE constructor
     ;
 
-type_declaration
+constructor
     = IDENTIFIER.id                                         {: return constDef(id); :}
     | IDENTIFIER.id LCURLY type_properties.p COMMA? RCURLY  {: return recordDef(id, p); :}
-    | IDENTIFIER.id type_members.p
+    | IDENTIFIER.id type_parameters.p
         {:
             List<Symbol> properties = new ArrayList<>();
             int i = 0;
-            for (Symbol type : p) {
-                properties.add(propDef("_" + i++, type));
+            for (Symbol property : p) {
+                properties.add(propDef("_" + i++, property));
             }
             return recordDef(id, properties);
         :}
     ;
 
-type_members
-    = type_signature.ts+
-        {:
-            List<Symbol> members = new ArrayList<>();
-            for (Symbol t : ts) {
-                if (t instanceof TypeReference) {
-                    List<Symbol> properties = new ArrayList<>();
-                    properties.add(((TypeReference) t).getType());
-                    properties.addAll(((TypeReference) t).getParameters());
-                    members.addAll(properties);
-                } else {
-                    members.add(t);
-                }
-            }
-            return new Symbol(members.toArray(new Symbol[members.size()]));
-        :}
+type_parameters
+    = type_parameter
+    | type_parameters type_parameter
+    ;
+
+type_parameter
+    = qualified_identifier.id               {: return ftype(id); :}
+    | LPAREN constructor_reference.c RPAREN {: return c; :}
+    ;
+
+constructor_reference
+    = qualified_identifier.id type_parameters.p {: return typeRef(ftype(id), asList(p)); :}
     ;
 
 type_properties

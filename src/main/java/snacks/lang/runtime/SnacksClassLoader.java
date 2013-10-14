@@ -137,7 +137,9 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         if (directory.exists()) {
             for (File file : classFiles(directory)) {
                 try {
-                    processSnack(loadClass(module + '.' + baseName(file)));
+                    if (!file.getName().contains("Tuple")) {
+                        processSnack(loadClass(module + '.' + baseName(file)));
+                    }
                 } catch (ClassNotFoundException exception) {
                     // intentionally empty
                 }
@@ -313,6 +315,11 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         public int hashCode() {
             return Objects.hash(name, kind);
         }
+
+        @Override
+        public String toString() {
+            return name + "(" + kind + ")";
+        }
     }
 
     private static final class SnackValue {
@@ -331,6 +338,11 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
 
         public Type getType() {
             return type;
+        }
+
+        @Override
+        public String toString() {
+            return javaClazz.getName();
         }
     }
 }

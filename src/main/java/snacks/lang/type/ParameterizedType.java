@@ -1,7 +1,5 @@
 package snacks.lang.type;
 
-import static org.apache.commons.lang.StringUtils.join;
-
 import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
@@ -51,11 +49,7 @@ public class ParameterizedType extends Type {
 
     @Override
     public String getName() {
-        List<String> parameterNames = new ArrayList<>();
-        for (Type parameter : parameters) {
-            parameterNames.add(parameter.getName());
-        }
-        return type.getName() + "<" + join(parameterNames, ", ") + ">";
+        return type.getName();
     }
 
     public List<Type> getParameters() {
@@ -72,17 +66,22 @@ public class ParameterizedType extends Type {
     }
 
     @Override
+    public boolean isMember(Type type, TypeFactory factory) {
+        return this.type.isMember(type, factory);
+    }
+
+    @Override
     public String toString() {
         return "(Parameterized " + type + " " + parameters + ")";
     }
 
     @Override
-    protected boolean acceptRight(Type other) {
+    protected boolean acceptRight(Type other, TypeFactory factory) {
         if (other instanceof ParameterizedType) {
             ParameterizedType otherType = (ParameterizedType) other;
-            if (parameters.size() == otherType.parameters.size() && otherType.type.accepts(type)) {
+            if (parameters.size() == otherType.parameters.size() && otherType.type.accepts(type, factory)) {
                 for (int i = 0; i < parameters.size(); i++) {
-                    if (!parameters.get(i).accepts(otherType.parameters.get(i))) {
+                    if (!parameters.get(i).accepts(otherType.parameters.get(i), factory)) {
                         return false;
                     }
                 }

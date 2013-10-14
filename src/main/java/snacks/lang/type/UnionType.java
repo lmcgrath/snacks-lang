@@ -18,9 +18,9 @@ public class UnionType extends Type {
     }
 
     @Override
-    public boolean acceptLeft(Type other) {
+    public boolean acceptLeft(Type other, TypeFactory factory) {
         if (!equals(other)) {
-            if (occursIn(other)) {
+            if (occursIn(other, factory)) {
                 return false;
             } else {
                 bind(other);
@@ -30,7 +30,7 @@ public class UnionType extends Type {
     }
 
     @Override
-    public boolean acceptRight(Type other) {
+    public boolean acceptRight(Type other, TypeFactory factory) {
         return other instanceof UnionType; // TODO should verify type overlap
     }
 

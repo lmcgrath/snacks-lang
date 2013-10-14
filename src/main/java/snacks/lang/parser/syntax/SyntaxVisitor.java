@@ -106,6 +106,8 @@ public interface SyntaxVisitor {
 
     void visitTypeDeclaration(TypeDeclaration node);
 
+    void visitTypeReference(TypeReference node);
+
     void visitTypeSpec(TypeSpec node);
 
     void visitTypeVariable(TypeVariable node);

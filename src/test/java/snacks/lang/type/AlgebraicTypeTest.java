@@ -42,11 +42,11 @@ public class AlgebraicTypeTest {
 
     @Test
     public void expectationOfAlgebraicTypeShouldAcceptMemberType() {
-        assertThat(node.accepts(tree), is(true));
+        assertThat(node.accepts(tree, null), is(true));
     }
 
     @Test
     public void expectationOfRecursiveMemberTypeShouldNotAcceptAlgebraicSuperType() {
-        assertThat(tree.accepts(node), is(false));
+        assertThat(tree.accepts(node, null), is(false));
     }
 }

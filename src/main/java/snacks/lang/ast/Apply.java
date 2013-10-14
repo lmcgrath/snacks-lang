@@ -51,7 +51,7 @@ public class Apply extends AstNode {
 
     @Override
     public Type getType() {
-        return type.expose();
+        return type;
     }
 
     @Override

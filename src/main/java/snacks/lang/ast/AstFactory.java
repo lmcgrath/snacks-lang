@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import java.util.List;
-import snacks.lang.SnackKind;
 import snacks.lang.type.RecordType.Property;
 import snacks.lang.type.Type;
 
@@ -54,12 +53,12 @@ public final class AstFactory {
         return new StringConstant(value);
     }
 
-    public static AstNode constantDef(String module, String name) {
-        return new DeclaredConstant(module, name);
+    public static AstNode constantDef(String qualifiedName) {
+        return new DeclaredConstant(qualifiedName);
     }
 
-    public static DeclaredExpression declaration(String module, String name, AstNode body) {
-        return new DeclaredExpression(module, name, body);
+    public static DeclaredExpression declaration(String qualifiedName, AstNode body) {
+        return new DeclaredExpression(qualifiedName, body);
     }
 
     public static AstNode embrace(String var, String javaClass, AstNode body) {
@@ -102,18 +101,6 @@ public final class AstFactory {
         return new ReferencesEqual(left, right);
     }
 
-    public static Locator locator(String name) {
-        return new VariableLocator(name);
-    }
-
-    public static Locator locator(String module, String name) {
-        return new DeclarationLocator(module, name);
-    }
-
-    public static Locator locator(String module, String name, SnackKind kind) {
-        return new DeclarationLocator(module, name, kind);
-    }
-
     public static AstNode loop(AstNode condition, AstNode body) {
         return new Loop(condition, body);
     }
@@ -130,20 +117,12 @@ public final class AstFactory {
         return new DeclaredProperty(name, type);
     }
 
-    public static Reference reference(String name, Type type) {
-        return reference(new VariableLocator(name), type);
-    }
-
-    public static Reference reference(String module, String name, Type type) {
-        return reference(locator(module, name), type);
-    }
-
     public static Reference reference(Locator locator, Type type) {
         return new Reference(locator, type);
     }
 
-    public static NamedNode record(String module, String name, Collection<Property> properties) {
-        return new DeclaredRecord(module, name, properties);
+    public static NamedNode record(String qualifiedName, Collection<Property> properties) {
+        return new DeclaredRecord(qualifiedName, properties);
     }
 
     public static AstNode result(AstNode value) {

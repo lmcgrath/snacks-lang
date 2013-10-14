@@ -9,9 +9,12 @@ import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
-import static snacks.lang.type.Types.*;
+import static snacks.lang.type.Types.isFunction;
+import static snacks.lang.type.Types.isInvokable;
+import static snacks.lang.type.Types.isType;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import me.qmx.jitescript.*;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
@@ -21,6 +24,8 @@ import snacks.lang.type.*;
 import snacks.lang.type.RecordType.Property;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
+
+    private static final Pattern tuplePattern = Pattern.compile("^_\\d+$");
 
     private final SnacksRegistry registry;
     private final List<JiteClass> acceptedClasses;
@@ -133,7 +138,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateClosureLocator(ClosureLocator locator) {
         CodeBlock block = block();
-        String className = javaClass(locator.getModule(), locator.getName());
+        String className = javaClass(locator.getName());
         block.newobj(className);
         block.dup();
         for (String variable : locator.getEnvironment()) {
@@ -149,7 +154,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclarationLocator(DeclarationLocator locator) {
-        Class<?> clazz = registry.classOf(locator.getQualifiedName(), locator.getKind());
+        Class<?> clazz = registry.classOf(locator.getName(), locator.getKind());
         String className;
         if (clazz == null) {
             if (declarations.containsKey(locator)) {
@@ -177,9 +182,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         if (hasParent()) {
             interfaces.add(parentClass());
         }
-        JiteClass jiteClass = new JiteClass(javaClass(node.getModule(), node.getName()), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), array(interfaces));
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
-        snack.value("name", node.getName());
+        snack.value("name", node.getQualifiedName());
         snack.arrayValue("kind").addEnum(TYPE);
         jiteClass.addAnnotation(snack);
         jiteClass.setAccess(ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
@@ -190,7 +195,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         builders.push(new ClassBuilder(jiteClass));
         defineType(node.getType());
         jiteClass.defineMethod("toString", ACC_PUBLIC, sig(String.class), new CodeBlock() {{
-            ldc(node.getName());
+            ldc(node.getSimpleName());
             areturn();
         }});
         acceptClass();
@@ -198,7 +203,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclaredConstructor(DeclaredConstructor node) {
-        beginClass(node, node.getName(), interfacesFor(node.getType()));
+        beginClass(node, node.getSimpleName(), interfacesFor(node.getType()));
         generate(node.getBody());
         acceptClass();
     }
@@ -226,7 +231,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateDeclaredRecord(final DeclaredRecord node) {
         final List<Property> properties = node.getProperties();
-        final JiteClass jiteClass = beginSubType(node.getModule(), node.getName(), node.getType());
+        final JiteClass jiteClass = beginSubType(node, node.getType());
         for (final Property property : properties) {
             final String type = propertyClass(property);
             jiteClass.defineField(javaName(property.getName()), ACC_PRIVATE | ACC_FINAL, "L" + type + ";", null);
@@ -256,21 +261,37 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             newobj(p(StringBuilder.class));
             dup();
             invokespecial(p(StringBuilder.class), "<init>", sig(void.class));
-            ldc(node.getName().substring(node.getName().lastIndexOf('.') + 1) + "{");
-            invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
-            for (int i = 0; i < properties.size(); i++) {
-                Property property = properties.get(i);
-                if (i > 0) {
-                    ldc(", " + property.getName() + "=");
-                } else {
-                    ldc(property.getName() + "=");
-                }
+            if (isNamedTuple(node)) {
+                ldc(node.getSimpleName() + "(");
                 invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
-                aload(0);
-                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
-                invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
+                for (int i = 0; i < properties.size(); i++) {
+                    if (i > 0) {
+                        ldc(", ");
+                        invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+                    }
+                    Property property = properties.get(i);
+                    aload(0);
+                    getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
+                    invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
+                }
+                ldc(")");
+            } else {
+                ldc(node.getSimpleName() + "{");
+                invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+                for (int i = 0; i < properties.size(); i++) {
+                    Property property = properties.get(i);
+                    if (i > 0) {
+                        ldc(", " + property.getName() + "=");
+                    } else {
+                        ldc(property.getName() + "=");
+                    }
+                    invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
+                    aload(0);
+                    getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
+                    invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, Object.class));
+                }
+                ldc("}");
             }
-            ldc("}");
             invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
             invokevirtual(p(StringBuilder.class), "toString", sig(String.class));
             areturn();
@@ -281,10 +302,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateDeclaredType(DeclaredType node) {
         List<NamedNode> variants = node.getVariants();
-        if (variants.size() == 1 && Objects.equals(variants.get(0).getName(), node.getName())) {
+        if (variants.size() == 1 && Objects.equals(variants.get(0).getQualifiedName(), node.getQualifiedName())) {
             generate(variants.get(0));
         } else {
-            beginType(node.getModule(), node.getName(), node.getType());
+            beginType(node);
             parentClass = jiteClass().getClassName();
             JiteClass jiteClass = acceptClass();
             for (NamedNode variant : node.getVariants()) {
@@ -484,7 +505,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(ParameterizedType.class));
         block.dup();
-        block.ldc(type.getName());
+        generate(type.getType());
         block.ldc(parameters.size());
         block.anewarray(p(Type.class));
         for (int i = 0; i < parameters.size(); i++) {
@@ -494,7 +515,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             block.aastore();
         }
         block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
-        block.invokespecial(p(ParameterizedType.class), "<init>", sig(void.class, String.class, Collection.class));
+        block.invokespecial(p(ParameterizedType.class), "<init>", sig(void.class, Type.class, Collection.class));
     }
 
     @Override
@@ -686,23 +707,27 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return jiteClass;
     }
 
+    private String[] array(List<String> list) {
+        return list.toArray(new String[list.size()]);
+    }
+
     private CodeBlock beginBlock() {
         return state().beginBlock();
     }
 
     private JiteClass beginClass(NamedNode node, List<String> interfaces) {
-        return beginClass(node, node.getName(), interfaces);
+        return beginClass(node, node.getSimpleName(), interfaces);
     }
 
     private JiteClass beginClass(NamedNode node, String internalName, List<String> interfaces) {
         JiteClass jiteClass = new JiteClass(
             javaClass(node.getModule(), internalName),
             p(Object.class),
-            interfaces.toArray(new String[interfaces.size()])
+            array(interfaces)
         );
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
         AnnotationArrayValue kind = snack.arrayValue("kind");
-        snack.value("name", node.getName());
+        snack.value("name", node.getSimpleName());
         if (isType(node.getType())) {
             kind.addEnum(TYPE);
         } else {
@@ -714,15 +739,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return jiteClass;
     }
 
-    private JiteClass beginSubType(String module, String name, Type type) {
+    private JiteClass beginSubType(NamedNode node, Type type) {
         List<String> interfaces = new ArrayList<>();
         if (hasParent()) {
             interfaces.add(parentClass());
         }
-        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), interfaces.toArray(new String[interfaces.size()]));
+        JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), array(interfaces));
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
         snack.arrayValue("kind").addEnum(EXPRESSION);
-        snack.value("name", name);
+        snack.value("name", node.getSimpleName());
         jiteClass.addAnnotation(snack);
         if (hasParent()) {
             childClasses.add(jiteClass);
@@ -733,17 +758,17 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return jiteClass;
     }
 
-    private JiteClass beginType(String module, String name, Type type) {
-        JiteClass jiteClass = new JiteClass(javaClass(module, name), p(Object.class), new String[0]);
+    private JiteClass beginType(NamedNode node) {
+        JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), new String[0]);
         jiteClass.setAccess(ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT);
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
         AnnotationArrayValue parameters = snack.arrayValue("parameters");
-        snack.value("name", name);
+        snack.value("name", node.getSimpleName());
         snack.arrayValue("kind").addEnum(TYPE);
         jiteClass.addAnnotation(snack);
-        if (type instanceof ParameterizedType) {
-            for (Type parameter : ((ParameterizedType) type).getParameters()) {
-                parameters.add(module + '.' + name + '#' + parameter.getName());
+        if (node.getType() instanceof ParameterizedType) {
+            for (Type parameter : ((ParameterizedType) node.getType()).getParameters()) {
+                parameters.add(node.getQualifiedName() + '#' + parameter.getName());
             }
         }
         builders.push(new ClassBuilder(jiteClass));
@@ -882,8 +907,25 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         return state().isField(name);
     }
 
+    private boolean isNamedTuple(DeclaredRecord record) {
+        boolean namedTuple = true;
+        for (Property property : record.getProperties()) {
+            if (!tuplePattern.matcher(property.getName()).find()) {
+                namedTuple = false;
+                break;
+            }
+        }
+        return namedTuple;
+    }
+
     private boolean isVariable(String name) {
         return state().isVariable(name);
+    }
+
+    private String javaClass(String qualifiedName) {
+        String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
+        String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
+        return javaClass(module, name);
     }
 
     private String javaClass(String module, String name) {
@@ -927,11 +969,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private String propertyClass(Property property) {
-        Class<?> clazz = registry.classOf(property.getType().getName(), TYPE);
-        if (clazz == null) {
-            return javaName(property.getType().getName()).replace('.', '/');
+        if (property.getType() instanceof VariableType) {
+            return p(Object.class);
         } else {
-            return p(clazz);
+            Class<?> clazz = registry.classOf(property.getType().getName(), TYPE);
+            if (clazz == null) {
+                return javaName(property.getType().getName()).replace('.', '/');
+            } else {
+                return p(clazz);
+            }
         }
     }
 
@@ -940,7 +986,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private Type typeOf(DeclarationLocator locator) {
-        Type type = registry.typeOf(locator.getQualifiedName(), locator.getKind());
+        Type type = registry.typeOf(locator.getName(), locator.getKind());
         if (type == null) {
             if (!declarations.containsKey(locator)) {
                 throw new CompileException("Unable to determine type of " + locator);

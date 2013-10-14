@@ -350,6 +350,14 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitTypeReference(TypeReference node) {
+        print(node.getType());
+        for (Symbol parameter : node.getParameters()) {
+            print(parameter);
+        }
+    }
+
+    @Override
     public void visitTypeSpec(TypeSpec node) {
         print(node.getName());
     }

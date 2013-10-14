@@ -16,6 +16,7 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import snacks.lang.SnackKind;
+import snacks.lang.ast.DeclarationLocator;
 import snacks.lang.ast.NamedNode;
 import snacks.lang.runtime.SnacksClassLoader;
 import snacks.lang.type.Type;
@@ -32,13 +33,13 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() {
         translate("example = 2 + 2");
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() {
         translate("example = `+` 2");
-        assertThat(typeOf("example"), equalTo(union(
+        assertThat(typeOf("test.example"), equalTo(union(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(INTEGER_TYPE, INTEGER_TYPE)
@@ -51,7 +52,7 @@ public class TranslatorTest {
             "partial = `+` 2",
             "example = partial 'bananas'"
         );
-        assertThat(typeOf("example"), equalTo(STRING_TYPE));
+        assertThat(typeOf("test.example"), equalTo(STRING_TYPE));
     }
 
     @Test
@@ -60,10 +61,10 @@ public class TranslatorTest {
             "value = 'Hello, World!'",
             "example = 2 + value"
         );
-        assertThat(nodes, defines(declaration("test", "value", expression(constant("Hello, World!")))));
-        assertThat(nodes, defines(declaration("test", "example", expression(apply(
+        assertThat(nodes, defines(declaration("test.value", expression(constant("Hello, World!")))));
+        assertThat(nodes, defines(declaration("test.example", expression(apply(
             apply(
-                environment.getReference(locator("snacks.lang", "+")),
+                environment.getReference(new DeclarationLocator("snacks.lang.+")),
                 constant(2),
                 union(
                     func(STRING_TYPE, STRING_TYPE),
@@ -71,7 +72,7 @@ public class TranslatorTest {
                     func(INTEGER_TYPE, INTEGER_TYPE)
                 )
             ),
-            reference("test", "value", STRING_TYPE),
+            reference(new DeclarationLocator("test.value"), STRING_TYPE),
             STRING_TYPE
         )))));
     }
@@ -91,7 +92,7 @@ public class TranslatorTest {
             "identity = (a) -> a",
             "example = identity 12"
         );
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -102,7 +103,7 @@ public class TranslatorTest {
             "import test.example.identity as id",
             "example = id 12"
         );
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -113,7 +114,7 @@ public class TranslatorTest {
             "from test.example import identity",
             "example = identity 12"
         );
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -124,13 +125,13 @@ public class TranslatorTest {
             "from test.example import identity as id",
             "example = id 12"
         );
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldTranslateTypedFunction() {
         translate("double = (x:Integer):Integer -> x * 2");
-        assertThat(typeOf("double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
     }
 
     @Test(expected = TypeException.class)
@@ -141,7 +142,7 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateUntypedFunction() {
         translate("double = (x) -> x * 2");
-        assertThat(typeOf("double"), equalTo(union(
+        assertThat(typeOf("test.double"), equalTo(union(
             func(INTEGER_TYPE, INTEGER_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
             func(STRING_TYPE, STRING_TYPE)
@@ -151,7 +152,7 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateUntypedFunctionWithMultipleArguments() {
         translate("multiply = (x y) -> x * y");
-        assertThat(typeOf("multiply"), equalTo(typeOf("snacks.lang", "*")));
+        assertThat(typeOf("test.multiply"), equalTo(typeOf("snacks.lang.*")));
     }
 
     @Test(expected = TypeException.class)
@@ -162,19 +163,19 @@ public class TranslatorTest {
     @Test
     public void shouldTranslatePartiallyTypedFunction() {
         translate("multiply = (x:String y) -> x * y");
-        assertThat(typeOf("multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
+        assertThat(typeOf("test.multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
     }
 
     @Test
     public void shouldTranslateUnaryPlus() {
         translate("positive = (x) -> +x");
-        assertThat(typeOf("positive"), equalTo(typeOf("snacks.lang", "unary+")));
+        assertThat(typeOf("test.positive"), equalTo(typeOf("snacks.lang.unary+")));
     }
 
     @Test
     public void shouldTranslateUnaryMinus() {
         translate("negative = (x) -> -x");
-        assertThat(typeOf("negative"), equalTo(typeOf("snacks.lang", "unary-")));
+        assertThat(typeOf("test.negative"), equalTo(typeOf("snacks.lang.unary-")));
     }
 
     @Test(expected = TypeException.class)
@@ -185,13 +186,13 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateVar() {
         translate("waffles = { var test = 2; return test; } ()");
-        assertThat(typeOf("waffles"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.waffles"), equalTo(INTEGER_TYPE));
     }
 
     @Test
     public void shouldTranslateInstantiable() {
         translate("answer = () -> 42");
-        assertThat(typeOf("answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
     }
 
     @Test
@@ -203,7 +204,7 @@ public class TranslatorTest {
             "    return waffles",
             "}"
         );
-        assertThat(typeOf("example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
+        assertThat(typeOf("test.example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
     }
 
     @Test
@@ -212,13 +213,13 @@ public class TranslatorTest {
             "speak = () -> say 'Woof'",
             "main = () -> speak ()"
         );
-        assertThat(typeOf("main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
+        assertThat(typeOf("test.main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
     }
 
     @Test
     public void shouldTranslateUntypedThreeArgFunction() {
         translate("volume = (x y z) -> x * y * z");
-        assertThat(typeOf("volume").decompose(), hasSize(9));
+        assertThat(typeOf("test.volume").decompose(), hasSize(9));
     }
 
     @Test
@@ -231,7 +232,7 @@ public class TranslatorTest {
             "    return x",
             "}"
         );
-        assertThat(typeOf("test"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.test"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
     }
 
     @Test(expected = TypeException.class)
@@ -264,7 +265,7 @@ public class TranslatorTest {
             "operate = (op) -> op 2 4",
             "example = operate `+`"
         );
-        assertThat(typeOf("example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
 
     @Test
@@ -273,7 +274,7 @@ public class TranslatorTest {
             "addIntegers :: Integer -> Integer -> Integer",
             "addIntegers = (x y) -> x + y"
         );
-        assertThat(typeOf("addIntegers"), equalTo(func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))));
+        assertThat(typeOf("test.addIntegers"), equalTo(func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))));
     }
 
     @Test(expected = TypeException.class)
@@ -338,7 +339,7 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem", asList(
+        assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem", asList(
             record("test.SideForBacon", asList(
                 property("name", STRING_TYPE),
                 property("tasteIndex", INTEGER_TYPE),
@@ -356,7 +357,7 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
+        assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
             property("name", STRING_TYPE),
             property("tasteIndex", INTEGER_TYPE),
             property("pairsWithBacon?", BOOLEAN_TYPE)
@@ -372,7 +373,7 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
+        assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
             property("name", STRING_TYPE),
             property("tasteIndex", INTEGER_TYPE),
             property("pairsWithBacon?", BOOLEAN_TYPE)
@@ -388,7 +389,7 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("SideForBacon", TYPE), equalTo(record("test.SideForBacon", asList(
+        assertThat(typeOf("test.SideForBacon", TYPE), equalTo(record("test.SideForBacon", asList(
             property("name", STRING_TYPE),
             property("tasteIndex", INTEGER_TYPE),
             property("pairsWithBacon?", BOOLEAN_TYPE)
@@ -404,7 +405,7 @@ public class TranslatorTest {
             "    pairsWithBacon?: Boolean",
             "}"
         );
-        assertThat(typeOf("SideForBacon", EXPRESSION), equalTo(
+        assertThat(typeOf("test.SideForBacon", EXPRESSION), equalTo(
             func(STRING_TYPE, func(INTEGER_TYPE, func(BOOLEAN_TYPE, record("test.SideForBacon", asList(
                 property("name", STRING_TYPE),
                 property("tasteIndex", INTEGER_TYPE),
@@ -423,7 +424,7 @@ public class TranslatorTest {
             "}",
             "waffles = SideForBacon 'Waffles' 10 True"
         );
-        assertThat(typeOf("waffles", EXPRESSION), equalTo(record("test.SideForBacon", asList(
+        assertThat(typeOf("test.waffles", EXPRESSION), equalTo(record("test.SideForBacon", asList(
             property("name", STRING_TYPE),
             property("tasteIndex", INTEGER_TYPE),
             property("pairsWithBacon?", BOOLEAN_TYPE)
@@ -440,7 +441,7 @@ public class TranslatorTest {
             "}",
             "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }"
         );
-        assertThat(typeOf("waffles"), equalTo(record("test.SideForBacon", asList(
+        assertThat(typeOf("test.waffles"), equalTo(record("test.SideForBacon", asList(
             property("name", STRING_TYPE),
             property("tasteIndex", INTEGER_TYPE),
             property("pairsWithBacon?", BOOLEAN_TYPE)
@@ -457,7 +458,7 @@ public class TranslatorTest {
             "}",
             "bacon? = (x:SideForBacon) -> x.pairsWithBacon?"
         );
-        assertThat(typeOf("bacon?"), equalTo(func(
+        assertThat(typeOf("test.bacon?"), equalTo(func(
             record("test.SideForBacon", asList(
                 property("name", STRING_TYPE),
                 property("tasteIndex", INTEGER_TYPE),
@@ -470,7 +471,7 @@ public class TranslatorTest {
     @Test
     public void shouldCreateRecursiveType() {
         translate("data Tree = Leaf | Node Integer Tree Tree");
-        assertThat(typeOf("Tree", TYPE), equalTo(algebraic("test.Tree", asList(
+        assertThat(typeOf("test.Tree", TYPE), equalTo(algebraic("test.Tree", asList(
             simple("test.Leaf"),
             record("test.Node", asList(
                 property("_0", simple("snacks.lang.Integer")),
@@ -483,8 +484,8 @@ public class TranslatorTest {
     @Test
     public void shouldCreateConstantWhenConstructorTakesNoArguments() {
         translate("data Tree = Leaf | Node Integer Tree Tree");
-        assertThat(typeOf("Leaf", TYPE), equalTo(simple("test.Leaf")));
-        assertThat(typeOf("Leaf", EXPRESSION), equalTo(typeOf("Leaf", TYPE)));
+        assertThat(typeOf("test.Leaf", TYPE), equalTo(simple("test.Leaf")));
+        assertThat(typeOf("test.Leaf", EXPRESSION), equalTo(typeOf("test.Leaf", TYPE)));
     }
 
     @Test
@@ -499,45 +500,35 @@ public class TranslatorTest {
             property("_2", treeType)
         ));
         translate("data Tree = Leaf | Node Integer Tree Tree");
-        assertThat(typeOf("Node", TYPE), equalTo(nodeType));
-        assertThat(typeOf("Node", EXPRESSION), equalTo(
+        assertThat(typeOf("test.Node", TYPE), equalTo(nodeType));
+        assertThat(typeOf("test.Node", EXPRESSION), equalTo(
             func(INTEGER_TYPE, func(treeType, func(treeType, nodeType)))
         ));
     }
 
     @Test
-    public void test() {
+    public void shouldCreateParameterizedType() {
         translate(
-            "data Tree = Leaf | Node Integer Tree Tree",
-            "node = Node 3 Leaf Leaf"
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "node = Node 'Waffles' Leaf Leaf"
         );
-        assertThat(typeOf("node"), equalTo(record("test.Node", asList(
-            property("_0", simple("snacks.lang.Integer")),
-            property("_1", algebraic("test.Tree", asList(
-                simple("test.Leaf"),
-                recur("test.Node")
-            ))),
-            property("_2", algebraic("test.Tree", asList(
-                simple("test.Leaf"),
-                recur("test.Node")
-            )))
+        assertThat(typeOf("test.node"), equalTo(record("test.Node", asList(
+            property("_0", simple("snacks.lang.String")),
+            property("_1", parameterized(recur("test.Tree"), asList(simple("snacks.lang.String")))),
+            property("_2", parameterized(recur("test.Tree"), asList(simple("snacks.lang.String"))))
         ))));
     }
 
-    private Type typeOf(String name, SnackKind kind) {
-        return environment.getReference(locator("test", name, kind)).getType();
+    private Type typeOf(String qualifiedName, SnackKind kind) {
+        return environment.getReference(new DeclarationLocator(qualifiedName, kind)).getType();
     }
 
-    private Type typeOf(String name) {
-        return typeOf("test", name);
-    }
-
-    private Type typeOf(String module, String name) {
-        return environment.getReference(locator(module, name)).getType();
+    private Type typeOf(String qualifiedName) {
+        return environment.getReference(new DeclarationLocator(qualifiedName)).getType();
     }
 
     private void define(String name, Type type) {
-        environment.define(reference(locator("test.example", name, EXPRESSION), type));
+        environment.define(reference(new DeclarationLocator("test.example." + name, EXPRESSION), type));
     }
 
     private Collection<NamedNode> translate(String... inputs) {

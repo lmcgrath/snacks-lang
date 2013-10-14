@@ -42,6 +42,10 @@ public class TypeDeclaration extends VisitableSymbol {
         }
     }
 
+    public List<String> getParameters() {
+        return parameters;
+    }
+
     public List<Symbol> getVariants() {
         return variants;
     }

@@ -19,4 +19,6 @@ public interface TypeFactory {
     Type copyVariableType(VariableType type, Map<Type, Type> mappings);
 
     Type createVariable();
+
+    Type expand(RecursiveType type);
 }

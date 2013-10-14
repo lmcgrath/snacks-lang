@@ -10,17 +10,15 @@ import snacks.lang.SnackKind;
 
 public class DeclarationLocator extends Locator {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final SnackKind kind;
 
-    public DeclarationLocator(String module, String name) {
-        this(module, name, EXPRESSION);
+    public DeclarationLocator(String qualifiedName) {
+        this(qualifiedName, EXPRESSION);
     }
 
-    public DeclarationLocator(String module, String name, SnackKind kind) {
-        this.module = module;
-        this.name = name;
+    public DeclarationLocator(String qualifiedName, SnackKind kind) {
+        this.qualifiedName = qualifiedName;
         this.kind = kind;
     }
 
@@ -31,8 +29,7 @@ public class DeclarationLocator extends Locator {
         } else if (o instanceof DeclarationLocator) {
             DeclarationLocator other = (DeclarationLocator) o;
             return new EqualsBuilder()
-                .append(module, other.module)
-                .append(name, other.name)
+                .append(qualifiedName, other.qualifiedName)
                 .append(kind, other.kind)
                 .isEquals();
         } else {
@@ -54,25 +51,19 @@ public class DeclarationLocator extends Locator {
         return kind;
     }
 
-    public String getModule() {
-        return module;
-    }
-
     @Override
     public String getName() {
-        return name;
-    }
-
-    public String getQualifiedName() {
-        return module + '.' + name;
+        return qualifiedName;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(module, name, kind);
+        return Objects.hash(qualifiedName, kind);
     }
 
     public String getJavaName() {
+        String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
+        String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
         return javaName(module).replace('.', '/') + '/' + capitalize(javaName(name));
     }
 
@@ -83,6 +74,6 @@ public class DeclarationLocator extends Locator {
 
     @Override
     public String toString() {
-        return module + "#" + name + "(" + kind + ")";
+        return qualifiedName + "(" + kind + ")";
     }
 }

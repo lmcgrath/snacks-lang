@@ -72,9 +72,9 @@ public class AlgebraicType extends Type {
     }
 
     @Override
-    public boolean isMember(Type type) {
+    public boolean isMember(Type type, TypeFactory factory) {
         for (Type t : types) {
-            if (t.accepts(type)) {
+            if (t.accepts(type, factory)) {
                 return true;
             }
         }
@@ -87,14 +87,14 @@ public class AlgebraicType extends Type {
     }
 
     @Override
-    public boolean acceptRight(Type other) {
+    public boolean acceptRight(Type other, TypeFactory factory) {
         if (other instanceof AlgebraicType) {
             AlgebraicType otherType = (AlgebraicType) other;
             if (Objects.equals(name, otherType.name) && types.size() == otherType.types.size()) {
                 Iterator<Type> theseTypes = types.iterator();
                 Iterator<Type> thoseTypes = otherType.types.iterator();
                 while (theseTypes.hasNext()) {
-                    if (!thoseTypes.next().accepts(theseTypes.next())) {
+                    if (!thoseTypes.next().accepts(theseTypes.next(), factory)) {
                         return false;
                     }
                 }
@@ -102,7 +102,7 @@ public class AlgebraicType extends Type {
             }
         } else {
             for (Type type : types) {
-                if (other.accepts(type)) {
+                if (other.accepts(type, factory)) {
                     return true;
                 }
             }

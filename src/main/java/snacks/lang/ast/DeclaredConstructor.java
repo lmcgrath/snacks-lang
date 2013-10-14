@@ -7,13 +7,11 @@ import snacks.lang.type.Type;
 
 public class DeclaredConstructor extends NamedNode {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final AstNode body;
 
-    public DeclaredConstructor(String module, String name, AstNode body) {
-        this.module = module;
-        this.name = name;
+    public DeclaredConstructor(String qualifiedName, AstNode body) {
+        this.qualifiedName = qualifiedName;
         this.body = body;
     }
 
@@ -32,13 +30,8 @@ public class DeclaredConstructor extends NamedNode {
     }
 
     @Override
-    public String getModule() {
-        return module;
-    }
-
-    @Override
-    public String getName() {
-        return name + "Constructor";
+    public String getQualifiedName() {
+        return qualifiedName + "Constructor";
     }
 
     @Override
@@ -48,11 +41,11 @@ public class DeclaredConstructor extends NamedNode {
 
     @Override
     public Locator locator() {
-        return new DeclarationLocator(module, name, getKind());
+        return new DeclarationLocator(qualifiedName, getKind());
     }
 
     @Override
     public String toString() {
-        return "(Constructor " + module + "." + name + " " + body + ")";
+        return "(Constructor " + qualifiedName + " " + body + ")";
     }
 }

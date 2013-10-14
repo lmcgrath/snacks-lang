@@ -4,33 +4,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class ClosureLocator extends Locator {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
     private final List<String> environment;
 
-    public ClosureLocator(String module, String name, Collection<String> environment) {
-        this.module = module;
-        this.name = name;
+    public ClosureLocator(String qualifiedName, Collection<String> environment) {
+        this.qualifiedName = qualifiedName;
         this.environment = new ArrayList<>(environment);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        } else if (o instanceof ClosureLocator) {
-            ClosureLocator other = (ClosureLocator) o;
-            return new EqualsBuilder()
-                .append(module, other.module)
-                .append(name, other.name)
-                .isEquals();
-        } else {
-            return false;
-        }
+        return o == this || o instanceof ClosureLocator && Objects.equals(qualifiedName, ((ClosureLocator) o).qualifiedName);
     }
 
     @Override
@@ -47,18 +34,14 @@ public class ClosureLocator extends Locator {
         return environment;
     }
 
-    public String getModule() {
-        return module;
-    }
-
     @Override
     public String getName() {
-        return name;
+        return qualifiedName;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(module, name);
+        return Objects.hash(qualifiedName);
     }
 
     @Override
@@ -68,6 +51,6 @@ public class ClosureLocator extends Locator {
 
     @Override
     public String toString() {
-        return module + "#" + name;
+        return qualifiedName;
     }
 }

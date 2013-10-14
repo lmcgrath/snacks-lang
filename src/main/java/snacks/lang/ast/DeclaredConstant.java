@@ -8,12 +8,10 @@ import snacks.lang.type.Type;
 
 public class DeclaredConstant extends NamedNode {
 
-    private final String module;
-    private final String name;
+    private final String qualifiedName;
 
-    public DeclaredConstant(String module, String name) {
-        this.module = module;
-        this.name = name;
+    public DeclaredConstant(String qualifiedName) {
+        this.qualifiedName = qualifiedName;
     }
 
     @Override
@@ -27,17 +25,12 @@ public class DeclaredConstant extends NamedNode {
     }
 
     @Override
-    public String getModule() {
-        return module;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+    public String getQualifiedName() {
+        return qualifiedName;
     }
 
     @Override
     public Type getType() {
-        return simple(module + '.' + name);
+        return simple(qualifiedName);
     }
 }

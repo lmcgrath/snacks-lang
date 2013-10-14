@@ -19,7 +19,7 @@ public class TypeReference extends VisitableSymbol {
 
     @Override
     public void accept(SyntaxVisitor visitor) {
-        // TODO
+        visitor.visitTypeReference(this);
     }
 
     @Override
