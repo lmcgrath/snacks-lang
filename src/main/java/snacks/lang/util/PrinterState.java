@@ -11,6 +11,10 @@ public class PrinterState {
         this.out = out;
     }
 
+    public void begin() {
+        indent();
+    }
+
     public void begin(Object node) {
         out.print(getIndent());
         out.println("+" + formatNode(node));

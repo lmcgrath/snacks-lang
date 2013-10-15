@@ -56,4 +56,9 @@ public class GuardCase extends AstNode {
     public void print(AstPrinter printer) {
         printer.printGuardCase(this);
     }
+
+    @Override
+    public String toString() {
+        return "(If " + condition + " Then " + expression + ")";
+    }
 }

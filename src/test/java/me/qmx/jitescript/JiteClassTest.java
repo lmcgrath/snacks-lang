@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -163,6 +164,7 @@ public class JiteClassTest {
         clazz.newInstance();
     }
 
+    @Ignore
     @Test
     public void testPrivateInnerClass() throws Exception {
         JiteClass parent = new JiteClass("test/Parent") {{

@@ -18,23 +18,6 @@ public class UnionType extends Type {
     }
 
     @Override
-    public boolean acceptLeft(Type other, TypeFactory factory) {
-        if (!equals(other)) {
-            if (occursIn(other, factory)) {
-                return false;
-            } else {
-                bind(other);
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean acceptRight(Type other, TypeFactory factory) {
-        return other instanceof UnionType; // TODO should verify type overlap
-    }
-
-    @Override
     public void bind(Type type) {
         if (!types.contains(type) && !equals(type)) {
             types.add(type);
@@ -80,12 +63,17 @@ public class UnionType extends Type {
     }
 
     public Set<Type> getTypes() {
-        return types;
+        return new HashSet<>(types);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(types);
+    }
+
+    @Override
+    public void print(TypePrinter printer) {
+        printer.printUnionType(this);
     }
 
     @Override

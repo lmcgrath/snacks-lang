@@ -54,6 +54,11 @@ public class Initializer extends AstNode {
     }
 
     @Override
+    public void print(AstPrinter printer) {
+        printer.printInitializer(this);
+    }
+
+    @Override
     public String toString() {
         return "(Initializer " + constructor + " " + arguments + ")";
     }

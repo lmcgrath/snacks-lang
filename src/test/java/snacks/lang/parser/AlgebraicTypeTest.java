@@ -1,24 +1,29 @@
-package snacks.lang.type;
+package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.type.Types.algebraic;
-import static snacks.lang.type.Types.property;
-import static snacks.lang.type.Types.record;
-import static snacks.lang.type.Types.recur;
-import static snacks.lang.type.Types.simple;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.type.Types.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import snacks.lang.SnacksRegistry;
+import snacks.lang.type.Type;
 
 public class AlgebraicTypeTest {
 
+    private SnacksRegistry registry;
+    private SymbolEnvironment environment;
     private Type tree;
     private Type node;
 
     @Before
     public void setUp() {
+        registry = mock(SnacksRegistry.class);
+        environment = new SymbolEnvironment(registry);
         tree = algebraic("Tree", asList(
             simple("Leaf"),
             record("Node", asList(
@@ -38,15 +43,12 @@ public class AlgebraicTypeTest {
                 recur("Node")
             )))
         ));
+        doReturn(tree).when(registry).typeOf("Tree", TYPE);
+        doReturn(node).when(registry).typeOf("Node", TYPE);
     }
 
     @Test
     public void expectationOfAlgebraicTypeShouldAcceptMemberType() {
-        assertThat(node.accepts(tree, null), is(true));
-    }
-
-    @Test
-    public void expectationOfRecursiveMemberTypeShouldNotAcceptAlgebraicSuperType() {
-        assertThat(tree.accepts(node, null), is(false));
+        assertThat(environment.unify(tree, node), is(true));
     }
 }

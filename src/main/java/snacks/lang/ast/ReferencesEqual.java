@@ -17,11 +17,6 @@ public class ReferencesEqual extends AstNode {
     }
 
     @Override
-    public void print(AstPrinter printer) {
-        printer.printReferencesEqual(this);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -36,17 +31,17 @@ public class ReferencesEqual extends AstNode {
         }
     }
 
+    @Override
+    public void generate(Generator generator) {
+        generator.generateReferencesEqual(this);
+    }
+
     public AstNode getLeft() {
         return left;
     }
 
     public AstNode getRight() {
         return right;
-    }
-
-    @Override
-    public void generate(Generator generator) {
-        generator.generateReferencesEqual(this);
     }
 
     @Override
@@ -57,5 +52,15 @@ public class ReferencesEqual extends AstNode {
     @Override
     public int hashCode() {
         return Objects.hash(left, right);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printReferencesEqual(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(ReferencesEquals " + left + " " + right + ")";
     }
 }

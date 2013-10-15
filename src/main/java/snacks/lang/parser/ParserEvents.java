@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import beaver.Parser.Events;
 import beaver.Symbol;
 
-public class ParserEvents extends Events {
+class ParserEvents extends Events {
 
     private final Logger logger;
 

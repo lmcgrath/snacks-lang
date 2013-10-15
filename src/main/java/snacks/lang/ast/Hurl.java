@@ -38,6 +38,11 @@ public class Hurl extends AstNode {
     }
 
     @Override
+    public void print(AstPrinter printer) {
+        printer.printHurl(this);
+    }
+
+    @Override
     public String toString() {
         return "(hurl " + body + ")";
     }

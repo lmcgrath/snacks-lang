@@ -42,12 +42,12 @@ public class SimpleType extends Type {
     }
 
     @Override
-    public String toString() {
-        return "(" + name + ")";
+    public void print(TypePrinter printer) {
+        printer.printSimpleType(this);
     }
 
     @Override
-    protected boolean acceptRight(Type other, TypeFactory factory) {
-        return other instanceof SimpleType && name.equals(other.getName()) || other.isMember(this, factory);
+    public String toString() {
+        return "(" + name + ")";
     }
 }

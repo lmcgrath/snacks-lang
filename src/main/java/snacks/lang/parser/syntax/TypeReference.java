@@ -10,11 +10,11 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class TypeReference extends VisitableSymbol {
 
     private final Symbol type;
-    private final List<Symbol> parameters;
+    private final List<Symbol> arguments;
 
-    public TypeReference(Symbol type, Collection<Symbol> parameters) {
+    public TypeReference(Symbol type, Collection<Symbol> arguments) {
         this.type = type;
-        this.parameters = new ArrayList<>(parameters);
+        this.arguments = new ArrayList<>(arguments);
     }
 
     @Override
@@ -30,15 +30,15 @@ public class TypeReference extends VisitableSymbol {
             TypeReference other = (TypeReference) o;
             return new EqualsBuilder()
                 .append(type, other.type)
-                .append(parameters, other.parameters)
+                .append(arguments, other.arguments)
                 .isEquals();
         } else {
             return false;
         }
     }
 
-    public List<Symbol> getParameters() {
-        return parameters;
+    public List<Symbol> getArguments() {
+        return arguments;
     }
 
     public Symbol getType() {
@@ -47,11 +47,11 @@ public class TypeReference extends VisitableSymbol {
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, parameters);
+        return Objects.hash(type, arguments);
     }
 
     @Override
     public String toString() {
-        return "(TypeReference " + type + " " + parameters + ")";
+        return "(TypeReference " + type + " " + arguments + ")";
     }
 }

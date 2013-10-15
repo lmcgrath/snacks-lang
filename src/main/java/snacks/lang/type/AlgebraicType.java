@@ -1,16 +1,19 @@
 package snacks.lang.type;
 
 import java.util.*;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class AlgebraicType extends Type {
 
     private final String name;
-    private final List<Type> types;
+    private final List<Type> arguments;
+    private final List<Type> options;
 
-    public AlgebraicType(String name, Collection<Type> types) {
+    public AlgebraicType(String name, Collection<Type> arguments, Collection<Type> options) {
         this.name = name;
-        this.types = new ArrayList<>(types);
+        this.arguments = ImmutableList.copyOf(arguments);
+        this.options = ImmutableList.copyOf(options);
     }
 
     @Override
@@ -20,7 +23,7 @@ public class AlgebraicType extends Type {
 
     @Override
     public List<Type> decompose() {
-        return new ArrayList<>(types);
+        return new ArrayList<>(options);
     }
 
     @Override
@@ -31,7 +34,8 @@ public class AlgebraicType extends Type {
             AlgebraicType other = (AlgebraicType) o;
             return new EqualsBuilder()
                 .append(name, other.name)
-                .append(types, other.types)
+                .append(arguments, other.arguments)
+                .append(options, other.options)
                 .isEquals();
         } else {
             return false;
@@ -40,11 +44,12 @@ public class AlgebraicType extends Type {
 
     @Override
     public Type expose() {
-        List<Type> exposedTypes = new ArrayList<>();
-        for (Type type : types) {
-            exposedTypes.add(type.expose());
-        }
-        return new AlgebraicType(name, exposedTypes);
+        return new AlgebraicType(name, expose(arguments), expose(options));
+    }
+
+    @Override
+    public List<Type> getArguments() {
+        return arguments;
     }
 
     @Override
@@ -62,51 +67,22 @@ public class AlgebraicType extends Type {
         return name;
     }
 
-    public List<Type> getTypes() {
-        return types;
+    public List<Type> getOptions() {
+        return options;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, types);
+        return Objects.hash(name, options);
     }
 
     @Override
-    public boolean isMember(Type type, TypeFactory factory) {
-        for (Type t : types) {
-            if (t.accepts(type, factory)) {
-                return true;
-            }
-        }
-        return false;
+    public void print(TypePrinter printer) {
+        printer.printAlgebraicType(this);
     }
 
     @Override
     public String toString() {
-        return "(AlgebraicType " + name + " " + types + ")";
-    }
-
-    @Override
-    public boolean acceptRight(Type other, TypeFactory factory) {
-        if (other instanceof AlgebraicType) {
-            AlgebraicType otherType = (AlgebraicType) other;
-            if (Objects.equals(name, otherType.name) && types.size() == otherType.types.size()) {
-                Iterator<Type> theseTypes = types.iterator();
-                Iterator<Type> thoseTypes = otherType.types.iterator();
-                while (theseTypes.hasNext()) {
-                    if (!thoseTypes.next().accepts(theseTypes.next(), factory)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        } else {
-            for (Type type : types) {
-                if (other.accepts(type, factory)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return "(AlgebraicType " + name + " " + arguments + " " + options + ")";
     }
 }

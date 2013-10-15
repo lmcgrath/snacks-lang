@@ -30,11 +30,7 @@ public class SymbolEnvironment implements TypeFactory {
 
     @Override
     public Type copyAlgebraicType(AlgebraicType type, Map<Type, Type> mappings) {
-        List<Type> copiedTypes = new ArrayList<>();
-        for (Type t : type.getTypes()) {
-            copiedTypes.add(genericCopy(t, mappings));
-        }
-        return algebraic(type.getName(), copiedTypes);
+        return algebraic(type.getName(), genericCopy(type.getArguments(), mappings), genericCopy(type.getOptions(), mappings));
     }
 
     @Override
@@ -43,21 +39,21 @@ public class SymbolEnvironment implements TypeFactory {
     }
 
     @Override
-    public Type copyParameterizedType(ParameterizedType type, Map<Type, Type> mappings) {
-        List<Type> parameters = new ArrayList<>();
-        for (Type parameter : type.getParameters()) {
-            parameters.add(genericCopy(parameter, mappings));
-        }
-        return parameterized(genericCopy(type.getType(), mappings), parameters);
-    }
-
-    @Override
     public Type copyRecordType(RecordType type, Map<Type, Type> mappings) {
+        List<Type> arguments = new ArrayList<>();
+        for (Type argument : type.getArguments()) {
+            arguments.add(genericCopy(argument, mappings));
+        }
         List<Property> properties = new ArrayList<>();
         for (Property property : type.getProperties()) {
             properties.add(property(property.getName(), genericCopy(property.getType(), mappings)));
         }
-        return record(type.getName(), properties);
+        return record(type.getName(), arguments, properties);
+    }
+
+    @Override
+    public Type copyRecursiveType(RecursiveType type, Map<Type, Type> mappings) {
+        return recur(type.getName(), genericCopy(type.getArguments(), mappings));
     }
 
     @Override
@@ -78,7 +74,7 @@ public class SymbolEnvironment implements TypeFactory {
     public Type copyVariableType(VariableType type, Map<Type, Type> mappings) {
         if (isGeneric(type)) {
             if (!mappings.containsKey(type)) {
-                mappings.put(type, createVariable());
+                mappings.put(type, new VariableType(type.getName()));
             }
             return mappings.get(type);
         } else {
@@ -91,13 +87,13 @@ public class SymbolEnvironment implements TypeFactory {
         return scope.createVariable();
     }
 
+    public void define(Reference reference) {
+        scope.define(reference);
+    }
+
     @Override
     public Type expand(RecursiveType type) {
         return typeOf(new DeclarationLocator(type.getName(), TYPE));
-    }
-
-    public void define(Reference reference) {
-        scope.define(reference);
     }
 
     public SymbolEnvironment extend() {
@@ -164,12 +160,32 @@ public class SymbolEnvironment implements TypeFactory {
         return genericCopy(scope.typeOf(locator), new HashMap<Type, Type>());
     }
 
+    @Override
+    public boolean unify(Type left, Type right) {
+        Type exposedLeft = left.expose();
+        Type exposedRight = right.expose();
+        return unifierFor(exposedLeft).unify(exposedLeft, exposedRight, this);
+    }
+
+    private List<Type> genericCopy(Collection<Type> types, Map<Type, Type> mappings) {
+        List<Type> copiedTypes = new ArrayList<>();
+        for (Type type : types) {
+            copiedTypes.add(genericCopy(type, mappings));
+        }
+        return copiedTypes;
+    }
+
     private Type genericCopy(Type type, Map<Type, Type> mappings) {
         return type.expose().genericCopy(this, mappings).expose();
     }
 
     private boolean isGeneric(Type type) {
-        return !type.occursIn(scope.getSpecializedTypes(), this);
+        for (Type t : scope.getSpecializedTypes()) {
+            if (type.equals(t)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static final class HeadScope extends Scope implements LocatorVisitor {

@@ -1,5 +1,7 @@
 package snacks.lang.ast;
 
+import java.util.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.type.Type;
 
 public class Access extends AstNode {
@@ -12,6 +14,32 @@ public class Access extends AstNode {
         this.expression = expression;
         this.property = property;
         this.type = type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof Access) {
+            Access other = (Access) o;
+            return new EqualsBuilder()
+                .append(expression, other.expression)
+                .append(property, other.property)
+                .append(type, other.type)
+                .isEquals();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(expression, property, type);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printAccess(this);
     }
 
     @Override
@@ -30,5 +58,10 @@ public class Access extends AstNode {
 
     public String getProperty() {
         return property;
+    }
+
+    @Override
+    public String toString() {
+        return "(Access " + expression + "." + property + ")";
     }
 }

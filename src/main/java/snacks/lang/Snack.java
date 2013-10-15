@@ -13,9 +13,9 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface Snack {
 
-    SnackKind[] kind() default EXPRESSION;
+    SnackKind kind() default EXPRESSION;
 
     String name();
 
-    String[] parameters() default { };
+    String[] arguments() default { };
 }

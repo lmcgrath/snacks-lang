@@ -15,18 +15,18 @@ public class TypeUnrollerTest {
 
     @Before
     public void setUp() {
-        parentType = algebraic("Tree", asList(
+        parentType = algebraic("Tree", asList(simple("Integer")), asList(
             simple("Leaf"),
             record("Node", asList(
                 property("_0", simple("Integer")),
-                property("_1", recur("Tree")),
-                property("_2", recur("Tree"))
+                property("_1", recur("Tree", asList(simple("Integer")))),
+                property("_2", recur("Tree", asList(simple("Integer"))))
             ))
         ));
         childType = record("Node", asList(
             property("_0", simple("Integer")),
-            property("_1", recur("Tree")),
-            property("_2", recur("Tree"))
+            property("_1", recur("Tree", asList(simple("Integer")))),
+            property("_2", recur("Tree", asList(simple("Integer"))))
         ));
     }
 
@@ -34,13 +34,13 @@ public class TypeUnrollerTest {
     public void shouldUnrollChildType() {
         assertThat(new TypeUnroller(childType, parentType).unroll(), equalTo(record("Node", asList(
             property("_0", simple("Integer")),
-            property("_1", algebraic("Tree", asList(
+            property("_1", algebraic("Tree", asList(simple("Integer")), asList(
                 simple("Leaf"),
-                recur("Node")
+                recur("Node", asList(simple("Integer")))
             ))),
-            property("_2", algebraic("Tree", asList(
+            property("_2", algebraic("Tree", asList(simple("Integer")), asList(
                 simple("Leaf"),
-                recur("Node")
+                recur("Node", asList(simple("Integer")))
             )))
         ))));
     }

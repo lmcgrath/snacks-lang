@@ -40,6 +40,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitAnyMatcher(AnyMatcher node) {
+        // intentionally empty
+    }
+
+    @Override
     public void visitApplyExpression(ApplyExpression node) {
         print(node.getExpression());
         print(node.getArgument());
@@ -75,6 +80,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitCaptureMatcher(CaptureMatcher node) {
+        print("variable: " + node.getVariable());
+    }
+
+    @Override
     public void visitCharacterLiteral(CharacterLiteral node) {
         value("'" + node.getValue() + "'");
     }
@@ -98,6 +108,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConstantMatcher(ConstantMatcher node) {
+        print(node.getConstant());
+    }
+
+    @Override
     public void visitConstructorExpression(ConstructorExpression node) {
         print(node.getConstructor());
         for (Symbol argument : node.getArguments()) {
@@ -106,14 +121,16 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitContinueExpression(ContinueExpression node) {
-        // intentionally empty
+    public void visitConstructorMatcher(ConstructorMatcher node) {
+        print(node.getConstructor());
+        for (Symbol argumentMatcher : node.getArgumentMatchers()) {
+            print(argumentMatcher);
+        }
     }
 
     @Override
-    public void visitExpressionDeclaration(ExpressionDeclaration node) {
-        print("name: " + node.getName());
-        print(node.getBody());
+    public void visitContinueExpression(ContinueExpression node) {
+        // intentionally empty
     }
 
     @Override
@@ -138,6 +155,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
             print(embraceCase);
         }
         print(node.getEnsureCase());
+    }
+
+    @Override
+    public void visitExpressionDeclaration(ExpressionDeclaration node) {
+        print("name: " + node.getName());
+        print(node.getBody());
     }
 
     @Override
@@ -241,6 +264,20 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitNamedPattern(NamedPattern node) {
+        print("name: " + node.getName());
+        print(node.getPattern());
+    }
+
+    @Override
+    public void visitPatternMatcher(PatternMatcher node) {
+        for (Symbol argument : node.getMatchers()) {
+            print(argument);
+        }
+        print(node.getBody());
+    }
+
+    @Override
     public void visitNopExpression(NopExpression node) {
         // intentionally empty
     }
@@ -272,6 +309,12 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitPropertyMatcher(PropertyMatcher node) {
+        print("name: " + node.getName());
+        print(node.getMatcher());
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         print("identifier: " + node);
     }
@@ -285,6 +328,14 @@ public class SyntaxPrinter implements SyntaxVisitor {
     public void visitRecordDeclaration(RecordDeclaration node) {
         print("name: " + node.getName());
         print(node.getProperties());
+    }
+
+    @Override
+    public void visitRecordMatcher(RecordMatcher node) {
+        print(node.getConstructor());
+        for (Symbol propertyMatcher : node.getPropertyMatchers()) {
+            print(propertyMatcher);
+        }
     }
 
     @Override
@@ -352,7 +403,7 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitTypeReference(TypeReference node) {
         print(node.getType());
-        for (Symbol parameter : node.getParameters()) {
+        for (Symbol parameter : node.getArguments()) {
             print(parameter);
         }
     }

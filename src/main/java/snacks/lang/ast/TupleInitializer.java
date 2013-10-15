@@ -4,6 +4,7 @@ import static snacks.lang.type.Types.tuple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import snacks.lang.type.Type;
 
 public class TupleInitializer extends AstNode {
@@ -12,6 +13,11 @@ public class TupleInitializer extends AstNode {
 
     public TupleInitializer(List<AstNode> elements) {
         this.elements = elements;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o == this || o instanceof TupleInitializer && Objects.equals(elements, ((TupleInitializer) o).elements);
     }
 
     @Override
@@ -30,5 +36,20 @@ public class TupleInitializer extends AstNode {
             types.add(element.getType());
         }
         return tuple(types);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(elements);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printTupleInitializer(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(TupleInitializer " + elements + ")";
     }
 }

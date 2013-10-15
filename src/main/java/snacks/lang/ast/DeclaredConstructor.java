@@ -2,6 +2,8 @@ package snacks.lang.ast;
 
 import static snacks.lang.SnackKind.EXPRESSION;
 
+import java.util.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnackKind;
 import snacks.lang.type.Type;
 
@@ -13,6 +15,21 @@ public class DeclaredConstructor extends NamedNode {
     public DeclaredConstructor(String qualifiedName, AstNode body) {
         this.qualifiedName = qualifiedName;
         this.body = body;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof DeclaredConstructor) {
+            DeclaredConstructor other = (DeclaredConstructor) o;
+            return new EqualsBuilder()
+                .append(qualifiedName, other.qualifiedName)
+                .append(body, other.body)
+                .isEquals();
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -37,6 +54,16 @@ public class DeclaredConstructor extends NamedNode {
     @Override
     public Type getType() {
         return body.getType();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(qualifiedName, body);
+    }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printDeclaredConstructor(this);
     }
 
     @Override

@@ -6,8 +6,6 @@ public interface TypeGenerator {
 
     void generateFunctionType(FunctionType type);
 
-    void generateParameterizedType(ParameterizedType type);
-
     void generateRecordType(RecordType type);
 
     void generateRecursiveType(RecursiveType type);

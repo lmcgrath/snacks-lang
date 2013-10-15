@@ -35,6 +35,11 @@ public class Loop extends AstNode {
     }
 
     @Override
+    public void print(AstPrinter printer) {
+        printer.printLoop(this);
+    }
+
+    @Override
     public void generate(Generator generator) {
         generator.generateLoop(this);
     }

@@ -1,6 +1,5 @@
 package snacks.lang.ast;
 
-import static org.apache.commons.lang.StringUtils.capitalize;
 import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnackKind.EXPRESSION;
 
@@ -64,7 +63,7 @@ public class DeclarationLocator extends Locator {
     public String getJavaName() {
         String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
         String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        return javaName(module).replace('.', '/') + '/' + capitalize(javaName(name));
+        return javaName(module).replace('.', '/') + '/' + javaName(name);
     }
 
     @Override

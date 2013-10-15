@@ -6,6 +6,8 @@ public interface SyntaxVisitor {
 
     void visitAndExpression(AndExpression node);
 
+    void visitAnyMatcher(AnyMatcher node);
+
     void visitApplyExpression(ApplyExpression node);
 
     void visitArgument(Argument node);
@@ -18,6 +20,8 @@ public interface SyntaxVisitor {
 
     void visitBreakExpression(BreakExpression node);
 
+    void visitCaptureMatcher(CaptureMatcher node);
+
     void visitCharacterLiteral(CharacterLiteral node);
 
     void visitConditionCase(ConditionCase node);
@@ -26,7 +30,11 @@ public interface SyntaxVisitor {
 
     void visitConstantDeclaration(ConstantDeclaration node);
 
+    void visitConstantMatcher(ConstantMatcher node);
+
     void visitConstructorExpression(ConstructorExpression node);
+
+    void visitConstructorMatcher(ConstructorMatcher node);
 
     void visitContinueExpression(ContinueExpression node);
 
@@ -76,15 +84,23 @@ public interface SyntaxVisitor {
 
     void visitOrExpression(OrExpression node);
 
+    void visitNamedPattern(NamedPattern node);
+
+    void visitPatternMatcher(PatternMatcher node);
+
     void visitPropertyDeclaration(PropertyDeclaration node);
 
     void visitPropertyExpression(PropertyExpression node);
+
+    void visitPropertyMatcher(PropertyMatcher node);
 
     void visitQualifiedIdentifier(QualifiedIdentifier node);
 
     void visitQuotedIdentifier(QuotedIdentifier node);
 
     void visitRecordDeclaration(RecordDeclaration node);
+
+    void visitRecordMatcher(RecordMatcher node);
 
     void visitRegexLiteral(RegexLiteral node);
 

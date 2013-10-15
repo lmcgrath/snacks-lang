@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import snacks.lang.Invokable;
@@ -722,7 +721,6 @@ public class RuntimeTest {
         verifyOut("Node(Waffles, Leaf, Leaf)");
     }
 
-    @Ignore
     @Test
     public void shouldDeconstructRecord() {
         run(
@@ -738,14 +736,25 @@ public class RuntimeTest {
         );
     }
 
-    @Ignore
     @Test
     public void shouldDeconstructJust() {
         run(
+            "data Maybe a = Nothing | Just a",
             "require :: Maybe a -> a",
+            "main = () -> assert $ require (Just 1) == 1",
             "require = ?(Just value) -> value",
-            "require = ?(Nothing) -> { hurl 'Got nothin!' }",
-            "main = () -> assert $ require (Just 1) == 1"
+            "require = ?(Nothing) -> hurl 'Got nothin!'"
+        );
+    }
+
+    @Test(expected = SnacksException.class)
+    public void shouldHurlNothing() {
+        run(
+            "data Maybe a = Nothing | Just a",
+            "require :: Maybe a -> a",
+            "main = () -> require Nothing",
+            "require = ?(Just value) -> value",
+            "require = ?(Nothing) -> hurl 'Got nothin!'"
         );
     }
 
@@ -814,6 +823,18 @@ public class RuntimeTest {
         verifyOut("toast");
     }
 
+    @Test
+    public void shouldTraverseTree() {
+        run(
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "size :: Tree a -> Integer",
+            "tree = Node 1 (Node 2 (Node 3 Leaf Leaf) (Node 4 Leaf Leaf)) Leaf",
+            "main = () -> assert $ size tree == 4",
+            "size = ?(Leaf) -> 0",
+            "size = ?(Node _ left right) -> 1 + size left + size right"
+        );
+    }
+
     private void run(String... inputs) {
         try {
             List<SnackDefinition> definitions = compiler.compile(translate(new SymbolEnvironment(loader), inputs));
@@ -821,7 +842,7 @@ public class RuntimeTest {
                 writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
             }
             loader.defineClasses(definitions);
-            ((Invokable) loader.loadClass("test.Main").newInstance()).invoke();
+            ((Invokable) loader.loadClass("test.main").newInstance()).invoke();
         } catch (ReflectiveOperationException exception) {
             throw new CompileException(exception);
         }

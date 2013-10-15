@@ -3,13 +3,16 @@ package snacks.lang.type;
 import static java.util.Arrays.asList;
 
 import java.util.*;
+import com.google.common.collect.ImmutableList;
 
 public abstract class Type {
 
-    public boolean accepts(Type other, TypeFactory factory) {
-        Type left = expose();
-        Type right = other.expose();
-        return left.acceptLeft(right, factory);
+    protected static List<Type> expose(Collection<Type> types) {
+        List<Type> exposedTypes = new ArrayList<>();
+        for (Type type : types) {
+            exposedTypes.add(type.expose());
+        }
+        return exposedTypes;
     }
 
     public void bind(Type type) {
@@ -29,29 +32,16 @@ public abstract class Type {
 
     public abstract Type genericCopy(TypeFactory types, Map<Type, Type> mappings);
 
+    public List<Type> getArguments() {
+        return ImmutableList.of();
+    }
+
     public abstract String getName();
 
     @Override
     public abstract int hashCode();
 
-    public boolean isMember(Type type, TypeFactory factory) {
-        return false;
-    }
-
-    public boolean occursIn(Type type, TypeFactory factory) {
-        Type actualVariable = expose();
-        Type actualType = type.expose();
-        return actualVariable.equals(actualType) || actualType.contains(type, factory);
-    }
-
-    public boolean occursIn(Collection<Type> types, TypeFactory factory) {
-        for (Type type : types) {
-            if (occursIn(type, factory)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    public abstract void print(TypePrinter printer);
 
     public Type recompose(Type functionType, TypeFactory types) {
         return this;
@@ -59,14 +49,4 @@ public abstract class Type {
 
     @Override
     public abstract String toString();
-
-    protected boolean acceptLeft(Type other, TypeFactory factory) {
-        return other.acceptRight(this, factory);
-    }
-
-    protected abstract boolean acceptRight(Type other, TypeFactory factory);
-
-    protected boolean contains(Type type, TypeFactory factory) {
-        return false;
-    }
 }

@@ -8,9 +8,9 @@ public interface TypeFactory {
 
     Type copyFunctionType(FunctionType type, Map<Type, Type> mappings);
 
-    Type copyParameterizedType(ParameterizedType type, Map<Type, Type> mappings);
-
     Type copyRecordType(RecordType type, Map<Type, Type> mappings);
+
+    Type copyRecursiveType(RecursiveType type, Map<Type, Type> mappings);
 
     Type copySimpleType(SimpleType type, Map<Type, Type> mappings);
 
@@ -21,4 +21,6 @@ public interface TypeFactory {
     Type createVariable();
 
     Type expand(RecursiveType type);
+
+    boolean unify(Type left, Type right);
 }

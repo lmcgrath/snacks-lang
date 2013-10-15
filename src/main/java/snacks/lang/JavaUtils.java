@@ -33,7 +33,7 @@ public class JavaUtils {
     }
 
     public static String javaClass(String module, String name) {
-        return module + '.' + capitalize(javaName(name));
+        return module + '.' + javaName(name);
     }
 
     public static String javaGetter(String snacksName) {

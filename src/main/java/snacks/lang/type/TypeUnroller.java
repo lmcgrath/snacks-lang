@@ -20,11 +20,13 @@ public class TypeUnroller implements TypeGenerator {
 
     @Override
     public void generateAlgebraicType(AlgebraicType type) {
-        List<Type> types = new ArrayList<>();
-        for (Type t : type.getTypes()) {
-            types.add(unroll(t));
+        List<Type> arguments;
+        if (Objects.equals(parentType.getName(), type.getName())) {
+            arguments = unroll(parentType.getArguments());
+        } else {
+            arguments = unroll(type.getArguments());
         }
-        result = new AlgebraicType(type.getName(), types);
+        result = new AlgebraicType(type.getName(), arguments, unroll(type.getOptions()));
     }
 
     @Override
@@ -33,21 +35,16 @@ public class TypeUnroller implements TypeGenerator {
     }
 
     @Override
-    public void generateParameterizedType(ParameterizedType type) {
-        List<Type> parameters = new ArrayList<>();
-        for (Type parameter : type.getParameters()) {
-            parameters.add(unroll(parameter));
-        }
-        result = new ParameterizedType(type.getType(), parameters);
-    }
-
-    @Override
     public void generateRecordType(RecordType type) {
+        List<Type> arguments = new ArrayList<>();
+        for (Type argument : type.getArguments()) {
+            arguments.add(unroll(argument));
+        }
         List<Property> properties = new ArrayList<>();
         for (Property property : type.getProperties()) {
             properties.add(new Property(property.getName(), unroll(property.getType())));
         }
-        result = new RecordType(type.getName(), properties);
+        result = new RecordType(type.getName(), arguments, properties);
     }
 
     @Override
@@ -80,10 +77,18 @@ public class TypeUnroller implements TypeGenerator {
         return result;
     }
 
+    private List<Type> unroll(List<Type> types) {
+        List<Type> unrolledTypes = new ArrayList<>();
+        for (Type type : types) {
+            unrolledTypes.add(unroll(type));
+        }
+        return unrolledTypes;
+    }
+
     private Type unroll(Type type) {
         result = null;
         if (Objects.equals(type.getName(), childType.getName())) {
-            return recur(type.getName());
+            return recur(type.getName(), parentType.getArguments());
         } else {
             type.generate(this);
             return result;

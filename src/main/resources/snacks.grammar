@@ -37,6 +37,18 @@
             throw new ParseException(exception);
         }
     }
+
+    private Symbol curry(Symbol[] arguments, Symbol expression) {
+        return curry(arguments, expression, null);
+    }
+
+    private Symbol curry(Symbol[] arguments, Symbol expression, Symbol type) {
+        Symbol body = expression;
+        for (int i = arguments.length - 1; i >= 1; i--) {
+            body = func(arguments[i], body);
+        }
+        return func(arguments[0], body, type);
+    }
 :};
 
 %typeof IDENTIFIER = "String";
@@ -59,18 +71,20 @@
 %typeof initializer_properties = "Symbol[]";
 
 module_declaration
-    = module_expressions.e opt_terms    {: return module(e); :}
-    |                                   {: return module(); :}
+    = module_expressions.e term*    {: return module(e); :}
+    | term*                         {: return module(); :}
     ;
+
+term = nl | SEMICOLON;
+nl = NEWLINE;
 
 module_expressions
     = module_expression
-    | module_expressions terms module_expression
+    | module_expressions term+ module_expression
     ;
 
 module_expression
     = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
-    | IDENTIFIER.id ASSIGN pattern.e                    {: return null; //patternCase(id, e); :}
     | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
     | IDENTIFIER.id INFIX INTEGER.p                     {: return op(id, p); :}
     | IDENTIFIER.id LEFT_INFIX INTEGER.p                {: return leftOp(id, p); :}
@@ -85,6 +99,8 @@ module_expression
         {: return typeDef(id, asList(t), asList(c)); :}
     | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN LCURLY type_properties.p COMMA? RCURLY
         {: return typeDef(id, asList(t), asList(recordDef(id, p))); :}
+    | IDENTIFIER.id ASSIGN pattern_matcher.p
+        {: return namedPattern(id, p); :}
     ;
 
 constructors
@@ -95,7 +111,7 @@ constructors
 constructor
     = IDENTIFIER.id                                         {: return constDef(id); :}
     | IDENTIFIER.id LCURLY type_properties.p COMMA? RCURLY  {: return recordDef(id, p); :}
-    | IDENTIFIER.id type_parameters.p
+    | IDENTIFIER.id type_parameter.p+
         {:
             List<Symbol> properties = new ArrayList<>();
             int i = 0;
@@ -106,18 +122,13 @@ constructor
         :}
     ;
 
-type_parameters
-    = type_parameter
-    | type_parameters type_parameter
-    ;
-
 type_parameter
     = qualified_identifier.id               {: return ftype(id); :}
     | LPAREN constructor_reference.c RPAREN {: return c; :}
     ;
 
 constructor_reference
-    = qualified_identifier.id type_parameters.p {: return typeRef(ftype(id), asList(p)); :}
+    = qualified_identifier.id type_parameter.p+ {: return typeRef(ftype(id), asList(p)); :}
     ;
 
 type_properties
@@ -194,25 +205,6 @@ qualified_identifier
     | qualified_identifier.ids DOT QUOTED_IDENTIFIER.id {: return qid(ids, id); :}
     ;
 
-pattern
-    = LPATTERN pattern_arguments COMMA? RPAREN APPLIES_TO expression
-    ;
-
-pattern_arguments
-    = pattern_argument
-    | pattern_arguments COMMA pattern_argument
-    ;
-
-pattern_argument
-    = qualified_identifier.id
-    | qualified_identifier.id pattern_parameters.p
-    ;
-
-pattern_parameters
-    = IDENTIFIER
-    | pattern_parameters IDENTIFIER
-    ;
-
 statement
     = primary_statement
     | WHILE expression.c COLON sequence.e term* END                 {: return loop(c, block(e)); :}
@@ -233,31 +225,27 @@ primary_statement
     | VAR IDENTIFIER.v ASSIGN expression.e          {: return var(v, e); :}
     | VAR QUOTED_IDENTIFIER.v                       {: return var(v); :}
     | VAR QUOTED_IDENTIFIER.v ASSIGN expression.e   {: return var(v, e); :}
-    | HURL string_literal.m                         {: return hurl(m); :}
-    | HURL IDENTIFIER.m                             {: return hurl(id(m)); :}
     | RETURN expression.e                           {: return result(e); :}
     ;
 
 expression
-    = message.e {: return msg(e); :}
-    ;
-
-message
-    = postfix_expression
-    | message postfix_expression
+    = postfix_expression.e+ {: return msg(e); :}
+    | HURL string_literal.m {: return hurl(m); :}
+    | HURL IDENTIFIER.m {: return hurl(id(m)); :}
     ;
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e initializer_properties.p         {: return initializer(e, p); :}
-    | postfix_expression.e DOT IDENTIFIER.id                {: return access(e, id); :}
-    | postfix_expression.e LINDEX message.a COMMA? RSQUARE  {:
-                                                                Symbol result = apply(id("[]"), e);
-                                                                for (Symbol arg : a) {
-                                                                    result = apply(result, arg);
-                                                                }
-                                                                return result;
-                                                            :}
+    | postfix_expression.e initializer_properties.p {: return initializer(e, p); :}
+    | postfix_expression.e DOT IDENTIFIER.id        {: return access(e, id); :}
+    | postfix_expression.e LINDEX postfix_expression.a+ COMMA? RSQUARE
+        {:
+            Symbol result = apply(id("[]"), e);
+            for (Symbol arg : a) {
+                result = apply(result, arg);
+            }
+            return result;
+        :}
     ;
 
 list
@@ -285,7 +273,7 @@ primary_expression
     | block
     | conditional
     | exceptional
-    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
+    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o {: return regex(asList(e), o); :}
     ;
 
 string_literal
@@ -347,54 +335,23 @@ function_literal
     = UNIT APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM  {: return invokable(block(e)); :}
     | UNIT APPLIES_TO expression.e                              {: return invokable(e); :}
     | LFUNC APPLIES_TO expression.e RPAREN                      {: return invokable(e); :}
-    | LFUNC function_arguments.a APPLIES_TO expression.e RPAREN
-        {:
-            Symbol expression = e;
-            for (int i = a.length - 1; i >= 1; i--) {
-                expression = func(a[i], expression);
-            }
-            expression = func(a[0], expression);
-            return expression;
-        :}
-    | LFUNC_MULTILINE function_arguments.a APPLIES_TO sequence.e term* RCURLY
-        {:
-            Symbol expression = block(e);
-            for (int i = a.length - 1; i >= 1; i--) {
-                expression = func(a[i], expression);
-            }
-            return func(a[0], expression);
-        :}
-    | LFUNC function_arguments.a RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
-        {:
-            Symbol expression = block(e);
-            for (int i = a.length - 1; i >= 1; i--) {
-                expression = func(a[i], expression);
-            }
-            return func(a[0], expression, t);
-        :}
-    | LFUNC function_arguments.a RPAREN suffix_typespec.t APPLIES_TO expression.e
-        {:
-            Symbol expression = e;
-            for (int i = a.length - 1; i >= 1; i--) {
-                expression = func(a[i], expression);
-            }
-            return func(a[0], expression, t);
-        :}
+    | LFUNC function_argument.a+ APPLIES_TO expression.e RPAREN {: return curry(a, e); :}
+    | LFUNC_MULTILINE function_argument.a+ APPLIES_TO sequence.e term* RCURLY
+        {: return curry(a, block(e)); :}
+    | LFUNC function_argument.a+ RPAREN suffix_typespec.t APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
+        {: return curry(a, block(e), t); :}
+    | LFUNC function_argument.a+ RPAREN suffix_typespec.t APPLIES_TO expression.e
+        {: return curry(a, e, t); :}
     ;
 
 conditional
     = conditional_case.h default_case.e END                     {: return conditional(h, null, e); :}
-    | conditional_case.h alternative_cases.t default_case.e END {: return conditional(h, t, e); :}
+    | conditional_case.h alternative_case.t+ default_case.e END {: return conditional(h, t, e); :}
     ;
 
 conditional_case
     = IF expression.c COLON sequence.e term*        {: return condition(c, block(e)); :}
     | UNLESS expression.c COLON sequence.e term*    {: return condition(unary("not", c), block(e)); :}
-    ;
-
-alternative_cases
-    = alternative_case
-    | alternative_cases alternative_case
     ;
 
 alternative_case
@@ -408,8 +365,8 @@ default_case
     ;
 
 exceptional
-    = begin_case.u sequence.s term* embrace_cases.e ensure_case.f END   {: return begin(u, block(s), e, f); :}
-    | begin_case.u sequence.s term* embrace_cases.e END                 {: return begin(u, block(s), e, null); :}
+    = begin_case.u sequence.s term* embrace_case.e+ ensure_case.f END   {: return begin(u, block(s), e, f); :}
+    | begin_case.u sequence.s term* embrace_case.e+ END                 {: return begin(u, block(s), e, null); :}
     | begin_case.u sequence.s term* ensure_case.f END                   {: return begin(u, block(s), null, f); :}
     | begin_case.u sequence.s term* END                                 {: return begin(u, block(s), null, null); :}
     ;
@@ -427,11 +384,6 @@ use_cases
 use_case
     = USE expression.e                      {: return use(null, e); :}
     | USE IDENTIFIER.id ASSIGN expression.e {: return use(id, e); :}
-    ;
-
-embrace_cases
-    = embrace_case
-    | embrace_cases embrace_case
     ;
 
 embrace_case
@@ -465,11 +417,6 @@ map_entry
     = expression.k GOES_TO expression.v {: return entry(k, v); :}
     ;
 
-function_arguments
-    = function_argument
-    | function_arguments function_argument
-    ;
-
 function_argument
     = FWORD.a suffix_typespec.t {: return arg(a, t); :}
     | THROWAWAY                 {: return arg("_", null); :}
@@ -495,21 +442,52 @@ interpolation
     | LINTERPOLATE expression.e RINTERPOLATE    {: return e; :}
     ;
 
-opt_terms
-    = terms
-    |
+pattern_matcher
+    = LPATTERN patterns.as COMMA? RPAREN APPLIES_TO expression.e
+        {: return pattern(asList(as), e); :}
+    | LPATTERN patterns.as COMMA? RPAREN APPLIES_TO LCURLY sequence.e term* RCURLY @ PRECSYM
+        {: return pattern(asList(as), block(e)); :}
     ;
 
-terms
-    = term
-    | terms term
+patterns
+    = pattern
+    | patterns COMMA pattern
     ;
 
-term
-    = nl
-    | SEMICOLON
+pattern
+    = THROWAWAY                                     {: return matchAny(); :}
+    | qualified_identifier.id                       {: return matchName(id); :}
+    | qualified_identifier.id argument_matcher.m+   {: return matchConstructor(type(id), asList(m)); :}
+    | qualified_identifier.id LCURLY RCURLY         {: return matchRecord(type(id), new ArrayList<Symbol>()); :}
+    | qualified_identifier.id LCURLY property_matchers.m COMMA? RCURLY
+        {: return matchRecord(type(id), asList(m)); :}
+    | LPAREN pattern.p COMMA RPAREN
+        {: return matchConstructor(type("snacks", "lang", "Tuple1"), asList(p)); :}
+    | LPAREN pattern.p COMMA tuple_matcher.m COMMA? RPAREN
+        {:
+            List<Symbol> elements = new ArrayList<>();
+            elements.add(p);
+            elements.addAll(asList(m));
+            return matchConstructor(type("snacks", "lang", "Tuple" + elements.size()), elements);
+        :}
     ;
 
-nl
-    = NEWLINE
+argument_matcher
+    = THROWAWAY                 {: return matchAny(); :}
+    | qualified_identifier.id   {: return matchName(id); :}
+    | LPAREN pattern.p RPAREN   {: return p; :}
+    ;
+
+property_matchers
+    = property_matcher
+    | property_matchers COMMA property_matcher
+    ;
+
+property_matcher
+    = IDENTIFIER.id ASSIGN pattern.p {: return matchProperty(id, p); :}
+    ;
+
+tuple_matcher
+    = pattern.p
+    | tuple_matcher COMMA pattern.p
     ;

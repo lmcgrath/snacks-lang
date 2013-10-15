@@ -10,21 +10,15 @@ public interface Generator {
 
     void generateAssign(Assign node);
 
-    void generateBegin(Begin begin);
+    void generateBegin(Begin node);
 
     void generateBooleanConstant(BooleanConstant node);
 
     void generateBreak(Break node);
 
+    void generateCharacterConstant(CharacterConstant node);
+
     void generateClosure(Closure node);
-
-    void generateDeclaredConstant(DeclaredConstant node);
-
-    void generateDeclaredConstructor(DeclaredConstructor node);
-
-    void generateDeclaredType(DeclaredType node);
-
-    void generateFunctionClosure(FunctionClosure node);
 
     void generateClosureLocator(ClosureLocator locator);
 
@@ -32,9 +26,15 @@ public interface Generator {
 
     void generateDeclarationLocator(DeclarationLocator locator);
 
+    void generateDeclaredConstant(DeclaredConstant node);
+
+    void generateDeclaredConstructor(DeclaredConstructor node);
+
     void generateDeclaredExpression(DeclaredExpression node);
 
     void generateDeclaredRecord(DeclaredRecord node);
+
+    void generateDeclaredType(DeclaredType node);
 
     void generateDoubleConstant(DoubleConstant node);
 
@@ -45,6 +45,8 @@ public interface Generator {
     void generateExpressionConstant(ExpressionConstant node);
 
     void generateFunction(Function node);
+
+    void generateFunctionClosure(FunctionClosure node);
 
     void generateGuardCase(GuardCase node);
 
@@ -62,7 +64,15 @@ public interface Generator {
 
     void generateLoop(Loop node);
 
-    void generateNop(Nop nop);
+    void generateMatchConstant(MatchConstant node);
+
+    void generateMatchConstructor(MatchConstructor node);
+
+    void generateNop(Nop node);
+
+    void generatePatternCase(PatternCase node);
+
+    void generatePatternCases(PatternCases node);
 
     void generateReference(Reference node);
 
@@ -85,6 +95,4 @@ public interface Generator {
     void generateVariableLocator(VariableLocator locator);
 
     void generateVoidFunction(VoidFunction node);
-
-    void visitCharacterConstant(CharacterConstant node);
 }

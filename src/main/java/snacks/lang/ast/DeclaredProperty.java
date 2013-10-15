@@ -34,12 +34,22 @@ public class DeclaredProperty extends AstNode {
     }
 
     @Override
+    public Type getType() {
+        return type;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(name, type);
     }
 
     @Override
-    public Type getType() {
-        return type;
+    public void print(AstPrinter printer) {
+        printer.printDeclaredProperty(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(Property " + name + ":" + type + ")";
     }
 }

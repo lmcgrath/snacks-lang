@@ -21,7 +21,7 @@ public class CharacterConstant extends AstNode {
 
     @Override
     public void generate(Generator generator) {
-        generator.visitCharacterConstant(this);
+        generator.generateCharacterConstant(this);
     }
 
     @Override

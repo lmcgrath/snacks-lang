@@ -105,8 +105,24 @@ public final class AstFactory {
         return new Loop(condition, body);
     }
 
+    public static AstNode matchConstant(Reference reference, AstNode constant) {
+        return new MatchConstant(reference, constant);
+    }
+
+    public static AstNode matchConstructor(Reference reference, Collection<AstNode> parameters) {
+        return new MatchConstructor(reference, parameters);
+    }
+
     public static AstNode nop() {
         return Nop.INSTANCE;
+    }
+
+    public static AstNode pattern(Collection<AstNode> matchCases, AstNode body) {
+        return new PatternCase(matchCases, body);
+    }
+
+    public static AstNode patterns(Type type, Collection<AstNode> patterns) {
+        return new PatternCases(type, patterns);
     }
 
     public static AstNode prop(String name, AstNode value) {
@@ -121,8 +137,8 @@ public final class AstFactory {
         return new Reference(locator, type);
     }
 
-    public static NamedNode record(String qualifiedName, Collection<Property> properties) {
-        return new DeclaredRecord(qualifiedName, properties);
+    public static NamedNode record(String qualifiedName, Collection<Type> parameters, Collection<Property> properties) {
+        return new DeclaredRecord(qualifiedName, parameters, properties);
     }
 
     public static AstNode result(AstNode value) {

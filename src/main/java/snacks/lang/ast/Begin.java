@@ -36,6 +36,11 @@ public class Begin extends AstNode {
     }
 
     @Override
+    public void print(AstPrinter printer) {
+        printer.printBegin(this);
+    }
+
+    @Override
     public String toString() {
         return "(begin " + body + ")";
     }

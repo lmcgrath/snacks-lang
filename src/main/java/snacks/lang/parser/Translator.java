@@ -6,17 +6,30 @@ import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.ast.AstFactory.access;
+import static snacks.lang.ast.AstFactory.apply;
+import static snacks.lang.ast.AstFactory.assign;
+import static snacks.lang.ast.AstFactory.begin;
 import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.ast.AstFactory.embrace;
 import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.hurl;
+import static snacks.lang.ast.AstFactory.initializer;
+import static snacks.lang.ast.AstFactory.invokable;
+import static snacks.lang.ast.AstFactory.loop;
+import static snacks.lang.ast.AstFactory.matchConstant;
+import static snacks.lang.ast.AstFactory.matchConstructor;
+import static snacks.lang.ast.AstFactory.nop;
+import static snacks.lang.ast.AstFactory.propDef;
 import static snacks.lang.ast.AstFactory.record;
+import static snacks.lang.ast.AstFactory.result;
+import static snacks.lang.ast.AstFactory.symbol;
 import static snacks.lang.ast.AstFactory.tuple;
-import static snacks.lang.parser.syntax.SyntaxFactory.id;
-import static snacks.lang.parser.syntax.SyntaxFactory.importId;
-import static snacks.lang.parser.syntax.SyntaxFactory.qid;
-import static snacks.lang.parser.syntax.SyntaxFactory.type;
-import static snacks.lang.parser.syntax.SyntaxFactory.typeRef;
+import static snacks.lang.ast.AstFactory.unit;
+import static snacks.lang.parser.syntax.SyntaxFactory.*;
 import static snacks.lang.type.Types.*;
 import static snacks.lang.type.Types.func;
+import static snacks.lang.type.Types.property;
 import static snacks.lang.type.Types.tuple;
 import static snacks.lang.type.Types.var;
 
@@ -41,6 +54,7 @@ public class Translator implements SyntaxVisitor {
     private final List<String> wildcardImports;
     private final List<String> typeErrors;
     private final Map<Symbol, Locator> names;
+    private final PatternCollection patterns;
     private AstNode result;
     private Type type;
     private int functionLevel;
@@ -51,14 +65,24 @@ public class Translator implements SyntaxVisitor {
         this.environments = new ArrayDeque<>(asList(environment));
         this.declarations = new ArrayList<>();
         this.aliases = new HashMap<>();
-        this.parameters = new HashMap<>();
+        this.parameters = new LinkedHashMap<>();
+        this.wildcardImports = new ArrayList<>(asList("snacks.lang"));
         this.typeErrors = new ArrayList<>();
         this.names = new IdentityHashMap<>();
-        this.wildcardImports = new ArrayList<>(asList("snacks.lang"));
+        this.patterns = new PatternCollection();
+    }
+
+    public void enterConstructor(Type type) {
+        patterns.enterConstructor(type);
+    }
+
+    public void leaveConstructor() {
+        patterns.leaveConstructor();
     }
 
     public List<NamedNode> translateModule(Symbol node) {
         translate(node);
+        declarations.addAll(patterns.render());
         return new ArrayList<>(declarations);
     }
 
@@ -90,6 +114,11 @@ public class Translator implements SyntaxVisitor {
         } else {
             result = new LogicalAnd(left, right);
         }
+    }
+
+    @Override
+    public void visitAnyMatcher(AnyMatcher node) {
+        result = nop();
     }
 
     @Override
@@ -141,6 +170,17 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitCaptureMatcher(CaptureMatcher node) {
+        AstNode value = currentArgument();
+        define(new VariableLocator(node.getVariable()), value.getType());
+        result = AstFactory.var(node.getVariable(), value);
+    }
+
+    private AstNode currentArgument() {
+        return patterns.currentArgument();
+    }
+
+    @Override
     public void visitCharacterLiteral(CharacterLiteral node) {
         result = constant(node.getValue());
     }
@@ -169,12 +209,31 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitConstantMatcher(ConstantMatcher node) {
+        Type type = translateType(node.getConstant());
+        result = matchConstant(currentArgument(type), translate(node.getConstant()));
+    }
+
+    @Override
     public void visitConstructorExpression(ConstructorExpression node) {
         List<AstNode> arguments = new ArrayList<>();
         for (Symbol argument : node.getArguments()) {
             arguments.add(translate(argument));
         }
         result = initializer(translate(node.getConstructor()), arguments);
+    }
+
+    @Override
+    public void visitConstructorMatcher(ConstructorMatcher node) {
+        Type type = translateType(node.getConstructor());
+        List<AstNode> argumentMatchers = new ArrayList<>();
+        enterConstructor(type);
+        for (int i = 0; i < node.getArgumentMatchers().size(); i++) {
+            setCurrentProperty("_" + i);
+            argumentMatchers.add(translate(node.getArgumentMatchers().get(i)));
+        }
+        result = matchConstructor(currentArgument(type), argumentMatchers);
+        leaveConstructor();
     }
 
     @Override
@@ -260,24 +319,28 @@ public class Translator implements SyntaxVisitor {
         AstNode constructor = translate(node.getConstructor());
         Type type = constructor.getType();
         if (type instanceof RecordType) {
-            throw new UnsupportedOperationException(); // TODO implement record copy syntax
+            throw new UnsupportedOperationException("Record copy syntax not yet implemented");
         } else if (type instanceof FunctionType) {
-            while (!(type instanceof RecordType)) {
+            while (type instanceof FunctionType) {
                 type = resultOf(type);
             }
-            RecordType recordType = (RecordType) type; // TODO hack
-            PropertyInitializers properties = translateProperties(node, recordType);
-            properties.requireAll();
-            List<Property> propertyTypes = recordType.getProperties();
-            for (int i = 0; i < propertyTypes.size(); i++) {
-                Type resultType = null;
-                if (i == propertyTypes.size() - 1) {
-                    resultType = type.expose();
+            if (type instanceof RecordType) {
+                RecordType recordType = (RecordType) type;
+                PropertyInitializers properties = translateProperties(node, recordType);
+                properties.requireAll();
+                List<Property> propertyTypes = recordType.getProperties();
+                for (int i = 0; i < propertyTypes.size(); i++) {
+                    Type resultType = null;
+                    if (i == propertyTypes.size() - 1) {
+                        resultType = type.expose();
+                    }
+                    constructor = apply(constructor, properties.getValue(propertyTypes.get(i).getName()), resultType);
                 }
-                constructor = apply(constructor, properties.getValue(propertyTypes.get(i).getName()), resultType);
+                result = constructor;
+                return;
             }
-            result = constructor;
         }
+        throw new ParseException("Type mismatch: cannot initialize against non-record type");
     }
 
     @Override
@@ -354,6 +417,17 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitNamedPattern(NamedPattern node) {
+        Locator locator = new DeclarationLocator(qualify(node.getName()), EXPRESSION);
+        if (hasSignature(locator)) {
+            patterns.beginPattern(node.getName(), locator, getSignature(locator));
+        } else {
+            throw new ParseException("No signature defined for pattern: " + locator.getName());
+        }
+        patterns.acceptPattern(translate(node.getPattern()), environment());
+    }
+
+    @Override
     public void visitNopExpression(NopExpression node) {
         result = nop();
     }
@@ -382,6 +456,18 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitPatternMatcher(PatternMatcher node) {
+        enterPattern();
+        List<AstNode> arguments = new ArrayList<>();
+        for (Symbol argument : node.getMatchers()) {
+            arguments.add(translate(argument));
+            nextArgument();
+        }
+        result = new PatternCase(arguments, translate(node.getBody()));
+        leavePattern();
+    }
+
+    @Override
     public void visitPropertyDeclaration(PropertyDeclaration node) {
         result = propDef(node.getName(), translateType(node.getType()));
     }
@@ -389,6 +475,12 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitPropertyExpression(PropertyExpression node) {
         result = prop(node.getName(), translate(node.getValue()));
+    }
+
+    @Override
+    public void visitPropertyMatcher(PropertyMatcher node) {
+        setCurrentProperty(node.getName());
+        result = translate(node.getMatcher());
     }
 
     @Override
@@ -408,7 +500,19 @@ public class Translator implements SyntaxVisitor {
             DeclaredProperty p = (DeclaredProperty) translate(property);
             properties.add(property(p.getName(), p.getType()));
         }
-        result = record(qualify(node.getName()), properties);
+        result = record(qualify(node.getName()), parameters.values(), properties);
+    }
+
+    @Override
+    public void visitRecordMatcher(RecordMatcher node) {
+        Type type = translateType(node.getConstructor());
+        List<AstNode> argumentMatchers = new ArrayList<>();
+        enterConstructor(type);
+        for (int i = 0; i < node.getPropertyMatchers().size(); i++) {
+            argumentMatchers.add(translate(node.getPropertyMatchers().get(i)));
+        }
+        result = matchConstructor(currentArgument(type), argumentMatchers);
+        leaveConstructor();
     }
 
     @Override
@@ -471,9 +575,11 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitTypeDeclaration(TypeDeclaration node) {
-        parameters.clear();
-        for (String parameter : node.getParameters()) {
-            parameters.put(parameter, createVariable());
+        this.parameters.clear();
+        List<Type> parameters = new ArrayList<>();
+        for (String argumentName : node.getParameters()) {
+            this.parameters.put(argumentName, createVariable(qualify(node.getName()) + '#' + argumentName));
+            parameters.add(this.parameters.get(argumentName));
         }
         Locator locator = new DeclarationLocator(qualify(node.getName()), TYPE);
         alias(node.getName(), qualify(node.getName()));
@@ -483,7 +589,7 @@ public class Translator implements SyntaxVisitor {
             NamedNode variant = (NamedNode) translate(node.getVariants().get(0));
             DeclaredType declaration = new DeclaredType(qualify(node.getName()), asList(variant));
             define(locator, variant.getType());
-            defineConstructor(variant.getQualifiedName(), ((RecordType) variant.getType()).getProperties());
+            defineConstructor(variant.getQualifiedName(), parameters, ((RecordType) variant.getType()).getProperties());
             declarations.add(declaration);
         } else {
             for (Symbol variant : node.getVariants()) {
@@ -493,15 +599,16 @@ public class Translator implements SyntaxVisitor {
             for (NamedNode variant : variants) {
                 types.add(variant.getType());
             }
-            Type parentType = new AlgebraicType(qualify(node.getName()), types);
+            Type parentType = new AlgebraicType(qualify(node.getName()), parameters, types);
             for (int i = 0; i < types.size(); i++) {
                 NamedNode variant = variants.get(i);
                 alias(variant.getSimpleName(), variant.getQualifiedName());
                 if (types.get(i) instanceof RecordType) {
                     RecordType type = (RecordType) new TypeUnroller(types.get(i), parentType).unroll();
-                    define(new DeclarationLocator(variant.getQualifiedName(), TYPE), new RecordType(variant.getQualifiedName(), type.getProperties()));
-                    defineConstructor(variant.getQualifiedName(), type.getProperties());
-                    variants.set(i, new DeclaredRecord(variant.getQualifiedName(), type.getProperties()));
+                    define(new DeclarationLocator(variant.getQualifiedName(), TYPE),
+                        new RecordType(variant.getQualifiedName(), parentType.getArguments(), type.getProperties()));
+                    defineConstructor(variant.getQualifiedName(), parentType.getArguments(), type.getProperties());
+                    variants.set(i, new DeclaredRecord(variant.getQualifiedName(), parameters, type.getProperties()));
                 } else {
                     define(new DeclarationLocator(variant.getQualifiedName(), TYPE), variant.getType());
                     defineConstant(variant.getQualifiedName(), variant.getType());
@@ -515,11 +622,11 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitTypeReference(TypeReference node) {
-        List<Type> parameters = new ArrayList<>();
-        for (Symbol parameter : node.getParameters()) {
-            parameters.add(translateType(parameter));
+        List<Type> typeArguments = new ArrayList<>();
+        for (Symbol argument : node.getArguments()) {
+            typeArguments.add(translateType(argument));
         }
-        type = parameterized(translateType(node.getType()), parameters);
+        type = new ArgumentBinder(typeArguments).bind(translateType(node.getType()));
     }
 
     @Override
@@ -529,7 +636,11 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitTypeVariable(TypeVariable node) {
-        type = var(node.getName());
+        if (parameters.containsKey(node.getName())) {
+            type = parameters.get(node.getName());
+        } else {
+            type = var(node.getName());
+        }
     }
 
     @Override
@@ -548,7 +659,7 @@ public class Translator implements SyntaxVisitor {
         Type varType = createVariable();
         define(new VariableLocator(node.getName()), varType);
         specialize(varType);
-        varType.accepts(value.getType(), environment());
+        environment().unify(varType, value.getType());
         generify(varType);
         result = AstFactory.var(node.getName(), value);
     }
@@ -582,6 +693,14 @@ public class Translator implements SyntaxVisitor {
         return environment().createVariable();
     }
 
+    private Type createVariable(String name) {
+        return new VariableType(name);
+    }
+
+    private Reference currentArgument(Type type) {
+        return patterns.currentArgument(type);
+    }
+
     private void define(Locator locator, Type type) {
         environment().define(new Reference(locator, type.expose()));
     }
@@ -592,8 +711,8 @@ public class Translator implements SyntaxVisitor {
         declarations.add(new DeclaredConstructor(name, namedDeclaration(name + "Constructor", constructor).getBody()));
     }
 
-    private void defineConstructor(String name, List<Property> properties) {
-        Type constructorType = new RecordType(name, properties);
+    private void defineConstructor(String name, List<Type> typeArguments, List<Property> properties) {
+        Type constructorType = new RecordType(name, typeArguments, properties);
         for (int i = properties.size() - 1; i >= 0; i--) {
             constructorType = func(properties.get(i).getType(), constructorType);
         }
@@ -614,6 +733,11 @@ public class Translator implements SyntaxVisitor {
             );
         }
         declarations.add(new DeclaredConstructor(name, namedDeclaration(name + "Constructor", constructor).getBody()));
+    }
+
+    private void enterPattern() {
+        enterScope();
+        patterns.enterScope(environment());
     }
 
     private void enterScope() {
@@ -682,7 +806,7 @@ public class Translator implements SyntaxVisitor {
         Set<Type> resultTypes = new HashSet<>();
         for (FunctionArgument pair : productOf(functionType, argumentType)) {
             Type resultType = createVariable();
-            if (func(pair.argumentType, resultType).accepts(pair.functionType, environment())) {
+            if (environment().unify(pair.functionType, func(pair.argumentType, resultType))) {
                 resultTypes.add(resultType.expose());
                 argumentTypes.add(pair.argumentType.expose());
             }
@@ -695,7 +819,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     private boolean isBoolean(AstNode expression) {
-        return BOOLEAN_TYPE.accepts(expression.getType(), environment());
+        return environment().unify(BOOLEAN_TYPE, expression.getType());
     }
 
     private boolean isDefined(Locator locator) {
@@ -739,12 +863,17 @@ public class Translator implements SyntaxVisitor {
         functionLevel--;
     }
 
+    private void leavePattern() {
+        patterns.leaveScope();
+        leaveScope();
+    }
+
     private void leaveScope() {
         environments.pop();
     }
 
     private void matchTypes(AstNode left, AstNode right) {
-        if (!left.getType().accepts(right.getType(), environment())) {
+        if (!environment().unify(left.getType(), right.getType())) {
             throw new TypeException("Type mismatch: " + left.getType() + " != " + right.getType());
         }
     }
@@ -763,14 +892,14 @@ public class Translator implements SyntaxVisitor {
         Locator locator = new DeclarationLocator(qualify(name));
         DeclaredExpression declaration = declaration(qualify(name), body);
         if (declaration.getType().decompose().isEmpty()) {
-            throw new TypeException(join(typeErrors, "; "));
+            throw new TypeException(join(typeErrors, ";\n"));
         }
         if (hasSignature(locator)) {
             Type type = getSignature(locator);
-            if (declaration.getType().accepts(type, environment())) {
+            if (environment().unify(declaration.getType(), type)) {
                 declaration.setType(type);
             } else {
-                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + typeOf(locator));
+                throw new TypeException("Type mismatch: " + declaration.getType() + " != " + type);
             }
         }
         if (declarations.contains(declaration)) {
@@ -782,6 +911,10 @@ public class Translator implements SyntaxVisitor {
         alias(declaration.getSimpleName(), declaration.getQualifiedName());
         define(locator, declaration.getType());
         return declaration;
+    }
+
+    private void nextArgument() {
+        patterns.nextArgument();
     }
 
     private boolean outputOperator(Operator o1, Operator o2) {
@@ -875,8 +1008,12 @@ public class Translator implements SyntaxVisitor {
         currentName = new NameSequence(name);
     }
 
-    private Symbol shuffleMessage(Message message) {
-        Deque<Symbol> input = new ArrayDeque<>(message.getElements());
+    private void setCurrentProperty(String property) {
+        patterns.setProperty(property);
+    }
+
+    private Symbol shuffleElements(List<Symbol> elements) {
+        Deque<Symbol> input = new ArrayDeque<>(elements);
         Deque<Symbol> output = new ArrayDeque<>();
         Deque<Operator> operators = new ArrayDeque<>();
         boolean expectPrefix = isOperator(input.peek());
@@ -906,6 +1043,15 @@ public class Translator implements SyntaxVisitor {
             output.push(new Identifier(operators.pop().getName()));
         }
         return reduceOperations(output);
+    }
+
+    private Symbol shuffleMessage(Message message) {
+        List<Symbol> elements = message.getElements();
+        if (elements.size() == 1) {
+            return elements.get(0);
+        } else {
+            return shuffleElements(elements);
+        }
     }
 
     private void signature(Reference reference) {
@@ -1008,23 +1154,23 @@ public class Translator implements SyntaxVisitor {
         return environment().typeOf(locator);
     }
 
-    private Symbol typeToSymbol(Type t) {
-        if (t instanceof ParameterizedType) {
-            ParameterizedType type = (ParameterizedType) t;
-            List<Symbol> parameters = new ArrayList<>();
-            for (Type parameter : type.getParameters()) {
-                parameters.add(typeToSymbol(parameter));
+    private Symbol typeToSymbol(Type type) {
+        if (type.expose() instanceof VariableType) {
+            String name = type.getName();
+            if (name.contains("#")) {
+                return type(name.substring(name.lastIndexOf('#') + 1));
+            } else {
+                return type(name);
             }
-            return typeRef(typeToSymbol(type.getType()), parameters);
         } else {
-            return type(t.getName().split("\\."));
+            return type(type.getName().split("\\."));
         }
     }
 
     private boolean unifyFunctionResult(Type functionType, Type declaredResultType) {
         if (functionType.decompose().size() == 1) {
             Type actualResultType = resultOf(functionType);
-            return declaredResultType.accepts(actualResultType, environment());
+            return environment().unify(declaredResultType, actualResultType);
         } else {
             return false;
         }
@@ -1043,7 +1189,7 @@ public class Translator implements SyntaxVisitor {
 
     private void verifyAssignmentType(Type targetType, Type valueType) {
         specialize(targetType);
-        if (!targetType.accepts(valueType, environment())) {
+        if (!environment().unify(targetType, valueType)) {
             throw new TypeException("Type mismatch: " + targetType + " != " + valueType);
         }
         generify(targetType);
@@ -1100,7 +1246,11 @@ public class Translator implements SyntaxVisitor {
         private final Map<String, PropertyInitializer> initializers;
         private final List<Property> matchedProperties;
 
-        private PropertyInitializers(RecordType recordType, Map<String, PropertyInitializer> initializers, List<Property> matchedProperties) {
+        private PropertyInitializers(
+            RecordType recordType,
+            Map<String, PropertyInitializer> initializers,
+            List<Property> matchedProperties
+        ) {
             this.record = recordType;
             this.initializers = initializers;
             this.matchedProperties = matchedProperties;

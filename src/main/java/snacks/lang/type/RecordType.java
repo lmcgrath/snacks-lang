@@ -7,10 +7,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class RecordType extends Type {
 
     private final String name;
+    private final List<Type> arguments;
     private final List<Property> properties;
 
-    public RecordType(String name, Collection<Property> properties) {
+    public RecordType(String name, Collection<Type> arguments, Collection<Property> properties) {
         this.name = name;
+        this.arguments = ImmutableList.copyOf(arguments);
         this.properties = ImmutableList.copyOf(properties);
     }
 
@@ -31,11 +33,15 @@ public class RecordType extends Type {
 
     @Override
     public Type expose() {
+        List<Type> exposedArguments = new ArrayList<>();
+        for (Type argument : arguments) {
+            exposedArguments.add(argument.expose());
+        }
         List<Property> exposedProperties = new ArrayList<>();
         for (Property property : properties) {
             exposedProperties.add(property.expose());
         }
-        return new RecordType(name, exposedProperties);
+        return new RecordType(name, exposedArguments, exposedProperties);
     }
 
     @Override
@@ -46,6 +52,11 @@ public class RecordType extends Type {
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
         return types.copyRecordType(this, mappings);
+    }
+
+    @Override
+    public List<Type> getArguments() {
+        return arguments;
     }
 
     @Override
@@ -63,24 +74,13 @@ public class RecordType extends Type {
     }
 
     @Override
-    public String toString() {
-        return "(" + name + properties + ")";
+    public void print(TypePrinter printer) {
+        printer.printRecordType(this);
     }
 
     @Override
-    protected boolean acceptRight(Type other, TypeFactory factory) {
-        if (other instanceof RecordType) {
-            RecordType otherRecord = (RecordType) other;
-            if (name.equals(otherRecord.name) && properties.size() == otherRecord.properties.size()) {
-                for (int i = 0; i < properties.size(); i++) {
-                    if (!properties.get(i).accepts(otherRecord.properties.get(i), factory)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
+    public String toString() {
+        return "(" + name + " " + arguments + " " + properties + ")";
     }
 
     public static final class Property {
@@ -128,10 +128,6 @@ public class RecordType extends Type {
         @Override
         public String toString() {
             return "(" + name + ": " + type + ")";
-        }
-
-        public boolean accepts(Property other, TypeFactory factory) {
-            return Objects.equals(name, other.name) && other.type.accepts(type, factory);
         }
     }
 }

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.ast.AstFactory.var;
 import static snacks.lang.parser.TranslatorMatcher.defines;
 import static snacks.lang.type.Types.*;
 import static snacks.lang.type.Types.func;
@@ -14,12 +15,13 @@ import static snacks.lang.type.Types.record;
 
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnackKind;
-import snacks.lang.ast.DeclarationLocator;
-import snacks.lang.ast.NamedNode;
+import snacks.lang.ast.*;
 import snacks.lang.runtime.SnacksClassLoader;
 import snacks.lang.type.Type;
+import snacks.lang.type.VariableType;
 
 public class TranslatorTest {
 
@@ -513,10 +515,101 @@ public class TranslatorTest {
             "node = Node 'Waffles' Leaf Leaf"
         );
         assertThat(typeOf("test.node"), equalTo(record("test.Node", asList(
-            property("_0", simple("snacks.lang.String")),
-            property("_1", parameterized(recur("test.Tree"), asList(simple("snacks.lang.String")))),
-            property("_2", parameterized(recur("test.Tree"), asList(simple("snacks.lang.String"))))
+            property("_0", STRING_TYPE),
+            property("_1", algebraic("test.Tree", asList(STRING_TYPE), asList(
+                simple("test.Leaf"),
+                recur("test.Node", asList(vtype(STRING_TYPE)))
+            ))),
+            property("_2", algebraic("test.Tree", asList(STRING_TYPE), asList(
+                simple("test.Leaf"),
+                recur("test.Node", asList(vtype(STRING_TYPE)))
+            )))
         ))));
+    }
+
+    @Ignore("Type discrepancy with assignments")
+    @Test
+    public void shouldTranslatePatternMatching() {
+        AstNode hurl = hurl(constant("Got nothin!"));
+        Type a = vtype("test.Maybe#a");
+        hurl.getType().bind(a);
+        Type just = record("test.Just", asList(property("_0", a)));
+        Type nothing = simple("test.Nothing");
+        Type maybe = algebraic("test.Maybe", asList(a), asList(nothing, just));
+        String arg0 = "#snacks#~patternArg0";
+        String arg1 = "#snacks#~patternArg1";
+        Collection<NamedNode> nodes = translate(
+            "data Maybe a = Nothing | Just a",
+            "perhaps? :: Maybe a -> a -> a",
+            "perhaps? = ?(Just value, _) -> value",
+            "perhaps? = ?(Nothing, default) -> default"
+        );
+        assertThat(nodes, defines(declaration("test.perhaps?", patterns(func(func(maybe, a), a), asList(
+            pattern(
+                asList(
+                    matchConstructor(
+                        reference(vl(arg0), just),
+                        asList(var("value", access(reference(vl(arg0), just), "_0", a)))
+                    ),
+                    nop()
+                ),
+                reference(vl("value"), a)
+            ),
+            pattern(
+                asList(
+                    matchConstant(reference(vl(arg0), nothing), reference(dl("test.Nothing"), nothing)),
+                    var("default", reference(vl(arg1), a))
+                ),
+                reference(vl("default"), a)
+            )
+        )))));
+    }
+
+    @Test
+    public void shouldTranslateRecordPattern() {
+        Type type = record("test.BreakfastItem", asList(
+            property("name", STRING_TYPE),
+            property("tasteIndex", INTEGER_TYPE),
+            property("pairsWithBacon?", BOOLEAN_TYPE)
+        ));
+        Reference argument = reference(vl("#snacks#~patternArg0"), type);
+        Collection<NamedNode> nodes = translate(
+            "data BreakfastItem = {",
+            "    name: String,",
+            "    tasteIndex: Integer,",
+            "    pairsWithBacon?: Boolean,",
+            "}",
+            "bacon? :: BreakfastItem -> Boolean",
+            "bacon? = ?(BreakfastItem { pairsWithBacon? = x }) -> x"
+        );
+        assertThat(nodes, defines(declaration("test.bacon?", patterns(func(type, BOOLEAN_TYPE), asList(
+            pattern(
+                asList(matchConstructor(argument, asList(
+                    var("x", access(argument, "pairsWithBacon?", BOOLEAN_TYPE))
+                ))),
+                reference(vl("x"), BOOLEAN_TYPE)
+            )
+        )))));
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotCreateTreeWithIncorrectData() {
+        translate(
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "tree = Node 1 (Node 'Waffles' Leaf Leaf) Leaf"
+        );
+    }
+
+    private void define(String name, Type type) {
+        environment.define(reference(new DeclarationLocator("test.example." + name, EXPRESSION), type));
+    }
+
+    private Locator dl(String name) {
+        return new DeclarationLocator(name);
+    }
+
+    private Collection<NamedNode> translate(String... inputs) {
+        return CompilerUtil.translate(environment, inputs);
     }
 
     private Type typeOf(String qualifiedName, SnackKind kind) {
@@ -527,11 +620,15 @@ public class TranslatorTest {
         return environment.getReference(new DeclarationLocator(qualifiedName)).getType();
     }
 
-    private void define(String name, Type type) {
-        environment.define(reference(new DeclarationLocator("test.example." + name, EXPRESSION), type));
+    private Locator vl(String name) {
+        return new VariableLocator(name);
     }
 
-    private Collection<NamedNode> translate(String... inputs) {
-        return CompilerUtil.translate(environment, inputs);
+    private Type vtype(String name) {
+        return new VariableType(name);
+    }
+
+    private Type vtype(Type type) {
+        return new VariableType(type);
     }
 }

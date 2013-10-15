@@ -7,6 +7,7 @@ import static snacks.lang.parser.CompilerUtil.expression;
 import static snacks.lang.parser.CompilerUtil.parse;
 import static snacks.lang.parser.syntax.SyntaxFactory.*;
 
+import java.util.ArrayList;
 import beaver.Symbol;
 import org.junit.Test;
 
@@ -566,5 +567,116 @@ public class ParserTest {
                 ))
             ))
         )));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherWithConstructor() {
+        Symbol tree = parse("require = ?(Just value) -> value");
+        assertThat(tree, equalTo(module(namedPattern("require", pattern(
+            asList(matchConstructor(type("Just"), asList(matchCapture("value")))),
+            id("value"))
+        ))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherWithConstant() {
+        Symbol tree = parse("require = ?(Nothing) -> { hurl 'Got nothin!' }");
+        assertThat(tree, equalTo(module(namedPattern("require", pattern(
+            asList(matchConstant(qid("Nothing"))),
+            block(hurl(literal("Got nothin!")))
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherWithConstantAndThrowaway() {
+        Symbol tree = parse("snd = ?(_, Just something) -> something");
+        assertThat(tree, equalTo(module(namedPattern("snd", pattern(
+            asList(matchAny(), matchConstructor(type("Just"), asList(matchCapture("something")))),
+            id("something")
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherIgnoringConstructorArguments() {
+        Symbol tree = parse("right = ?(Node _ _ r) -> r");
+        assertThat(tree, equalTo(module(namedPattern("right", pattern(
+            asList(matchConstructor(type("Node"), asList(matchAny(), matchAny(), matchCapture("r")))),
+            id("r")
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherWithSingleElementTuple() {
+        Symbol tree = parse("unwrap = ?((first,)) -> first");
+        assertThat(tree, equalTo(module(namedPattern("unwrap", pattern(
+            asList(matchConstructor(type("snacks", "lang", "Tuple1"), asList(matchCapture("first")))),
+            id("first")
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherExtractingMiddleElementFromTuple() {
+        Symbol tree = parse("middle = ?((_, middle, _)) -> middle");
+        assertThat(tree, equalTo(module(namedPattern("middle", pattern(
+            asList(matchConstructor(type("snacks", "lang", "Tuple3"), asList(matchAny(), matchCapture("middle"), matchAny()))),
+            id("middle")
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherExtractingJustValueFromNodeData() {
+        Symbol tree = parse(
+            "valueOf = ?(Node (Just value) _ _) -> value",
+            "valueOf = ?(Node Nothing _ _) -> { hurl 'no value!' }"
+        );
+        assertThat(tree, equalTo(module(
+            namedPattern("valueOf", pattern(
+                asList(matchConstructor(type("Node"), asList(
+                    matchConstructor(type("Just"), asList(matchCapture("value"))),
+                    matchAny(),
+                    matchAny()
+                ))),
+                id("value")
+            )),
+            namedPattern("valueOf", pattern(
+                asList(matchConstructor(type("Node"), asList(
+                    matchConstant(qid("Nothing")),
+                    matchAny(),
+                    matchAny()
+                ))),
+                block(hurl(literal("no value!")))
+            ))
+        )));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherExtractingFieldFromRecord() {
+        Symbol tree = parse("bacon? = ?(BreakfastItem { pairsWithBacon? = a }) -> a");
+        assertThat(tree, equalTo(module(namedPattern("bacon?", pattern(
+            asList(matchRecord(type("BreakfastItem"), asList(matchProperty("pairsWithBacon?", matchCapture("a"))))),
+            id("a")
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherCapturingNoFieldsFromRecord() {
+        Symbol tree = parse("alwaysBacon? = ?(BreakfastItem { }) -> True");
+        assertThat(tree, equalTo(module(namedPattern("alwaysBacon?", pattern(
+            asList(matchRecord(type("BreakfastItem"), new ArrayList<Symbol>())),
+            literal(true)
+        )))));
+    }
+
+    @Test
+    public void shouldParsePatternMatcherExtractingPropertyFromNodeData() {
+        Symbol tree = parse("nodeBacon? = ?(Node (BreakfastItem { pairsWithBacon? = a }) _ _) -> a");
+        assertThat(tree, equalTo(module(namedPattern("nodeBacon?", pattern(
+            asList(matchConstructor(type("Node"), asList(
+                matchRecord(type("BreakfastItem"), asList(matchProperty("pairsWithBacon?", matchCapture("a")))),
+                matchAny(),
+                matchAny()
+            ))),
+            id("a")
+        )))));
     }
 }

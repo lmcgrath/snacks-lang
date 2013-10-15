@@ -15,6 +15,7 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
                 'import static java.util.Arrays.asList;',
                 'import static snacks.lang.SnackKind.TYPE;',
                 '',
+                'import java.util.ArrayList;',
                 'import java.util.Objects;',
                 'import org.apache.commons.lang.builder.EqualsBuilder;',
                 'import snacks.lang.type.RecordType;',
@@ -30,7 +31,7 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
             content << ''
             content << '    @SnackType'
             content << '    public static Type type() {'
-            content << "        return new RecordType(\"snacks.lang.Tuple$size\", asList("
+            content << "        return new RecordType(\"snacks.lang.Tuple$size\", new ArrayList<Type>(), asList("
             content << range.collect { t -> "            new Property(\"_$t\", new VariableType(\"snacks.lang.Tuple$size#_$t\"))" }.join(',\n')
             content << "        ));"
             content << '    }'

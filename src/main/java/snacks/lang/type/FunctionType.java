@@ -15,17 +15,6 @@ public class FunctionType extends Type {
     }
 
     @Override
-    public boolean acceptRight(Type other, TypeFactory factory) {
-        if (other instanceof FunctionType) {
-            FunctionType otherFunction = (FunctionType) other;
-            return argument.accepts(otherFunction.argument, factory)
-                && result.accepts(otherFunction.result, factory);
-        } else {
-            return false;
-        }
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -74,12 +63,12 @@ public class FunctionType extends Type {
     }
 
     @Override
-    public String toString() {
-        return "(" + argument + " -> " + result + ")";
+    public void print(TypePrinter printer) {
+        printer.printFunctionType(this);
     }
 
     @Override
-    protected boolean contains(Type type, TypeFactory factory) {
-        return type.occursIn(argument, factory) || type.occursIn(result, factory);
+    public String toString() {
+        return "(fn " + argument + " -> " + result + ")";
     }
 }

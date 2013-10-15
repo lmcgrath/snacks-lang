@@ -55,6 +55,11 @@ public class LogicalAnd extends AstNode {
     }
 
     @Override
+    public void print(AstPrinter printer) {
+        printer.printLogicalAnd(this);
+    }
+
+    @Override
     public String toString() {
         return "(" + left + " || " + right + ")";
     }

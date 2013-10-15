@@ -14,6 +14,11 @@ public class GuardCases extends AstNode {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o == this || o instanceof GuardCases && Objects.equals(cases, ((GuardCases) o).cases);
+    }
+
+    @Override
     public void generate(Generator generator) {
         generator.generateGuardCases(this);
     }
@@ -32,7 +37,17 @@ public class GuardCases extends AstNode {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(cases);
+    }
+
+    @Override
     public void print(AstPrinter printer) {
         printer.printGuardCases(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(Guards " + cases + ")";
     }
 }

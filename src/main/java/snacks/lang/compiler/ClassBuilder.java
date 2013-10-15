@@ -31,10 +31,6 @@ class ClassBuilder {
         return scope().getBlock();
     }
 
-    public void enterGuard() {
-        scope().enterGuard();
-    }
-
     public EmbraceScope currentEmbrace() {
         return scope().currentEmbrace();
     }
@@ -45,6 +41,10 @@ class ClassBuilder {
 
     public void enterEmbrace(int exceptionVar, Exceptional node) {
         scope().enterEmbrace(exceptionVar, node);
+    }
+
+    public void enterGuard() {
+        scope().enterGuard();
     }
 
     public LoopScope enterLoop() {
@@ -65,10 +65,6 @@ class ClassBuilder {
 
     public boolean isField(String name) {
         return fields.contains(name);
-    }
-
-    public boolean isVariable(String name) {
-        return scope().isVariable(name);
     }
 
     public void leaveEmbrace(Generator generator) {

@@ -1,24 +1,42 @@
 package snacks.lang.type;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 public class RecursiveType extends Type {
 
     private final String name;
+    private final List<Type> arguments;
 
-    public RecursiveType(String name) {
+    public RecursiveType(String name, Collection<Type> arguments) {
         this.name = name;
+        this.arguments = ImmutableList.copyOf(arguments);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || o instanceof RecursiveType && Objects.equals(name, ((RecursiveType) o).name);
+        if (o == this) {
+            return true;
+        } else if (o instanceof RecursiveType) {
+            RecursiveType other = (RecursiveType) o;
+            return new EqualsBuilder()
+                .append(name, other.name)
+                .append(arguments, other.arguments)
+                .isEquals();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public Type expose() {
         return this;
+    }
+
+    @Override
+    public List<Type> getArguments() {
+        return arguments;
     }
 
     @Override
@@ -28,7 +46,7 @@ public class RecursiveType extends Type {
 
     @Override
     public Type genericCopy(TypeFactory types, Map<Type, Type> mappings) {
-        return this;
+        return types.copyRecursiveType(this, mappings);
     }
 
     @Override
@@ -42,17 +60,12 @@ public class RecursiveType extends Type {
     }
 
     @Override
-    public boolean isMember(Type type, TypeFactory factory) {
-        return factory.expand(this).isMember(type, factory);
+    public void print(TypePrinter printer) {
+        printer.printRecursiveType(this);
     }
 
     @Override
     public String toString() {
-        return "(Recur " + name + ")";
-    }
-
-    @Override
-    protected boolean acceptRight(Type other, TypeFactory factory) {
-        return Objects.equals(name, other.getName());
+        return "(Recur " + name + " " + arguments + ")";
     }
 }

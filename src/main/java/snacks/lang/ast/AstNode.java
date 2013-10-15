@@ -7,6 +7,9 @@ public abstract class AstNode {
 
     private Position position;
 
+    @Override
+    public abstract boolean equals(Object o);
+
     public void generate(Generator generator) {
         throw new UnsupportedOperationException("Cannot reference " + getClass().getSimpleName());
     }
@@ -21,15 +24,19 @@ public abstract class AstNode {
 
     public abstract Type getType();
 
+    @Override
+    public abstract int hashCode();
+
     public boolean isInvokable() {
         return false;
     }
 
-    public void print(AstPrinter printer) {
-        // intentionally empty
-    }
+    public abstract void print(AstPrinter printer);
 
     public void reduce(Reducer reducer) {
         throw new UnsupportedOperationException("Cannot assign to " + getClass().getSimpleName());
     }
+
+    @Override
+    public abstract String toString();
 }

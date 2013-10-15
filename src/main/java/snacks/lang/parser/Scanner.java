@@ -245,8 +245,16 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private Action detectFunctionParen() {
         boolean function = false;
+        int parens = 1;
         try (LookAhead ignored = new LookAhead()) {
             while (isIdentifier(peek()) || peek() == ')' || peek() == ':' || peek() == '.' || isWhitespace(peek())) {
+                if (peek() == ')') {
+                    if (parens == 0) {
+                        function = false;
+                        break;
+                    }
+                    parens--;
+                }
                 if (peek() == '-' && lookAhead(1) == '>') {
                     function = true;
                     break;

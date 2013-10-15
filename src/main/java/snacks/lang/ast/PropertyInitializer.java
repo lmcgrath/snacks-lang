@@ -46,4 +46,14 @@ public class PropertyInitializer extends AstNode {
     public int hashCode() {
         return Objects.hash(name, value);
     }
+
+    @Override
+    public void print(AstPrinter printer) {
+        printer.printPropertyInitializer(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(Property " + name + " = " + value + ")";
+    }
 }

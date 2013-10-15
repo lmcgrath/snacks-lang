@@ -205,6 +205,39 @@ public final class SyntaxFactory {
         return new MapLiteral(entries);
     }
 
+    public static Symbol matchAny() {
+        return new AnyMatcher();
+    }
+
+    public static Symbol matchCapture(String argument) {
+        return new CaptureMatcher(argument);
+    }
+
+    public static Symbol matchConstant(Symbol constant) {
+        return new ConstantMatcher(constant);
+    }
+
+    public static Symbol matchConstructor(Symbol constructor, Collection<Symbol> argumentMatchers) {
+        return new ConstructorMatcher(constructor, argumentMatchers);
+    }
+
+    public static Symbol matchName(QualifiedIdentifier id) {
+        List<String> segments = id.getSegments();
+        if (segments.size() == 1 && Character.isLowerCase(segments.get(0).charAt(0))) {
+            return matchCapture(segments.get(0));
+        } else {
+            return matchConstant(id);
+        }
+    }
+
+    public static Symbol matchProperty(String name, Symbol matcher) {
+        return new PropertyMatcher(name, matcher);
+    }
+
+    public static Symbol matchRecord(Symbol constructor, Collection<Symbol> propertyMatchers) {
+        return new RecordMatcher(constructor, propertyMatchers);
+    }
+
     public static Symbol module(Symbol... elements) {
         return new Module(elements);
     }
@@ -217,12 +250,20 @@ public final class SyntaxFactory {
         }
     }
 
+    public static Symbol namedPattern(String name, Symbol pattern) {
+        return new NamedPattern(name, pattern);
+    }
+
     public static Symbol nop() {
         return new NopExpression();
     }
 
     public static Symbol op(String name, int precedence) {
         return new OperatorDeclaration(new Operator(NONE, precedence, 2, name));
+    }
+
+    public static Symbol pattern(Collection<Symbol> arguments, Symbol body) {
+        return new PatternMatcher(arguments, body);
     }
 
     public static Symbol prefix(String name, int precedence) {
@@ -321,16 +362,16 @@ public final class SyntaxFactory {
         return type(qid(segments));
     }
 
-    public static Symbol typeRef(Symbol type, Collection<Symbol> parameters) {
-        return new TypeReference(type, parameters);
-    }
-
     public static Symbol typeDef(String name, Collection<Symbol> definition) {
         return typeDef(name, new ArrayList<String>(), definition);
     }
 
     public static Symbol typeDef(String name, Collection<String> parameters, Collection<Symbol> definition) {
         return new TypeDeclaration(name, parameters, definition);
+    }
+
+    public static Symbol typeRef(Symbol type, Collection<Symbol> parameters) {
+        return new TypeReference(type, parameters);
     }
 
     public static Symbol typeVar(String name) {

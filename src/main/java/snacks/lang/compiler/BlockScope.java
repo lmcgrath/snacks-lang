@@ -56,14 +56,10 @@ class BlockScope {
     }
 
     public int getVariable(String name) {
-        if (!isVariable(name)) {
-            variables.put(name, variables.size() + 2);
+        if (!variables.containsKey(name)) {
+            variables.put(name, variables.size() + 1);
         }
         return variables.get(name);
-    }
-
-    public boolean isVariable(String name) {
-        return variables.containsKey(name);
     }
 
     public void leaveEmbrace(Generator generator) {

@@ -9,6 +9,9 @@ public abstract class VisitableSymbol extends Symbol {
 
     public abstract void accept(SyntaxVisitor visitor);
 
+    @Override
+    public abstract boolean equals(Object o);
+
     public Position getPosition() {
         return position;
     }
@@ -16,4 +19,10 @@ public abstract class VisitableSymbol extends Symbol {
     public void setPosition(Position position) {
         this.position = position;
     }
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract String toString();
 }
