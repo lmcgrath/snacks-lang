@@ -2,6 +2,7 @@ package snacks.lang.parser;
 
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.reference;
+import static snacks.lang.parser.TypeUnifier.unifierFor;
 import static snacks.lang.type.Types.*;
 
 import java.util.*;
