@@ -282,16 +282,12 @@ public class ScannerTest {
 
     @Test
     public void shouldGetQuotedIdentifier() {
-        assertThat(scan(" `+` bananas").nextToken(), both(hasKind(QUOTED_IDENTIFIER)).and(hasValue("+")));
+        assertThat(scan(" (+) bananas").nextToken(), both(hasKind(QUOTED_IDENTIFIER)).and(hasValue("+")));
     }
 
     @Test
-    public void shouldGetDoubleNegative() {
-        Scanner scanner = scan("-(-3)");
-        assertThat(scanner.nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("-")));
-        assertThat(scanner.nextToken(), hasKind(LPAREN));
-        assertThat(scanner.nextToken(), both(hasKind(IDENTIFIER)).and(hasValue("-")));
-        assertThat(scanner.nextToken(), both(hasKind(INTEGER)).and(hasValue(3)));
+    public void shouldGetQuotedOperator() {
+        assertThat(scan(" `rem` 3").nextToken(), both(hasKind(QUOTED_OPERATOR)).and(hasValue("rem")));
     }
 
     private Scanner scan(String... inputs) {

@@ -438,7 +438,7 @@ public class ParserTest {
 
     @Test
     public void shouldParsePartialApplication() {
-        assertThat(parse("example = `+` 2"), equalTo(module(
+        assertThat(parse("example = (+) 2"), equalTo(module(
             def("example", msg(quoted("+"), literal(2)))
         )));
     }
@@ -452,7 +452,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseOperatorImport() {
-        assertThat(parse("import example.funny.`..`"), equalTo(module(
+        assertThat(parse("import example.funny.(..)"), equalTo(module(
             importId(qid("example", "funny", ".."))
         )));
     }

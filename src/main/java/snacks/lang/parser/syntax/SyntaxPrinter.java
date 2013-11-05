@@ -315,6 +315,29 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
+    public void visitProtocolDeclaration(ProtocolDeclaration node) {
+        print("name: " + node.getName());
+        print("arguments: " + node.getArguments());
+        print("members:");
+        state.begin();
+        print(node.getMembers());
+        state.end();
+    }
+
+    @Override
+    public void visitProtocolImplementation(ProtocolImplementation node) {
+        print("name: " + node.getName());
+        print("arguments:");
+        state.begin();
+        print(node.getArguments());
+        state.end();
+        print("members:");
+        state.begin();
+        print(node.getMembers());
+        state.end();
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         print("identifier: " + node);
     }
@@ -322,6 +345,11 @@ public class SyntaxPrinter implements SyntaxVisitor {
     @Override
     public void visitQuotedIdentifier(QuotedIdentifier node) {
         print("identifier: " + node.getName());
+    }
+
+    @Override
+    public void visitQuotedOperator(QuotedOperator node) {
+        print("operator: " + node.getName());
     }
 
     @Override

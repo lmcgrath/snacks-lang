@@ -40,7 +40,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() {
-        translate("example = `+` 2");
+        translate("example = (+) 2");
         assertThat(typeOf("test.example"), equalTo(union(
             func(STRING_TYPE, STRING_TYPE),
             func(DOUBLE_TYPE, DOUBLE_TYPE),
@@ -51,7 +51,7 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfExpressionUsingPossibleTypes() {
         translate(
-            "partial = `+` 2",
+            "partial = (+) 2",
             "example = partial 'bananas'"
         );
         assertThat(typeOf("test.example"), equalTo(STRING_TYPE));
@@ -265,7 +265,7 @@ public class TranslatorTest {
         translate(
             "operate :: (Integer -> Integer -> Integer) -> Integer",
             "operate = (op) -> op 2 4",
-            "example = operate `+`"
+            "example = operate (+)"
         );
         assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
     }
@@ -598,6 +598,46 @@ public class TranslatorTest {
             "data Tree a = Leaf | Node a (Tree a) (Tree a)",
             "tree = Node 1 (Node 'Waffles' Leaf Leaf) Leaf"
         );
+    }
+
+    @Test
+    public void shouldUseQuotedFunctionAsOperator() {
+        Collection<NamedNode> nodes = translate(
+            "add :: Integer -> Integer -> Integer",
+            "add = (x y) -> x + y",
+            "example = 2 `add` 3"
+        );
+        assertThat(nodes, defines(declaration("test.example", expression(
+            apply(
+                apply(
+                    reference(dl("test.add"), func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))),
+                    constant(2),
+                    func(INTEGER_TYPE, INTEGER_TYPE)
+                ),
+                constant(3),
+                INTEGER_TYPE
+            )
+        ))));
+    }
+
+    @Test
+    public void shouldUseSymbolFunctionAsOperator() {
+        Collection<NamedNode> nodes = translate(
+            "(~>) :: Integer -> Integer -> Integer",
+            "(~>) = (x y) -> x ** y",
+            "example = 2 ~> 3"
+        );
+        assertThat(nodes, defines(declaration("test.example", expression(
+            apply(
+                apply(
+                    reference(dl("test.~>"), func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))),
+                    constant(2),
+                    func(INTEGER_TYPE, INTEGER_TYPE)
+                ),
+                constant(3),
+                INTEGER_TYPE
+            )
+        ))));
     }
 
     private void define(String name, Type type) {

@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import snacks.lang.Invokable;
@@ -212,8 +213,8 @@ public class RuntimeTest {
         run(
             "operate = (op) -> op 2 4",
             "main = {",
-            "    say $ operate `+`",
-            "    say $ operate `*`",
+            "    say $ operate (+)",
+            "    say $ operate (*)",
             "}"
         );
         verifyOut(6);
@@ -224,7 +225,7 @@ public class RuntimeTest {
     public void shouldOverridePlus() {
         run(
             "main = {",
-            "    var `+` = (x y) -> 'sneaky ninja (='",
+            "    var (+) = (x y) -> 'sneaky ninja (='",
             "    say $ 3 + 24",
             "}"
         );
@@ -401,7 +402,7 @@ public class RuntimeTest {
 
     @Test
     public void shouldCompileNegativeNegative() {
-        run("main = () -> assert $ -(-3) == 3");
+        run("main = () -> assert $ -(- 3) == 3");
     }
 
     @Test
@@ -778,7 +779,7 @@ public class RuntimeTest {
 
     @Test
     public void shouldUseAndAsFunction() {
-        run("main = () -> assert $ not (`and` True False)");
+        run("main = () -> assert $ not ((and) True False)");
     }
 
     @Test
@@ -832,6 +833,37 @@ public class RuntimeTest {
             "main = () -> assert $ size tree == 4",
             "size = ?(Leaf) -> 0",
             "size = ?(Node _ left right) -> 1 + size left + size right"
+        );
+    }
+
+    @Test
+    public void shouldUseFunctionAsOperator() {
+        run(
+            "add :: Integer -> Integer -> Integer",
+            "main = () -> assert $ 2 `add` 3 == 5",
+            "add = (a b) -> a + b"
+        );
+    }
+
+    @Ignore("WIP")
+    @Test
+    public void shouldCreateProtocol() {
+        run(
+            "protocol Equitable a where",
+            "    (==) :: a -> a -> Boolean",
+            "    (!=) :: a -> a -> Boolean",
+            "    (!=) = (x y) -> not $ x == y",
+            "end",
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "main = () -> {",
+            "    assert $ (Node 3 Leaf Leaf) == (Node 3 Leaf Leaf)",
+            "    assert $ (Node 4 Leaf Leaf) != (Node 4 (Node 1 Leaf Leaf) Leaf)",
+            "}",
+            "implement Equitable (Tree a) where",
+            "    (==) = ?(Leaf, Leaf) -> True",
+            "    (==) = ?(Node x l1 r1, Node y l2 r2) -> x == y and l1 == l2 and r1 == r2",
+            "    (==) = ?(_, _) -> False",
+            "end"
         );
     }
 

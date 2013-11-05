@@ -33,6 +33,7 @@ import snacks.lang.type.Type;
 public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
+
     private final Set<String> loadedSnacks = new HashSet<>();
     private final Map<SnackKey, SnackValue> snacks = new HashMap<>();
     private final OperatorRegistry operators = new OperatorRegistry();

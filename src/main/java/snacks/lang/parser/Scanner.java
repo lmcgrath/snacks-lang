@@ -28,7 +28,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             "ensure",
             "->",
             "=>",
-            "else"
+            "else",
+            "where",
+            "derives"
         ));
     }
 
@@ -63,6 +65,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         dictionary.put("infix", null);
         dictionary.put("is", IDENTIFIER);
         dictionary.put("not", IDENTIFIER);
+        dictionary.put("protocol", PROTOCOL);
+        dictionary.put("implement", IMPLEMENT);
+        dictionary.put("derives", DERIVES);
+        dictionary.put("where", WHERE);
     }
 
     private final Deque<Integer> braces;
@@ -143,6 +149,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                     break;
                 case EMBRACE:
                     action = scanEmbrace();
+                    break;
+                case QUOTED_OPERATOR:
+                    action = scanQuotedOperator();
                     break;
                 case QUOTED_IDENTIFIER:
                     action = scanQuotedIdentifier();
@@ -319,6 +328,24 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         return true;
     }
 
+    private boolean expectQuotedIdentifier() {
+        try (LookAhead ignore = new LookAhead()) {
+            if (isQuoted(peek())) {
+                while (isQuoted(peek())) {
+                    read();
+                }
+                if (peek() == ')') {
+                    read();
+                    while (isWhitespace(peek())) {
+                        read();
+                    }
+                    return !(peek() == '-' && lookAhead(1) == '>');
+                }
+            }
+            return false;
+        }
+    }
+
     private boolean hasString() {
         return string.length() > 0;
     }
@@ -378,6 +405,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private boolean isPrefix(int c) {
         return c == '+' || c == '-' || c == '!' || c == '~';
+    }
+
+    private boolean isQuoted(int c) {
+        return isIdentifier(c) || c == '[' || c == ']' || c == '.';
     }
 
     private boolean isSymbol(int c) {
@@ -639,8 +670,12 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 if (peek() == ')') {
                     read();
                     return accept(UNIT);
+                } else if (expectQuotedIdentifier()) {
+                    enterState(State.QUOTED_IDENTIFIER);
+                    return keepGoing();
+                } else {
+                    return detectFunctionParen();
                 }
-                return detectFunctionParen();
             case ')':
                 read();
                 detectSuffix();
@@ -684,7 +719,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                     return accept(DOT);
                 }
             case '`':
-                enterState(State.QUOTED_IDENTIFIER);
+                enterState(State.QUOTED_OPERATOR);
                 read();
                 return keepGoing();
             case ':':
@@ -1040,15 +1075,40 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private Action scanQuotedIdentifier() {
-        if (isIdentifier(peek()) || peek() == '[' || peek() == ']' || peek() == '.') {
-            while (isIdentifier(peek()) || peek() == '[' || peek() == ']' || peek() == '.') {
+        if (isQuoted(peek())) {
+            while (isQuoted(peek())) {
+                read();
+            }
+            if (peek() == ')') {
+                leaveState();
+                String text = text();
+                if (dictionary.containsKey(text) && dictionary.get(text) != IDENTIFIER) {
+                    return error();
+                } else {
+                    Action action = accept(QUOTED_IDENTIFIER, text);
+                    read();
+                    return action;
+                }
+            }
+        }
+        return error();
+    }
+
+    private Action scanQuotedOperator() {
+        if (isQuoted(peek())) {
+            while (isQuoted(peek())) {
                 read();
             }
             if (peek() == '`') {
                 leaveState();
-                Action action = accept(QUOTED_IDENTIFIER, text());
-                read();
-                return action;
+                String text = text();
+                if (dictionary.containsKey(text) && dictionary.get(text) != IDENTIFIER) {
+                    return error();
+                } else {
+                    Action action = accept(QUOTED_OPERATOR, text);
+                    read();
+                    return action;
+                }
             }
         }
         return error();
@@ -1203,6 +1263,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         SKIP_NEWLINES,
         EMBRACE,
         QUOTED_IDENTIFIER,
+        QUOTED_OPERATOR,
         DATA_DECLARATION,
         TYPE_SIGNATURE,
     }

@@ -94,9 +94,15 @@ public interface SyntaxVisitor {
 
     void visitPropertyMatcher(PropertyMatcher node);
 
+    void visitProtocolDeclaration(ProtocolDeclaration node);
+
+    void visitProtocolImplementation(ProtocolImplementation node);
+
     void visitQualifiedIdentifier(QualifiedIdentifier node);
 
     void visitQuotedIdentifier(QuotedIdentifier node);
+
+    void visitQuotedOperator(QuotedOperator node);
 
     void visitRecordDeclaration(RecordDeclaration node);
 

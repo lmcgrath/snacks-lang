@@ -145,6 +145,14 @@ public final class SyntaxFactory {
         return new Identifier(name);
     }
 
+    public static Symbol implement(String name, Collection<Symbol> arguments, Collection<Symbol> members) {
+        return new ProtocolImplementation(name, arguments, members);
+    }
+
+    public static Symbol derives(Symbol... protocols) {
+        return new DerivesProtocols(asList(protocols));
+    }
+
     public static Symbol importId(Symbol id) {
         return new Import(id, ((QualifiedIdentifier) id).getLastSegment());
     }
@@ -238,6 +246,10 @@ public final class SyntaxFactory {
         return new RecordMatcher(constructor, propertyMatchers);
     }
 
+    public static Symbol member(String name, Symbol body) {
+        return new ProtocolMember(name, body);
+    }
+
     public static Symbol module(Symbol... elements) {
         return new Module(elements);
     }
@@ -278,12 +290,20 @@ public final class SyntaxFactory {
         return new PropertyExpression(name, value);
     }
 
+    public static Symbol protocol(String name, Collection<String> arguments, Collection<Symbol> members) {
+        return new ProtocolDeclaration(name, arguments, members);
+    }
+
     public static QualifiedIdentifier qid(QualifiedIdentifier id, String segment) {
         return new QualifiedIdentifier(id, segment);
     }
 
     public static QualifiedIdentifier qid(String... ids) {
         return new QualifiedIdentifier(ids);
+    }
+
+    public static Symbol qop(String id) {
+        return new QuotedOperator(id);
     }
 
     public static Symbol quoted(String id) {

@@ -1,4 +1,4 @@
-%goal module_declaration;
+%goal module;
 %goal expression;
 %package "snacks.lang.parser";
 %class "Parser";
@@ -16,7 +16,7 @@
     VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE, CHARACTER,
     BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE, PIPE,
     LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
-    QUOTED_IDENTIFIER, LPATTERN
+    QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -53,6 +53,7 @@
 
 %typeof IDENTIFIER = "String";
 %typeof QUOTED_IDENTIFIER = "String";
+%typeof QUOTED_OPERATOR = "String";
 %typeof FWORD = "String";
 %typeof STRING = "String";
 %typeof INTEGER = "Integer";
@@ -70,37 +71,94 @@
 %typeof qualified_fword = "QualifiedIdentifier";
 %typeof initializer_properties = "Symbol[]";
 
-module_declaration
-    = module_expressions.e term*    {: return module(e); :}
-    | term*                         {: return module(); :}
+module
+    = module_statements.e term* {: return module(e); :}
+    | term*                     {: return module(); :}
     ;
 
 term = nl | SEMICOLON;
 nl = NEWLINE;
 
-module_expressions
-    = module_expression
-    | module_expressions term+ module_expression
+module_statements
+    = module_statement
+    | module_statements term+ module_statement
     ;
 
-module_expression
-    = IDENTIFIER.id ASSIGN expression.e                 {: return def(id, e); :}
-    | IDENTIFIER.id DOUBLE_COLON type_signature.t       {: return sig(id, t); :}
-    | IDENTIFIER.id INFIX INTEGER.p                     {: return op(id, p); :}
-    | IDENTIFIER.id LEFT_INFIX INTEGER.p                {: return leftOp(id, p); :}
-    | IDENTIFIER.id RIGHT_INFIX INTEGER.p               {: return rightOp(id, p); :}
-    | IDENTIFIER.id PREFIX INTEGER.p                    {: return prefix(id, p); :}
-    | IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
+module_statement
+    = expression_statement
+    | operator_statement
+    | data_statement
+    | import_statement
+    | protocol_statement
+    ;
+
+expression_statement
+    = expression_signature
+    | expression_declaration
+    ;
+
+expression_signature
+    = IDENTIFIER.id DOUBLE_COLON type_signature.t           {: return sig(id, t); :}
+    | QUOTED_IDENTIFIER.id DOUBLE_COLON type_signature.t    {: return sig(id, t); :}
+    ;
+
+expression_declaration
+    = IDENTIFIER.id ASSIGN expression.e             {: return def(id, e); :}
+    | IDENTIFIER.id ASSIGN pattern_matcher.p        {: return namedPattern(id, p); :}
+    | QUOTED_IDENTIFIER.id ASSIGN expression.e      {: return def(id, e); :}
+    | QUOTED_IDENTIFIER.id ASSIGN pattern_matcher.p {: return namedPattern(id, p); :}
+    ;
+
+operator_statement
+    = IDENTIFIER.id INFIX INTEGER.p                 {: return op(id, p); :}
+    | IDENTIFIER.id LEFT_INFIX INTEGER.p            {: return leftOp(id, p); :}
+    | IDENTIFIER.id RIGHT_INFIX INTEGER.p           {: return rightOp(id, p); :}
+    | IDENTIFIER.id PREFIX INTEGER.p                {: return prefix(id, p); :}
+    | QUOTED_IDENTIFIER.id INFIX INTEGER.p          {: return op(id, p); :}
+    | QUOTED_IDENTIFIER.id LEFT_INFIX INTEGER.p     {: return leftOp(id, p); :}
+    | QUOTED_IDENTIFIER.id RIGHT_INFIX INTEGER.p    {: return rightOp(id, p); :}
+    | QUOTED_IDENTIFIER.id PREFIX INTEGER.p         {: return prefix(id, p); :}
+    ;
+
+import_statement
+    = IMPORT qualified_identifier.id import_alias.a     {: return importId(id, a == null ? id.getLastSegment() : a); :}
     | IMPORT qualified_identifier.id DOT THROWAWAY      {: return importWildcard(id); :}
     | FROM qualified_identifier.id IMPORT sub_imports.s {: return from(id, s); :}
     | FROM qualified_identifier.id IMPORT LPAREN sub_imports.s COMMA? RPAREN
         {: return from(id, s); :}
-    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN constructors.c
+    ;
+
+data_statement
+    = DATA IDENTIFIER.id IDENTIFIER.t* derives_clause? ASSIGN constructors.c
         {: return typeDef(id, asList(t), asList(c)); :}
-    | DATA IDENTIFIER.id IDENTIFIER.t* ASSIGN LCURLY type_properties.p COMMA? RCURLY
+    | DATA IDENTIFIER.id IDENTIFIER.t* derives_clause? ASSIGN LCURLY type_properties.p COMMA? RCURLY
         {: return typeDef(id, asList(t), asList(recordDef(id, p))); :}
-    | IDENTIFIER.id ASSIGN pattern_matcher.p
-        {: return namedPattern(id, p); :}
+    ;
+
+derives_clause
+    = DERIVES protocols_list.l {: return derives(l); :}
+    ;
+
+protocols_list
+    = qualified_identifier
+    | protocols_list COMMA qualified_identifier
+    ;
+
+protocol_statement
+    = PROTOCOL IDENTIFIER.id IDENTIFIER.a+ WHERE protocol_members.ms term* END
+        {: return protocol(id, asList(a), asList(ms)); :}
+    | IMPLEMENT IDENTIFIER.id type_parameter.a+ WHERE implementation_members.ms term* END
+        {: return implement(id, asList(a), asList(ms)); :}
+    ;
+
+protocol_members
+    = expression_statement
+    | protocol_members term+ expression_statement
+    ;
+
+implementation_members
+    = expression_declaration
+    | implementation_members term+ expression_declaration
     ;
 
 constructors
@@ -190,11 +248,13 @@ sub_imports
     ;
 
 sub_import
-    = IDENTIFIER.id import_alias.a {: return sub(id, a == null ? id : a); :}
+    = IDENTIFIER.id import_alias.a          {: return sub(id, a == null ? id : a); :}
+    | QUOTED_IDENTIFIER.id import_alias.a   {: return sub(id, a == null ? id : a); :}
     ;
 
 import_alias
-    = AS IDENTIFIER.id {: return new Symbol(id); :}
+    = AS IDENTIFIER.id          {: return new Symbol(id); :}
+    | AS QUOTED_IDENTIFIER.id   {: return new Symbol(id); :}
     |
     ;
 
@@ -256,6 +316,7 @@ list
 primary_expression
     = IDENTIFIER.id                 {: return id(id); :}
     | QUOTED_IDENTIFIER.id          {: return quoted(id); :}
+    | QUOTED_OPERATOR.id            {: return qop(id); :}
     | INTEGER.val                   {: return literal(val); :}
     | DOUBLE.val                    {: return literal(val); :}
     | TRUE                          {: return literal(true); :}

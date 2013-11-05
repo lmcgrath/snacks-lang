@@ -6,34 +6,21 @@ import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.ast.AstFactory.access;
-import static snacks.lang.ast.AstFactory.apply;
-import static snacks.lang.ast.AstFactory.assign;
-import static snacks.lang.ast.AstFactory.begin;
 import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.AstFactory.embrace;
 import static snacks.lang.ast.AstFactory.func;
-import static snacks.lang.ast.AstFactory.hurl;
-import static snacks.lang.ast.AstFactory.initializer;
-import static snacks.lang.ast.AstFactory.invokable;
-import static snacks.lang.ast.AstFactory.loop;
-import static snacks.lang.ast.AstFactory.matchConstant;
-import static snacks.lang.ast.AstFactory.matchConstructor;
-import static snacks.lang.ast.AstFactory.nop;
-import static snacks.lang.ast.AstFactory.propDef;
 import static snacks.lang.ast.AstFactory.record;
-import static snacks.lang.ast.AstFactory.result;
-import static snacks.lang.ast.AstFactory.symbol;
 import static snacks.lang.ast.AstFactory.tuple;
-import static snacks.lang.ast.AstFactory.unit;
-import static snacks.lang.parser.syntax.SyntaxFactory.*;
+import static snacks.lang.parser.syntax.SyntaxFactory.id;
+import static snacks.lang.parser.syntax.SyntaxFactory.importId;
+import static snacks.lang.parser.syntax.SyntaxFactory.qid;
+import static snacks.lang.parser.syntax.SyntaxFactory.type;
 import static snacks.lang.type.Types.*;
 import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.property;
 import static snacks.lang.type.Types.tuple;
 import static snacks.lang.type.Types.var;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Operator;
@@ -45,6 +32,8 @@ import snacks.lang.type.*;
 import snacks.lang.type.RecordType.Property;
 
 public class Translator implements SyntaxVisitor {
+
+    private static final Pattern OPERATOR_PATTERN = Pattern.compile("^\\W+$");
 
     private final String module;
     private final Deque<SymbolEnvironment> environments;
@@ -174,10 +163,6 @@ public class Translator implements SyntaxVisitor {
         AstNode value = currentArgument();
         define(new VariableLocator(node.getVariable()), value.getType());
         result = AstFactory.var(node.getVariable(), value);
-    }
-
-    private AstNode currentArgument() {
-        return patterns.currentArgument();
     }
 
     @Override
@@ -484,12 +469,27 @@ public class Translator implements SyntaxVisitor {
     }
 
     @Override
+    public void visitProtocolDeclaration(ProtocolDeclaration node) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public void visitProtocolImplementation(ProtocolImplementation node) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
     public void visitQualifiedIdentifier(QualifiedIdentifier node) {
         result = referenceQualifiedIdentifier(node, EXPRESSION);
     }
 
     @Override
     public void visitQuotedIdentifier(QuotedIdentifier node) {
+        result = reference(node.getName(), EXPRESSION);
+    }
+
+    @Override
+    public void visitQuotedOperator(QuotedOperator node) {
         result = reference(node.getName(), EXPRESSION);
     }
 
@@ -697,6 +697,10 @@ public class Translator implements SyntaxVisitor {
         return new VariableType(name);
     }
 
+    private AstNode currentArgument() {
+        return patterns.currentArgument();
+    }
+
     private Reference currentArgument(Type type) {
         return patterns.currentArgument(type);
     }
@@ -767,7 +771,13 @@ public class Translator implements SyntaxVisitor {
     }
 
     private Operator getOperator(Symbol node) {
-        return getOperator(((Identifier) node).getName());
+        if (node instanceof Identifier) {
+            return getOperator(((Identifier) node).getName());
+        } else if (node instanceof QuotedOperator) {
+            return new Operator(LEFT, 10, 2, ((QuotedOperator) node).getName());
+        } else {
+            throw new IllegalArgumentException("Cannot get operator for node " + node.getClass());
+        }
     }
 
     private Operator getOperator(String name) {
@@ -826,16 +836,21 @@ public class Translator implements SyntaxVisitor {
         return environment().isDefined(locator);
     }
 
-    private boolean isOperator(Symbol node) {
-        if (node instanceof Identifier) {
-            String name = ((Identifier) node).getName();
-            if (!"=".equals(name)) {
-                reference(name, EXPRESSION);
+    private boolean isIdentifierOperator(String name) {
+        reference(name, EXPRESSION);
+        if (!isOperator(name)) {
+            if (OPERATOR_PATTERN.matcher(name).find()) {
+                environment().registerInfix(10, LEFT, name);
+            } else {
+                return false;
             }
-            return environment().isOperator(name);
-        } else {
-            return false;
         }
+        return true;
+    }
+
+    private boolean isOperator(Symbol node) {
+        return node instanceof QuotedOperator
+            || node instanceof Identifier && isIdentifierOperator(((Identifier) node).getName());
     }
 
     private boolean isOperator(String name) {
@@ -1026,7 +1041,7 @@ public class Translator implements SyntaxVisitor {
                 if (!operators.isEmpty()) {
                     Operator o2 = operators.peek();
                     while (!operators.isEmpty() && outputOperator(o1, o2)) {
-                        output.push(new Identifier(operators.pop().getName()));
+                        output.push(toSymbol(operators.pop()));
                         o2 = operators.peek();
                     }
                 }
@@ -1040,7 +1055,7 @@ public class Translator implements SyntaxVisitor {
             }
         }
         while (!operators.isEmpty()) {
-            output.push(new Identifier(operators.pop().getName()));
+            output.push(toSymbol(operators.pop()));
         }
         return reduceOperations(output);
     }
@@ -1074,6 +1089,14 @@ public class Translator implements SyntaxVisitor {
                 }
         }
         return op;
+    }
+
+    private Symbol toSymbol(Operator operator) {
+        if (operator.getFixity() == LEFT && operator.getPrecedence() == 10) {
+            return new QuotedOperator(operator.getName());
+        } else {
+            return new Identifier(operator.getName());
+        }
     }
 
     private AstNode translate(VisitableSymbol node) {
