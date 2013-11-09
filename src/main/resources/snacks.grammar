@@ -16,7 +16,7 @@
     VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE, CHARACTER,
     BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE, PIPE,
     LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
-    QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE
+    QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE, SYMBOL_CONSTRUCTOR
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -334,7 +334,8 @@ primary_expression
     | block
     | conditional
     | exceptional
-    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o {: return regex(asList(e), o); :}
+    | LREGEX interpolation_list.e RREGEX REGEX_OPTIONS.o    {: return regex(asList(e), o); :}
+    | SYMBOL_CONSTRUCTOR string_literal.s                   {: return apply(qid("snacks", "lang", "symbol"), s); :}
     ;
 
 string_literal
@@ -360,8 +361,16 @@ property
     ;
 
 list_literal
-    = LSQUARE list.e COMMA? RSQUARE {: return list(e); :}
-    | LSQUARE RSQUARE               {: return list(); :}
+    = LSQUARE RSQUARE
+        {: return qid("snacks", "lang", "EmptyList"); :}
+    | LSQUARE list.es COMMA? RSQUARE
+        {:
+            Symbol tail = qid("snacks", "lang", "EmptyList");
+            for (int i = es.length - 1; i >= 0; i--) {
+                tail = apply(apply(qid("snacks", "lang", "ListElement"), es[i]), tail);
+            }
+            return tail;
+        :}
     ;
 
 tuple_literal
@@ -494,8 +503,10 @@ qualified_fword
     ;
 
 interpolation_list
-    = interpolation.e                       {: return apply(id("stringy"), e); :}
-    | interpolation_list.es interpolation.e {: return apply(apply(id("concat"), es), apply(id("stringy"), e)); :}
+    = interpolation.e
+        {: return apply(qid("snacks", "lang", "string"), e); :}
+    | interpolation_list.es interpolation.e
+        {: return apply(apply(qid("snacks", "lang", "concat"), es), apply(qid("snacks", "lang", "string"), e)); :}
     ;
 
 interpolation

@@ -15,6 +15,7 @@ import static snacks.lang.type.Types.isInvokable;
 import java.util.*;
 import java.util.regex.Pattern;
 import me.qmx.jitescript.*;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
@@ -25,6 +26,7 @@ import snacks.lang.type.RecordType.Property;
 public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private static final Pattern tuplePattern = Pattern.compile("^_\\d+$");
+
     private final SnacksRegistry registry;
     private final List<JiteClass> acceptedClasses;
     private final Deque<ClassBuilder> builders;
@@ -176,13 +178,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclaredConstant(final DeclaredConstant node) {
-        List<String> interfaces = new ArrayList<>();
-        if (hasParent()) {
-            interfaces.add(parentClass());
-        }
-        JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), array(interfaces));
+        JiteClass jiteClass = new JiteClass(node.getJavaClass(), getSuperClass(), array(interfacesFor(node.getType())));
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
-        snack.value("name", node.getQualifiedName());
+        snack.value("name", node.getSimpleName());
         snack.enumValue("kind", TYPE);
         jiteClass.addAnnotation(snack);
         jiteClass.setAccess(ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
@@ -236,7 +234,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }
         jiteClass.defineMethod("<init>", ACC_PUBLIC, "(L" + join(types, ";L") + ";)V", new CodeBlock() {{
             aload(0);
-            invokespecial(p(Object.class), "<init>", sig(void.class));
+            invokespecial(getSuperClass(), "<init>", sig(void.class));
             int arg = 1;
             for (Property property : properties) {
                 String type = propertyClass(property);
@@ -247,8 +245,70 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
             voidreturn();
         }});
         generateProperties(node);
+        generateEquals(node);
+        generateHashCode(node);
         generateToString(node);
         acceptClass();
+    }
+
+    private void generateHashCode(DeclaredRecord node) {
+        final List<Property> properties = node.getProperties();
+        final JiteClass jiteClass = jiteClass();
+        jiteClass.defineMethod("hashCode", ACC_PUBLIC, sig(int.class), new CodeBlock() {{
+            ldc(properties.size());
+            anewarray(p(Object.class));
+            int i = 0;
+            for (Property property : properties) {
+                dup();
+                ldc(i++);
+                aload(0);
+                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
+                aastore();
+            }
+            invokestatic(p(Objects.class), "hash", sig(int.class, Object[].class));
+            ireturn();
+        }});
+    }
+
+    private void generateEquals(DeclaredRecord node) {
+        final List<Property> properties = node.getProperties();
+        final JiteClass jiteClass = jiteClass();
+        jiteClass.defineMethod("equals", ACC_PUBLIC, sig(boolean.class, Object.class), new CodeBlock() {{
+            LabelNode instanceOf = new LabelNode();
+            LabelNode end = new LabelNode();
+            // references equal
+            aload(0);
+            aload(1);
+            if_acmpne(instanceOf);
+            ldc(true);
+            ireturn();
+
+            // references same type
+            label(instanceOf);
+            aload(1);
+            instance_of(jiteClass.getClassName());
+            ifne(end);
+            aload(1);
+            checkcast(jiteClass.getClassName());
+            astore(2);
+            newobj(p(EqualsBuilder.class));
+            dup();
+            invokespecial(p(EqualsBuilder.class), "<init>", sig(void.class));
+            for (Property property : properties) {
+                aload(0);
+                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
+                aload(2);
+                getfield(jiteClass.getClassName(), javaName(property.getName()), "L" + propertyClass(property) + ";");
+                invokevirtual(p(EqualsBuilder.class), "append", sig(EqualsBuilder.class, Object.class, Object.class));
+            }
+            invokevirtual(p(EqualsBuilder.class), "isEquals", sig(boolean.class));
+            ireturn();
+
+            // no equality
+            label(end);
+            ldc(false);
+            ireturn();
+        }});
     }
 
     @Override
@@ -273,7 +333,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDoubleConstant(DoubleConstant node) {
-        block().ldc(node.getValue());
+        CodeBlock block = block();
+        block.ldc(node.getValue());
+        block.invokestatic(p(Double.class), "valueOf", sig(Double.class, double.class));
     }
 
     @Override
@@ -698,11 +760,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private JiteClass beginSubType(NamedNode node, Type type) {
-        List<String> interfaces = new ArrayList<>();
-        if (hasParent()) {
-            interfaces.add(parentClass());
-        }
-        JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), array(interfaces));
+        JiteClass jiteClass = new JiteClass(node.getJavaClass(), getSuperClass(), array(interfacesFor(type)));
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
         snack.enumValue("kind", EXPRESSION);
         snack.value("name", node.getSimpleName());
@@ -718,7 +776,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private JiteClass beginType(NamedNode node) {
         JiteClass jiteClass = new JiteClass(node.getJavaClass(), p(Object.class), new String[0]);
-        jiteClass.setAccess(ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT);
+        jiteClass.setAccess(ACC_PUBLIC | ACC_ABSTRACT);
+        jiteClass.defineDefaultConstructor(ACC_PROTECTED);
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
         AnnotationArrayValue parameters = snack.arrayValue("arguments");
         snack.value("name", node.getSimpleName());
@@ -928,6 +987,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
     }
 
+    private String getSuperClass() {
+        return hasParent() ? parentClass() : p(Object.class);
+    }
+
     private int getVariable(String name) {
         return state().getVariable(name);
     }
@@ -938,8 +1001,15 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private List<String> interfacesFor(Type type) {
         List<String> interfaces = new ArrayList<>();
-        if (isInvokable(type)) {
-            interfaces.add(p(Invokable.class));
+        if (isFunction(type)) {
+            interfaces.add(p(_Function.class));
+            if (isInvokable(type)) {
+                interfaces.add(p(Invokable.class));
+            }
+        } else if (type instanceof RecordType) {
+            interfaces.add(p(_Record.class));
+        } else if (type instanceof SimpleType) {
+            interfaces.add(p(_Constant.class));
         }
         return interfaces;
     }

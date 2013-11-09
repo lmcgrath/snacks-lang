@@ -1,15 +1,16 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.union;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "or")
+@Snack(name = "or", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 3, shortCircuit = true)
-public class Or {
+public class Or implements _Function {
 
     private static Or instance;
 

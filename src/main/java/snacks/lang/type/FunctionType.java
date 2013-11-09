@@ -69,6 +69,6 @@ public class FunctionType extends Type {
 
     @Override
     public String toString() {
-        return "(fn " + argument + " -> " + result + ")";
+        return "(FunctionType argument=" + argument + " result=" + result + ")";
     }
 }

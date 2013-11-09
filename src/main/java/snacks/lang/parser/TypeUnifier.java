@@ -1,5 +1,7 @@
 package snacks.lang.parser;
 
+import static snacks.lang.type.Types.isFunction;
+
 import java.util.List;
 import java.util.Objects;
 import snacks.lang.type.*;
@@ -114,6 +116,11 @@ abstract class TypeUnifier<T extends Type> {
         }
 
         @Override
+        protected boolean unifyWithFunction(AlgebraicType left, FunctionType right, TypeFactory factory) {
+            return false;
+        }
+
+        @Override
         protected boolean unifyWithAlgebraic(AlgebraicType left, AlgebraicType right, TypeFactory factory) {
             return Objects.equals(left.getName(), right.getName())
                 && unifyAll(left.getOptions(), right.getOptions(), factory)
@@ -142,8 +149,18 @@ abstract class TypeUnifier<T extends Type> {
 
         @Override
         protected boolean unifyWithFunction(FunctionType left, FunctionType right, TypeFactory factory) {
-            return factory.unify(left.getArgument(), right.getArgument())
-                && factory.unify(left.getResult(), right.getResult());
+            boolean unified = false;
+            if (isFunction(left.getArgument())) {
+                unified = factory.unify(right.getArgument(), left.getArgument());
+            } else {
+                unified = factory.unify(left.getArgument(), right.getArgument());
+            }
+            return unified && factory.unify(left.getResult(), right.getResult());
+        }
+
+        @Override
+        protected boolean unifyWithRecord(FunctionType left, RecordType right, TypeFactory factory) {
+            return false;
         }
     }
 
@@ -205,6 +222,11 @@ abstract class TypeUnifier<T extends Type> {
     private static class SimpleUnifier extends TypeUnifier<SimpleType> {
 
         @Override
+        protected boolean unifyWithFunction(SimpleType left, FunctionType right, TypeFactory factory) {
+            return false;
+        }
+
+        @Override
         protected boolean unifyWithRecord(SimpleType left, RecordType right, TypeFactory factory) {
             return false;
         }
@@ -231,6 +253,12 @@ abstract class TypeUnifier<T extends Type> {
     }
 
     private static class VariableUnifier extends TypeUnifier<VariableType> {
+
+        @Override
+        protected boolean unifyWithAlgebraic(VariableType left, AlgebraicType right, TypeFactory factory) {
+            left.bind(right);
+            return true;
+        }
 
         @Override
         protected boolean unifyWithFunction(VariableType left, FunctionType right, TypeFactory factory) {

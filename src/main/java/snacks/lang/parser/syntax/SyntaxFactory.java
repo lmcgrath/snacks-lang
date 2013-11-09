@@ -177,10 +177,6 @@ public final class SyntaxFactory {
         return new OperatorDeclaration(new Operator(LEFT, precedence, 2, id));
     }
 
-    public static Symbol list(Symbol... elements) {
-        return new ListLiteral(elements);
-    }
-
     public static Symbol literal(String value) {
         return new StringLiteral(value);
     }

@@ -3,41 +3,12 @@ package snacks.lang.runtime;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static snacks.lang.parser.CompilerUtil.translate;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
-import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import snacks.lang.Invokable;
-import snacks.lang.SnackDefinition;
 import snacks.lang.SnacksException;
-import snacks.lang.compiler.CompileException;
-import snacks.lang.compiler.Compiler;
-import snacks.lang.parser.SymbolEnvironment;
 
-public class RuntimeTest {
-
-    @Rule
-    public final OutResource out;
-    private Compiler compiler;
-    private SnacksClassLoader loader;
-
-    public RuntimeTest() {
-        out = new OutResource();
-    }
-
-    @Before
-    public void setUp() {
-        loader = new SnacksClassLoader();
-        compiler = new Compiler(loader);
-    }
+public class RuntimeTest extends AbstractRuntimeTest{
 
     @Test
     public void shouldSayHello() {
@@ -535,7 +506,7 @@ public class RuntimeTest {
 
     @Test
     public void shouldCreateTuple() {
-        run("main = () -> assert $ stringy ('waffles', 10, True) == '(Tuple3 waffles, 10, true)'");
+        run("main = () -> assert $ string ('waffles', 10, True) == '(waffles, 10, true)'");
     }
 
     @Test
@@ -557,7 +528,7 @@ public class RuntimeTest {
         run(
             "something :: (String, Boolean, Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
-            "something = (x) -> assert $ stringy x == '(Tuple3 waffles, true, 3)'"
+            "something = (x) -> assert $ string x == '(waffles, true, 3)'"
         );
     }
 
@@ -585,9 +556,9 @@ public class RuntimeTest {
         run(
             "something :: (snacks.lang.String, snacks.lang.Boolean, snacks.lang.Integer) -> ()",
             "main = () -> something ('waffles', True, 3)",
-            "something = (x) -> say $ stringy x"
+            "something = (x) -> say $ string x"
         );
-        verifyOut("(Tuple3 waffles, true, 3)");
+        verifyOut("(waffles, true, 3)");
     }
 
     @Test
@@ -621,7 +592,7 @@ public class RuntimeTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy SideForBacon {",
+            "main = () -> say $ string SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = True",
@@ -638,7 +609,7 @@ public class RuntimeTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy BreakfastItem {",
+            "main = () -> say $ string BreakfastItem {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = True",
@@ -655,7 +626,7 @@ public class RuntimeTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy $ SideForBacon 'Waffles' 10 True"
+            "main = () -> say $ string $ SideForBacon 'Waffles' 10 True"
         );
         verifyOut("SideForBacon{name=Waffles, tasteIndex=10, pairsWithBacon?=true}");
     }
@@ -708,7 +679,7 @@ public class RuntimeTest {
     public void shouldCreateRecursiveNamedTuple() {
         run(
             "data Tree = Leaf | Node Integer Tree Tree",
-            "main = () -> say $ stringy $ Node 3 Leaf Leaf"
+            "main = () -> say $ string $ Node 3 Leaf Leaf"
         );
         verifyOut("Node(3, Leaf, Leaf)");
     }
@@ -717,7 +688,7 @@ public class RuntimeTest {
     public void shouldCreateParameterizedType() {
         run(
             "data Tree a = Leaf | Node a (Tree a) (Tree a)",
-            "main = () -> say $ stringy $ Node 'Waffles' Leaf Leaf"
+            "main = () -> say $ string $ Node 'Waffles' Leaf Leaf"
         );
         verifyOut("Node(Waffles, Leaf, Leaf)");
     }
@@ -847,6 +818,35 @@ public class RuntimeTest {
 
     @Ignore("WIP")
     @Test
+    public void shouldCreateList() {
+        run("main = () -> assert $ string [1, 2, 3] == '[1, 2, 3]'");
+    }
+
+    @Test
+    public void shouldCreateEmptyList() {
+        run("main = () -> assert $ string [] == '[]'");
+    }
+
+    @Test
+    public void shouldCreateListOfTuples() {
+        run("main = () -> assert $ string [(1, 2), (3, 4)] == '[(1, 2), (3, 4)]'");
+    }
+
+    @Test
+    public void shouldCreateStringSymbol() {
+        run("main = () -> assert $ :'waffles' == :waffles");
+    }
+
+    @Test
+    public void shouldCreateInterpolatedSymbol() {
+        run(
+            "waffles = 'waffles'",
+            "main = () -> assert $ :waffles == :\"#{waffles}\""
+        );
+    }
+
+    @Ignore("WIP")
+    @Test
     public void shouldCreateProtocol() {
         run(
             "protocol Equitable a where",
@@ -865,43 +865,5 @@ public class RuntimeTest {
             "    (==) = ?(_, _) -> False",
             "end"
         );
-    }
-
-    private void run(String... inputs) {
-        try {
-            List<SnackDefinition> definitions = compiler.compile(translate(new SymbolEnvironment(loader), inputs));
-            for (SnackDefinition definition : definitions) {
-                writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
-            }
-            loader.defineClasses(definitions);
-            ((Invokable) loader.loadClass("test.main").newInstance()).invoke();
-        } catch (ReflectiveOperationException exception) {
-            throw new CompileException(exception);
-        }
-    }
-
-    private void verifyOut(int value) {
-        verify(out.getStream()).println(value);
-    }
-
-    private void verifyOut(String line) {
-        verify(out.getStream()).println(line);
-    }
-
-    private void verifyNever(String line) {
-        verify(out.getStream(), never()).println(line);
-    }
-
-    private void writeClass(File file, byte[] bytes) {
-        try {
-            if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
-                throw new IOException("Failed to mkdirs: " + file.getParentFile());
-            }
-            try (FileOutputStream output = new FileOutputStream(file)) {
-                output.write(bytes);
-            }
-        } catch (IOException exception) {
-            throw new CompileException(exception);
-        }
     }
 }

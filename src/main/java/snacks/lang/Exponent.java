@@ -2,6 +2,7 @@ package snacks.lang;
 
 import static java.lang.Math.pow;
 import static snacks.lang.Fixity.RIGHT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.DOUBLE_TYPE;
 import static snacks.lang.type.Types.INTEGER_TYPE;
 import static snacks.lang.type.Types.func;
@@ -9,9 +10,9 @@ import static snacks.lang.type.Types.union;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "**")
+@Snack(name = "**", kind = EXPRESSION)
 @Infix(fixity = RIGHT, precedence = 14)
-public class Exponent {
+public class Exponent implements _Function {
 
     private static Exponent instance;
 

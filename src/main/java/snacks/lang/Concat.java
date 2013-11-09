@@ -1,13 +1,14 @@
 package snacks.lang;
 
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.STRING_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.var;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "concat")
-public class Concat {
+@Snack(name = "concat", kind = EXPRESSION)
+public class Concat implements _Function {
 
     private static Concat instance;
 

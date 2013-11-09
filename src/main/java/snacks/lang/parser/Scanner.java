@@ -330,6 +330,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private boolean expectQuotedIdentifier() {
         try (LookAhead ignore = new LookAhead()) {
+            if ((peek() == '-' || peek() == '+' || peek() == '~' || peek() == '!') && (isLetter(lookAhead(1)) || isDigit(lookAhead(1)))) {
+                return false;
+            }
             if (isQuoted(peek())) {
                 while (isQuoted(peek())) {
                     read();
@@ -551,12 +554,12 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 read();
             }
             detectSuffix();
-            detectNewlines();
             return accept(SYMBOL, text().substring(1));
         } else if (peek() == '[' && lookAhead(1) == ']') {
             detectSuffix();
-            detectNewlines();
             return accept(SYMBOL, text().substring(1));
+        } else if (peek() == '\'' || peek() == '"') {
+            return accept(SYMBOL_CONSTRUCTOR);
         } else {
             detectNewlines();
             return accept(COLON);
@@ -699,13 +702,8 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 return accept(RSQUARE);
             case '[':
                 read();
-                if (peek() == ']') {
-                    read();
-                    return accept(IDENTIFIER, text());
-                } else {
-                    detectNewlines();
-                    return accept(LSQUARE);
-                }
+                detectNewlines();
+                return accept(LSQUARE);
             case '.':
                 read();
                 if (peek() == '.') {
@@ -908,6 +906,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         while (isIdentifier(peek())) {
             read();
         }
+        while (peek() == '\'') {
+            read();
+        }
         String text = text();
         if (dictionary.containsKey(text)) {
             switch (text) {
@@ -1079,6 +1080,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             while (isQuoted(peek())) {
                 read();
             }
+            while (peek() == '\'') {
+                read();
+            }
             if (peek() == ')') {
                 leaveState();
                 String text = text();
@@ -1097,6 +1101,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     private Action scanQuotedOperator() {
         if (isQuoted(peek())) {
             while (isQuoted(peek())) {
+                read();
+            }
+            while (peek() == '\'') {
                 read();
             }
             if (peek() == '`') {

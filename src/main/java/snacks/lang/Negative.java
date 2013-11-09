@@ -1,5 +1,6 @@
 package snacks.lang;
 
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.DOUBLE_TYPE;
 import static snacks.lang.type.Types.INTEGER_TYPE;
 import static snacks.lang.type.Types.func;
@@ -7,9 +8,9 @@ import static snacks.lang.type.Types.union;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "unary-")
+@Snack(name = "unary-", kind = EXPRESSION)
 @Prefix(precedence = 15)
-public class Negative {
+public class Negative implements _Function {
 
     private static Negative instance;
 

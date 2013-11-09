@@ -2,14 +2,15 @@ package snacks.lang;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.func;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "not")
+@Snack(name = "not", kind = EXPRESSION)
 @Prefix(precedence = 5)
-public class Not {
+public class Not implements _Function {
 
     private static Not instance;
 

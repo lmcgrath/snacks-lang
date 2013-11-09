@@ -55,7 +55,7 @@ public class Translator implements SyntaxVisitor {
         this.declarations = new ArrayList<>();
         this.aliases = new HashMap<>();
         this.parameters = new LinkedHashMap<>();
-        this.wildcardImports = new ArrayList<>(asList("snacks.lang"));
+        this.wildcardImports = new ArrayList<>(asList("snacks.lang", module));
         this.typeErrors = new ArrayList<>();
         this.names = new IdentityHashMap<>();
         this.patterns = new PatternCollection();
@@ -363,11 +363,6 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitIteratorLoop(IteratorLoop node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitListLiteral(ListLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 

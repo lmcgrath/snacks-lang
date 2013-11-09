@@ -1,6 +1,7 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.DOUBLE_TYPE;
 import static snacks.lang.type.Types.INTEGER_TYPE;
 import static snacks.lang.type.Types.func;
@@ -8,9 +9,9 @@ import static snacks.lang.type.Types.union;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "/")
+@Snack(name = "/", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
-public class Divide {
+public class Divide implements _Function {
 
     private static Divide instance;
 

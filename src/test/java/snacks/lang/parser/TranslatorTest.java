@@ -292,7 +292,7 @@ public class TranslatorTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy SideForBacon {",
+            "main = () -> say $ string SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "}"
@@ -307,7 +307,7 @@ public class TranslatorTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy SideForBacon {",
+            "main = () -> say $ string SideForBacon {",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
             "    pairsWithBacon? = 'eewwwww bacon is grody'",
@@ -323,7 +323,7 @@ public class TranslatorTest {
             "    tasteIndex: Integer,",
             "    pairsWithBacon?: Boolean,",
             "}",
-            "main = () -> say $ stringy SideForBacon {",
+            "main = () -> say $ string SideForBacon {",
             "    pairsWithBacon? = True,",
             "    name = 'Waffles',",
             "    tasteIndex = 10,",
@@ -638,6 +638,11 @@ public class TranslatorTest {
                 INTEGER_TYPE
             )
         ))));
+    }
+
+    @Test(expected = TypeException.class)
+    public void shouldNotCreateHeterogeneousList() {
+        translate("test = [1, 2, 'Waffles']");
     }
 
     private void define(String name, Type type) {

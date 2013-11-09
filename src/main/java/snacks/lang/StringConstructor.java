@@ -1,19 +1,20 @@
 package snacks.lang;
 
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.STRING_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.var;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "stringy")
-public class Stringy {
+@Snack(name = "string", kind = EXPRESSION)
+public class StringConstructor {
 
-    private static Stringy instance;
+    private static StringConstructor instance;
 
-    public static Stringy instance() {
+    public static StringConstructor instance() {
         if (instance == null) {
-            instance = new Stringy();
+            instance = new StringConstructor();
         }
         return instance;
     }

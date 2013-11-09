@@ -1,14 +1,15 @@
 package snacks.lang;
 
 import static java.lang.System.out;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.VOID_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.var;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "say")
-public class Say {
+@Snack(name = "say", kind = EXPRESSION)
+public class Say implements _Function {
 
     private static Say instance;
 

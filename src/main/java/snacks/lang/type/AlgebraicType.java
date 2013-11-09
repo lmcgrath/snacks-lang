@@ -83,6 +83,6 @@ public class AlgebraicType extends Type {
 
     @Override
     public String toString() {
-        return "(AlgebraicType " + name + " " + arguments + " " + options + ")";
+        return "(AlgebraicType name=" + name + " arguments=" + arguments + " options=" + options + ")";
     }
 }

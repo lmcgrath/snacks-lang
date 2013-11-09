@@ -40,6 +40,10 @@ public class Symbol {
         return o == this || o instanceof Symbol && Objects.equals(value, ((Symbol) o).value);
     }
 
+    public String getValue() {
+        return value;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(value);

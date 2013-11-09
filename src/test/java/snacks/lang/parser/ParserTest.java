@@ -30,9 +30,14 @@ public class ParserTest {
 
     @Test
     public void shouldParseList() {
-        assertThat(expression("[a]"), equalTo(list(id("a"))));
-        assertThat(expression("[a, b,]"), equalTo(list(id("a"), id("b"))));
-        assertThat(expression("[a, b, c]"), equalTo(list(id("a"), id("b"), id("c"))));
+        Symbol element = qid("snacks", "lang", "ListElement");
+        Symbol empty = qid("snacks", "lang", "EmptyList");
+        assertThat(expression("[a]"), equalTo(apply(apply(element, id("a")), empty)));
+        assertThat(expression("[a, b,]"), equalTo(apply(apply(element, id("a")), apply(apply(element, id("b")), empty))));
+        assertThat(expression("[a, b, c]"), equalTo(
+            apply(apply(element, id("a")),
+                apply(apply(element, id("b")),
+                    apply(apply(element, id("c")), empty)))));
     }
 
     @Test

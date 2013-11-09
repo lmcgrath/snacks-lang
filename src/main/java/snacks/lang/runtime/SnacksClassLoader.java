@@ -163,7 +163,9 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         for (Class<?> subClazz : clazz.getClasses()) {
             Snack subSnack = subClazz.getAnnotation(Snack.class);
             if (subSnack != null && subSnack.kind() == TYPE) {
-                memberTypes.add(resolveType(subClazz));
+                Type type = resolveType(subClazz);
+                memberTypes.add(type);
+                snacks.put(new SnackKey(moduleName(subClazz) + '.' + subSnack.name(), subSnack.kind()), new SnackValue(getJavaClazz(subClazz), type));
             }
         }
         if (memberTypes.isEmpty()) {
@@ -175,6 +177,10 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
             }
             return algebraic(qualifiedName, arguments, memberTypes);
         }
+    }
+
+    private String moduleName(Class<?> subClazz) {
+        return subClazz.getName().substring(0, subClazz.getName().lastIndexOf('.'));
     }
 
     private void resolveClasses(File directory, String module) {

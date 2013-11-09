@@ -133,7 +133,7 @@ public class VariableType extends Type {
 
         @Override
         public String toString() {
-            return "<var " + type.toString() + ">";
+            return "(VariableType bind=" + type.toString() + ")";
         }
     }
 
@@ -189,7 +189,7 @@ public class VariableType extends Type {
 
         @Override
         public String toString() {
-            return "<var " + name + ">";
+            return "(VariableType name=" + name + ")";
         }
     }
 }

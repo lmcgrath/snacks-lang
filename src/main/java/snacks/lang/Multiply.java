@@ -1,13 +1,14 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.*;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "*")
+@Snack(name = "*", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
-public class Multiply {
+public class Multiply implements _Function {
 
     private static Multiply instance;
 

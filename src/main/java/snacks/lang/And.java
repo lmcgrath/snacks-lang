@@ -1,15 +1,16 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.func;
 
 import snacks.lang.type.Type;
 import snacks.lang.type.Types;
 
-@Snack(name = "and")
+@Snack(name = "and", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 4)
-public class And {
+public class And implements _Function {
 
     private static And instance;
 

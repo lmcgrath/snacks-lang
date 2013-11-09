@@ -26,7 +26,7 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
             ]
 
             content << "@Snack(name = \"Tuple$size\", kind = TYPE)"
-            content << "public class Tuple$size<${range.collect { t -> "T$t" }.join(', ')}> {"
+            content << "public class Tuple$size<${range.collect { t -> "T$t" }.join(', ')}> implements _Tuple {"
 
             content << ''
             content << '    @SnackType'
@@ -77,12 +77,20 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
             content << '    public int hashCode() {'
             content << "        return Objects.hash(${range.collect { t -> "_$t" }.join(', ')});"
             content << "    }"
-
             content << ''
-            content << '    @Override'
-            content << '    public String toString() {'
-            content << "        return \"(Tuple$size \" + ${range.collect { t -> "_${t}" }.join(' + ", " + ')} + \")\";"
-            content << '    }'
+
+            if (it == 0) {
+                content << '    @Override'
+                content << '    public String toString() {'
+                content << '        return "(" + _0 + ",)";'
+                content << '    }'
+            } else {
+                content << '    @Override'
+                content << '    public String toString() {'
+                content << "        return \"(\" + ${range.collect { t -> "_${t}" }.join(' + ", " + ')} + \")\";"
+                content << '    }'
+            }
+
             content << '}'
 
             file(tuples.get(it)).write(content.join('\n'))

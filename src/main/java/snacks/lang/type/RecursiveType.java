@@ -66,6 +66,6 @@ public class RecursiveType extends Type {
 
     @Override
     public String toString() {
-        return "(Recur " + name + " " + arguments + ")";
+        return "(Recur name=" + name + " arguments=" + arguments + ")";
     }
 }

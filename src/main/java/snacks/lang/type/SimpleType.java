@@ -48,6 +48,6 @@ public class SimpleType extends Type {
 
     @Override
     public String toString() {
-        return "(" + name + ")";
+        return "(SimpleType name=" + name + ")";
     }
 }

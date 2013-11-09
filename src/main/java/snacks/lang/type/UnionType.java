@@ -78,6 +78,6 @@ public class UnionType extends Type {
 
     @Override
     public String toString() {
-        return "(Union [" + join(types, ", ") + "])";
+        return "(UnionType members=" + types + ")";
     }
 }

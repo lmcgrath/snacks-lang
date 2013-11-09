@@ -80,7 +80,7 @@ public class RecordType extends Type {
 
     @Override
     public String toString() {
-        return "(" + name + " " + arguments + " " + properties + ")";
+        return "(RecordType name=" + name + " arguments=" + arguments + " properties=" + properties + ")";
     }
 
     public static final class Property {
@@ -127,7 +127,7 @@ public class RecordType extends Type {
 
         @Override
         public String toString() {
-            return "(" + name + ": " + type + ")";
+            return "(Property name=" + name + " type=" + type + ")";
         }
     }
 }

@@ -1,0 +1,7 @@
+name :: Type -> Symbol
+name = ?(SimpleType { name = n }) -> n
+name = ?(RecordType { name = n }) -> n
+name = ?(VariableType { name = n }) -> n
+name = ?(AlgebraicType { name = n }) -> n
+name = ?(FunctionType { }) -> :'snacks.lang.Function'
+name = ?(x) -> hurl "#{classOf x}'s type has no name!"

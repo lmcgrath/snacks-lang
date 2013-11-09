@@ -77,6 +77,10 @@ public final class Types {
         return new SimpleType(name);
     }
 
+    public static Type tuple(Type... types) {
+        return tuple(asList(types));
+    }
+
     public static Type tuple(Collection<Type> types) {
         List<Property> properties = new ArrayList<>();
         Iterator<Type> iterator = types.iterator();

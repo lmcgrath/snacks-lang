@@ -2,6 +2,10 @@ $ :: (a -> b) -> a -> b
 $ infix right 1
 $ = (a b) -> a b
 
+$> :: a -> (a -> b) -> b
+$> infix left 0
+$> = (a b) -> b a
+
 ! :: Boolean -> Boolean
 ! affix right 5
 ! = (b) -> not b

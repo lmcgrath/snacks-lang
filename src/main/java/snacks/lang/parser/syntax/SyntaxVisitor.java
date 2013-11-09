@@ -66,8 +66,6 @@ public interface SyntaxVisitor {
 
     void visitIteratorLoop(IteratorLoop node);
 
-    void visitListLiteral(ListLiteral node);
-
     void visitLoopExpression(LoopExpression node);
 
     void visitMapEntry(MapEntry node);

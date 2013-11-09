@@ -1,6 +1,7 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.var;
@@ -8,9 +9,9 @@ import static snacks.lang.type.Types.var;
 import java.util.Objects;
 import snacks.lang.type.Type;
 
-@Snack(name = "!=")
+@Snack(name = "!=", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class NotEquals {
+public class NotEquals implements _Function {
 
     private static NotEquals instance;
 

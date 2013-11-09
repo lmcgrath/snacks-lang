@@ -1,15 +1,16 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.func;
 import static snacks.lang.type.Types.var;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "is not")
+@Snack(name = "is not", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class NotIdentical {
+public class NotIdentical implements _Function {
 
     private static Identical instance;
 

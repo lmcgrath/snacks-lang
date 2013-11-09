@@ -1,13 +1,14 @@
 package snacks.lang;
 
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.BOOLEAN_TYPE;
 import static snacks.lang.type.Types.VOID_TYPE;
 import static snacks.lang.type.Types.func;
 
 import snacks.lang.type.Type;
 
-@Snack(name = "assert")
-public class SnacksAssert {
+@Snack(name = "assert", kind = EXPRESSION)
+public class SnacksAssert implements _Function {
 
     private static SnacksAssert instance;
 

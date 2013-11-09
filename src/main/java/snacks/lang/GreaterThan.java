@@ -1,13 +1,14 @@
 package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.type.Types.*;
 
 import snacks.lang.type.Type;
 
-@Snack(name = ">")
+@Snack(name = ">", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class GreaterThan {
+public class GreaterThan implements _Function {
 
     private static GreaterThan instance;
 

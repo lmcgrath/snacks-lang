@@ -224,13 +224,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitListLiteral(ListLiteral node) {
-        for (Symbol element : node.getElements()) {
-            print(element);
-        }
-    }
-
-    @Override
     public void visitLoopExpression(LoopExpression node) {
         print(node.getCondition());
         print(node.getBody());
