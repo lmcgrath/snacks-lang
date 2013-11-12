@@ -10,7 +10,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "is", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class Identical implements _Function {
+public class Identical {
 
     private static Identical instance;
 

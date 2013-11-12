@@ -141,7 +141,7 @@ public abstract class TypeInfo {
 
         private static FunctionConstructor instance;
 
-        private static FunctionConstructor instance() {
+        public static FunctionConstructor instance() {
             if (instance == null) {
                 instance = new FunctionConstructor();
             }
@@ -150,22 +150,22 @@ public abstract class TypeInfo {
 
         @SnackType
         public static Type type() {
-            return func(SYMBOL_TYPE, func(SYMBOL_TYPE, FunctionInfo.type()));
+            return func(TypeInfo.type(), func(TypeInfo.type(), FunctionInfo.type()));
         }
 
         public Object apply(Object argument) {
-            return new Closure((Symbol) argument);
+            return new Closure((TypeInfo) argument);
         }
 
         public static final class Closure {
 
-            private final Symbol argument;
+            private final TypeInfo argument;
 
-            public Closure(Symbol argument) {
+            public Closure(TypeInfo argument) {
                 this.argument = argument;
             }
 
-            public Object apply(Symbol result) {
+            public Object apply(TypeInfo result) {
                 return new FunctionInfo(argument, result);
             }
         }
@@ -176,16 +176,23 @@ public abstract class TypeInfo {
 
         @SnackType
         public static Type type() {
+            Type parent = algebraic("snacks.lang.reflect.Type", asList(
+                SimpleInfo.type(),
+                recur("snacks.lang.reflect.FunctionType"),
+                VariableInfo.type(),
+                RecordInfo.type(),
+                AlgebraicInfo.type()
+            ));
             return record("snacks.lang.reflect.FunctionType", asList(
-                property("argument", SYMBOL_TYPE),
-                property("result", SYMBOL_TYPE)
+                property("argument", parent),
+                property("result", parent)
             ));
         }
 
-        private final Symbol argument;
-        private final Symbol result;
+        private final TypeInfo argument;
+        private final TypeInfo result;
 
-        public FunctionInfo(Symbol argument, Symbol result) {
+        public FunctionInfo(TypeInfo argument, TypeInfo result) {
             this.argument = argument;
             this.result = result;
         }
@@ -205,11 +212,11 @@ public abstract class TypeInfo {
             }
         }
 
-        public Symbol getArgument() {
+        public TypeInfo getArgument() {
             return argument;
         }
 
-        public Symbol getResult() {
+        public TypeInfo getResult() {
             return result;
         }
 

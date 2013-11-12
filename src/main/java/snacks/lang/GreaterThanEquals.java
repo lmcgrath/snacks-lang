@@ -8,7 +8,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = ">=", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class GreaterThanEquals implements _Function {
+public class GreaterThanEquals {
 
     private static GreaterThanEquals instance;
 

@@ -9,11 +9,14 @@ public class ReflectTest extends AbstractRuntimeTest {
     public void shouldGetNamesOfTypes() {
         run(
             "import snacks.lang.reflect._",
+
             "data Toast = { bread: Symbol, burned?: Boolean }",
-            "data Point = 0D | 1D Integer | 2D Integer Integer",
+            "data Point = 0D | 1D Integer | 2D Integer Integer | 3D Integer Integer Integer",
+
             "toast = Toast { bread = :rye, burned? = True }",
             "point2d = 2D 5 (-3)",
             "tuple = (1, 'toast')",
+
             "main = () -> {",
             "    assert $ (typeOf (!)     $> name) == :'snacks.lang.Function'",
             "    assert $ (typeOf 12.3    $> name) == :'snacks.lang.Double'",
@@ -31,8 +34,8 @@ public class ReflectTest extends AbstractRuntimeTest {
             "import snacks.lang.reflect._",
             "data Toast = { bread: Symbol, burned?: Boolean }",
             "main = () -> {",
-            "    assert $ typeOf Toast { bread = :sourdough, burned? = True } == typeFor (TypeName :'test.Toast')",
-            "    assert $ typeOf Toast == typeFor (ExpressionName :'test.Toast#EXPRESSION')",
+            "    assert $ typeFor (TypeName :'test.Toast') == typeOf Toast { bread = :sourdough, burned? = True }",
+            "    assert $ typeFor (ExpressionName :'test.Toast') == typeOf Toast",
             "}"
         );
     }

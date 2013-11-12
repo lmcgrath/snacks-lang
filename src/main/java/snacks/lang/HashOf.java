@@ -8,7 +8,7 @@ import static snacks.lang.type.Types.var;
 import snacks.lang.type.Type;
 
 @Snack(name = "hashOf", kind = EXPRESSION)
-public class HashOf implements _Function {
+public class HashOf {
 
     private static HashOf instance;
 

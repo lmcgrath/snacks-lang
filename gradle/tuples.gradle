@@ -26,7 +26,7 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
             ]
 
             content << "@Snack(name = \"Tuple$size\", kind = TYPE)"
-            content << "public class Tuple$size<${range.collect { t -> "T$t" }.join(', ')}> implements _Tuple {"
+            content << "public class Tuple$size<${range.collect { t -> "T$t" }.join(', ')}> {"
 
             content << ''
             content << '    @SnackType'

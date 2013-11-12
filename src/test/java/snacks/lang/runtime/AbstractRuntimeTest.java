@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import snacks.lang.Invokable;
@@ -22,6 +23,7 @@ public class AbstractRuntimeTest {
     public final OutResource out;
     private Compiler compiler;
     private SnacksClassLoader loader;
+    private ClassLoader previousLoader;
 
     public AbstractRuntimeTest() {
         out = new OutResource();
@@ -29,8 +31,15 @@ public class AbstractRuntimeTest {
 
     @Before
     public void setUp() {
+        previousLoader = Thread.currentThread().getContextClassLoader();
         loader = new SnacksClassLoader();
         compiler = new Compiler(loader);
+        Thread.currentThread().setContextClassLoader(loader);
+    }
+
+    @After
+    public void tearDown() {
+        Thread.currentThread().setContextClassLoader(previousLoader);
     }
 
     public void run(String... inputs) {
@@ -39,7 +48,7 @@ public class AbstractRuntimeTest {
             for (SnackDefinition definition : definitions) {
                 writeClass(new File(definition.getJavaName().replace('.', '/') + ".class"), definition.getBytes());
             }
-            loader.defineClasses(definitions);
+            loader.defineSnacks(definitions);
             ((Invokable) loader.loadClass("test.main").newInstance()).invoke();
         } catch (ReflectiveOperationException exception) {
             throw new CompileException(exception);

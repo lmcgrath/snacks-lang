@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringUtils.join;
 import static org.objectweb.asm.Opcodes.*;
 import static snacks.lang.JavaUtils.javaGetter;
 import static snacks.lang.JavaUtils.javaName;
-import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
@@ -199,7 +198,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generateDeclaredConstructor(DeclaredConstructor node) {
-        beginClass(node, node.getSimpleName(), interfacesFor(node.getType()));
+        beginClass(node, node.getSimpleName() + "Constructor", interfacesFor(node.getType()));
         generate(node.getBody());
         acceptClass();
     }
@@ -762,7 +761,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     private JiteClass beginSubType(NamedNode node, Type type) {
         JiteClass jiteClass = new JiteClass(node.getJavaClass(), getSuperClass(), array(interfacesFor(type)));
         VisibleAnnotation snack = new VisibleAnnotation(Snack.class);
-        snack.enumValue("kind", EXPRESSION);
+        snack.enumValue("kind", node.getKind());
         snack.value("name", node.getSimpleName());
         jiteClass.addAnnotation(snack);
         if (hasParent()) {
@@ -1001,15 +1000,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private List<String> interfacesFor(Type type) {
         List<String> interfaces = new ArrayList<>();
-        if (isFunction(type)) {
-            interfaces.add(p(_Function.class));
-            if (isInvokable(type)) {
-                interfaces.add(p(Invokable.class));
-            }
-        } else if (type instanceof RecordType) {
-            interfaces.add(p(_Record.class));
-        } else if (type instanceof SimpleType) {
-            interfaces.add(p(_Constant.class));
+        if (isInvokable(type)) {
+            interfaces.add(p(Invokable.class));
         }
         return interfaces;
     }

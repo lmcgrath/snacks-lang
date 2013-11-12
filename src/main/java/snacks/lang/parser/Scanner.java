@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.regex.Pattern;
 import snacks.lang.util.Position;
 
 public class Scanner extends beaver.Scanner implements AutoCloseable {
@@ -19,6 +20,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     public static final int INITIAL_BUFFER_SIZE = 1024;
     public static final int READ_BUFFER_SIZE = 1024;
     private static final Charset UTF_8 = Charset.forName("UTF-8");
+    private static final Pattern symbolPattern = Pattern.compile("^[\\W]+$");
     private static final Set<String> newlineWords = new HashSet<>();
     private static final Map<String, Short> dictionary = new HashMap<>();
 
@@ -28,6 +30,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             "ensure",
             "->",
             "=>",
+            "=",
             "else",
             "where",
             "derives"
@@ -971,8 +974,12 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             }
             return accept(dictionary.get(text));
         }
-        detectSuffix();
-        return accept(IDENTIFIER, text());
+        if (symbolPattern.matcher(text).find()) {
+            detectNewlines();
+        } else {
+            detectSuffix();
+        }
+        return accept(IDENTIFIER, text);
     }
 
     private Action scanInterpolation() {

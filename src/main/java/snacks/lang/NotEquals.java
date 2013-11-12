@@ -11,7 +11,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "!=", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class NotEquals implements _Function {
+public class NotEquals {
 
     private static NotEquals instance;
 

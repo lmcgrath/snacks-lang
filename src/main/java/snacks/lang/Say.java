@@ -9,7 +9,7 @@ import static snacks.lang.type.Types.var;
 import snacks.lang.type.Type;
 
 @Snack(name = "say", kind = EXPRESSION)
-public class Say implements _Function {
+public class Say {
 
     private static Say instance;
 

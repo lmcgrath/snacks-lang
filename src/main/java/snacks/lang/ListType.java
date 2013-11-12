@@ -5,10 +5,49 @@ import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.type.Types.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.type.Type;
 
 @Snack(name = "List", kind = TYPE, arguments = "snacks.lang.List#a")
 public abstract class ListType {
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> fromList(ListType list) {
+        List<T> result = new ArrayList<>();
+        ListType tail = list;
+        while (true) {
+            if (tail instanceof ListElement) {
+                ListElement element = (ListElement) tail;
+                result.add((T) element.get_0());
+                tail = element.get_1();
+            } else if (tail instanceof EmptyList) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    public static ListType toList(Object... elements) {
+        ListType tail = EmptyList.value();
+        for (int i = elements.length - 1; i >= 0; i--) {
+            tail = new ListElement(elements[i], tail);
+        }
+        return tail;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static ListType toList(Collection<?> elements) {
+        List list = new ArrayList(elements);
+        ListType tail = EmptyList.value();
+        for (int i = list.size() - 1; i >= 0; i--) {
+            tail = new ListElement(list.get(i), tail);
+        }
+        return tail;
+    }
 
     @SnackType
     public static Type type() {
@@ -82,12 +121,32 @@ public abstract class ListType {
             this._1 = _1;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof ListElement) {
+                ListElement other = (ListElement) o;
+                return new EqualsBuilder()
+                    .append(_0, other._0)
+                    .append(_1, other._1)
+                    .isEquals();
+            } else {
+                return false;
+            }
+        }
+
         public Object get_0() {
             return _0;
         }
 
         public ListType get_1() {
             return _1;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(_0, _1);
         }
 
         @Override
@@ -137,6 +196,16 @@ public abstract class ListType {
         @SnackType
         public static Type type() {
             return simple("snacks.lang.EmptyList");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o == this || o instanceof EmptyList;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash();
         }
 
         @Override

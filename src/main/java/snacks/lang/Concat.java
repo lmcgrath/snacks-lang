@@ -8,7 +8,7 @@ import static snacks.lang.type.Types.var;
 import snacks.lang.type.Type;
 
 @Snack(name = "concat", kind = EXPRESSION)
-public class Concat implements _Function {
+public class Concat {
 
     private static Concat instance;
 

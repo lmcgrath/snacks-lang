@@ -8,7 +8,7 @@ import static snacks.lang.type.Types.func;
 import snacks.lang.type.Type;
 
 @Snack(name = "assert", kind = EXPRESSION)
-public class SnacksAssert implements _Function {
+public class SnacksAssert {
 
     private static SnacksAssert instance;
 

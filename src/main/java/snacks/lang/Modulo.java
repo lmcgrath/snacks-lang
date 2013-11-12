@@ -9,7 +9,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "%", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
-public class Modulo implements _Function {
+public class Modulo {
 
     private static Modulo instance;
 

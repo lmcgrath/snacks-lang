@@ -8,7 +8,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "+", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 12)
-public class Plus implements _Function {
+public class Plus {
 
     private static Plus instance;
 

@@ -9,6 +9,7 @@ import static snacks.lang.type.Types.record;
 import static snacks.lang.type.Types.simple;
 import static snacks.lang.type.Types.var;
 
+import java.util.Objects;
 import snacks.lang.type.Type;
 
 @Snack(name = "Maybe", kind = TYPE, arguments = "snacks.lang.Maybe#a")
@@ -18,8 +19,10 @@ public abstract class Maybe {
         // intentionally empty
     }
 
+    public abstract <T> T require();
+
     @Snack(name = "Just", kind = EXPRESSION)
-    public static final class JustConstructor implements _Function {
+    public static final class JustConstructor {
 
         private static JustConstructor instance;
 
@@ -43,7 +46,7 @@ public abstract class Maybe {
     }
 
     @Snack(name = "Just", kind = TYPE, arguments = "snacks.lang.Maybe#a")
-    public static final class Just extends Maybe implements _Record {
+    public static final class Just extends Maybe {
 
         @SnackType
         public static Type type() {
@@ -58,8 +61,24 @@ public abstract class Maybe {
             this._0 = _0;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            return o == this || o instanceof Just && Objects.equals(_0, ((Just) o)._0);
+        }
+
         public Object get_0() {
             return _0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(_0);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T require() {
+            return (T) _0;
         }
 
         @Override
@@ -69,7 +88,7 @@ public abstract class Maybe {
     }
 
     @Snack(name = "Nothing", kind = EXPRESSION)
-    public static final class NothingConstructor implements _Constant {
+    public static final class NothingConstructor {
 
         @SnackType
         public static Type type() {
@@ -82,7 +101,7 @@ public abstract class Maybe {
     }
 
     @Snack(name = "Nothing", kind = TYPE)
-    public static final class Nothing extends Maybe implements _Constant {
+    public static final class Nothing extends Maybe {
 
         private static Nothing instance;
 
@@ -96,6 +115,21 @@ public abstract class Maybe {
         @SnackType
         public static Type type() {
             return simple("snacks.lang.Nothing");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o == this || o instanceof Nothing;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash();
+        }
+
+        @Override
+        public <T> T require() {
+            throw new SnacksException("Can't get something out of Nothing!");
         }
 
         @Override

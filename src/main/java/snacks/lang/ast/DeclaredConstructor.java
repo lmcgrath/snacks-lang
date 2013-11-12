@@ -48,7 +48,7 @@ public class DeclaredConstructor extends NamedNode {
 
     @Override
     public String getQualifiedName() {
-        return qualifiedName + "Constructor";
+        return qualifiedName;
     }
 
     @Override
@@ -62,13 +62,13 @@ public class DeclaredConstructor extends NamedNode {
     }
 
     @Override
-    public void print(AstPrinter printer) {
-        printer.printDeclaredConstructor(this);
+    public Locator locator() {
+        return new DeclarationLocator(qualifiedName, getKind());
     }
 
     @Override
-    public Locator locator() {
-        return new DeclarationLocator(qualifiedName, getKind());
+    public void print(AstPrinter printer) {
+        printer.printDeclaredConstructor(this);
     }
 
     @Override

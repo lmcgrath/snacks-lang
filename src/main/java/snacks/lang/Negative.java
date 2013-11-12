@@ -10,7 +10,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "unary-", kind = EXPRESSION)
 @Prefix(precedence = 15)
-public class Negative implements _Function {
+public class Negative {
 
     private static Negative instance;
 

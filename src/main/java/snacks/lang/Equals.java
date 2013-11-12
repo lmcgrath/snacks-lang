@@ -11,7 +11,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "==", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class Equals implements _Function {
+public class Equals {
 
     private static Equals instance;
 

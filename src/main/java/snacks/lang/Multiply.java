@@ -8,7 +8,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "*", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
-public class Multiply implements _Function {
+public class Multiply {
 
     private static Multiply instance;
 

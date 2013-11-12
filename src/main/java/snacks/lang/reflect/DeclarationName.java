@@ -20,7 +20,7 @@ public abstract class DeclarationName {
     }
 
     @Snack(name = "TypeName", kind = EXPRESSION)
-    public static final class TypeNameConstructor implements _Function {
+    public static final class TypeNameConstructor {
 
         private static TypeNameConstructor instance;
 
@@ -42,7 +42,7 @@ public abstract class DeclarationName {
     }
 
     @Snack(name = "TypeName", kind = TYPE)
-    public static final class TypeName extends DeclarationName implements _Record {
+    public static final class TypeName extends DeclarationName {
 
         @SnackType
         public static Type type() {
@@ -78,7 +78,7 @@ public abstract class DeclarationName {
     }
 
     @Snack(name = "ExpressionName", kind = EXPRESSION)
-    public static final class ExpressionNameConstructor implements _Function {
+    public static final class ExpressionNameConstructor {
 
         private static ExpressionNameConstructor instance;
 
@@ -100,7 +100,7 @@ public abstract class DeclarationName {
     }
 
     @Snack(name = "ExpressionName", kind = TYPE)
-    public static final class ExpressionName extends DeclarationName implements _Record {
+    public static final class ExpressionName extends DeclarationName {
 
         @SnackType
         public static Type type() {
@@ -131,7 +131,7 @@ public abstract class DeclarationName {
 
         @Override
         public String toString() {
-            return "TypeName(" + _0 + ")";
+            return "ExpressionName(" + _0 + ")";
         }
     }
 }

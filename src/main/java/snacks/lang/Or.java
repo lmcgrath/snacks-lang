@@ -10,7 +10,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "or", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 3, shortCircuit = true)
-public class Or implements _Function {
+public class Or {
 
     private static Or instance;
 

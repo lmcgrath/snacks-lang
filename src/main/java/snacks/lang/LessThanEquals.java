@@ -8,7 +8,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "<=", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class LessThanEquals implements _Function {
+public class LessThanEquals {
 
     private static LessThanEquals instance;
 

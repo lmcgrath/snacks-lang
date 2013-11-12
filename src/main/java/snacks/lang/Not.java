@@ -10,7 +10,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "not", kind = EXPRESSION)
 @Prefix(precedence = 5)
-public class Not implements _Function {
+public class Not {
 
     private static Not instance;
 

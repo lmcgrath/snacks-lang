@@ -12,7 +12,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "**", kind = EXPRESSION)
 @Infix(fixity = RIGHT, precedence = 14)
-public class Exponent implements _Function {
+public class Exponent {
 
     private static Exponent instance;
 

@@ -1,10 +1,11 @@
 package snacks.lang.runtime;
 
+import static java.lang.Character.isUpperCase;
 import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang.StringUtils.capitalize;
 import static snacks.lang.JavaUtils.javaClass;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.type.Types.algebraic;
-import static snacks.lang.type.Types.simple;
 import static snacks.lang.type.Types.var;
 
 import java.io.File;
@@ -23,6 +24,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.*;
+import snacks.lang.Maybe.Just;
+import snacks.lang.Maybe.Nothing;
 import snacks.lang.compiler.Compiler;
 import snacks.lang.parser.Parser;
 import snacks.lang.parser.Scanner;
@@ -36,6 +39,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
 
     private final Set<String> loadedSnacks = new HashSet<>();
     private final Map<SnackKey, SnackValue> snacks = new HashMap<>();
+    private final Map<Class<?>, SnackValue> classes = new HashMap<>();
     private final OperatorRegistry operators = new OperatorRegistry();
     private final Set<URL> sourceFiles = new HashSet<>();
 
@@ -56,13 +60,13 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    public void defineClasses(Collection<SnackDefinition> definitions) {
-        List<Class<?>> classes = new ArrayList<>();
+    public void defineSnacks(Collection<SnackDefinition> definitions) {
+        List<Class<?>> snackClasses = new ArrayList<>();
         for (SnackDefinition definition : definitions) {
-            classes.add(defineClass(definition));
+            snackClasses.add(defineClass(definition));
         }
-        for (Class<?> clazz : classes) {
-            processSnack(clazz);
+        for (Class<?> snackClazz : snackClasses) {
+            processSnack(snackClazz);
         }
     }
 
@@ -82,6 +86,14 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
             return snacks.get(new SnackKey(qualifiedName, kind)).getType();
         } else {
             return null;
+        }
+    }
+
+    public Maybe typeOf(Class<?> clazz) {
+        if (classes.containsKey(clazz)) {
+            return new Just(classes.get(clazz).getType());
+        } else {
+            return Nothing.value();
         }
     }
 
@@ -130,6 +142,10 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         return hasSnack(qualifiedName) && snacks.containsKey(new SnackKey(qualifiedName, kind));
     }
 
+    private String moduleName(Class<?> subClazz) {
+        return subClazz.getName().substring(0, subClazz.getName().lastIndexOf('.'));
+    }
+
     private void processAnnotations(Class<?> snackClass, String name) {
         Infix infix = snackClass.getAnnotation(Infix.class);
         if (infix != null) {
@@ -154,7 +170,16 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
                 type = resolveType(clazz);
                 processAnnotations(clazz, snack.name());
             }
-            snacks.put(new SnackKey(qualifiedName, snack.kind()), new SnackValue(getJavaClazz(clazz), type));
+            registerSnack(qualifiedName, snack, clazz, type);
+        }
+    }
+
+    private void registerSnack(String qualifiedName, Snack snack, Class<?> clazz, Type type) {
+        SnackValue value = new SnackValue(getJavaClazz(clazz), type);
+        snacks.put(new SnackKey(qualifiedName, snack.kind()), value);
+        classes.put(clazz, value);
+        if (value.getJavaClazz() != clazz) {
+            classes.put(value.getJavaClazz(), value);
         }
     }
 
@@ -165,11 +190,11 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
             if (subSnack != null && subSnack.kind() == TYPE) {
                 Type type = resolveType(subClazz);
                 memberTypes.add(type);
-                snacks.put(new SnackKey(moduleName(subClazz) + '.' + subSnack.name(), subSnack.kind()), new SnackValue(getJavaClazz(subClazz), type));
+                registerSnack(moduleName(subClazz) + '.' + subSnack.name(), subSnack, subClazz, type);
             }
         }
         if (memberTypes.isEmpty()) {
-            return simple(qualifiedName);
+            return resolveType(clazz);
         } else {
             List<Type> arguments = new ArrayList<>();
             for (String argument : snack.arguments()) {
@@ -179,8 +204,17 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private String moduleName(Class<?> subClazz) {
-        return subClazz.getName().substring(0, subClazz.getName().lastIndexOf('.'));
+    private boolean resolveByName(String module, String name) {
+        try {
+            processSnack(loadClass(javaClass(module, name)));
+            return true;
+        } catch (ClassNotFoundException | NoClassDefFoundError exception) {
+            return false;
+        }
+    }
+
+    private boolean resolveByNameCapitalized(String module, String name) {
+        return !isUpperCase(name.charAt(0)) && resolveByName(module, capitalize(name));
     }
 
     private void resolveClasses(File directory, String module) {
@@ -224,9 +258,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
     private void resolveSnackClass(String qualifiedName) {
         String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
         String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        try {
-            processSnack(loadClass(javaClass(module, name)));
-        } catch (ClassNotFoundException | NoClassDefFoundError exception) {
+        if (!resolveByName(module, name) && !resolveByNameCapitalized(module, name)) {
             resolveSnackPackage(module);
             if (!loadedSnacks.contains(qualifiedName)) {
                 resolveSnackSource(module);
@@ -260,7 +292,7 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
                 Parser parser = new Parser();
                 Translator translator = new Translator(new SymbolEnvironment(this), module);
                 Compiler compiler = new Compiler(this);
-                defineClasses(compiler.compile(translator.translateModule(parser.parse(scanner))));
+                defineSnacks(compiler.compile(translator.translateModule(parser.parse(scanner))));
             }
         } catch (IOException exception) {
             throw new ResolutionException(exception);

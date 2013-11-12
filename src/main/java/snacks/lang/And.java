@@ -10,7 +10,7 @@ import snacks.lang.type.Types;
 
 @Snack(name = "and", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 4)
-public class And implements _Function {
+public class And {
 
     private static And instance;
 

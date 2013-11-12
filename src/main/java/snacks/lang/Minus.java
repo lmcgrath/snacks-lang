@@ -11,7 +11,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "-", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 12)
-public class Minus implements _Function {
+public class Minus {
 
     private static Minus instance;
 

@@ -11,7 +11,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "/", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
-public class Divide implements _Function {
+public class Divide {
 
     private static Divide instance;
 

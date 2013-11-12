@@ -10,7 +10,7 @@ import snacks.lang.type.Type;
 
 @Snack(name = "is not", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
-public class NotIdentical implements _Function {
+public class NotIdentical {
 
     private static Identical instance;
 
