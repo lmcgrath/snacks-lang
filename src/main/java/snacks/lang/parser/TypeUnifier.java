@@ -1,11 +1,20 @@
 package snacks.lang.parser;
 
-import static snacks.lang.type.Types.isFunction;
+import static snacks.lang.Type.AlgebraicType;
+import static snacks.lang.Type.UnionType;
+import static snacks.lang.Type.VariableType;
+import static snacks.lang.Types.isFunction;
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.Objects;
-import snacks.lang.type.*;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.SnacksList;
+import snacks.lang.Type;
+import snacks.lang.TypeFactory;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.RecursiveType;
+import snacks.lang.Type.SimpleType;
 
 abstract class TypeUnifier<T extends Type> {
 
@@ -38,10 +47,12 @@ abstract class TypeUnifier<T extends Type> {
         }
     }
 
-    private static boolean unifyAll(List<Type> leftTypes, List<Type> rightTypes, TypeFactory factory) {
+    private static boolean unifyAll(SnacksList<Type> leftTypes, SnacksList<Type> rightTypes, TypeFactory factory) {
         if (leftTypes.size() == rightTypes.size()) {
-            for (int i = 0; i < leftTypes.size(); i++) {
-                if (!factory.unify(leftTypes.get(i), rightTypes.get(i))) {
+            Iterator<Type> leftIterator = leftTypes.iterator();
+            Iterator<Type> rightIterator = rightTypes.iterator();
+            while (leftIterator.hasNext()) {
+                if (!factory.unify(leftIterator.next(), rightIterator.next())) {
                     return false;
                 }
             }
@@ -149,7 +160,7 @@ abstract class TypeUnifier<T extends Type> {
 
         @Override
         protected boolean unifyWithFunction(FunctionType left, FunctionType right, TypeFactory factory) {
-            boolean unified = false;
+            boolean unified;
             if (isFunction(left.getArgument())) {
                 unified = factory.unify(right.getArgument(), left.getArgument());
             } else {
@@ -166,11 +177,13 @@ abstract class TypeUnifier<T extends Type> {
 
     private static class RecordUnifier extends TypeUnifier<RecordType> {
 
-        private boolean unifyProperties(List<Property> leftProperties, List<Property> rightProperties, TypeFactory factory) {
+        private boolean unifyProperties(SnacksList<Property> leftProperties, SnacksList<Property> rightProperties, TypeFactory factory) {
             if (leftProperties.size() == rightProperties.size()) {
-                for (int i = 0; i < leftProperties.size(); i++) {
-                    Property leftProperty = leftProperties.get(i);
-                    Property rightProperty = rightProperties.get(i);
+                Iterator<Property> leftIterator = leftProperties.iterator();
+                Iterator<Property> rightIterator = rightProperties.iterator();
+                while (leftIterator.hasNext()) {
+                    Property leftProperty = leftIterator.next();
+                    Property rightProperty = rightIterator.next();
                     if (!Objects.equals(leftProperty.getName(), rightProperty.getName())
                         || !factory.unify(leftProperty.getType(), rightProperty.getType())) {
                         return false;

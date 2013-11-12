@@ -18,10 +18,10 @@ task (generateTuples, dependsOn: setUpGeneratedDir) {
                 'import java.util.ArrayList;',
                 'import java.util.Objects;',
                 'import org.apache.commons.lang.builder.EqualsBuilder;',
-                'import snacks.lang.type.RecordType;',
-                'import snacks.lang.type.RecordType.Property;',
-                'import snacks.lang.type.Type;',
-                'import snacks.lang.type.VariableType;',
+                'import snacks.lang.Type.RecordType;',
+                'import snacks.lang.Type.RecordType.Property;',
+                'import snacks.lang.Type;',
+                'import snacks.lang.Type.VariableType;',
                 '',
             ]
 

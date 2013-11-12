@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.DOUBLE_TYPE;
+import static snacks.lang.Types.doubleType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class DoubleConstant extends AstNode {
 
@@ -30,7 +30,7 @@ public class DoubleConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return DOUBLE_TYPE;
+        return doubleType();
     }
 
     public double getValue() {

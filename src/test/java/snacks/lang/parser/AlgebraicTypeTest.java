@@ -6,12 +6,12 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.*;
+import static snacks.lang.Types.*;
 
 import org.junit.Before;
 import org.junit.Test;
 import snacks.lang.SnacksRegistry;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class AlgebraicTypeTest {
 

@@ -1,8 +1,8 @@
 package snacks.lang.parser;
 
-import static snacks.lang.type.Types.argumentOf;
-import static snacks.lang.type.Types.isFunction;
-import static snacks.lang.type.Types.resultOf;
+import static snacks.lang.Types.argumentOf;
+import static snacks.lang.Types.isFunction;
+import static snacks.lang.Types.resultOf;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.Reference;
 import snacks.lang.ast.VariableLocator;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 class PatternScope {
 

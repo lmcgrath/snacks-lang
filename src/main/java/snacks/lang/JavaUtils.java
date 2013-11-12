@@ -36,8 +36,16 @@ public class JavaUtils {
         return module + '.' + javaName(name);
     }
 
+    public static String javaGetter(Symbol snacksName) {
+        return javaGetter(snacksName.getValue());
+    }
+
     public static String javaGetter(String snacksName) {
         return "get" + capitalize(javaName(snacksName));
+    }
+
+    public static String javaName(Symbol snacksName) {
+        return javaName(snacksName.getValue());
     }
 
     public static String javaName(String snacksName) {

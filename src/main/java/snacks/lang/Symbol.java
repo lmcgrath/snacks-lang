@@ -2,18 +2,19 @@ package snacks.lang;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.SYMBOL_TYPE;
+import static snacks.lang.Types.symbolType;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import snacks.lang.type.Type;
 
 @Snack(name = "Symbol", kind = TYPE)
 public class Symbol {
 
     @SnackType
-    public static final Type type = SYMBOL_TYPE;
+    public static Type type() {
+        return symbolType();
+    }
 
     private static final Map<String, Symbol> symbols = new HashMap<>();
     private static final Object lock = new Object();

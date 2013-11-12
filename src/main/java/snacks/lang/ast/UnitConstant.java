@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.VOID_TYPE;
+import static snacks.lang.Types.voidType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class UnitConstant extends AstNode {
 
@@ -25,7 +25,7 @@ public class UnitConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return VOID_TYPE;
+        return voidType();
     }
 
     @Override

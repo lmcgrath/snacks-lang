@@ -2,11 +2,9 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.var;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.var;
 
 @Snack(name = "is not", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
@@ -23,7 +21,7 @@ public class NotIdentical {
 
     @SnackType
     public static Type type() {
-        return func(var("T"), func(var("U"), BOOLEAN_TYPE));
+        return func(var("T"), func(var("U"), booleanType()));
     }
 
     public Closure apply(Object left) {

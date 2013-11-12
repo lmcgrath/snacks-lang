@@ -8,8 +8,11 @@ import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_APPLY;
 import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
-import static snacks.lang.type.Types.isFunction;
-import static snacks.lang.type.Types.isInvokable;
+import static snacks.lang.Type.SimpleType;
+import static snacks.lang.Type.UnionType;
+import static snacks.lang.Type.VariableType;
+import static snacks.lang.Types.isFunction;
+import static snacks.lang.Types.isInvokable;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -19,8 +22,11 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
 import snacks.lang.ast.*;
-import snacks.lang.type.*;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.RecursiveType;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
 
@@ -77,10 +83,10 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(AlgebraicType.class));
         block.dup();
-        block.ldc(type.getName());
+        block.ldc(type.getName().getValue());
         generateTypes(type.getArguments());
         generateTypes(type.getOptions());
-        block.invokespecial(p(AlgebraicType.class), "<init>", sig(void.class, String.class, Collection.class, Collection.class));
+        block.invokespecial(p(AlgebraicType.class), "<init>", sig(void.class, String.class, Iterable.class, Iterable.class));
     }
 
     @Override
@@ -441,11 +447,11 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.newobj(className);
         block.dup();
         if (node.getType() instanceof RecordType) {
-            List<Property> properties = ((RecordType) node.getType()).getProperties();
+            Iterator<Property> properties = ((RecordType) node.getType()).getProperties().iterator();
             List<AstNode> arguments = node.getArguments();
             String[] types = new String[arguments.size()];
-            for (int i = 0; i < properties.size(); i++) {
-                types[i] = propertyClass(properties.get(i));
+            for (int i = 0; properties.hasNext(); i++) {
+                types[i] = propertyClass(properties.next());
                 generate(arguments.get(i));
                 block.checkcast(types[i]);
             }
@@ -561,23 +567,25 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(RecordType.class));
         block.dup();
-        block.ldc(type.getName());
+        block.ldc(type.getName().getValue());
         generateTypes(type.getArguments());
-        List<Property> properties = type.getProperties();
+        SnacksList<Property> properties = type.getProperties();
+        Iterator<Property> propertyIterator = properties.iterator();
         block.ldc(properties.size());
         block.anewarray(p(Property.class));
         for (int i = 0; i < properties.size(); i++) {
+            Property property = propertyIterator.next();
             block.dup();
             block.ldc(i);
             block.newobj(p(Property.class));
             block.dup();
-            block.ldc(properties.get(i).getName());
-            generate(properties.get(i).getType());
+            block.ldc(property.getName().getValue());
+            generate(property.getType());
             block.invokespecial(p(Property.class), "<init>", sig(void.class, String.class, Type.class));
             block.aastore();
         }
         block.invokestatic(p(Arrays.class), "asList", sig(List.class, Object[].class));
-        block.invokespecial(p(RecordType.class), "<init>", sig(void.class, String.class, Collection.class, Collection.class));
+        block.invokespecial(p(RecordType.class), "<init>", sig(void.class, String.class, Iterable.class, Iterable.class));
     }
 
     @Override
@@ -585,9 +593,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(RecursiveType.class));
         block.dup();
-        block.ldc(type.getName());
+        block.ldc(type.getName().getValue());
         generateTypes(type.getArguments());
-        block.invokespecial(p(RecursiveType.class), "<init>", sig(void.class, String.class, Collection.class));
+        block.invokespecial(p(RecursiveType.class), "<init>", sig(void.class, String.class, Iterable.class));
     }
 
     @Override
@@ -633,7 +641,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(SimpleType.class));
         block.dup();
-        block.ldc(type.getName());
+        block.ldc(type.getName().getValue());
         block.invokespecial(p(SimpleType.class), "<init>", sig(void.class, String.class));
     }
 
@@ -672,7 +680,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.newobj(p(UnionType.class));
         block.dup();
         generateTypes(type.getTypes());
-        block.invokespecial(p(UnionType.class), "<init>", sig(void.class, Collection.class));
+        block.invokespecial(p(UnionType.class), "<init>", sig(void.class, Iterable.class));
     }
 
     @Override
@@ -696,7 +704,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         CodeBlock block = block();
         block.newobj(p(VariableType.class));
         block.dup();
-        block.ldc(type.getName());
+        block.ldc(type.getName().getValue());
         block.invokespecial(p(VariableType.class), "<init>", sig(void.class, String.class));
     }
 
@@ -794,7 +802,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     }
 
     private String classOf(Type type) {
-        Class<?> clazz = registry.classOf(type.getName(), TYPE);
+        Class<?> clazz = registry.classOf(type.getName().getValue(), TYPE);
         if (clazz == null) {
             return javaName(type.getName()).replace('.', '/');
         } else {
@@ -955,9 +963,9 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
                 for (int i = 0; i < properties.size(); i++) {
                     Property property = properties.get(i);
                     if (i > 0) {
-                        ldc(", " + property.getName() + "=");
+                        ldc(", " + property.getName().getValue() + "=");
                     } else {
-                        ldc(property.getName() + "=");
+                        ldc(property.getName().getValue() + "=");
                     }
                     invokevirtual(p(StringBuilder.class), "append", sig(StringBuilder.class, String.class));
                     aload(0);
@@ -972,7 +980,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         }});
     }
 
-    private void generateTypes(Collection<Type> types) {
+    private void generateTypes(SnacksList<Type> types) {
         CodeBlock block = block();
         block.ldc(types.size());
         block.anewarray(p(Type.class));
@@ -1013,7 +1021,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     private boolean isNamedTuple(DeclaredRecord record) {
         boolean namedTuple = true;
         for (Property property : record.getProperties()) {
-            if (!tuplePattern.matcher(property.getName()).find()) {
+            if (!tuplePattern.matcher(property.getName().getValue()).find()) {
                 namedTuple = false;
                 break;
             }

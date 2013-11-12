@@ -3,10 +3,12 @@ package snacks.lang.type;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static snacks.lang.type.Types.*;
+import static snacks.lang.Types.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import snacks.lang.Type;
+import snacks.lang.TypeUnroller;
 
 public class TypeUnrollerTest {
 

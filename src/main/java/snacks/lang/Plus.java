@@ -2,9 +2,7 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.*;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.*;
 
 @Snack(name = "+", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 12)
@@ -22,17 +20,17 @@ public class Plus {
     @SnackType
     public static Type type() {
         return union(
-            func(BOOLEAN_TYPE, func(STRING_TYPE, STRING_TYPE)),
-            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
-            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(INTEGER_TYPE, func(STRING_TYPE, STRING_TYPE)),
-            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(STRING_TYPE, STRING_TYPE)),
-            func(STRING_TYPE, func(STRING_TYPE, STRING_TYPE)),
-            func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE)),
-            func(STRING_TYPE, func(DOUBLE_TYPE, STRING_TYPE)),
-            func(STRING_TYPE, func(BOOLEAN_TYPE, STRING_TYPE))
+            func(booleanType(), func(stringType(), stringType())),
+            func(integerType(), func(integerType(), integerType())),
+            func(integerType(), func(doubleType(), doubleType())),
+            func(integerType(), func(stringType(), stringType())),
+            func(doubleType(), func(doubleType(), doubleType())),
+            func(doubleType(), func(integerType(), doubleType())),
+            func(doubleType(), func(stringType(), stringType())),
+            func(stringType(), func(stringType(), stringType())),
+            func(stringType(), func(integerType(), stringType())),
+            func(stringType(), func(doubleType(), stringType())),
+            func(stringType(), func(booleanType(), stringType()))
         );
     }
 

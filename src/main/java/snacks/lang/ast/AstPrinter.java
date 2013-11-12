@@ -6,8 +6,14 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
-import snacks.lang.type.*;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.Symbol;
+import snacks.lang.Type;
+import snacks.lang.TypePrinter;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.RecursiveType;
+import snacks.lang.Type.SimpleType;
 import snacks.lang.util.PrinterState;
 
 public class AstPrinter implements TypePrinter {
@@ -51,7 +57,7 @@ public class AstPrinter implements TypePrinter {
     }
 
     @Override
-    public void printAlgebraicType(AlgebraicType type) {
+    public void printAlgebraicType(Type.AlgebraicType type) {
         print(type.getName());
         for (Type argument : type.getArguments()) {
             print(argument);
@@ -321,7 +327,7 @@ public class AstPrinter implements TypePrinter {
     }
 
     @Override
-    public void printUnionType(UnionType type) {
+    public void printUnionType(Type.UnionType type) {
         for (Type t : type.getTypes()) {
             print(t);
         }
@@ -340,7 +346,7 @@ public class AstPrinter implements TypePrinter {
     }
 
     @Override
-    public void printVariableType(VariableType type) {
+    public void printVariableType(Type.VariableType type) {
         if (type.expose() == type) {
             print("name: " + type.getName());
         } else {
@@ -350,6 +356,10 @@ public class AstPrinter implements TypePrinter {
 
     public void printVoidFunction(VoidFunction node) {
         print(node.getBody());
+    }
+
+    private void print(Symbol symbol) {
+        print(symbol.getValue());
     }
 
     private void print(String label, Type type) {

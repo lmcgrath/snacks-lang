@@ -4,10 +4,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.DOUBLE_TYPE;
-import static snacks.lang.type.Types.INTEGER_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.union;
+import static snacks.lang.Types.doubleType;
+import static snacks.lang.Types.integerType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.union;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,10 +25,10 @@ public class SnacksClassLoaderTest {
     @Test
     public void shouldResolveDivideSnack() {
         assertThat(loader.typeOf("snacks.lang./", EXPRESSION), equalTo(union(
-            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
-            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE))
+            func(integerType(), func(integerType(), integerType())),
+            func(integerType(), func(doubleType(), doubleType())),
+            func(doubleType(), func(integerType(), doubleType())),
+            func(doubleType(), func(doubleType(), doubleType()))
         )));
     }
 

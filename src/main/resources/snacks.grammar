@@ -5,7 +5,7 @@
 %import "java.io.IOException",
         "java.util.List",
         "java.util.Set",
-        "snacks.lang.type.Type",
+        "snacks.lang.Type",
         "snacks.lang.parser.syntax.*",
         "static snacks.lang.parser.syntax.SyntaxFactory.*",
         "static java.util.Arrays.*",

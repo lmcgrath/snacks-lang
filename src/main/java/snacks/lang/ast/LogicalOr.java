@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.Types.booleanType;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class LogicalOr extends AstNode {
 
@@ -46,7 +46,7 @@ public class LogicalOr extends AstNode {
 
     @Override
     public Type getType() {
-        return BOOLEAN_TYPE;
+        return booleanType();
     }
 
     @Override

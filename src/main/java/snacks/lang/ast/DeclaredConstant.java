@@ -1,11 +1,11 @@
 package snacks.lang.ast;
 
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.simple;
+import static snacks.lang.Types.simple;
 
 import java.util.Objects;
 import snacks.lang.SnackKind;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class DeclaredConstant extends NamedNode {
 

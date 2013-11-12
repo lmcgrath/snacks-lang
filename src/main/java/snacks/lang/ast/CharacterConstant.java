@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.type.Types.CHARACTER_TYPE;
+import static snacks.lang.Types.characterType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class CharacterConstant extends AstNode {
 
@@ -26,7 +26,7 @@ public class CharacterConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return CHARACTER_TYPE;
+        return characterType();
     }
 
     public char getValue() {

@@ -2,11 +2,8 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
-import static snacks.lang.type.Types.func;
-
-import snacks.lang.type.Type;
-import snacks.lang.type.Types;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.func;
 
 @Snack(name = "and", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 4)
@@ -23,7 +20,7 @@ public class And {
 
     @SnackType
     public static Type type() {
-        return Types.union(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
+        return Types.union(func(booleanType(), func(booleanType(), booleanType())));
     }
 
     public Closure apply(Boolean left) {

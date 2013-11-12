@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.SYMBOL_TYPE;
+import static snacks.lang.Types.symbolType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class SymbolConstant extends AstNode {
 
@@ -29,7 +29,7 @@ public class SymbolConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return SYMBOL_TYPE;
+        return symbolType();
     }
 
     @Override

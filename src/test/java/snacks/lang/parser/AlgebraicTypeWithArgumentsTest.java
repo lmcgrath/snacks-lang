@@ -4,16 +4,16 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static snacks.lang.type.Types.*;
-import static snacks.lang.type.Types.property;
-import static snacks.lang.type.Types.record;
-import static snacks.lang.type.Types.simple;
-import static snacks.lang.type.Types.var;
+import static snacks.lang.Types.*;
+import static snacks.lang.Types.property;
+import static snacks.lang.Types.record;
+import static snacks.lang.Types.simple;
+import static snacks.lang.Types.var;
 
 import org.junit.Before;
 import org.junit.Test;
 import snacks.lang.SnacksRegistry;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class AlgebraicTypeWithArgumentsTest {
 

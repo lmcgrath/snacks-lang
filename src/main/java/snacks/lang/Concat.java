@@ -1,11 +1,9 @@
 package snacks.lang;
 
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.STRING_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.var;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.stringType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.var;
 
 @Snack(name = "concat", kind = EXPRESSION)
 public class Concat {
@@ -21,7 +19,7 @@ public class Concat {
 
     @SnackType
     public static Type type() {
-        return func(var("T"), func(var("U"), STRING_TYPE));
+        return func(var("T"), func(var("U"), stringType()));
     }
 
     public ConcatClosure apply(Object left) {

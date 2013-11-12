@@ -1,11 +1,9 @@
 package snacks.lang;
 
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.SYMBOL_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.var;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.symbolType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.var;
 
 @Snack(name = "symbol", kind = EXPRESSION)
 public class SymbolConstructor {
@@ -21,7 +19,7 @@ public class SymbolConstructor {
 
     @SnackType
     public static Type type() {
-        return func(var("snacks.lang.symbol#a"), SYMBOL_TYPE);
+        return func(var("snacks.lang.symbol#a"), symbolType());
     }
 
     public Object apply(Object value) {

@@ -2,11 +2,9 @@ package snacks.lang;
 
 import static java.lang.System.out;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.VOID_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.var;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.voidType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.var;
 
 @Snack(name = "say", kind = EXPRESSION)
 public class Say {
@@ -22,7 +20,7 @@ public class Say {
 
     @SnackType
     public static Type type() {
-        return func(var("T"), VOID_TYPE);
+        return func(var("T"), voidType());
     }
 
     public Object apply(Boolean value) {

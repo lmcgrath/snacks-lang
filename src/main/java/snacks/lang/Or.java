@@ -2,11 +2,9 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.union;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.union;
 
 @Snack(name = "or", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 3, shortCircuit = true)
@@ -23,7 +21,7 @@ public class Or {
 
     @SnackType
     public static Type type() {
-        return union(func(BOOLEAN_TYPE, func(BOOLEAN_TYPE, BOOLEAN_TYPE)));
+        return union(func(booleanType(), func(booleanType(), booleanType())));
     }
 
     public Closure apply(Boolean left) {

@@ -1,16 +1,14 @@
-package snacks.lang.reflect;
+package snacks.lang;
 
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.SYMBOL_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.property;
-import static snacks.lang.type.Types.record;
+import static snacks.lang.Types.symbolType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.property;
+import static snacks.lang.Types.record;
 
 import java.util.Objects;
-import snacks.lang.*;
-import snacks.lang.type.Type;
 
 @Snack(name = "DeclarationName", kind = TYPE)
 public abstract class DeclarationName {
@@ -33,7 +31,7 @@ public abstract class DeclarationName {
 
         @SnackType
         public static Type type() {
-            return func(SYMBOL_TYPE, TypeName.type());
+            return func(symbolType(), TypeName.type());
         }
 
         public Object apply(Symbol name) {
@@ -47,7 +45,7 @@ public abstract class DeclarationName {
         @SnackType
         public static Type type() {
             return record("snacks.lang.reflect.TypeName", asList(
-                property("_0", SYMBOL_TYPE)
+                property("_0", symbolType())
             ));
         }
 
@@ -91,7 +89,7 @@ public abstract class DeclarationName {
 
         @SnackType
         public static Type type() {
-            return func(SYMBOL_TYPE, ExpressionName.type());
+            return func(symbolType(), ExpressionName.type());
         }
 
         public Object apply(Symbol name) {
@@ -105,7 +103,7 @@ public abstract class DeclarationName {
         @SnackType
         public static Type type() {
             return record("snacks.lang.reflect.ExpressionName", asList(
-                property("_0", SYMBOL_TYPE)
+                property("_0", symbolType())
             ));
         }
 

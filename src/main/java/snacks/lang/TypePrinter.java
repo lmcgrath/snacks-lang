@@ -1,4 +1,8 @@
-package snacks.lang.type;
+package snacks.lang;
+
+import static snacks.lang.Type.*;
+
+import snacks.lang.Type.VariableType;
 
 public interface TypePrinter {
 

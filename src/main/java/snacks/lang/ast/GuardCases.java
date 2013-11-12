@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.union;
+import static snacks.lang.Types.union;
 
 import java.util.*;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class GuardCases extends AstNode {
 

@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
+import static snacks.lang.Types.booleanType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class BooleanConstant extends AstNode {
 
@@ -30,7 +30,7 @@ public class BooleanConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return BOOLEAN_TYPE;
+        return booleanType();
     }
 
     public boolean getValue() {

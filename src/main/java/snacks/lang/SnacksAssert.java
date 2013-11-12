@@ -1,11 +1,9 @@
 package snacks.lang;
 
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
-import static snacks.lang.type.Types.VOID_TYPE;
-import static snacks.lang.type.Types.func;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.voidType;
+import static snacks.lang.Types.func;
 
 @Snack(name = "assert", kind = EXPRESSION)
 public class SnacksAssert {
@@ -21,7 +19,7 @@ public class SnacksAssert {
 
     @SnackType
     public static Type type() {
-        return func(BOOLEAN_TYPE, VOID_TYPE);
+        return func(booleanType(), voidType());
     }
 
     public Object apply(Boolean argument) {

@@ -2,7 +2,7 @@ package snacks.lang.ast;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class PropertyInitializer extends AstNode {
 

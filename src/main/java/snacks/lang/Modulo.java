@@ -2,10 +2,8 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.INTEGER_TYPE;
-import static snacks.lang.type.Types.func;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.integerType;
+import static snacks.lang.Types.func;
 
 @Snack(name = "%", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
@@ -22,7 +20,7 @@ public class Modulo {
 
     @SnackType
     public static Type type() {
-        return func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE));
+        return func(integerType(), func(integerType(), integerType()));
     }
 
     public Closure apply(Integer left) {

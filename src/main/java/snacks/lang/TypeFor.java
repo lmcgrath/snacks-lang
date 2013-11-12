@@ -1,21 +1,15 @@
-package snacks.lang.reflect;
+package snacks.lang;
 
 import static java.lang.Thread.currentThread;
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.reflect.TypeTransformer.transform;
-import static snacks.lang.type.Types.algebraic;
-import static snacks.lang.type.Types.func;
+import static snacks.lang.Types.algebraic;
+import static snacks.lang.Types.func;
 
-import snacks.lang.MatchException;
-import snacks.lang.Snack;
-import snacks.lang.SnackType;
-import snacks.lang.SnacksException;
-import snacks.lang.reflect.DeclarationName.ExpressionName;
-import snacks.lang.reflect.DeclarationName.TypeName;
+import snacks.lang.DeclarationName.ExpressionName;
+import snacks.lang.DeclarationName.TypeName;
 import snacks.lang.runtime.SnacksClassLoader;
-import snacks.lang.type.Type;
 
 @Snack(name = "typeFor", kind = EXPRESSION)
 public class TypeFor {
@@ -32,20 +26,20 @@ public class TypeFor {
     @SnackType
     public static Type type() {
         return func(
-            algebraic("snacks.lang.reflect.DeclarationName", asList(
+            algebraic("snacks.lang.DeclarationName", asList(
                 TypeName.type(),
                 ExpressionName.type()
             )),
-            TypeInfo.type()
+            Type.type()
         );
     }
 
     public Object apply(DeclarationName name) {
         SnacksClassLoader loader = getLoader();
         if (name instanceof ExpressionName) {
-            return transform(loader.typeOf(((ExpressionName) name).get_0().getValue(), EXPRESSION));
+            return loader.typeOf(((ExpressionName) name).get_0().getValue(), EXPRESSION);
         } else if (name instanceof TypeName) {
-            return transform(loader.typeOf(((TypeName) name).get_0().getValue(), TYPE));
+            return loader.typeOf(((TypeName) name).get_0().getValue(), TYPE);
         } else {
             throw new MatchException("Could not match " + name.getClass().getName());
         }

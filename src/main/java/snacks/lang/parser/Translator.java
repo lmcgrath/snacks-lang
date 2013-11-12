@@ -1,11 +1,11 @@
 package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.reverse;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.SnacksList.fromList;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.ast.AstFactory.func;
 import static snacks.lang.ast.AstFactory.record;
@@ -14,22 +14,24 @@ import static snacks.lang.parser.syntax.SyntaxFactory.id;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 import static snacks.lang.parser.syntax.SyntaxFactory.type;
-import static snacks.lang.type.Types.*;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.tuple;
-import static snacks.lang.type.Types.var;
+import static snacks.lang.Types.*;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.tuple;
+import static snacks.lang.Types.var;
 
 import java.util.*;
 import java.util.regex.Pattern;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.Operator;
-import snacks.lang.SnackKind;
+import snacks.lang.*;
 import snacks.lang.ast.*;
 import snacks.lang.parser.syntax.*;
 import snacks.lang.parser.syntax.Result;
-import snacks.lang.type.*;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.VariableType;
 
 public class Translator implements SyntaxVisitor {
 
@@ -82,7 +84,7 @@ public class Translator implements SyntaxVisitor {
         for (Type type : expression.getType().decompose()) {
             if (type instanceof RecordType) {
                 for (Property propertyType : ((RecordType) type).getProperties()) {
-                    if (propertyType.getName().equals(property)) {
+                    if (propertyType.getName().getValue().equals(property)) {
                         result = access(expression, property, propertyType.getType());
                         return;
                     }
@@ -313,13 +315,18 @@ public class Translator implements SyntaxVisitor {
                 RecordType recordType = (RecordType) type;
                 PropertyInitializers properties = translateProperties(node, recordType);
                 properties.requireAll();
-                List<Property> propertyTypes = recordType.getProperties();
+                SnacksList<Property> propertyTypes = recordType.getProperties();
+                Iterator<Property> propertyIterator = propertyTypes.iterator();
                 for (int i = 0; i < propertyTypes.size(); i++) {
                     Type resultType = null;
                     if (i == propertyTypes.size() - 1) {
                         resultType = type.expose();
                     }
-                    constructor = apply(constructor, properties.getValue(propertyTypes.get(i).getName()), resultType);
+                    constructor = apply(
+                        constructor,
+                        properties.getValue(propertyIterator.next().getName().getValue()),
+                        resultType
+                    );
                 }
                 result = constructor;
                 return;
@@ -341,7 +348,7 @@ public class Translator implements SyntaxVisitor {
         if (body.getType().decompose().isEmpty()) {
             throw new TypeException("Unable to determine type of invokable:\n\u2022 " + join(typeErrors, "\n\u2022 "));
         }
-        Type functionType = func(VOID_TYPE, body.getType());
+        Type functionType = func(voidType(), body.getType());
         leaveScope();
         leaveFunction();
         if (functionLevel > 1) {
@@ -603,7 +610,7 @@ public class Translator implements SyntaxVisitor {
                     define(new DeclarationLocator(variant.getQualifiedName(), TYPE),
                         new RecordType(variant.getQualifiedName(), parentType.getArguments(), type.getProperties()));
                     defineConstructor(variant.getQualifiedName(), parentType.getArguments(), type.getProperties());
-                    variants.set(i, new DeclaredRecord(variant.getQualifiedName(), parameters, type.getProperties()));
+                    variants.set(i, new DeclaredRecord(variant.getQualifiedName(), parameters, fromList(type.getProperties())));
                 } else {
                     define(new DeclarationLocator(variant.getQualifiedName(), TYPE), variant.getType());
                     defineConstant(variant.getQualifiedName(), variant.getType());
@@ -710,23 +717,21 @@ public class Translator implements SyntaxVisitor {
         declarations.add(new DeclaredConstructor(name, namedDeclaration(name + "Constructor", constructor).getBody()));
     }
 
-    private void defineConstructor(String name, List<Type> typeArguments, List<Property> properties) {
+    private void defineConstructor(String name, Iterable<Type> typeArguments, SnacksList<Property> properties) {
         Type constructorType = new RecordType(name, typeArguments, properties);
-        for (int i = properties.size() - 1; i >= 0; i--) {
-            constructorType = func(properties.get(i).getType(), constructorType);
+        for (Property property : properties.reverse()) {
+            constructorType = func(property.getType(), constructorType);
         }
         define(new DeclarationLocator(name, EXPRESSION), constructorType);
         Symbol constructor = type(name.split("\\."));
         List<Symbol> arguments = new ArrayList<>();
-        List<Property> reversedProperties = new ArrayList<>(properties);
-        reverse(reversedProperties);
         for (Property property : properties) {
-            arguments.add(id(property.getName()));
+            arguments.add(id(property.getName().getValue()));
         }
         constructor = new ConstructorExpression(constructor, arguments);
-        for (Property property : reversedProperties) {
+        for (Property property : properties.reverse()) {
             constructor = new FunctionLiteral(
-                new Argument(property.getName(), typeToSymbol(property.getType())),
+                new Argument(property.getName().getValue(), typeToSymbol(property.getType())),
                 constructor,
                 null
             );
@@ -824,7 +829,7 @@ public class Translator implements SyntaxVisitor {
     }
 
     private boolean isBoolean(AstNode expression) {
-        return environment().unify(BOOLEAN_TYPE, expression.getType());
+        return environment().unify(booleanType(), expression.getType());
     }
 
     private boolean isDefined(Locator locator) {
@@ -1140,7 +1145,7 @@ public class Translator implements SyntaxVisitor {
             }
             boolean found = false;
             for (Property propertyType : recordType.getProperties()) {
-                if (propertyType.getName().equals(property.getName())) {
+                if (propertyType.getName().getValue().equals(property.getName())) {
                     verifyAssignmentType(propertyType.getType(), property.getType());
                     matchedProperties.add(propertyType);
                     found = true;
@@ -1173,15 +1178,15 @@ public class Translator implements SyntaxVisitor {
     }
 
     private Symbol typeToSymbol(Type type) {
+        String name = type.getName().getValue();
         if (type.expose() instanceof VariableType) {
-            String name = type.getName();
             if (name.contains("#")) {
                 return type(name.substring(name.lastIndexOf('#') + 1));
             } else {
                 return type(name);
             }
         } else {
-            return type(type.getName().split("\\."));
+            return type(name.split("\\."));
         }
     }
 
@@ -1279,12 +1284,12 @@ public class Translator implements SyntaxVisitor {
         }
 
         private void requireAll() {
-            List<Property> missingProperties = new ArrayList<>(record.getProperties());
+            List<Property> missingProperties = fromList(record.getProperties());
             missingProperties.removeAll(matchedProperties);
             if (matchedProperties.size() != record.getProperties().size()) {
                 List<String> propertyNames = new ArrayList<>();
                 for (Property property : missingProperties) {
-                    propertyNames.add(property.getName());
+                    propertyNames.add(property.getName().getValue());
                 }
                 throw new MissingPropertyException("Missing properties: " + join(propertyNames, ", "));
             }

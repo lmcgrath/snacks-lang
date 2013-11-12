@@ -9,3 +9,13 @@ $> = (a b) -> b a
 ! :: Boolean -> Boolean
 ! affix right 5
 ! = (b) -> not b
+
+name :: Type -> Symbol
+name = ?(SimpleType { name = n }) -> n
+name = ?(RecordType { name = n }) -> n
+name = ?(VariableType { name = n }) -> n
+name = ?(AlgebraicType { name = n }) -> n
+name = ?(FunctionType { name = n }) -> n
+name = ?(UnionType { name = n }) -> n
+name = ?(RecursiveType { name = n }) -> n
+name = ?(x) -> hurl "#{classOf x}'s type has no name!"

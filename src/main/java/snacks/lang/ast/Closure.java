@@ -1,14 +1,14 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.VOID_TYPE;
-import static snacks.lang.type.Types.func;
+import static snacks.lang.Types.voidType;
+import static snacks.lang.Types.func;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class Closure extends AstNode {
 
@@ -55,7 +55,7 @@ public class Closure extends AstNode {
 
     @Override
     public Type getType() {
-        return func(VOID_TYPE, body.getType());
+        return func(voidType(), body.getType());
     }
 
     @Override

@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static snacks.lang.type.Types.STRING_TYPE;
+import static snacks.lang.Types.stringType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class StringConstant extends AstNode {
 
@@ -31,7 +31,7 @@ public class StringConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return STRING_TYPE;
+        return stringType();
     }
 
     public String getValue() {

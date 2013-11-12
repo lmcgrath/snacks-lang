@@ -1,12 +1,12 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.func;
+import static snacks.lang.Types.func;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class PatternCase extends AstNode {
 

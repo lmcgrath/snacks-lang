@@ -5,8 +5,8 @@ import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static snacks.lang.JavaUtils.javaClass;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.algebraic;
-import static snacks.lang.type.Types.var;
+import static snacks.lang.Types.algebraic;
+import static snacks.lang.Types.var;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -31,7 +31,7 @@ import snacks.lang.parser.Parser;
 import snacks.lang.parser.Scanner;
 import snacks.lang.parser.SymbolEnvironment;
 import snacks.lang.parser.Translator;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 

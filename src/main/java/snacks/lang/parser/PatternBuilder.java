@@ -8,8 +8,8 @@ import java.util.List;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.NamedNode;
-import snacks.lang.type.Type;
-import snacks.lang.type.TypeFactory;
+import snacks.lang.Type;
+import snacks.lang.TypeFactory;
 
 class PatternBuilder {
 

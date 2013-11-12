@@ -1,6 +1,9 @@
-package snacks.lang.type;
+package snacks.lang;
+
+import static snacks.lang.Type.*;
 
 import java.util.Map;
+import snacks.lang.Type.VariableType;
 
 public interface TypeFactory {
 

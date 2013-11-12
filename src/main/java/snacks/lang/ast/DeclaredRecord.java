@@ -1,7 +1,7 @@
 package snacks.lang.ast;
 
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.record;
+import static snacks.lang.Types.record;
 
 import java.util.Collection;
 import java.util.List;
@@ -9,8 +9,8 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnackKind;
-import snacks.lang.type.RecordType.Property;
-import snacks.lang.type.Type;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type;
 
 public class DeclaredRecord extends NamedNode {
 

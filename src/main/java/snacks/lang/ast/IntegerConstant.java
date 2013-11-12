@@ -1,9 +1,9 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.INTEGER_TYPE;
+import static snacks.lang.Types.integerType;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class IntegerConstant extends AstNode {
 
@@ -30,7 +30,7 @@ public class IntegerConstant extends AstNode {
 
     @Override
     public Type getType() {
-        return INTEGER_TYPE;
+        return integerType();
     }
 
     public int getValue() {

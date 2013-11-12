@@ -2,9 +2,7 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.*;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.*;
 
 @Snack(name = "*", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 13)
@@ -22,11 +20,11 @@ public class Multiply {
     @SnackType
     public static Type type() {
         return union(
-            func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE)),
-            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
-            func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))
+            func(integerType(), func(integerType(), integerType())),
+            func(integerType(), func(doubleType(), doubleType())),
+            func(doubleType(), func(doubleType(), doubleType())),
+            func(doubleType(), func(integerType(), doubleType())),
+            func(stringType(), func(integerType(), stringType()))
         );
     }
 

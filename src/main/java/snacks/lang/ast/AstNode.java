@@ -1,6 +1,6 @@
 package snacks.lang.ast;
 
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 import snacks.lang.util.Position;
 
 public abstract class AstNode {

@@ -3,26 +3,21 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.*;
+import static snacks.lang.Types.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
 
 @Snack(name = "List", kind = TYPE, arguments = "snacks.lang.List#a")
-public abstract class ListType {
+public abstract class SnacksList<T> implements Iterable<T> {
 
-    @SuppressWarnings("unchecked")
-    public static <T> List<T> fromList(ListType list) {
+    public static <T> List<T> fromList(SnacksList<T> list) {
         List<T> result = new ArrayList<>();
-        ListType tail = list;
+        SnacksList<T> tail = list;
         while (true) {
             if (tail instanceof ListElement) {
-                ListElement element = (ListElement) tail;
-                result.add((T) element.get_0());
+                ListElement<T> element = (ListElement<T>) tail;
+                result.add(element.get_0());
                 tail = element.get_1();
             } else if (tail instanceof EmptyList) {
                 break;
@@ -31,38 +26,60 @@ public abstract class ListType {
         return result;
     }
 
-    public static ListType toList(Object... elements) {
-        ListType tail = EmptyList.value();
+    public static <T> SnacksList<T> toList(Iterable<T> iterable) {
+        if (iterable instanceof SnacksList) {
+            return (SnacksList<T>) iterable;
+        } else {
+            List<T> list = new ArrayList<>();
+            for (T t : iterable) {
+                list.add(t);
+            }
+            return toList(list);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> SnacksList<T> toList(T... elements) {
+        SnacksList<T> tail = EmptyList.value();
         for (int i = elements.length - 1; i >= 0; i--) {
-            tail = new ListElement(elements[i], tail);
+            tail = new ListElement<>(elements[i], tail);
         }
         return tail;
     }
 
-    @SuppressWarnings("unchecked")
-    public static ListType toList(Collection<?> elements) {
-        List list = new ArrayList(elements);
-        ListType tail = EmptyList.value();
+    public static <T> SnacksList<T> toList(Collection<T> elements) {
+        List<T> list = new ArrayList<>(elements);
+        SnacksList<T> tail = EmptyList.value();
         for (int i = list.size() - 1; i >= 0; i--) {
-            tail = new ListElement(list.get(i), tail);
+            tail = new ListElement<>(list.get(i), tail);
         }
         return tail;
     }
 
     @SnackType
     public static Type type() {
-        return algebraic("snacks.lang.List", asList(var("snacks.lang.List#a")), asList(
+        return listOf(var("snacks.lang.List#a"));
+    }
+
+    public static Type listOf(Type type) {
+        return algebraic("snacks.lang.List", asList(type), asList(
             simple("snacks.lang.EmptyList"),
-            record("snacks.lang.ListElement", asList(var("snacks.lang.List#a")), asList(
-                property("_0", var("snacks.lang.List#a")),
-                property("_1", recur("snacks.lang.List", asList(var("snacks.lang.List#a"))))
+            record("snacks.lang.ListElement", asList(type), asList(
+                property("_0", type),
+                property("_1", recur("snacks.lang.List", asList(type)))
             ))
         ));
     }
 
-    private ListType() {
+    private SnacksList() {
         // intentionally empty
     }
+
+    public abstract boolean isEmpty();
+
+    public abstract SnacksList<T> reverse();
+
+    public abstract int size();
 
     @Snack(name = "ListElement", kind = EXPRESSION)
     public static final class ListElementConstructor {
@@ -78,7 +95,7 @@ public abstract class ListType {
 
         @SnackType
         public static Type type() {
-            return func(var("snacks.lang.List#a"), func(ListType.type(), ListElement.type()));
+            return func(var("snacks.lang.List#a"), func(SnacksList.type(), ListElement.type()));
         }
 
         public Object apply(Object value) {
@@ -93,14 +110,15 @@ public abstract class ListType {
                 this.value = value;
             }
 
+            @SuppressWarnings("unchecked")
             public Object apply(Object tail) {
-                return new ListElement(value, (ListType) tail);
+                return new ListElement(value, (SnacksList) tail);
             }
         }
     }
 
     @Snack(name = "ListElement", kind = TYPE, arguments = "snacks.lang.List#a")
-    public static final class ListElement extends ListType {
+    public static final class ListElement<T> extends SnacksList<T> {
 
         @SnackType
         public static Type type() {
@@ -113,10 +131,35 @@ public abstract class ListType {
             ));
         }
 
-        private final Object _0;
-        private final ListType _1;
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
 
-        public ListElement(Object _0, ListType _1) {
+        @Override
+        public Iterator<T> iterator() {
+            return new IteratorImpl<>(this);
+        }
+
+        @Override
+        public SnacksList<T> reverse() {
+            List<T> ts = new ArrayList<>();
+            for (T t : this) {
+                ts.add(t);
+            }
+            Collections.reverse(ts);
+            return toList(ts);
+        }
+
+        @Override
+        public int size() {
+            return 1 + _1.size();
+        }
+
+        private final T _0;
+        private final SnacksList<T> _1;
+
+        public ListElement(T _0, SnacksList<T> _1) {
             this._0 = _0;
             this._1 = _1;
         }
@@ -136,11 +179,11 @@ public abstract class ListType {
             }
         }
 
-        public Object get_0() {
+        public T get_0() {
             return _0;
         }
 
-        public ListType get_1() {
+        public SnacksList<T> get_1() {
             return _1;
         }
 
@@ -154,7 +197,7 @@ public abstract class ListType {
             StringBuilder builder = new StringBuilder();
             builder.append("[");
             builder.append(_0);
-            ListType remainder = _1;
+            SnacksList remainder = _1;
             if (!(remainder instanceof EmptyList)) {
                 while (!(remainder instanceof EmptyList)) {
                     builder.append(", ");
@@ -182,11 +225,12 @@ public abstract class ListType {
     }
 
     @Snack(name = "EmptyList", kind = TYPE)
-    public static final class EmptyList extends ListType {
+    public static final class EmptyList<T> extends SnacksList<T> {
 
         private static EmptyList value;
 
-        public static EmptyList value() {
+        @SuppressWarnings("unchecked")
+        public static <T> EmptyList<T> value() {
             if (value == null) {
                 value = new EmptyList();
             }
@@ -196,6 +240,41 @@ public abstract class ListType {
         @SnackType
         public static Type type() {
             return simple("snacks.lang.EmptyList");
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+
+        @Override
+        public Iterator<T> iterator() {
+            return new Iterator<T>() {
+                @Override
+                public boolean hasNext() {
+                    return false;
+                }
+
+                @Override
+                public T next() {
+                    throw new NoSuchElementException();
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        @Override
+        public SnacksList<T> reverse() {
+            return this;
+        }
+
+        @Override
+        public int size() {
+            return 0;
         }
 
         @Override
@@ -211,6 +290,39 @@ public abstract class ListType {
         @Override
         public String toString() {
             return "[]";
+        }
+    }
+
+    private static final class IteratorImpl<T> implements Iterator<T> {
+
+        private SnacksList<T> tail;
+
+        public IteratorImpl(SnacksList<T> tail) {
+            this.tail = tail;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return tail instanceof ListElement;
+        }
+
+        @Override
+        public T next() {
+            if (tail instanceof ListElement) {
+                ListElement<T> element = (ListElement<T>) tail;
+                T data = element.get_0();
+                tail = element.get_1();
+                return data;
+            } else if (tail instanceof EmptyList) {
+                throw new NoSuchElementException();
+            } else {
+                throw new MatchException("Could not match " + tail.getClass().getName());
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

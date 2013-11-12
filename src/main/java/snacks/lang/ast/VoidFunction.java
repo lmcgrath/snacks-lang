@@ -1,10 +1,10 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.VOID_TYPE;
-import static snacks.lang.type.Types.func;
+import static snacks.lang.Types.voidType;
+import static snacks.lang.Types.func;
 
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class VoidFunction extends AstNode {
 
@@ -35,7 +35,7 @@ public class VoidFunction extends AstNode {
 
     @Override
     public Type getType() {
-        return func(VOID_TYPE, body.getType());
+        return func(voidType(), body.getType());
     }
 
     @Override

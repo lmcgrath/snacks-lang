@@ -3,10 +3,8 @@ package snacks.lang;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.BOOLEAN_TYPE;
-import static snacks.lang.type.Types.func;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.func;
 
 @Snack(name = "not", kind = EXPRESSION)
 @Prefix(precedence = 5)
@@ -23,7 +21,7 @@ public class Not {
 
     @SnackType
     public static Type type() {
-        return func(BOOLEAN_TYPE, BOOLEAN_TYPE);
+        return func(booleanType(), booleanType());
     }
 
     public Boolean apply(Boolean argument) {

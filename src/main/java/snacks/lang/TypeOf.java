@@ -1,15 +1,11 @@
-package snacks.lang.reflect;
+package snacks.lang;
 
 import static java.lang.Thread.currentThread;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.reflect.TypeTransformer.transform;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.var;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.var;
 
-import snacks.lang.Snack;
-import snacks.lang.SnackType;
 import snacks.lang.runtime.SnacksClassLoader;
-import snacks.lang.type.Type;
 
 @Snack(name = "typeOf", kind = EXPRESSION)
 public class TypeOf {
@@ -25,14 +21,10 @@ public class TypeOf {
 
     @SnackType
     public static Type type() {
-        return func(var("snacks.lang.typeOf#a"), TypeInfo.type());
+        return func(var("snacks.lang.typeOf#a"), Type.type());
     }
 
     public Object apply(Object expression) {
-        return transform(typeOf(expression));
-    }
-
-    private Type typeOf(Object expression) {
         return ((SnacksClassLoader) currentThread().getContextClassLoader()).typeOf(expression.getClass()).require();
     }
 }

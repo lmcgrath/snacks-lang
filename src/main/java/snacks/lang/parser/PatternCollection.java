@@ -5,7 +5,7 @@ import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.NamedNode;
 import snacks.lang.ast.Reference;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 class PatternCollection {
 

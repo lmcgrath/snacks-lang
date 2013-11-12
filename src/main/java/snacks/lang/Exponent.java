@@ -3,12 +3,10 @@ package snacks.lang;
 import static java.lang.Math.pow;
 import static snacks.lang.Fixity.RIGHT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.DOUBLE_TYPE;
-import static snacks.lang.type.Types.INTEGER_TYPE;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.union;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.doubleType;
+import static snacks.lang.Types.integerType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.union;
 
 @Snack(name = "**", kind = EXPRESSION)
 @Infix(fixity = RIGHT, precedence = 14)
@@ -26,10 +24,10 @@ public class Exponent {
     @SnackType
     public static Type type() {
         return union(
-            func(INTEGER_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
-            func(INTEGER_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(INTEGER_TYPE, DOUBLE_TYPE)),
-            func(DOUBLE_TYPE, func(DOUBLE_TYPE, DOUBLE_TYPE))
+            func(integerType(), func(integerType(), doubleType())),
+            func(integerType(), func(doubleType(), doubleType())),
+            func(doubleType(), func(integerType(), doubleType())),
+            func(doubleType(), func(doubleType(), doubleType()))
         );
     }
 

@@ -3,7 +3,7 @@ package snacks.lang.ast;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class Initializer extends AstNode {
 

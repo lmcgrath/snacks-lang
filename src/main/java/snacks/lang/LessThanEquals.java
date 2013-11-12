@@ -2,9 +2,7 @@ package snacks.lang;
 
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.type.Types.*;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.*;
 
 @Snack(name = "<=", kind = EXPRESSION)
 @Infix(fixity = LEFT, precedence = 6)
@@ -22,10 +20,10 @@ public class LessThanEquals {
     @SnackType
     public static Type type() {
         return union(
-            func(INTEGER_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
-            func(INTEGER_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE)),
-            func(DOUBLE_TYPE, func(INTEGER_TYPE, BOOLEAN_TYPE)),
-            func(DOUBLE_TYPE, func(DOUBLE_TYPE, BOOLEAN_TYPE))
+            func(integerType(), func(integerType(), booleanType())),
+            func(integerType(), func(doubleType(), booleanType())),
+            func(doubleType(), func(integerType(), booleanType())),
+            func(doubleType(), func(doubleType(), booleanType()))
         );
     }
 

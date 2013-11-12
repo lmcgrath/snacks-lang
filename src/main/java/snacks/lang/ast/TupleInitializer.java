@@ -1,11 +1,11 @@
 package snacks.lang.ast;
 
-import static snacks.lang.type.Types.tuple;
+import static snacks.lang.Types.tuple;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import snacks.lang.type.Type;
+import snacks.lang.Type;
 
 public class TupleInitializer extends AstNode {
 

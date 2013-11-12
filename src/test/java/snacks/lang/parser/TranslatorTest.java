@@ -2,16 +2,15 @@ package snacks.lang.parser;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.ast.AstFactory.var;
 import static snacks.lang.parser.TranslatorMatcher.defines;
-import static snacks.lang.type.Types.*;
-import static snacks.lang.type.Types.func;
-import static snacks.lang.type.Types.record;
+import static snacks.lang.Types.*;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.record;
 
 import java.util.Collection;
 import org.junit.Before;
@@ -20,8 +19,8 @@ import org.junit.Test;
 import snacks.lang.SnackKind;
 import snacks.lang.ast.*;
 import snacks.lang.runtime.SnacksClassLoader;
-import snacks.lang.type.Type;
-import snacks.lang.type.VariableType;
+import snacks.lang.Type;
+import snacks.lang.Type.VariableType;
 
 public class TranslatorTest {
 
@@ -35,16 +34,16 @@ public class TranslatorTest {
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() {
         translate("example = 2 + 2");
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
     public void shouldResolveTypeOfPlusWithInteger() {
         translate("example = (+) 2");
         assertThat(typeOf("test.example"), equalTo(union(
-            func(STRING_TYPE, STRING_TYPE),
-            func(DOUBLE_TYPE, DOUBLE_TYPE),
-            func(INTEGER_TYPE, INTEGER_TYPE)
+            func(stringType(), stringType()),
+            func(doubleType(), doubleType()),
+            func(integerType(), integerType())
         )));
     }
 
@@ -54,7 +53,7 @@ public class TranslatorTest {
             "partial = (+) 2",
             "example = partial 'bananas'"
         );
-        assertThat(typeOf("test.example"), equalTo(STRING_TYPE));
+        assertThat(typeOf("test.example"), equalTo(stringType()));
     }
 
     @Test
@@ -69,13 +68,13 @@ public class TranslatorTest {
                 environment.getReference(new DeclarationLocator("snacks.lang.+")),
                 constant(2),
                 union(
-                    func(STRING_TYPE, STRING_TYPE),
-                    func(DOUBLE_TYPE, DOUBLE_TYPE),
-                    func(INTEGER_TYPE, INTEGER_TYPE)
+                    func(stringType(), stringType()),
+                    func(doubleType(), doubleType()),
+                    func(integerType(), integerType())
                 )
             ),
-            reference(new DeclarationLocator("test.value"), STRING_TYPE),
-            STRING_TYPE
+            reference(new DeclarationLocator("test.value"), stringType()),
+            stringType()
         )))));
     }
 
@@ -94,7 +93,7 @@ public class TranslatorTest {
             "identity = (a) -> a",
             "example = identity 12"
         );
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
@@ -105,7 +104,7 @@ public class TranslatorTest {
             "import test.example.identity as id",
             "example = id 12"
         );
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
@@ -116,7 +115,7 @@ public class TranslatorTest {
             "from test.example import identity",
             "example = identity 12"
         );
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
@@ -127,13 +126,13 @@ public class TranslatorTest {
             "from test.example import identity as id",
             "example = id 12"
         );
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
     public void shouldTranslateTypedFunction() {
         translate("double = (x:Integer):Integer -> x * 2");
-        assertThat(typeOf("test.double"), equalTo(func(INTEGER_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.double"), equalTo(func(integerType(), integerType())));
     }
 
     @Test(expected = TypeException.class)
@@ -145,9 +144,9 @@ public class TranslatorTest {
     public void shouldTranslateUntypedFunction() {
         translate("double = (x) -> x * 2");
         assertThat(typeOf("test.double"), equalTo(union(
-            func(INTEGER_TYPE, INTEGER_TYPE),
-            func(DOUBLE_TYPE, DOUBLE_TYPE),
-            func(STRING_TYPE, STRING_TYPE)
+            func(integerType(), integerType()),
+            func(doubleType(), doubleType()),
+            func(stringType(), stringType())
         )));
     }
 
@@ -165,7 +164,7 @@ public class TranslatorTest {
     @Test
     public void shouldTranslatePartiallyTypedFunction() {
         translate("multiply = (x:String y) -> x * y");
-        assertThat(typeOf("test.multiply"), equalTo(func(STRING_TYPE, func(INTEGER_TYPE, STRING_TYPE))));
+        assertThat(typeOf("test.multiply"), equalTo(func(stringType(), func(integerType(), stringType()))));
     }
 
     @Test
@@ -188,13 +187,13 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateVar() {
         translate("waffles = { var test = 2; return test; } ()");
-        assertThat(typeOf("test.waffles"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.waffles"), equalTo(integerType()));
     }
 
     @Test
     public void shouldTranslateInstantiable() {
         translate("answer = () -> 42");
-        assertThat(typeOf("test.answer"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.answer"), equalTo(func(voidType(), integerType())));
     }
 
     @Test
@@ -206,7 +205,7 @@ public class TranslatorTest {
             "    return waffles",
             "}"
         );
-        assertThat(typeOf("test.example"), equalTo(func(VOID_TYPE, STRING_TYPE)));
+        assertThat(typeOf("test.example"), equalTo(func(voidType(), stringType())));
     }
 
     @Test
@@ -215,13 +214,13 @@ public class TranslatorTest {
             "speak = () -> say 'Woof'",
             "main = () -> speak ()"
         );
-        assertThat(typeOf("test.main"), equalTo(func(VOID_TYPE, VOID_TYPE)));
+        assertThat(typeOf("test.main"), equalTo(func(voidType(), voidType())));
     }
 
     @Test
     public void shouldTranslateUntypedThreeArgFunction() {
         translate("volume = (x y z) -> x * y * z");
-        assertThat(typeOf("test.volume").decompose(), hasSize(9));
+        assertThat(typeOf("test.volume").decompose().size(), equalTo(9));
     }
 
     @Test
@@ -234,7 +233,7 @@ public class TranslatorTest {
             "    return x",
             "}"
         );
-        assertThat(typeOf("test.test"), equalTo(func(VOID_TYPE, INTEGER_TYPE)));
+        assertThat(typeOf("test.test"), equalTo(func(voidType(), integerType())));
     }
 
     @Test(expected = TypeException.class)
@@ -267,7 +266,7 @@ public class TranslatorTest {
             "operate = (op) -> op 2 4",
             "example = operate (+)"
         );
-        assertThat(typeOf("test.example"), equalTo(INTEGER_TYPE));
+        assertThat(typeOf("test.example"), equalTo(integerType()));
     }
 
     @Test
@@ -276,7 +275,7 @@ public class TranslatorTest {
             "addIntegers :: Integer -> Integer -> Integer",
             "addIntegers = (x y) -> x + y"
         );
-        assertThat(typeOf("test.addIntegers"), equalTo(func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))));
+        assertThat(typeOf("test.addIntegers"), equalTo(func(integerType(), func(integerType(), integerType()))));
     }
 
     @Test(expected = TypeException.class)
@@ -343,9 +342,9 @@ public class TranslatorTest {
         );
         assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(algebraic("test.BreakfastItem", asList(
             record("test.SideForBacon", asList(
-                property("name", STRING_TYPE),
-                property("tasteIndex", INTEGER_TYPE),
-                property("pairsWithBacon?", BOOLEAN_TYPE)
+                property("name", stringType()),
+                property("tasteIndex", integerType()),
+                property("pairsWithBacon?", booleanType())
             ))
         ))));
     }
@@ -360,9 +359,9 @@ public class TranslatorTest {
             "}"
         );
         assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ))));
     }
 
@@ -376,9 +375,9 @@ public class TranslatorTest {
             "}"
         );
         assertThat(typeOf("test.BreakfastItem", TYPE), equalTo(record("test.BreakfastItem", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ))));
     }
 
@@ -392,9 +391,9 @@ public class TranslatorTest {
             "}"
         );
         assertThat(typeOf("test.SideForBacon", TYPE), equalTo(record("test.SideForBacon", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ))));
     }
 
@@ -408,10 +407,10 @@ public class TranslatorTest {
             "}"
         );
         assertThat(typeOf("test.SideForBacon", EXPRESSION), equalTo(
-            func(STRING_TYPE, func(INTEGER_TYPE, func(BOOLEAN_TYPE, record("test.SideForBacon", asList(
-                property("name", STRING_TYPE),
-                property("tasteIndex", INTEGER_TYPE),
-                property("pairsWithBacon?", BOOLEAN_TYPE)
+            func(stringType(), func(integerType(), func(booleanType(), record("test.SideForBacon", asList(
+                property("name", stringType()),
+                property("tasteIndex", integerType()),
+                property("pairsWithBacon?", booleanType())
             )))))
         ));
     }
@@ -427,9 +426,9 @@ public class TranslatorTest {
             "waffles = SideForBacon 'Waffles' 10 True"
         );
         assertThat(typeOf("test.waffles", EXPRESSION), equalTo(record("test.SideForBacon", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ))));
     }
 
@@ -444,9 +443,9 @@ public class TranslatorTest {
             "waffles = SideForBacon { name = 'Waffles', tasteIndex = 10, pairsWithBacon? = True }"
         );
         assertThat(typeOf("test.waffles"), equalTo(record("test.SideForBacon", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ))));
     }
 
@@ -462,11 +461,11 @@ public class TranslatorTest {
         );
         assertThat(typeOf("test.bacon?"), equalTo(func(
             record("test.SideForBacon", asList(
-                property("name", STRING_TYPE),
-                property("tasteIndex", INTEGER_TYPE),
-                property("pairsWithBacon?", BOOLEAN_TYPE)
+                property("name", stringType()),
+                property("tasteIndex", integerType()),
+                property("pairsWithBacon?", booleanType())
             )),
-            BOOLEAN_TYPE
+            booleanType()
         )));
     }
 
@@ -504,7 +503,7 @@ public class TranslatorTest {
         translate("data Tree = Leaf | Node Integer Tree Tree");
         assertThat(typeOf("test.Node", TYPE), equalTo(nodeType));
         assertThat(typeOf("test.Node", EXPRESSION), equalTo(
-            func(INTEGER_TYPE, func(treeType, func(treeType, nodeType)))
+            func(integerType(), func(treeType, func(treeType, nodeType)))
         ));
     }
 
@@ -515,14 +514,14 @@ public class TranslatorTest {
             "node = Node 'Waffles' Leaf Leaf"
         );
         assertThat(typeOf("test.node"), equalTo(record("test.Node", asList(
-            property("_0", STRING_TYPE),
-            property("_1", algebraic("test.Tree", asList(STRING_TYPE), asList(
+            property("_0", stringType()),
+            property("_1", algebraic("test.Tree", asList(stringType()), asList(
                 simple("test.Leaf"),
-                recur("test.Node", asList(vtype(STRING_TYPE)))
+                recur("test.Node", asList(vtype(stringType())))
             ))),
-            property("_2", algebraic("test.Tree", asList(STRING_TYPE), asList(
+            property("_2", algebraic("test.Tree", asList(stringType()), asList(
                 simple("test.Leaf"),
-                recur("test.Node", asList(vtype(STRING_TYPE)))
+                recur("test.Node", asList(vtype(stringType())))
             )))
         ))));
     }
@@ -568,9 +567,9 @@ public class TranslatorTest {
     @Test
     public void shouldTranslateRecordPattern() {
         Type type = record("test.BreakfastItem", asList(
-            property("name", STRING_TYPE),
-            property("tasteIndex", INTEGER_TYPE),
-            property("pairsWithBacon?", BOOLEAN_TYPE)
+            property("name", stringType()),
+            property("tasteIndex", integerType()),
+            property("pairsWithBacon?", booleanType())
         ));
         Reference argument = reference(vl("#snacks#~patternArg0"), type);
         Collection<NamedNode> nodes = translate(
@@ -582,12 +581,12 @@ public class TranslatorTest {
             "bacon? :: BreakfastItem -> Boolean",
             "bacon? = ?(BreakfastItem { pairsWithBacon? = x }) -> x"
         );
-        assertThat(nodes, defines(declaration("test.bacon?", patterns(func(type, BOOLEAN_TYPE), asList(
+        assertThat(nodes, defines(declaration("test.bacon?", patterns(func(type, booleanType()), asList(
             pattern(
                 asList(matchConstructor(argument, asList(
-                    var("x", access(argument, "pairsWithBacon?", BOOLEAN_TYPE))
+                    var("x", access(argument, "pairsWithBacon?", booleanType()))
                 ))),
-                reference(vl("x"), BOOLEAN_TYPE)
+                reference(vl("x"), booleanType())
             )
         )))));
     }
@@ -610,12 +609,12 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test.example", expression(
             apply(
                 apply(
-                    reference(dl("test.add"), func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))),
+                    reference(dl("test.add"), func(integerType(), func(integerType(), integerType()))),
                     constant(2),
-                    func(INTEGER_TYPE, INTEGER_TYPE)
+                    func(integerType(), integerType())
                 ),
                 constant(3),
-                INTEGER_TYPE
+                integerType()
             )
         ))));
     }
@@ -630,12 +629,12 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test.example", expression(
             apply(
                 apply(
-                    reference(dl("test.~>"), func(INTEGER_TYPE, func(INTEGER_TYPE, INTEGER_TYPE))),
+                    reference(dl("test.~>"), func(integerType(), func(integerType(), integerType()))),
                     constant(2),
-                    func(INTEGER_TYPE, INTEGER_TYPE)
+                    func(integerType(), integerType())
                 ),
                 constant(3),
-                INTEGER_TYPE
+                integerType()
             )
         ))));
     }

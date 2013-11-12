@@ -6,8 +6,8 @@ import java.util.Objects;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Reference;
 import snacks.lang.ast.UndefinedSymbolException;
-import snacks.lang.type.RecordType;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
 
 class ConstructorScope {
 
@@ -22,8 +22,8 @@ class ConstructorScope {
 
     public AstNode accessProperty() {
         for (Property property : type.getProperties()) {
-            if (Objects.equals(this.property, property.getName())) {
-                return access(reference, property.getName(), property.getType());
+            if (Objects.equals(this.property, property.getName().getValue())) {
+                return access(reference, property.getName().getValue(), property.getType());
             }
         }
         throw new UndefinedSymbolException("Property '" + this.property + "' does not exist");

@@ -1,7 +1,5 @@
 package snacks.lang;
 
-import snacks.lang.type.Type;
-
 public interface SnacksRegistry {
 
     Class<?> classOf(String qualifiedName, SnackKind kind);

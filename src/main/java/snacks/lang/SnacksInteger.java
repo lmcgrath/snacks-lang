@@ -1,14 +1,14 @@
 package snacks.lang;
 
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.type.Types.INTEGER_TYPE;
-
-import snacks.lang.type.Type;
+import static snacks.lang.Types.integerType;
 
 @Snack(name = "Integer", kind = TYPE)
 @JavaType(Integer.class)
 public class SnacksInteger {
 
     @SnackType
-    public static final Type type = INTEGER_TYPE;
+    public static Type type() {
+        return integerType();
+    }
 }

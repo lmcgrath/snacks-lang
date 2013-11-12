@@ -1,11 +1,13 @@
-package snacks.lang.type;
+package snacks.lang;
 
-import static snacks.lang.type.Types.recur;
+import static snacks.lang.Type.*;
+import static snacks.lang.Types.recur;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import snacks.lang.type.RecordType.Property;
+import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.RecordType.Property;
 
 public class TypeUnroller implements TypeGenerator {
 
@@ -77,7 +79,7 @@ public class TypeUnroller implements TypeGenerator {
         return result;
     }
 
-    private List<Type> unroll(List<Type> types) {
+    private List<Type> unroll(Iterable<Type> types) {
         List<Type> unrolledTypes = new ArrayList<>();
         for (Type type : types) {
             unrolledTypes.add(unroll(type));
