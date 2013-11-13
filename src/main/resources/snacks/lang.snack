@@ -19,3 +19,9 @@ name = ?(FunctionType { name = n }) -> n
 name = ?(UnionType { name = n }) -> n
 name = ?(RecursiveType { name = n }) -> n
 name = ?(x) -> hurl "#{classOf x}'s type has no name!"
+
+inc :: Integer -> Integer
+inc = (x) -> x + 1
+
+dec :: Integer -> Integer
+dec = (x) -> x - 1

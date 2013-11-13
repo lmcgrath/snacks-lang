@@ -130,16 +130,17 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private boolean hasSnack(String qualifiedName) {
-        if (!loadedSnacks.contains(qualifiedName)) {
-            resolveSnackClass(qualifiedName);
-            loadedSnacks.add(qualifiedName);
+    private boolean hasSnack(String qualifiedName, SnackKind kind) {
+        String key = qualifiedName + '#' + kind;
+        if (!loadedSnacks.contains(key)) {
+            resolveSnackClass(qualifiedName, kind);
+            loadedSnacks.add(key);
         }
-        return loadedSnacks.contains(qualifiedName);
+        return loadedSnacks.contains(key);
     }
 
     private boolean is(String qualifiedName, SnackKind kind) {
-        return hasSnack(qualifiedName) && snacks.containsKey(new SnackKey(qualifiedName, kind));
+        return hasSnack(qualifiedName, kind) && snacks.containsKey(new SnackKey(qualifiedName, kind));
     }
 
     private String moduleName(Class<?> subClazz) {
@@ -255,12 +256,13 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
         }
     }
 
-    private void resolveSnackClass(String qualifiedName) {
+    private void resolveSnackClass(String qualifiedName, SnackKind kind) {
         String module = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
         String name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        if (!resolveByName(module, name) && !resolveByNameCapitalized(module, name)) {
+        SnackKey key = new SnackKey(qualifiedName, kind);
+        if (!resolveByName(module, name) && !resolveByNameCapitalized(module, name) || !snacks.containsKey(key)) {
             resolveSnackPackage(module);
-            if (!loadedSnacks.contains(qualifiedName)) {
+            if (!loadedSnacks.contains(qualifiedName + '#' + kind)) {
                 resolveSnackSource(module);
             }
         }
