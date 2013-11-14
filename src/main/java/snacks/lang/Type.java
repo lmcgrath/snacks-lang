@@ -1,6 +1,7 @@
 package snacks.lang;
 
 import static java.util.Arrays.asList;
+import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksList.listOf;
 import static snacks.lang.SnacksList.toList;
@@ -65,6 +66,11 @@ public abstract class Type {
 
     public SnacksList<Type> getArguments() {
         return EmptyList.value();
+    }
+
+    public String getJavaName() {
+        String name = getName().getValue();
+        return javaName(name.substring(0, name.lastIndexOf('.'))) + '.' + javaName(name.substring(name.lastIndexOf('.') + 1));
     }
 
     public abstract Symbol getName();

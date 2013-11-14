@@ -443,7 +443,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateInitializer(Initializer node) {
         CodeBlock block = block();
-        String className = javaName(node.getType().getName()).replace('.', '/');
+        String className = node.getType().getJavaName().replace('.', '/');
         block.newobj(className);
         block.dup();
         if (node.getType() instanceof RecordType) {

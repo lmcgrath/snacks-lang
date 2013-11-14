@@ -1,5 +1,6 @@
 package snacks.lang;
 
+import static java.lang.Character.isJavaIdentifierStart;
 import static org.apache.commons.lang.StringUtils.capitalize;
 
 import java.util.LinkedHashMap;
@@ -53,8 +54,8 @@ public class JavaUtils {
         for (String replacement : replacements.keySet()) {
             javaName = javaName.replace(replacement, replacements.get(replacement));
         }
-        if (javaName.startsWith("¢")) {
-            javaName = "Op" + javaName;
+        if (!isJavaIdentifierStart(javaName.charAt(0))) {
+            javaName = "¢" + javaName;
         }
         return javaName;
     }

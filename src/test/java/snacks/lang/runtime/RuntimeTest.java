@@ -816,7 +816,6 @@ public class RuntimeTest extends AbstractRuntimeTest{
         );
     }
 
-    @Ignore("WIP")
     @Test
     public void shouldCreateList() {
         run("main = () -> assert $ string [1, 2, 3] == '[1, 2, 3]'");
