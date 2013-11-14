@@ -13,7 +13,7 @@ public class Divide {
 
     private static Divide instance;
 
-    public static Divide instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Divide();
         }

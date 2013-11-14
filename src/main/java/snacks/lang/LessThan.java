@@ -10,7 +10,7 @@ public class LessThan {
 
     private static LessThan instance;
 
-    public static LessThan instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new LessThan();
         }

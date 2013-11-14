@@ -17,28 +17,6 @@ public abstract class DeclarationName {
         // intentionally empty
     }
 
-    @Snack(name = "TypeName", kind = EXPRESSION)
-    public static final class TypeNameConstructor {
-
-        private static TypeNameConstructor instance;
-
-        public static TypeNameConstructor instance() {
-            if (instance == null) {
-                instance = new TypeNameConstructor();
-            }
-            return instance;
-        }
-
-        @SnackType
-        public static Type type() {
-            return func(symbolType(), TypeName.type());
-        }
-
-        public Object apply(Symbol name) {
-            return new TypeName(name);
-        }
-    }
-
     @Snack(name = "TypeName", kind = TYPE)
     public static final class TypeName extends DeclarationName {
 
@@ -73,27 +51,27 @@ public abstract class DeclarationName {
         public String toString() {
             return "TypeName(" + _0 + ")";
         }
-    }
 
-    @Snack(name = "ExpressionName", kind = EXPRESSION)
-    public static final class ExpressionNameConstructor {
+        @Snack(name = "TypeName", kind = EXPRESSION)
+        public static final class Constructor {
 
-        private static ExpressionNameConstructor instance;
+            private static Constructor instance;
 
-        public static ExpressionNameConstructor instance() {
-            if (instance == null) {
-                instance = new ExpressionNameConstructor();
+            public static Object instance() {
+                if (instance == null) {
+                    instance = new Constructor();
+                }
+                return instance;
             }
-            return instance;
-        }
 
-        @SnackType
-        public static Type type() {
-            return func(symbolType(), ExpressionName.type());
-        }
+            @SnackType
+            public static Type type() {
+                return func(symbolType(), TypeName.type());
+            }
 
-        public Object apply(Symbol name) {
-            return new ExpressionName(name);
+            public Object apply(Symbol name) {
+                return new TypeName(name);
+            }
         }
     }
 
@@ -130,6 +108,28 @@ public abstract class DeclarationName {
         @Override
         public String toString() {
             return "ExpressionName(" + _0 + ")";
+        }
+
+        @Snack(name = "ExpressionName", kind = EXPRESSION)
+        public static final class Constructor {
+
+            private static Constructor instance;
+
+            public static Object instance() {
+                if (instance == null) {
+                    instance = new Constructor();
+                }
+                return instance;
+            }
+
+            @SnackType
+            public static Type type() {
+                return func(symbolType(), ExpressionName.type());
+            }
+
+            public Object apply(Symbol name) {
+                return new ExpressionName(name);
+            }
         }
     }
 }

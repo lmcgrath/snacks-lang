@@ -14,7 +14,7 @@ public class Exponent {
 
     private static Exponent instance;
 
-    public static Exponent instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Exponent();
         }

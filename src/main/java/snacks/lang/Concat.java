@@ -10,7 +10,7 @@ public class Concat {
 
     private static Concat instance;
 
-    public static Concat instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Concat();
         }

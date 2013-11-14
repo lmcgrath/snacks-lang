@@ -14,7 +14,7 @@ public class Equals {
 
     private static Equals instance;
 
-    public static Equals instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Equals();
         }

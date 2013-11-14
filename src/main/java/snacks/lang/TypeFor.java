@@ -16,7 +16,7 @@ public class TypeFor {
 
     private static TypeFor instance;
 
-    public static TypeFor instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new TypeFor();
         }

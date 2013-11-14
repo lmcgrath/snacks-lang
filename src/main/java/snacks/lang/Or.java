@@ -12,7 +12,7 @@ public class Or {
 
     private static Or instance;
 
-    public static Or instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Or();
         }

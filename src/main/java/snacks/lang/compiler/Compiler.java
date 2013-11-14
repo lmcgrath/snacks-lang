@@ -11,7 +11,6 @@ import static snacks.lang.SnacksDispatcher.BOOTSTRAP_GET;
 import static snacks.lang.Type.SimpleType;
 import static snacks.lang.Type.UnionType;
 import static snacks.lang.Type.VariableType;
-import static snacks.lang.Types.isFunction;
 import static snacks.lang.Types.isInvokable;
 
 import java.util.*;
@@ -174,11 +173,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         } else {
             className = p(clazz);
         }
-        if (isFunction(typeOf(locator))) {
-            block().invokestatic(className, "instance", "()L" + className + ";");
-        } else {
-            block().invokestatic(className, "instance", sig(Object.class));
-        }
+        block().invokestatic(className, "instance", sig(Object.class));
     }
 
     @Override
@@ -433,7 +428,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
     @Override
     public void generateHurl(Hurl node) {
         CodeBlock block = block();
-        block.invokestatic(p(Errorize.class), "instance", sig(Errorize.class));
+        block.invokestatic(p(Errorize.class), "instance", sig(Object.class));
         generate(node.getBody());
         block.invokedynamic("apply", sig(Object.class, Object.class, Object.class), BOOTSTRAP_APPLY);
         block.checkcast(p(Throwable.class));
@@ -856,7 +851,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.label(returnValue);
         block.getstatic(jiteClass.getClassName(), "instance", className);
         block.areturn();
-        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, "()" + className, acceptBlock());
+        jiteClass.defineMethod("instance", ACC_PUBLIC | ACC_STATIC, sig(Object.class), acceptBlock());
         jiteClass.defineDefaultConstructor();
     }
 
@@ -1090,16 +1085,5 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     private ClassBuilder state() {
         return builders.peek();
-    }
-
-    private Type typeOf(DeclarationLocator locator) {
-        Type type = registry.typeOf(locator.getName(), locator.getKind());
-        if (type == null) {
-            if (!declarations.containsKey(locator)) {
-                throw new CompileException("Unable to determine type of " + locator);
-            }
-            return declarations.get(locator).getType();
-        }
-        return type;
     }
 }

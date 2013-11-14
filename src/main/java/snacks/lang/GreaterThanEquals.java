@@ -10,7 +10,7 @@ public class GreaterThanEquals {
 
     private static GreaterThanEquals instance;
 
-    public static GreaterThanEquals instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new GreaterThanEquals();
         }

@@ -1,8 +1,9 @@
-package snacks.lang.runtime;
+package snacks.lang;
 
 import org.junit.Test;
+import snacks.lang.util.SnacksTest;
 
-public class ReflectTest extends AbstractRuntimeTest {
+public class ReflectTest extends SnacksTest {
 
     @Test
     public void shouldGetNamesOfTypes() {

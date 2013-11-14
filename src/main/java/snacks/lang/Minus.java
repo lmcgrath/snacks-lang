@@ -13,7 +13,7 @@ public class Minus {
 
     private static Minus instance;
 
-    public static Minus instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Minus();
         }

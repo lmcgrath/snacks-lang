@@ -14,7 +14,7 @@ public class Ref {
 
     private static Ref instance;
 
-    public static Ref instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Ref();
         }

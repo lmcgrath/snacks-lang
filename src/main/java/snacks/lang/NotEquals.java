@@ -14,7 +14,7 @@ public class NotEquals {
 
     private static NotEquals instance;
 
-    public static NotEquals instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new NotEquals();
         }

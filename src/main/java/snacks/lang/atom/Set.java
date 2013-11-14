@@ -14,7 +14,7 @@ public class Set {
 
     private static Set instance;
 
-    public static Set instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Set();
         }

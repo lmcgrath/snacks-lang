@@ -7,8 +7,9 @@ import static org.junit.Assert.fail;
 import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnacksException;
+import snacks.lang.util.SnacksTest;
 
-public class RuntimeTest extends AbstractRuntimeTest{
+public class RuntimeTest extends SnacksTest {
 
     @Test
     public void shouldSayHello() {
@@ -727,6 +728,21 @@ public class RuntimeTest extends AbstractRuntimeTest{
             "main = () -> require Nothing",
             "require = ?(Just value) -> value",
             "require = ?(Nothing) -> hurl 'Got nothin!'"
+        );
+    }
+
+    @Ignore("WIP")
+    @Test
+    public void shouldPatternMatchMultipleArguments() {
+        run(
+            "data Tree a = Leaf | Node a (Tree a) (Tree a)",
+            "leftTree = Node 1 (Node 2 (Node 3 Leaf Leaf) (Node 4 Leaf Leaf)) Leaf",
+            "rightTree = Node 1 (Node 2 Leaf (Node 4 Leaf Leaf)) Leaf",
+            "eq :: Tree a -> Tree a -> Boolean",
+            "main = () -> assert $ not (leftTree `eq` rightTree)",
+            "eq = ?(Leaf, Leaf) -> True",
+            "eq = ?(Node x l1 r1, Node y l2 r2) -> x == x and l1 `eq` r1 and l2 `eq` r2",
+            "eq = ?(_, _) -> False"
         );
     }
 

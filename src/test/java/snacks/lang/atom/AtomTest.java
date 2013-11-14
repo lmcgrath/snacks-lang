@@ -1,9 +1,9 @@
 package snacks.lang.atom;
 
 import org.junit.Test;
-import snacks.lang.runtime.AbstractRuntimeTest;
+import snacks.lang.util.SnacksTest;
 
-public class AtomTest extends AbstractRuntimeTest {
+public class AtomTest extends SnacksTest {
 
     @Test
     public void shouldSwapAtomValue() {

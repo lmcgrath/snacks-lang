@@ -46,7 +46,7 @@ public final class Atom<T> {
 
         private static Constructor instance;
 
-        public static Constructor instance() {
+        public static Object instance() {
             if (instance == null) {
                 instance = new Constructor();
             }

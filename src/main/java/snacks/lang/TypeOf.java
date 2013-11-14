@@ -12,7 +12,7 @@ public class TypeOf {
 
     private static TypeOf instance;
 
-    public static TypeOf instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new TypeOf();
         }

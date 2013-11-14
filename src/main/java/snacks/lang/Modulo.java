@@ -11,7 +11,7 @@ public class Modulo {
 
     private static Modulo instance;
 
-    public static Modulo instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Modulo();
         }

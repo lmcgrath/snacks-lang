@@ -11,7 +11,7 @@ public class And {
 
     private static And instance;
 
-    public static And instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new And();
         }

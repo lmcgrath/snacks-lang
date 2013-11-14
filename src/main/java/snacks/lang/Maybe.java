@@ -16,30 +16,6 @@ public abstract class Maybe {
 
     public abstract <T> T require();
 
-    @Snack(name = "Just", kind = EXPRESSION)
-    public static final class JustConstructor {
-
-        private static JustConstructor instance;
-
-        public static JustConstructor instance() {
-            if (instance == null) {
-                instance = new JustConstructor();
-            }
-            return instance;
-        }
-
-        @SnackType
-        public static Type type() {
-            return func(var("snacks.lang.Maybe#a"), record("snacks.lang.Just", asList(var("snacks.lang.Maybe#a")), asList(
-                property("_0", var("snacks.lang.Maybe#a"))
-            )));
-        }
-
-        public Object apply(Object value) {
-            return new Just(value);
-        }
-    }
-
     @Snack(name = "Just", kind = TYPE, arguments = "snacks.lang.Maybe#a")
     public static final class Just extends Maybe {
 
@@ -80,18 +56,29 @@ public abstract class Maybe {
         public String toString() {
             return "Just(" + _0 + ")";
         }
-    }
 
-    @Snack(name = "Nothing", kind = EXPRESSION)
-    public static final class NothingConstructor {
+        @Snack(name = "Just", kind = EXPRESSION)
+        public static final class Constructor {
 
-        @SnackType
-        public static Type type() {
-            return simple("snacks.lang.Nothing");
-        }
+            private static Constructor instance;
 
-        public static Object instance() {
-            return Nothing.value();
+            public static Object instance() {
+                if (instance == null) {
+                    instance = new Constructor();
+                }
+                return instance;
+            }
+
+            @SnackType
+            public static Type type() {
+                return func(var("snacks.lang.Maybe#a"), record("snacks.lang.Just", asList(var("snacks.lang.Maybe#a")), asList(
+                    property("_0", var("snacks.lang.Maybe#a"))
+                )));
+            }
+
+            public Object apply(Object value) {
+                return new Just(value);
+            }
         }
     }
 
@@ -130,6 +117,19 @@ public abstract class Maybe {
         @Override
         public String toString() {
             return "Nothing";
+        }
+
+        @Snack(name = "Nothing", kind = EXPRESSION)
+        public static final class Constructor {
+
+            @SnackType
+            public static Type type() {
+                return simple("snacks.lang.Nothing");
+            }
+
+            public static Object instance() {
+                return Nothing.value();
+            }
         }
     }
 }

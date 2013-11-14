@@ -10,7 +10,7 @@ public class HashOf {
 
     private static HashOf instance;
 
-    public static HashOf instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new HashOf();
         }

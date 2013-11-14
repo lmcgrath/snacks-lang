@@ -12,7 +12,7 @@ public class Positive {
 
     private static Positive instance;
 
-    public static Positive instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Positive();
         }

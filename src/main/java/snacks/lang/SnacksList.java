@@ -81,42 +81,6 @@ public abstract class SnacksList<T> implements Iterable<T> {
 
     public abstract int size();
 
-    @Snack(name = "ListElement", kind = EXPRESSION)
-    public static final class ListElementConstructor {
-
-        private static ListElementConstructor instance;
-
-        public static ListElementConstructor instance() {
-            if (instance == null) {
-                instance = new ListElementConstructor();
-            }
-            return instance;
-        }
-
-        @SnackType
-        public static Type type() {
-            return func(var("snacks.lang.List#a"), func(SnacksList.type(), ListElement.type()));
-        }
-
-        public Object apply(Object value) {
-            return new Closure(value);
-        }
-
-        public static final class Closure {
-
-            private final Object value;
-
-            public Closure(Object value) {
-                this.value = value;
-            }
-
-            @SuppressWarnings("unchecked")
-            public Object apply(Object tail) {
-                return new ListElement(value, (SnacksList) tail);
-            }
-        }
-    }
-
     @Snack(name = "ListElement", kind = TYPE, arguments = "snacks.lang.List#a")
     public static final class ListElement<T> extends SnacksList<T> {
 
@@ -209,18 +173,41 @@ public abstract class SnacksList<T> implements Iterable<T> {
             builder.append("]");
             return builder.toString();
         }
-    }
 
-    @Snack(name = "EmptyList", kind = EXPRESSION)
-    public static final class EmptyListConstructor {
+        @Snack(name = "ListElement", kind = EXPRESSION)
+        public static final class Constructor {
 
-        public static Object instance() {
-            return EmptyList.value();
-        }
+            private static Constructor instance;
 
-        @SnackType
-        public static Type type() {
-            return EmptyList.type();
+            public static Object instance() {
+                if (instance == null) {
+                    instance = new Constructor();
+                }
+                return instance;
+            }
+
+            @SnackType
+            public static Type type() {
+                return func(var("snacks.lang.List#a"), func(SnacksList.type(), ListElement.type()));
+            }
+
+            public Object apply(Object value) {
+                return new Closure(value);
+            }
+
+            public static final class Closure {
+
+                private final Object value;
+
+                public Closure(Object value) {
+                    this.value = value;
+                }
+
+                @SuppressWarnings("unchecked")
+                public Object apply(Object tail) {
+                    return new ListElement(value, (SnacksList) tail);
+                }
+            }
         }
     }
 
@@ -290,6 +277,19 @@ public abstract class SnacksList<T> implements Iterable<T> {
         @Override
         public String toString() {
             return "[]";
+        }
+
+        @Snack(name = "EmptyList", kind = EXPRESSION)
+        public static final class Constructor {
+
+            public static Object instance() {
+                return value();
+            }
+
+            @SnackType
+            public static Type type() {
+                return EmptyList.type();
+            }
         }
     }
 

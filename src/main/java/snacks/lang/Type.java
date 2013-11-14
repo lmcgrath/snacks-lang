@@ -51,6 +51,8 @@ public abstract class Type {
         // intentionally empty
     }
 
+    public abstract Type copy();
+
     public SnacksList<Type> decompose() {
         return toList(this);
     }
@@ -116,6 +118,19 @@ public abstract class Type {
         @Override
         public void bind(Type type) {
             // intentionally empty
+        }
+
+        @Override
+        public AlgebraicType copy() {
+            List<Type> copiedArguments = new ArrayList<>();
+            for (Type argument : arguments) {
+                copiedArguments.add(argument.copy());
+            }
+            List<Type> copiedOptions = new ArrayList<>();
+            for (Type option : options) {
+                copiedOptions.add(option.copy());
+            }
+            return new AlgebraicType(name, copiedArguments, copiedOptions);
         }
 
         @Override
@@ -207,6 +222,11 @@ public abstract class Type {
         }
 
         @Override
+        public FunctionType copy() {
+            return new FunctionType(argument.copy(), result.copy());
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (o == this) {
                 return true;
@@ -289,6 +309,19 @@ public abstract class Type {
             this.name = name;
             this.arguments = toList(arguments);
             this.properties = toList(properties);
+        }
+
+        @Override
+        public RecordType copy() {
+            List<Type> copiedArguments = new ArrayList<>();
+            for (Type argument : arguments) {
+                copiedArguments.add(argument.copy());
+            }
+            List<Property> copiedProperties = new ArrayList<>();
+            for (Property property : properties) {
+                copiedProperties.add(property.copy());
+            }
+            return new RecordType(name, copiedArguments, copiedProperties);
         }
 
         @Override
@@ -381,6 +414,10 @@ public abstract class Type {
                 this.type = type;
             }
 
+            public Property copy() {
+                return new Property(name, type.copy());
+            }
+
             @Override
             public boolean equals(Object o) {
                 if (o == this) {
@@ -441,6 +478,15 @@ public abstract class Type {
         public RecursiveType(Symbol name, Iterable<Type> arguments) {
             this.name = name;
             this.arguments = toList(arguments);
+        }
+
+        @Override
+        public RecursiveType copy() {
+            List<Type> copiedArguments = new ArrayList<>();
+            for (Type argument : arguments) {
+                copiedArguments.add(argument.copy());
+            }
+            return new RecursiveType(name, copiedArguments);
         }
 
         @Override
@@ -520,6 +566,11 @@ public abstract class Type {
         }
 
         @Override
+        public SimpleType copy() {
+            return this;
+        }
+
+        @Override
         public boolean equals(Object o) {
             return o == this || o instanceof SimpleType && Objects.equals(name, ((SimpleType) o).name);
         }
@@ -589,6 +640,15 @@ public abstract class Type {
             if (!types.contains(type) && !equals(type)) {
                 types.add(type);
             }
+        }
+
+        @Override
+        public UnionType copy() {
+            List<Type> copiedTypes = new ArrayList<>();
+            for (Type type : types) {
+                copiedTypes.add(type.copy());
+            }
+            return new UnionType(copiedTypes);
         }
 
         @Override
@@ -675,6 +735,11 @@ public abstract class Type {
         }
 
         @Override
+        public VariableType copy() {
+            return state.copy();
+        }
+
+        @Override
         public SnacksList<Type> decompose() {
             return state.decompose();
         }
@@ -728,6 +793,8 @@ public abstract class Type {
 
             void bind(Type type);
 
+            VariableType copy();
+
             SnacksList<Type> decompose();
 
             Type expose();
@@ -748,6 +815,11 @@ public abstract class Type {
             @Override
             public void bind(Type type) {
                 // intentionally empty
+            }
+
+            @Override
+            public VariableType copy() {
+                return new VariableType(type);
             }
 
             @Override
@@ -799,6 +871,11 @@ public abstract class Type {
             @Override
             public void bind(Type type) {
                 parent.state = new BoundState(type);
+            }
+
+            @Override
+            public VariableType copy() {
+                return new VariableType(name);
             }
 
             @Override

@@ -12,7 +12,7 @@ public class Not {
 
     private static Not instance;
 
-    public static Not instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Not();
         }

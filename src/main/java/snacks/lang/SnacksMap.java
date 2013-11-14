@@ -3,21 +3,34 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.SnacksMap.EmptyMap.emptyMap;
+import static snacks.lang.SnacksMap.MapEntry.mapEntry;
 import static snacks.lang.Types.*;
+
+import java.util.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 @Snack(name = "Map", kind = TYPE)
 public abstract class SnacksMap<K, V> {
 
-    private static final Type K_TYPE = var("snacks.lang.Map#k");
-    private static final Type V_TYPE = var("snacks.lang.Map#v");
+    public static Type keyType() {
+        return var("snacks.lang.Map#k");
+    }
 
     @SnackType
-    public static Type type() {
-        return algebraic("snacks.lang.Map", asList(K_TYPE, V_TYPE), asList(
-            EmptyMap.type(),
-            MapNode.type()
+    public static Type mapType() {
+        return algebraic("snacks.lang.Map", asList(keyType(), valueType()), asList(
+            emptyMap(),
+            mapEntry()
         ));
     }
+
+    public static Type valueType() {
+        return var("snacks.lang.Map#v");
+    }
+
+    @Override
+    public abstract boolean equals(Object o);
 
     public abstract K getKey();
 
@@ -29,20 +42,10 @@ public abstract class SnacksMap<K, V> {
 
     public abstract V getValue();
 
+    @Override
+    public abstract int hashCode();
+
     public abstract boolean isEmpty();
-
-    @Snack(name = "EmptyMap", kind = EXPRESSION)
-    public static final class EmptyMapConstructor {
-
-        public static Object instance() {
-            return EmptyMap.value();
-        }
-
-        @SnackType
-        public static Type type() {
-            return EmptyMap.type();
-        }
-    }
 
     @Snack(name = "EmptyMap", kind = TYPE)
     public static final class EmptyMap<K, V> extends SnacksMap<K, V> {
@@ -50,7 +53,7 @@ public abstract class SnacksMap<K, V> {
         private static EmptyMap value;
 
         @SnackType
-        public static Type type() {
+        public static Type emptyMap() {
             return simple("snacks.lang.EmptyMap");
         }
 
@@ -60,6 +63,11 @@ public abstract class SnacksMap<K, V> {
                 value = new EmptyMap();
             }
             return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o == this || o instanceof EmptyMap;
         }
 
         @Override
@@ -88,112 +96,40 @@ public abstract class SnacksMap<K, V> {
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash();
+        }
+
+        @Override
         public boolean isEmpty() {
             return true;
         }
-    }
 
-    @Snack(name = "MapNode", kind = EXPRESSION)
-    public static final class MapNodeConstructor {
+        @Snack(name = "EmptyMap", kind = EXPRESSION)
+        public static final class Constructor {
 
-        private static MapNodeConstructor instance;
-
-        public static MapNodeConstructor instance() {
-            if (instance == null) {
-                instance = new MapNodeConstructor();
-            }
-            return instance;
-        }
-
-        @SnackType
-        public static Type type() {
-            return func(integerType(), func(K_TYPE, func(V_TYPE, func(SnacksMap.type(), func(
-                SnacksMap.type(),
-                MapNode.type()
-            )))));
-        }
-
-        public Object apply(Integer size) {
-            return new Closure1(size);
-        }
-
-        public static final class Closure1 {
-
-            private final Integer size;
-
-            public Closure1(Integer size) {
-                this.size = size;
+            public static Object instance() {
+                return value();
             }
 
-            public Object apply(Object key) {
-                return new Closure2(size, key);
-            }
-        }
-
-        public static final class Closure2 {
-
-            private final Integer size;
-            private final Object key;
-
-            public Closure2(Integer size, Object key) {
-                this.size = size;
-                this.key = key;
-            }
-
-            public Object apply(Object value) {
-                return new Closure3(size, key, value);
-            }
-        }
-
-        public static final class Closure3 {
-
-            private final Integer size;
-            private final Object key;
-            private final Object value;
-
-            public Closure3(Integer size, Object key, Object value) {
-                this.size = size;
-                this.key = key;
-                this.value = value;
-            }
-
-            public Object apply(SnacksMap left) {
-                return new Closure4(size, key, value, left);
-            }
-        }
-
-        public static final class Closure4 {
-
-            private final Integer size;
-            private final Object key;
-            private final Object value;
-            private final SnacksMap left;
-
-            public Closure4(Integer size, Object key, Object value, SnacksMap left) {
-                this.size = size;
-                this.key = key;
-                this.value = value;
-                this.left = left;
-            }
-
-            @SuppressWarnings("unchecked")
-            public Object apply(SnacksMap right) {
-                return new MapNode(size, key, value, left, right);
+            @SnackType
+            public static Type type() {
+                return emptyMap();
             }
         }
     }
 
-    @Snack(name = "MapNode", kind = TYPE, arguments = { "snacks.lang.Map#k", "snacks.lang.Map#k" })
-    public static final class MapNode<K, V> extends SnacksMap<K, V> {
+    @Snack(name = "MapEntry", kind = TYPE, arguments = { "snacks.lang.Map#k", "snacks.lang.Map#k" })
+    public static final class MapEntry<K, V> extends SnacksMap<K, V> {
 
         @SnackType
-        public static Type type() {
-            return record("snacks.lang.MapNode", asList(K_TYPE, V_TYPE), asList(
+        public static Type mapEntry() {
+            return record("snacks.lang.MapEntry", asList(keyType(), valueType()), asList(
                 property("size", integerType()),
-                property("key", K_TYPE),
-                property("value", V_TYPE),
-                property("left", recur("snacks.lang.Map", asList(K_TYPE, V_TYPE))),
-                property("right", recur("snacks.lang.Map", asList(K_TYPE, V_TYPE)))
+                property("key", keyType()),
+                property("value", valueType()),
+                property("left", recur("snacks.lang.Map", asList(keyType(), valueType()))),
+                property("right", recur("snacks.lang.Map", asList(keyType(), valueType())))
             ));
         }
 
@@ -203,12 +139,30 @@ public abstract class SnacksMap<K, V> {
         private final SnacksMap<K, V> left;
         private final SnacksMap<K, V> right;
 
-        public MapNode(Integer size, K key, V value, SnacksMap<K, V> left, SnacksMap<K, V> right) {
+        public MapEntry(Integer size, K key, V value, SnacksMap<K, V> left, SnacksMap<K, V> right) {
             this.size = size;
             this.key = key;
             this.value = value;
             this.left = left;
             this.right = right;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof MapEntry) {
+                MapEntry other = (MapEntry) o;
+                return new EqualsBuilder()
+                    .append(size, other.size)
+                    .append(key, other.key)
+                    .append(value, other.value)
+                    .append(left, other.left)
+                    .append(right, other.right)
+                    .isEquals();
+            } else {
+                return false;
+            }
         }
 
         @Override
@@ -237,8 +191,103 @@ public abstract class SnacksMap<K, V> {
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash(size, key, value, left, right);
+        }
+
+        @Override
         public boolean isEmpty() {
             return false;
+        }
+
+        @Snack(name = "MapEntry", kind = EXPRESSION)
+        public static final class Constructor {
+
+            private static Constructor instance;
+
+            public static Object instance() {
+                if (instance == null) {
+                    instance = new Constructor();
+                }
+                return instance;
+            }
+
+            @SnackType
+            public static Type type() {
+                return func(integerType(), func(keyType(), func(valueType(), func(mapType(), func(
+                    mapType(),
+                    mapEntry()
+                )))));
+            }
+
+            public Object apply(Integer size) {
+                return new Closure1(size);
+            }
+
+            public static final class Closure1 {
+
+                private final Integer size;
+
+                public Closure1(Integer size) {
+                    this.size = size;
+                }
+
+                public Object apply(Object key) {
+                    return new Closure2(size, key);
+                }
+            }
+
+            public static final class Closure2 {
+
+                private final Integer size;
+                private final Object key;
+
+                public Closure2(Integer size, Object key) {
+                    this.size = size;
+                    this.key = key;
+                }
+
+                public Object apply(Object value) {
+                    return new Closure3(size, key, value);
+                }
+            }
+
+            public static final class Closure3 {
+
+                private final Integer size;
+                private final Object key;
+                private final Object value;
+
+                public Closure3(Integer size, Object key, Object value) {
+                    this.size = size;
+                    this.key = key;
+                    this.value = value;
+                }
+
+                public Object apply(SnacksMap left) {
+                    return new Closure4(size, key, value, left);
+                }
+            }
+
+            public static final class Closure4 {
+
+                private final Integer size;
+                private final Object key;
+                private final Object value;
+                private final SnacksMap left;
+
+                public Closure4(Integer size, Object key, Object value, SnacksMap left) {
+                    this.size = size;
+                    this.key = key;
+                    this.value = value;
+                    this.left = left;
+                }
+
+                @SuppressWarnings("unchecked")
+                public Object apply(SnacksMap right) {
+                    return new MapEntry(size, key, value, left, right);
+                }
+            }
         }
     }
 }

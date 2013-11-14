@@ -10,7 +10,7 @@ public class ClassOf {
 
     private static ClassOf instance;
 
-    public static ClassOf instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new ClassOf();
         }

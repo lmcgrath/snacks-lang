@@ -10,7 +10,7 @@ public class LessThanEquals {
 
     private static LessThanEquals instance;
 
-    public static LessThanEquals instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new LessThanEquals();
         }

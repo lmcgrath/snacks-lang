@@ -1,4 +1,4 @@
-package snacks.lang.runtime;
+package snacks.lang.util;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,8 +16,10 @@ import snacks.lang.SnackDefinition;
 import snacks.lang.compiler.CompileException;
 import snacks.lang.compiler.Compiler;
 import snacks.lang.parser.SymbolEnvironment;
+import snacks.lang.runtime.OutResource;
+import snacks.lang.runtime.SnacksClassLoader;
 
-public class AbstractRuntimeTest {
+public class SnacksTest {
 
     @Rule
     public final OutResource out;
@@ -25,7 +27,7 @@ public class AbstractRuntimeTest {
     private SnacksClassLoader loader;
     private ClassLoader previousLoader;
 
-    public AbstractRuntimeTest() {
+    public SnacksTest() {
         out = new OutResource();
     }
 

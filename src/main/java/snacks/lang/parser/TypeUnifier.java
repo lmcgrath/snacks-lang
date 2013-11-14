@@ -47,6 +47,15 @@ abstract class TypeUnifier<T extends Type> {
         }
     }
 
+    private static boolean contains(AlgebraicType left, Type right, TypeFactory factory) {
+        for (Type option : left.getOptions()) {
+            if (factory.unify(option, right)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean unifyAll(SnacksList<Type> leftTypes, SnacksList<Type> rightTypes, TypeFactory factory) {
         if (leftTypes.size() == rightTypes.size()) {
             Iterator<Type> leftIterator = leftTypes.iterator();
@@ -87,27 +96,27 @@ abstract class TypeUnifier<T extends Type> {
     }
 
     protected boolean unifyWithAlgebraic(T left, AlgebraicType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithFunction(T left, FunctionType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithRecord(T left, RecordType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithRecursive(T left, RecursiveType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithSimple(T left, SimpleType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithUnion(T left, UnionType right, TypeFactory factory) {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     protected boolean unifyWithVariable(T left, VariableType right, TypeFactory factory) {
@@ -116,15 +125,6 @@ abstract class TypeUnifier<T extends Type> {
     }
 
     private static class AlgebraicUnifier extends TypeUnifier<AlgebraicType> {
-
-        private boolean contains(AlgebraicType left, Type right, TypeFactory factory) {
-            for (Type option : left.getOptions()) {
-                if (factory.unify(option, right)) {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         @Override
         protected boolean unifyWithFunction(AlgebraicType left, FunctionType right, TypeFactory factory) {
@@ -168,11 +168,6 @@ abstract class TypeUnifier<T extends Type> {
             }
             return unified && factory.unify(left.getResult(), right.getResult());
         }
-
-        @Override
-        protected boolean unifyWithRecord(FunctionType left, RecordType right, TypeFactory factory) {
-            return false;
-        }
     }
 
     private static class RecordUnifier extends TypeUnifier<RecordType> {
@@ -196,7 +191,7 @@ abstract class TypeUnifier<T extends Type> {
 
         @Override
         protected boolean unifyWithAlgebraic(RecordType left, AlgebraicType right, TypeFactory factory) {
-            return false;
+            return contains(right, left, factory);
         }
 
         @Override
@@ -235,13 +230,8 @@ abstract class TypeUnifier<T extends Type> {
     private static class SimpleUnifier extends TypeUnifier<SimpleType> {
 
         @Override
-        protected boolean unifyWithFunction(SimpleType left, FunctionType right, TypeFactory factory) {
-            return false;
-        }
-
-        @Override
-        protected boolean unifyWithRecord(SimpleType left, RecordType right, TypeFactory factory) {
-            return false;
+        protected boolean unifyWithAlgebraic(SimpleType left, AlgebraicType right, TypeFactory factory) {
+            return contains(right, left, factory);
         }
 
         @Override

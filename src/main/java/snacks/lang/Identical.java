@@ -12,7 +12,7 @@ public class Identical {
 
     private static Identical instance;
 
-    public static Identical instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Identical();
         }

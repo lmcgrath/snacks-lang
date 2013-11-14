@@ -10,7 +10,7 @@ public class Multiply {
 
     private static Multiply instance;
 
-    public static Multiply instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Multiply();
         }

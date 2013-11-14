@@ -4,7 +4,7 @@ public class Errorize {
 
     private static Errorize instance;
 
-    public static Errorize instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Errorize();
         }

@@ -10,7 +10,7 @@ public class Plus {
 
     private static Plus instance;
 
-    public static Plus instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Plus();
         }

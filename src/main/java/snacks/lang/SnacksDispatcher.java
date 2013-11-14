@@ -1,5 +1,6 @@
 package snacks.lang;
 
+import static com.headius.invokebinder.Binder.from;
 import static me.qmx.jitescript.util.CodegenUtils.p;
 import static me.qmx.jitescript.util.CodegenUtils.sig;
 import static org.apache.commons.lang.reflect.MethodUtils.getMatchingAccessibleMethod;
@@ -11,7 +12,6 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
-import com.headius.invokebinder.Binder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 
@@ -34,8 +34,8 @@ public class SnacksDispatcher {
     private static final String apply = "apply";
 
     public static CallSite bootstrap(Lookup lookup, String name, MethodType type) throws ReflectiveOperationException {
-        MutableCallSite callSite = new MutableCallSite(type);
-        MethodHandle send = Binder.from(type)
+        CallSite callSite = new MutableCallSite(type);
+        MethodHandle send = from(type)
             .insert(0, lookup)
             .invokeStatic(lookup, SnacksDispatcher.class, name);
         callSite.setTarget(send);
@@ -44,7 +44,7 @@ public class SnacksDispatcher {
 
     public static Object apply(Lookup lookup, Object function, Object argument) throws Throwable {
         Method method = methodFor(function, argument);
-        return Binder.from(method.getReturnType(), function.getClass(), method.getParameterTypes()[0])
+        return from(method.getReturnType(), function.getClass(), method.getParameterTypes()[0])
             .invokeVirtual(lookup, apply)
             .invoke(function, argument);
     }
@@ -55,7 +55,7 @@ public class SnacksDispatcher {
         if (method == null) {
             throw new NoSuchMethodException(p(expression.getClass()) + ":" + getter + ":" + sig(Object.class));
         } else {
-            return Binder.from(method.getReturnType(), expression.getClass())
+            return from(method.getReturnType(), expression.getClass())
                 .invokeVirtual(lookup, getter)
                 .invoke(expression);
         }

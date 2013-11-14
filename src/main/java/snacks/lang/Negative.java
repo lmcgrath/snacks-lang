@@ -12,7 +12,7 @@ public class Negative {
 
     private static Negative instance;
 
-    public static Negative instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Negative();
         }

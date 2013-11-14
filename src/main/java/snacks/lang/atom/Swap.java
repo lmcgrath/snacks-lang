@@ -17,7 +17,7 @@ public class Swap {
 
     private static Swap instance;
 
-    public static Swap instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new Swap();
         }

@@ -10,7 +10,7 @@ public class SnacksAssert {
 
     private static SnacksAssert instance;
 
-    public static SnacksAssert instance() {
+    public static Object instance() {
         if (instance == null) {
             instance = new SnacksAssert();
         }

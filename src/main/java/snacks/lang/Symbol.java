@@ -1,8 +1,11 @@
 package snacks.lang;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.Types.func;
 import static snacks.lang.Types.symbolType;
+import static snacks.lang.Types.var;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,5 +56,27 @@ public class Symbol {
     @Override
     public String toString() {
         return ":'" + escapeJava(value) + "'";
+    }
+
+    @Snack(name = "symbol", kind = EXPRESSION)
+    public static class Constructor {
+
+        private static Constructor instance;
+
+        public static Object instance() {
+            if (instance == null) {
+                instance = new Constructor();
+            }
+            return instance;
+        }
+
+        @SnackType
+        public static Type type() {
+            return func(var("snacks.lang.symbol#a"), symbolType());
+        }
+
+        public Object apply(Object value) {
+            return valueOf(value.toString());
+        }
     }
 }
