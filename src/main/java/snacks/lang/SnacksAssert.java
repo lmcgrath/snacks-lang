@@ -2,8 +2,8 @@ package snacks.lang;
 
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.Types.booleanType;
-import static snacks.lang.Types.voidType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.voidType;
 
 @Snack(name = "assert", kind = EXPRESSION)
 public class SnacksAssert {

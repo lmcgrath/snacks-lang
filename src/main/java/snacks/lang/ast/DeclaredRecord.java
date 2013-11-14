@@ -9,8 +9,8 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.SnackKind;
-import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type;
+import snacks.lang.Type.RecordType.Property;
 
 public class DeclaredRecord extends NamedNode {
 

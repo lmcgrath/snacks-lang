@@ -5,10 +5,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static snacks.lang.Types.*;
-import static snacks.lang.Types.property;
-import static snacks.lang.Types.record;
-import static snacks.lang.Types.simple;
-import static snacks.lang.Types.var;
 
 import org.junit.Before;
 import org.junit.Test;

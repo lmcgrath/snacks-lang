@@ -1,8 +1,8 @@
 package snacks.lang;
 
 import static snacks.lang.SnackKind.EXPRESSION;
-import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.var;
 
 @Snack(name = "hashOf", kind = EXPRESSION)

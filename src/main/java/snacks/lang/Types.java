@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import snacks.lang.Type.RecordType.Property;
-import snacks.lang.Type.SimpleType;
+import snacks.lang.Type.*;
 
 public final class Types {
 

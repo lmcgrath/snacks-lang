@@ -3,7 +3,7 @@ package snacks.lang;
 import static snacks.lang.Type.*;
 
 import java.util.Map;
-import snacks.lang.Type.VariableType;
+import snacks.lang.Type.*;
 
 public interface TypeFactory {
 

@@ -8,11 +8,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import snacks.lang.Type;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.Reference;
 import snacks.lang.ast.VariableLocator;
-import snacks.lang.Type;
 
 class PatternScope {
 

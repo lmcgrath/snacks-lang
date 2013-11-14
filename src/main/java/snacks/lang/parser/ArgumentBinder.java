@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import snacks.lang.Type;
-import snacks.lang.TypeGenerator;
 import snacks.lang.Type.AlgebraicType;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.RecursiveType;
+import snacks.lang.TypeGenerator;
 
 class ArgumentBinder implements TypeGenerator {
 

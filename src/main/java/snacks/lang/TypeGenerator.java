@@ -2,7 +2,7 @@ package snacks.lang;
 
 import static snacks.lang.Type.*;
 
-import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.*;
 
 public interface TypeGenerator {
 

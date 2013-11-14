@@ -5,22 +5,22 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.AstFactory.var;
-import static snacks.lang.parser.TranslatorMatcher.defines;
 import static snacks.lang.Types.*;
 import static snacks.lang.Types.func;
 import static snacks.lang.Types.record;
+import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.ast.AstFactory.var;
+import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Collection;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import snacks.lang.SnackKind;
-import snacks.lang.ast.*;
-import snacks.lang.runtime.SnacksClassLoader;
 import snacks.lang.Type;
 import snacks.lang.Type.VariableType;
+import snacks.lang.ast.*;
+import snacks.lang.runtime.SnacksClassLoader;
 
 public class TranslatorTest {
 

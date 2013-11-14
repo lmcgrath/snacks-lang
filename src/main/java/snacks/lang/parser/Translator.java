@@ -6,6 +6,10 @@ import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksList.fromList;
+import static snacks.lang.Types.*;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.tuple;
+import static snacks.lang.Types.var;
 import static snacks.lang.ast.AstFactory.*;
 import static snacks.lang.ast.AstFactory.func;
 import static snacks.lang.ast.AstFactory.record;
@@ -14,24 +18,20 @@ import static snacks.lang.parser.syntax.SyntaxFactory.id;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 import static snacks.lang.parser.syntax.SyntaxFactory.type;
-import static snacks.lang.Types.*;
-import static snacks.lang.Types.func;
-import static snacks.lang.Types.tuple;
-import static snacks.lang.Types.var;
 
 import java.util.*;
 import java.util.regex.Pattern;
 import beaver.Symbol;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.*;
-import snacks.lang.ast.*;
-import snacks.lang.parser.syntax.*;
-import snacks.lang.parser.syntax.Result;
 import snacks.lang.Type.AlgebraicType;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.VariableType;
+import snacks.lang.ast.*;
+import snacks.lang.parser.syntax.*;
+import snacks.lang.parser.syntax.Result;
 
 public class Translator implements SyntaxVisitor {
 

@@ -1,7 +1,7 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Types.voidType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.voidType;
 
 import java.util.ArrayList;
 import java.util.Collection;

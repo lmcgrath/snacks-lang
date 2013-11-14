@@ -3,8 +3,8 @@ package snacks.lang;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.Types.doubleType;
-import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.union;
 
 @Snack(name = "-", kind = EXPRESSION)

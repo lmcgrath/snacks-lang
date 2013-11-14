@@ -21,12 +21,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 import snacks.lang.*;
-import snacks.lang.ast.*;
 import snacks.lang.Type.AlgebraicType;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.RecursiveType;
+import snacks.lang.ast.*;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
 

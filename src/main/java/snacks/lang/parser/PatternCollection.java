@@ -1,11 +1,11 @@
 package snacks.lang.parser;
 
 import java.util.*;
+import snacks.lang.Type;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.NamedNode;
 import snacks.lang.ast.Reference;
-import snacks.lang.Type;
 
 class PatternCollection {
 

@@ -4,8 +4,8 @@ import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import java.util.List;
-import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type;
+import snacks.lang.Type.RecordType.Property;
 
 public final class AstFactory {
 

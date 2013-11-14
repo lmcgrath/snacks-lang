@@ -5,11 +5,11 @@ import static snacks.lang.ast.AstFactory.patterns;
 
 import java.util.ArrayList;
 import java.util.List;
+import snacks.lang.Type;
+import snacks.lang.TypeFactory;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Locator;
 import snacks.lang.ast.NamedNode;
-import snacks.lang.Type;
-import snacks.lang.TypeFactory;
 
 class PatternBuilder {
 

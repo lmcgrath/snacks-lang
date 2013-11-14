@@ -13,7 +13,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import snacks.lang.Invokable;
 import snacks.lang.SnackDefinition;
-import snacks.lang.compiler.*;
+import snacks.lang.compiler.CompileException;
 import snacks.lang.compiler.Compiler;
 import snacks.lang.parser.SymbolEnvironment;
 

@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Set;
 import snacks.lang.Symbol;
 import snacks.lang.Type;
-import snacks.lang.TypePrinter;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.RecursiveType;
 import snacks.lang.Type.SimpleType;
+import snacks.lang.TypePrinter;
 import snacks.lang.util.PrinterState;
 
 public class AstPrinter implements TypePrinter {

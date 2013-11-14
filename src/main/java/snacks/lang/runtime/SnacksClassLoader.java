@@ -31,7 +31,6 @@ import snacks.lang.parser.Parser;
 import snacks.lang.parser.Scanner;
 import snacks.lang.parser.SymbolEnvironment;
 import snacks.lang.parser.Translator;
-import snacks.lang.Type;
 
 public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 

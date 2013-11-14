@@ -2,9 +2,9 @@ package snacks.lang.parser;
 
 import static beaver.Symbol.getColumn;
 import static beaver.Symbol.getLine;
+import static java.util.logging.Logger.getLogger;
 import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static snacks.lang.parser.Terminals.NAMES;
-import static java.util.logging.Logger.getLogger;
 
 import java.util.logging.Logger;
 import beaver.Parser.Events;

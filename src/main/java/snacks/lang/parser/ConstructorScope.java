@@ -3,11 +3,11 @@ package snacks.lang.parser;
 import static snacks.lang.ast.AstFactory.access;
 
 import java.util.Objects;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
 import snacks.lang.ast.AstNode;
 import snacks.lang.ast.Reference;
 import snacks.lang.ast.UndefinedSymbolException;
-import snacks.lang.Type.RecordType;
-import snacks.lang.Type.RecordType.Property;
 
 class ConstructorScope {
 

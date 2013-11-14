@@ -9,12 +9,12 @@ import java.util.Iterator;
 import java.util.Objects;
 import snacks.lang.SnacksList;
 import snacks.lang.Type;
-import snacks.lang.TypeFactory;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.RecursiveType;
 import snacks.lang.Type.SimpleType;
+import snacks.lang.TypeFactory;
 
 abstract class TypeUnifier<T extends Type> {
 

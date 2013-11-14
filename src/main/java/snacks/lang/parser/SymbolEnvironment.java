@@ -5,18 +5,18 @@ import static snacks.lang.SnacksList.toList;
 import static snacks.lang.Type.AlgebraicType;
 import static snacks.lang.Type.UnionType;
 import static snacks.lang.Type.VariableType;
+import static snacks.lang.Types.*;
 import static snacks.lang.ast.AstFactory.reference;
 import static snacks.lang.parser.TypeUnifier.unifierFor;
-import static snacks.lang.Types.*;
 
 import java.util.*;
 import snacks.lang.*;
 import snacks.lang.Type.FunctionType;
 import snacks.lang.Type.RecordType;
 import snacks.lang.Type.RecordType.Property;
-import snacks.lang.ast.*;
 import snacks.lang.Type.RecursiveType;
 import snacks.lang.Type.SimpleType;
+import snacks.lang.ast.*;
 
 public class SymbolEnvironment implements TypeFactory {
 

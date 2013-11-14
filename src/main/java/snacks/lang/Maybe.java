@@ -3,11 +3,7 @@ package snacks.lang;
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.Types.func;
-import static snacks.lang.Types.property;
-import static snacks.lang.Types.record;
-import static snacks.lang.Types.simple;
-import static snacks.lang.Types.var;
+import static snacks.lang.Types.*;
 
 import java.util.Objects;
 

@@ -5,8 +5,8 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.Types.doubleType;
-import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.integerType;
 import static snacks.lang.Types.union;
 
 import org.junit.Before;

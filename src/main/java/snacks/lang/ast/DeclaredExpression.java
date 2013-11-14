@@ -4,9 +4,9 @@ import static snacks.lang.SnackKind.EXPRESSION;
 
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.Operator;
 import snacks.lang.SnackKind;
 import snacks.lang.Type;
-import snacks.lang.Operator;
 
 public class DeclaredExpression extends NamedNode {
 

@@ -6,7 +6,7 @@ import static snacks.lang.Types.recur;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.*;
 import snacks.lang.Type.RecordType.Property;
 
 public class TypeUnroller implements TypeGenerator {
