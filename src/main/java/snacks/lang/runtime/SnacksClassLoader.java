@@ -1,12 +1,26 @@
 package snacks.lang.runtime;
 
-import static java.lang.Character.isUpperCase;
-import static java.util.regex.Pattern.compile;
-import static org.apache.commons.lang.StringUtils.capitalize;
-import static snacks.lang.JavaUtils.javaClass;
-import static snacks.lang.SnackKind.TYPE;
-import static snacks.lang.Types.algebraic;
-import static snacks.lang.Types.var;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.Infix;
+import snacks.lang.JavaType;
+import snacks.lang.Maybe;
+import snacks.lang.Maybe.Just;
+import snacks.lang.Maybe.Nothing;
+import snacks.lang.Operator;
+import snacks.lang.OperatorRegistry;
+import snacks.lang.Prefix;
+import snacks.lang.ResolutionException;
+import snacks.lang.Snack;
+import snacks.lang.SnackDefinition;
+import snacks.lang.SnackKind;
+import snacks.lang.SnackType;
+import snacks.lang.SnacksRegistry;
+import snacks.lang.Type;
+import snacks.lang.compiler.Compiler;
+import snacks.lang.parser.Parser;
+import snacks.lang.parser.Scanner;
+import snacks.lang.parser.SymbolEnvironment;
+import snacks.lang.parser.Translator;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -17,20 +31,27 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.*;
-import snacks.lang.Maybe.Just;
-import snacks.lang.Maybe.Nothing;
-import snacks.lang.compiler.Compiler;
-import snacks.lang.parser.Parser;
-import snacks.lang.parser.Scanner;
-import snacks.lang.parser.SymbolEnvironment;
-import snacks.lang.parser.Translator;
+
+import static java.lang.Character.isUpperCase;
+import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang.StringUtils.capitalize;
+import static snacks.lang.JavaUtils.javaClass;
+import static snacks.lang.SnackKind.TYPE;
+import static snacks.lang.Types.algebraic;
+import static snacks.lang.Types.var;
 
 public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry {
 
@@ -185,22 +206,27 @@ public class SnacksClassLoader extends URLClassLoader implements SnacksRegistry 
 
     private Type reifyType(String qualifiedName, Snack snack, Class<?> clazz) {
         List<Type> memberTypes = new ArrayList<>();
-        for (Class<?> subClazz : clazz.getClasses()) {
-            Snack subSnack = subClazz.getAnnotation(Snack.class);
-            if (subSnack != null && subSnack.kind() == TYPE) {
-                Type type = resolveType(subClazz);
-                memberTypes.add(type);
-                registerSnack(moduleName(subClazz) + '.' + subSnack.name(), subSnack, subClazz, type);
-            }
-        }
-        if (memberTypes.isEmpty()) {
+        try {
             return resolveType(clazz);
-        } else {
-            List<Type> arguments = new ArrayList<>();
-            for (String argument : snack.arguments()) {
-                arguments.add(var(argument));
+        } catch (ResolutionException exception) {
+            for (Class<?> subClazz : clazz.getClasses()) {
+                Snack subSnack = subClazz.getAnnotation(Snack.class);
+                if (subSnack != null && subSnack.kind() == TYPE) {
+                    Type type = resolveType(subClazz);
+                    memberTypes.add(type);
+                    registerSnack(moduleName(subClazz) + '.' + subSnack.name(), subSnack, subClazz, type);
+                }
             }
-            return algebraic(qualifiedName, arguments, memberTypes);
+            if (memberTypes.isEmpty()) {
+                throw new ResolutionException("Unable to resolve type of " + snack.name()
+                    + " and type does not contain members");
+            } else {
+                List<Type> arguments = new ArrayList<>();
+                for (String argument : snack.arguments()) {
+                    arguments.add(var(argument));
+                }
+                return algebraic(qualifiedName, arguments, memberTypes);
+            }
         }
     }
 
