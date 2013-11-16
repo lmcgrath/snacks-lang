@@ -13,14 +13,14 @@ public class JavaUtils {
     static {
         replacements = new LinkedHashMap<>();
         replacements.put("¢", "¢Jingle");
-        replacements.put("$", "¢Bux");
+        replacements.put("$", "¢Bucks");
         replacements.put("?", "¢Query");
         replacements.put("!", "¢Bang");
         replacements.put("+", "¢Plus");
         replacements.put("-", "¢Dash");
         replacements.put("*", "¢Splat");
         replacements.put("/", "¢Slash");
-        replacements.put("%", "¢Frac");
+        replacements.put("%", "¢Snort");
         replacements.put("&", "¢Amp");
         replacements.put("|", "¢Pipe");
         replacements.put("^", "¢Point");
@@ -31,6 +31,7 @@ public class JavaUtils {
         replacements.put("<", "¢Left");
         replacements.put(">", "¢Right");
         replacements.put("~", "¢Wave");
+        replacements.put("#snacks#~", "¢Snacks");
     }
 
     public static String javaClass(String module, String name) {

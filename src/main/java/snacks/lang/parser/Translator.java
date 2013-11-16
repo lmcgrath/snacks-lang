@@ -407,11 +407,11 @@ public class Translator implements SyntaxVisitor {
     public void visitNamedPattern(NamedPattern node) {
         Locator locator = new DeclarationLocator(qualify(node.getName()), EXPRESSION);
         if (hasSignature(locator)) {
-            patterns.beginPattern(node.getName(), locator, getSignature(locator));
+            patterns.beginPattern(node.getName(), locator, environment());
         } else {
             throw new ParseException("No signature defined for pattern: " + locator.getName());
         }
-        patterns.acceptPattern(translate(node.getPattern()), environment());
+        patterns.acceptPattern((PatternCase) translate(node.getPattern()));
     }
 
     @Override
@@ -446,11 +446,18 @@ public class Translator implements SyntaxVisitor {
     public void visitPatternMatcher(PatternMatcher node) {
         enterPattern();
         List<AstNode> arguments = new ArrayList<>();
+        int environments = 0;
         for (Symbol argument : node.getMatchers()) {
+            enterScope();
             arguments.add(translate(argument));
             nextArgument();
+            environments++;
         }
-        result = new PatternCase(arguments, translate(node.getBody()));
+        AstNode body = translate(node.getBody());
+        for (int i = 0; i < environments; i++) {
+            leaveScope();
+        }
+        result = new PatternCase(arguments, body);
         leavePattern();
     }
 
@@ -1131,7 +1138,7 @@ public class Translator implements SyntaxVisitor {
             register(locator.getName().substring(locator.getName().lastIndexOf('.') + 1), functionType);
             return new Reference(locator, functionType);
         } else {
-            return func(argument.getName(), body, functionType);
+            return func(functionType, argument.getName(), body);
         }
     }
 

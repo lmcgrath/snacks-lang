@@ -15,6 +15,7 @@ public class MapTest extends SnacksTest {
         );
     }
 
+    @Ignore("WIP")
     @Test
     public void shouldInsertElementIntoMap() {
         run(

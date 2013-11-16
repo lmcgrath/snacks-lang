@@ -2,10 +2,7 @@ package snacks.lang.parser;
 
 import java.util.*;
 import snacks.lang.Type;
-import snacks.lang.ast.AstNode;
-import snacks.lang.ast.Locator;
-import snacks.lang.ast.NamedNode;
-import snacks.lang.ast.Reference;
+import snacks.lang.ast.*;
 
 class PatternCollection {
 
@@ -20,16 +17,16 @@ class PatternCollection {
         scopes = new ArrayDeque<>();
     }
 
-    public void acceptPattern(AstNode pattern, SymbolEnvironment environment) {
-        builders.get(currentPattern()).addPattern(pattern, environment);
+    public void acceptPattern(PatternCase pattern) {
+        builders.get(currentPattern()).addPattern(pattern);
         currentPattern = null;
     }
 
-    public void beginPattern(String name, Locator locator, Type signature) {
+    public void beginPattern(String name, Locator locator, SymbolEnvironment environment) {
         currentPattern = name;
         if (!builders.containsKey(name)) {
-            signatures.put(name, signature);
-            builders.put(name, new PatternBuilder(locator, signature));
+            signatures.put(name, environment.getSignature(locator));
+            builders.put(name, new PatternBuilder(locator, environment));
         }
     }
 

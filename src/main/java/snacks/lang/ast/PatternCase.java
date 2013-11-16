@@ -1,16 +1,15 @@
 package snacks.lang.ast;
 
-import static snacks.lang.Types.func;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import snacks.lang.Type;
 
 public class PatternCase extends AstNode {
 
-    private final ArrayList<AstNode> matchers;
+    private final List<AstNode> matchers;
     private final AstNode body;
 
     public PatternCase(Collection<AstNode> matchers, AstNode body) {
@@ -42,17 +41,21 @@ public class PatternCase extends AstNode {
         return body;
     }
 
-    public ArrayList<AstNode> getMatchers() {
+    public List<Type> getMatcherTypes() {
+        List<Type> matcherTypes = new ArrayList<>();
+        for (AstNode matcher : matchers) {
+            matcherTypes.add(matcher.getType());
+        }
+        return matcherTypes;
+    }
+
+    public List<AstNode> getMatchers() {
         return matchers;
     }
 
     @Override
     public Type getType() {
-        Type type = body.getType();
-        for (int i = matchers.size() - 1; i >= 0; i--) {
-            type = func(matchers.get(i).getType(), type);
-        }
-        return type;
+        return body.getType();
     }
 
     @Override

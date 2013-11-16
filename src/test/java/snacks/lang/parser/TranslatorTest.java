@@ -9,27 +9,15 @@ import static snacks.lang.Types.*;
 import static snacks.lang.Types.func;
 import static snacks.lang.Types.record;
 import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.AstFactory.var;
 import static snacks.lang.parser.TranslatorMatcher.defines;
 
 import java.util.Collection;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import snacks.lang.SnackKind;
 import snacks.lang.Type;
-import snacks.lang.Type.VariableType;
-import snacks.lang.ast.*;
-import snacks.lang.runtime.SnacksClassLoader;
+import snacks.lang.ast.DeclarationLocator;
+import snacks.lang.ast.NamedNode;
 
-public class TranslatorTest {
-
-    private SymbolEnvironment environment;
-
-    @Before
-    public void setUp() {
-        environment = new SymbolEnvironment(new SnacksClassLoader());
-    }
+public class TranslatorTest extends AbstractTranslatorTest {
 
     @Test
     public void shouldResolveTypeOfPlusWithIntegers() {
@@ -65,7 +53,7 @@ public class TranslatorTest {
         assertThat(nodes, defines(declaration("test.value", expression(constant("Hello, World!")))));
         assertThat(nodes, defines(declaration("test.example", expression(apply(
             apply(
-                environment.getReference(new DeclarationLocator("snacks.lang.+")),
+                ref(new DeclarationLocator("snacks.lang.+")),
                 constant(2),
                 union(
                     func(stringType(), stringType()),
@@ -98,7 +86,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldBeAbleToAliasImport() {
-        Type var = environment.createVariable();
+        Type var = createVariable();
         define("identity", func(var, var));
         translate(
             "import test.example.identity as id",
@@ -109,7 +97,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldBeAbleToImportUsingFrom() {
-        Type var = environment.createVariable();
+        Type var = createVariable();
         define("identity", func(var, var));
         translate(
             "from test.example import identity",
@@ -120,7 +108,7 @@ public class TranslatorTest {
 
     @Test
     public void shouldBeAbleToAliasImportUsingFrom() {
-        Type var = environment.createVariable();
+        Type var = createVariable();
         define("identity", func(var, var));
         translate(
             "from test.example import identity as id",
@@ -526,71 +514,6 @@ public class TranslatorTest {
         ))));
     }
 
-    @Ignore("Type discrepancy with assignments")
-    @Test
-    public void shouldTranslatePatternMatching() {
-        AstNode hurl = hurl(constant("Got nothin!"));
-        Type a = vtype("test.Maybe#a");
-        hurl.getType().bind(a);
-        Type just = record("test.Just", asList(property("_0", a)));
-        Type nothing = simple("test.Nothing");
-        Type maybe = algebraic("test.Maybe", asList(a), asList(nothing, just));
-        String arg0 = "#snacks#~patternArg0";
-        String arg1 = "#snacks#~patternArg1";
-        Collection<NamedNode> nodes = translate(
-            "data Maybe a = Nothing | Just a",
-            "perhaps? :: Maybe a -> a -> a",
-            "perhaps? = ?(Just value, _) -> value",
-            "perhaps? = ?(Nothing, default) -> default"
-        );
-        assertThat(nodes, defines(declaration("test.perhaps?", patterns(func(func(maybe, a), a), asList(
-            pattern(
-                asList(
-                    matchConstructor(
-                        reference(vl(arg0), just),
-                        asList(var("value", access(reference(vl(arg0), just), "_0", a)))
-                    ),
-                    nop()
-                ),
-                reference(vl("value"), a)
-            ),
-            pattern(
-                asList(
-                    matchConstant(reference(vl(arg0), nothing), reference(dl("test.Nothing"), nothing)),
-                    var("default", reference(vl(arg1), a))
-                ),
-                reference(vl("default"), a)
-            )
-        )))));
-    }
-
-    @Test
-    public void shouldTranslateRecordPattern() {
-        Type type = record("test.BreakfastItem", asList(
-            property("name", stringType()),
-            property("tasteIndex", integerType()),
-            property("pairsWithBacon?", booleanType())
-        ));
-        Reference argument = reference(vl("#snacks#~patternArg0"), type);
-        Collection<NamedNode> nodes = translate(
-            "data BreakfastItem = {",
-            "    name: String,",
-            "    tasteIndex: Integer,",
-            "    pairsWithBacon?: Boolean,",
-            "}",
-            "bacon? :: BreakfastItem -> Boolean",
-            "bacon? = ?(BreakfastItem { pairsWithBacon? = x }) -> x"
-        );
-        assertThat(nodes, defines(declaration("test.bacon?", patterns(func(type, booleanType()), asList(
-            pattern(
-                asList(matchConstructor(argument, asList(
-                    var("x", access(argument, "pairsWithBacon?", booleanType()))
-                ))),
-                reference(vl("x"), booleanType())
-            )
-        )))));
-    }
-
     @Test(expected = TypeException.class)
     public void shouldNotCreateTreeWithIncorrectData() {
         translate(
@@ -642,37 +565,5 @@ public class TranslatorTest {
     @Test(expected = TypeException.class)
     public void shouldNotCreateHeterogeneousList() {
         translate("test = [1, 2, 'Waffles']");
-    }
-
-    private void define(String name, Type type) {
-        environment.define(reference(new DeclarationLocator("test.example." + name, EXPRESSION), type));
-    }
-
-    private Locator dl(String name) {
-        return new DeclarationLocator(name);
-    }
-
-    private Collection<NamedNode> translate(String... inputs) {
-        return CompilerUtil.translate(environment, inputs);
-    }
-
-    private Type typeOf(String qualifiedName, SnackKind kind) {
-        return environment.getReference(new DeclarationLocator(qualifiedName, kind)).getType();
-    }
-
-    private Type typeOf(String qualifiedName) {
-        return environment.getReference(new DeclarationLocator(qualifiedName)).getType();
-    }
-
-    private Locator vl(String name) {
-        return new VariableLocator(name);
-    }
-
-    private Type vtype(String name) {
-        return new VariableType(name);
-    }
-
-    private Type vtype(Type type) {
-        return new VariableType(type);
     }
 }

@@ -544,9 +544,8 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generatePatternCases(PatternCases node) {
-        defineFunctionInitializer();
         CodeBlock block = beginBlock();
-        for (AstNode pattern : node.getPatterns()) {
+        for (PatternCase pattern : node.getPatterns()) {
             generate(pattern);
         }
         block.newobj(p(MatchException.class));
@@ -554,7 +553,6 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
         block.ldc("Failed to match pattern");
         block.invokespecial(p(MatchException.class), "<init>", sig(void.class, String.class));
         block.athrow();
-        jiteClass().defineMethod("apply", ACC_PUBLIC, sig(Object.class, Object.class), acceptBlock());
     }
 
     @Override

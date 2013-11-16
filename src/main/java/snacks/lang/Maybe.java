@@ -21,8 +21,9 @@ public abstract class Maybe {
 
         @SnackType
         public static Type type() {
-            return record("snacks.lang.Just", asList(var("snacks.lang.Maybe#a")), asList(
-                property("_0", var("snacks.lang.Maybe#a"))
+            Type var = var("snacks.lang.Maybe#a");
+            return record("snacks.lang.Just", asList(var), asList(
+                property("_0", var)
             ));
         }
 

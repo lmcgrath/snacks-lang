@@ -10,9 +10,9 @@ import snacks.lang.Type;
 public class PatternCases extends AstNode {
 
     private final Type type;
-    private final List<AstNode> patterns;
+    private final List<PatternCase> patterns;
 
-    public PatternCases(Type type, Collection<AstNode> patterns) {
+    public PatternCases(Type type, Collection<PatternCase> patterns) {
         this.type = type;
         this.patterns = new ArrayList<>(patterns);
     }
@@ -37,7 +37,7 @@ public class PatternCases extends AstNode {
         generator.generatePatternCases(this);
     }
 
-    public List<AstNode> getPatterns() {
+    public List<PatternCase> getPatterns() {
         return patterns;
     }
 

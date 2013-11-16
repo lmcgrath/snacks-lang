@@ -73,7 +73,7 @@ public final class AstFactory {
         return new ExpressionConstant(value);
     }
 
-    public static AstNode func(String variable, AstNode expression, Type type) {
+    public static AstNode func(Type type, String variable, AstNode expression) {
         return new Function(variable, expression, type);
     }
 
@@ -117,11 +117,11 @@ public final class AstFactory {
         return Nop.INSTANCE;
     }
 
-    public static AstNode pattern(Collection<AstNode> matchCases, AstNode body) {
+    public static PatternCase pattern(Collection<AstNode> matchCases, AstNode body) {
         return new PatternCase(matchCases, body);
     }
 
-    public static AstNode patterns(Type type, Collection<AstNode> patterns) {
+    public static AstNode patterns(Type type, Collection<PatternCase> patterns) {
         return new PatternCases(type, patterns);
     }
 

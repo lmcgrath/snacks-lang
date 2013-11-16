@@ -746,7 +746,15 @@ public abstract class Type {
 
         @Override
         public boolean equals(Object o) {
-            return o == this || o instanceof VariableType && Objects.equals(state, ((VariableType) o).state);
+            if (o == this) {
+                return true;
+            } else if (o instanceof VariableType) {
+                VariableType other = (VariableType) o;
+                return Objects.equals(getName(), other.getName())
+                    && (expose() instanceof VariableType || expose().equals(other.expose()));
+            } else {
+                return false;
+            }
         }
 
         @Override
