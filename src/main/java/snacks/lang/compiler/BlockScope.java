@@ -1,12 +1,13 @@
 package snacks.lang.compiler;
 
+import me.qmx.jitescript.CodeBlock;
+import snacks.lang.ast.Exceptional;
+import snacks.lang.ast.Generator;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import me.qmx.jitescript.CodeBlock;
-import snacks.lang.ast.Exceptional;
-import snacks.lang.ast.Generator;
 
 class BlockScope {
 

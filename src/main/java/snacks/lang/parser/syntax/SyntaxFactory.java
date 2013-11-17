@@ -1,17 +1,19 @@
 package snacks.lang.parser.syntax;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.addAll;
-import static snacks.lang.Fixity.LEFT;
-import static snacks.lang.Fixity.NONE;
-import static snacks.lang.Fixity.RIGHT;
+import beaver.Symbol;
+import snacks.lang.Operator;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import beaver.Symbol;
-import snacks.lang.Operator;
+
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.asList;
+import static java.util.Collections.addAll;
+import static snacks.lang.Fixity.LEFT;
+import static snacks.lang.Fixity.NONE;
+import static snacks.lang.Fixity.RIGHT;
 
 public final class SyntaxFactory {
 
@@ -167,6 +169,13 @@ public final class SyntaxFactory {
 
     public static Symbol initializer(Symbol constructor, Symbol... properties) {
         return new InitializerExpression(constructor, properties);
+    }
+
+    public static Symbol initializer(Symbol constructor, Symbol property, Symbol[] properties) {
+        Symbol[] properties2 = new Symbol[properties.length + 1];
+        properties2[0] = property;
+        arraycopy(properties, 0, properties2, 1, properties.length);
+        return new InitializerExpression(constructor, properties2);
     }
 
     public static Symbol invokable(Symbol body) {

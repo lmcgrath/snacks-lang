@@ -1,12 +1,5 @@
 package snacks.lang.parser;
 
-import static snacks.lang.Type.AlgebraicType;
-import static snacks.lang.Type.UnionType;
-import static snacks.lang.Type.VariableType;
-import static snacks.lang.Types.isFunction;
-
-import java.util.Iterator;
-import java.util.Objects;
 import snacks.lang.SnacksList;
 import snacks.lang.Type;
 import snacks.lang.Type.FunctionType;
@@ -15,6 +8,14 @@ import snacks.lang.Type.RecordType.Property;
 import snacks.lang.Type.RecursiveType;
 import snacks.lang.Type.SimpleType;
 import snacks.lang.TypeFactory;
+
+import java.util.Iterator;
+import java.util.Objects;
+
+import static snacks.lang.Type.AlgebraicType;
+import static snacks.lang.Type.UnionType;
+import static snacks.lang.Type.VariableType;
+import static snacks.lang.Types.isFunction;
 
 abstract class TypeUnifier<T extends Type> {
 
@@ -224,6 +225,11 @@ abstract class TypeUnifier<T extends Type> {
         protected boolean unifyWithRecursive(RecursiveType left, RecursiveType right, TypeFactory factory) {
             return Objects.equals(left.getName(), right.getName())
                 && unifyAll(left.getArguments(), right.getArguments(), factory);
+        }
+
+        @Override
+        protected boolean unifyWithSimple(RecursiveType left, SimpleType right, TypeFactory factory) {
+            return factory.unify(factory.expand(left), right);
         }
     }
 
