@@ -1,25 +1,19 @@
 package snacks.lang.parser;
 
-import snacks.lang.util.Position;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.copyOf;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
+import static snacks.lang.parser.Terminals.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
-
-import static java.util.Arrays.asList;
-import static java.util.Arrays.copyOf;
-import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
-import static snacks.lang.parser.Terminals.*;
+import snacks.lang.util.Position;
 
 public class Scanner extends beaver.Scanner implements AutoCloseable {
 
@@ -80,7 +74,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         dictionary.put("where", WHERE);
     }
 
-    private final Deque<Integer> braces;
+    private final Deque<BraceCounter> braces;
     private final Reader reader;
     private final String source;
     private final Deque<State> states;
@@ -198,21 +192,20 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private void beginInterpolation() {
         enterState(State.DEFAULT);
-        braces.push(0);
+        braces.push(new BraceCounter());
     }
 
     private void bracesDown() {
         if (!braces.isEmpty()) {
-            braces.push(braces.pop() - 1);
+            braces.peek().bracesDown();
         }
     }
 
     private void bracesUp() {
         if (braces.isEmpty()) {
-            braces.push(1);
-        } else {
-            braces.push(braces.pop() + 1);
+            braces.push(new BraceCounter());
         }
+        braces.peek().bracesUp();
     }
 
     private void buffer(int offset) {
@@ -311,7 +304,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private boolean endOfInterpolation() {
-        if (!braces.isEmpty() && braces.peek() < 0) {
+        if (!braces.isEmpty() && braces.peek().isEnd()) {
             leaveState();
             braces.pop();
             return true;
@@ -1296,7 +1289,24 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         TYPE_SIGNATURE,
     }
 
-    private class LookAhead implements AutoCloseable {
+    private static final class BraceCounter {
+
+        private int count;
+
+        public void bracesDown() {
+            count--;
+        }
+
+        public void bracesUp() {
+            count++;
+        }
+
+        public boolean isEnd() {
+            return count < 0;
+        }
+    }
+
+    private final class LookAhead implements AutoCloseable {
 
         private final int startPosition;
         private final int startLine;
