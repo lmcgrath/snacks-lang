@@ -1,14 +1,27 @@
 package snacks.lang.parser;
 
-import static java.util.Collections.reverse;
-import static snacks.lang.Types.*;
-import static snacks.lang.ast.AstFactory.*;
+import snacks.lang.Type;
+import snacks.lang.ast.AstNode;
+import snacks.lang.ast.ClosureLocator;
+import snacks.lang.ast.Locator;
+import snacks.lang.ast.NamedNode;
+import snacks.lang.ast.PatternCase;
+import snacks.lang.ast.Reference;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import snacks.lang.Type;
-import snacks.lang.ast.*;
+
+import static java.util.Collections.reverse;
+import static snacks.lang.Types.argumentOf;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.isFunction;
+import static snacks.lang.Types.resultOf;
+import static snacks.lang.ast.AstFactory.closure;
+import static snacks.lang.ast.AstFactory.declaration;
+import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.patterns;
+import static snacks.lang.ast.AstFactory.reference;
 
 class PatternBuilder {
 
@@ -26,17 +39,28 @@ class PatternBuilder {
         patterns.add(pattern);
     }
 
-    public NamedNode toPattern() {
+    public List<NamedNode> toPattern() {
         Type signature = environment.getSignature(locator);
         for (PatternCase pattern : patterns) {
             analyze(pattern, signature);
         }
         List<Type> argumentTypes = getArgumentTypes(signature);
+        List<NamedNode> declarations = new ArrayList<>();
         AstNode body = patterns(getReturnType(signature), patterns);
-        for (int i = argumentTypes.size() - 1; i >= 0; i--) {
-            body = func(func(argumentTypes.get(i), body.getType()), "#snacks#~patternArg" + i, body);
+        for (int i = argumentTypes.size() - 1; i > 0; i--) {
+            List<String> variables = new ArrayList<>();
+            for (int j = 0; j < i; j++) {
+                variables.add("#snacks#~patternArg" + j);
+            }
+            Locator closureLocator = new ClosureLocator(locator.getName() + '_' + i, variables);
+            NamedNode declaration = declaration(closureLocator.getName(), closure(func(argumentTypes.get(i), body.getType()), "#snacks#~patternArg" + i, body, variables));
+            body = reference(closureLocator, declaration.getType());
+            environment.define((Reference) body);
+            declarations.add(declaration);
         }
-        return declaration(locator.getName(), body);
+        body = func(func(argumentTypes.get(0), body.getType()), "#snacks#~patternArg0", body);
+        declarations.add(declaration(locator.getName(), body));
+        return declarations;
     }
 
     private void analyze(PatternCase pattern, Type signature) {

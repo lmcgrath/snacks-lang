@@ -1,8 +1,18 @@
 package snacks.lang.parser;
 
-import java.util.*;
 import snacks.lang.Type;
-import snacks.lang.ast.*;
+import snacks.lang.ast.AstNode;
+import snacks.lang.ast.Locator;
+import snacks.lang.ast.NamedNode;
+import snacks.lang.ast.PatternCase;
+import snacks.lang.ast.Reference;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class PatternCollection {
 
@@ -61,7 +71,7 @@ class PatternCollection {
     public List<NamedNode> render() {
         List<NamedNode> patterns = new ArrayList<>();
         for (PatternBuilder builder : builders.values()) {
-            patterns.add(builder.toPattern());
+            patterns.addAll(builder.toPattern());
         }
         return patterns;
     }

@@ -1,24 +1,41 @@
 package snacks.lang.parser;
 
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.rules.ExpectedException.none;
-import static snacks.lang.Types.*;
-import static snacks.lang.Types.func;
-import static snacks.lang.Types.record;
-import static snacks.lang.ast.AstFactory.*;
-import static snacks.lang.ast.AstFactory.func;
-import static snacks.lang.ast.AstFactory.var;
-import static snacks.lang.parser.TranslatorMatcher.defines;
-
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import snacks.lang.Type;
+import snacks.lang.ast.ClosureLocator;
 import snacks.lang.ast.NamedNode;
 import snacks.lang.ast.Reference;
+
+import java.util.Collection;
+
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+import static org.junit.rules.ExpectedException.none;
+import static snacks.lang.Types.algebraic;
+import static snacks.lang.Types.booleanType;
+import static snacks.lang.Types.func;
+import static snacks.lang.Types.integerType;
+import static snacks.lang.Types.property;
+import static snacks.lang.Types.record;
+import static snacks.lang.Types.recur;
+import static snacks.lang.Types.simple;
+import static snacks.lang.Types.stringType;
+import static snacks.lang.ast.AstFactory.access;
+import static snacks.lang.ast.AstFactory.closure;
+import static snacks.lang.ast.AstFactory.constant;
+import static snacks.lang.ast.AstFactory.declaration;
+import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.matchConstant;
+import static snacks.lang.ast.AstFactory.matchConstructor;
+import static snacks.lang.ast.AstFactory.nop;
+import static snacks.lang.ast.AstFactory.pattern;
+import static snacks.lang.ast.AstFactory.patterns;
+import static snacks.lang.ast.AstFactory.reference;
+import static snacks.lang.ast.AstFactory.var;
+import static snacks.lang.parser.TranslatorMatcher.defines;
 
 public class PatternTest extends AbstractTranslatorTest {
 
@@ -74,17 +91,19 @@ public class PatternTest extends AbstractTranslatorTest {
         assertThat(nodes, defines(declaration("test.leafs?", func(
             func(treeType, func(treeType, booleanType())),
             "#snacks#~patternArg0",
-            func(
-                func(treeType, booleanType()),
-                "#snacks#~patternArg1",
-                patterns(booleanType(), asList(
-                    pattern(asList(
-                        matchConstant(reference(vl("#snacks#~patternArg0"), leafType), ref(dl("test.Leaf"))),
-                        matchConstant(reference(vl("#snacks#~patternArg1"), leafType), ref(dl("test.Leaf")))
-                    ), constant(true)),
-                    pattern(asList(nop(), nop()), constant(false))
-                ))
-            )
+            reference(new ClosureLocator("test.leafs?_1", asList("#snacks#~pattern0")), func(treeType, booleanType()))
+        ))));
+        assertThat(nodes, defines(declaration("test.leafs?_1", closure(
+            func(treeType, booleanType()),
+            "#snacks#~patternArg1",
+            patterns(booleanType(), asList(
+                pattern(asList(
+                    matchConstant(reference(vl("#snacks#~patternArg0"), leafType), ref(dl("test.Leaf"))),
+                    matchConstant(reference(vl("#snacks#~patternArg1"), leafType), ref(dl("test.Leaf")))
+                ), constant(true)),
+                pattern(asList(nop(), nop()), constant(false))
+            )),
+            asList("#snacks#~patternArg0")
         ))));
     }
 
@@ -103,21 +122,22 @@ public class PatternTest extends AbstractTranslatorTest {
         assertThat(nodes, defines(declaration("test.optional", func(
             func(maybe, func(a, a)),
             "#snacks#~patternArg0",
-            func(func(a, a), "#snacks#~patternArg1", patterns(a, asList(
-                pattern(asList(
-                    matchConstant(reference(vl("#snacks#~patternArg0"), nothing), ref(dl("test.Nothing"))),
-                    var("x", reference(vl("#snacks#~patternArg1"), a))
-                ), reference(vl("x"), a)),
-                pattern(asList(
-                    matchConstructor(reference(vl("#snacks#~patternArg0"), just), asList(var("x", access(
-                        reference(vl("#snacks#~patternArg0"), just),
-                        "_0",
-                        a
-                    )))),
-                    nop()
-                ), reference(vl("x"), a))
-            )))
+            reference(new ClosureLocator("test.optional_1", asList("#snacks#~patternArg0")), func(a, a))
         ))));
+        assertThat(nodes, defines(declaration("test.optional_1",closure(func(a, a), "#snacks#~patternArg1", patterns(a, asList(
+            pattern(asList(
+                matchConstant(reference(vl("#snacks#~patternArg0"), nothing), ref(dl("test.Nothing"))),
+                var("x", reference(vl("#snacks#~patternArg1"), a))
+            ), reference(vl("x"), a)),
+            pattern(asList(
+                matchConstructor(reference(vl("#snacks#~patternArg0"), just), asList(var("x", access(
+                    reference(vl("#snacks#~patternArg0"), just),
+                    "_0",
+                    a
+                )))),
+                nop()
+            ), reference(vl("x"), a))
+        )), asList("#snacks#~patternArg0")))));
     }
 
     @Test

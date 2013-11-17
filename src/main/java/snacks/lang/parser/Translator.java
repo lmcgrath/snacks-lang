@@ -1,37 +1,176 @@
 package snacks.lang.parser;
 
+import beaver.Symbol;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import snacks.lang.Operator;
+import snacks.lang.SnackKind;
+import snacks.lang.SnacksList;
+import snacks.lang.Type;
+import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.VariableType;
+import snacks.lang.TypeUnroller;
+import snacks.lang.Types;
+import snacks.lang.ast.AstFactory;
+import snacks.lang.ast.AstNode;
+import snacks.lang.ast.Break;
+import snacks.lang.ast.ClosureLocator;
+import snacks.lang.ast.Continue;
+import snacks.lang.ast.DeclarationLocator;
+import snacks.lang.ast.DeclaredArgument;
+import snacks.lang.ast.DeclaredConstructor;
+import snacks.lang.ast.DeclaredExpression;
+import snacks.lang.ast.DeclaredProperty;
+import snacks.lang.ast.DeclaredRecord;
+import snacks.lang.ast.DeclaredType;
+import snacks.lang.ast.Locator;
+import snacks.lang.ast.LogicalAnd;
+import snacks.lang.ast.LogicalOr;
+import snacks.lang.ast.NamedNode;
+import snacks.lang.ast.PatternCase;
+import snacks.lang.ast.PropertyInitializer;
+import snacks.lang.ast.Reference;
+import snacks.lang.ast.UndefinedSymbolException;
+import snacks.lang.ast.VariableDeclaration;
+import snacks.lang.ast.VariableLocator;
+import snacks.lang.parser.syntax.AccessExpression;
+import snacks.lang.parser.syntax.AndExpression;
+import snacks.lang.parser.syntax.AnyMatcher;
+import snacks.lang.parser.syntax.ApplyExpression;
+import snacks.lang.parser.syntax.Argument;
+import snacks.lang.parser.syntax.AssignmentExpression;
+import snacks.lang.parser.syntax.Block;
+import snacks.lang.parser.syntax.BooleanLiteral;
+import snacks.lang.parser.syntax.BreakExpression;
+import snacks.lang.parser.syntax.CaptureMatcher;
+import snacks.lang.parser.syntax.CharacterLiteral;
+import snacks.lang.parser.syntax.ConditionCase;
+import snacks.lang.parser.syntax.Conditional;
+import snacks.lang.parser.syntax.ConstantDeclaration;
+import snacks.lang.parser.syntax.ConstantMatcher;
+import snacks.lang.parser.syntax.ConstructorExpression;
+import snacks.lang.parser.syntax.ConstructorMatcher;
+import snacks.lang.parser.syntax.ContinueExpression;
+import snacks.lang.parser.syntax.DoubleLiteral;
+import snacks.lang.parser.syntax.EmbraceCase;
+import snacks.lang.parser.syntax.ExceptionalExpression;
+import snacks.lang.parser.syntax.ExpressionDeclaration;
+import snacks.lang.parser.syntax.FromImport;
+import snacks.lang.parser.syntax.FunctionLiteral;
+import snacks.lang.parser.syntax.FunctionSignature;
+import snacks.lang.parser.syntax.HurlExpression;
+import snacks.lang.parser.syntax.Identifier;
+import snacks.lang.parser.syntax.Import;
+import snacks.lang.parser.syntax.InitializerExpression;
+import snacks.lang.parser.syntax.IntegerLiteral;
+import snacks.lang.parser.syntax.InvokableLiteral;
+import snacks.lang.parser.syntax.IteratorLoop;
+import snacks.lang.parser.syntax.LoopExpression;
+import snacks.lang.parser.syntax.MapEntry;
+import snacks.lang.parser.syntax.MapLiteral;
+import snacks.lang.parser.syntax.Message;
+import snacks.lang.parser.syntax.Module;
+import snacks.lang.parser.syntax.NamedPattern;
+import snacks.lang.parser.syntax.NopExpression;
+import snacks.lang.parser.syntax.OperatorDeclaration;
+import snacks.lang.parser.syntax.OrExpression;
+import snacks.lang.parser.syntax.PatternMatcher;
+import snacks.lang.parser.syntax.PropertyDeclaration;
+import snacks.lang.parser.syntax.PropertyExpression;
+import snacks.lang.parser.syntax.PropertyMatcher;
+import snacks.lang.parser.syntax.ProtocolDeclaration;
+import snacks.lang.parser.syntax.ProtocolImplementation;
+import snacks.lang.parser.syntax.QualifiedIdentifier;
+import snacks.lang.parser.syntax.QuotedIdentifier;
+import snacks.lang.parser.syntax.QuotedOperator;
+import snacks.lang.parser.syntax.RecordDeclaration;
+import snacks.lang.parser.syntax.RecordMatcher;
+import snacks.lang.parser.syntax.RegexLiteral;
+import snacks.lang.parser.syntax.Result;
+import snacks.lang.parser.syntax.SetLiteral;
+import snacks.lang.parser.syntax.Signature;
+import snacks.lang.parser.syntax.StringLiteral;
+import snacks.lang.parser.syntax.SubImport;
+import snacks.lang.parser.syntax.SymbolLiteral;
+import snacks.lang.parser.syntax.SyntaxVisitor;
+import snacks.lang.parser.syntax.TupleLiteral;
+import snacks.lang.parser.syntax.TupleSignature;
+import snacks.lang.parser.syntax.TypeDeclaration;
+import snacks.lang.parser.syntax.TypeReference;
+import snacks.lang.parser.syntax.TypeSpec;
+import snacks.lang.parser.syntax.TypeVariable;
+import snacks.lang.parser.syntax.UnitLiteral;
+import snacks.lang.parser.syntax.Using;
+import snacks.lang.parser.syntax.Var;
+import snacks.lang.parser.syntax.VarDeclaration;
+import snacks.lang.parser.syntax.VisitableSymbol;
+import snacks.lang.parser.syntax.WildcardImport;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.join;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksList.fromList;
-import static snacks.lang.Types.*;
+import static snacks.lang.Types.booleanType;
 import static snacks.lang.Types.func;
+import static snacks.lang.Types.property;
+import static snacks.lang.Types.recur;
+import static snacks.lang.Types.resultOf;
 import static snacks.lang.Types.tuple;
+import static snacks.lang.Types.union;
 import static snacks.lang.Types.var;
-import static snacks.lang.ast.AstFactory.*;
+import static snacks.lang.Types.voidType;
+import static snacks.lang.ast.AstFactory.access;
+import static snacks.lang.ast.AstFactory.apply;
+import static snacks.lang.ast.AstFactory.assign;
+import static snacks.lang.ast.AstFactory.begin;
+import static snacks.lang.ast.AstFactory.closure;
+import static snacks.lang.ast.AstFactory.constant;
+import static snacks.lang.ast.AstFactory.constantDef;
+import static snacks.lang.ast.AstFactory.declaration;
+import static snacks.lang.ast.AstFactory.embrace;
+import static snacks.lang.ast.AstFactory.exceptional;
+import static snacks.lang.ast.AstFactory.expression;
 import static snacks.lang.ast.AstFactory.func;
+import static snacks.lang.ast.AstFactory.guard;
+import static snacks.lang.ast.AstFactory.guards;
+import static snacks.lang.ast.AstFactory.hurl;
+import static snacks.lang.ast.AstFactory.initializer;
+import static snacks.lang.ast.AstFactory.invokable;
+import static snacks.lang.ast.AstFactory.loop;
+import static snacks.lang.ast.AstFactory.matchConstant;
+import static snacks.lang.ast.AstFactory.matchConstructor;
+import static snacks.lang.ast.AstFactory.nop;
+import static snacks.lang.ast.AstFactory.prop;
+import static snacks.lang.ast.AstFactory.propDef;
 import static snacks.lang.ast.AstFactory.record;
+import static snacks.lang.ast.AstFactory.result;
+import static snacks.lang.ast.AstFactory.sequence;
+import static snacks.lang.ast.AstFactory.symbol;
 import static snacks.lang.ast.AstFactory.tuple;
+import static snacks.lang.ast.AstFactory.unit;
 import static snacks.lang.parser.syntax.SyntaxFactory.id;
 import static snacks.lang.parser.syntax.SyntaxFactory.importId;
 import static snacks.lang.parser.syntax.SyntaxFactory.qid;
 import static snacks.lang.parser.syntax.SyntaxFactory.type;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import beaver.Symbol;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import snacks.lang.*;
-import snacks.lang.Type.AlgebraicType;
-import snacks.lang.Type.FunctionType;
-import snacks.lang.Type.RecordType;
-import snacks.lang.Type.RecordType.Property;
-import snacks.lang.Type.VariableType;
-import snacks.lang.ast.*;
-import snacks.lang.parser.syntax.*;
-import snacks.lang.parser.syntax.Result;
 
 public class Translator implements SyntaxVisitor {
 
@@ -1124,14 +1263,14 @@ public class Translator implements SyntaxVisitor {
         AstNode body = translate(node.getBody());
         leaveScope();
         Type functionType = inferenceFunctionType(node, argument);
-        if (functionLevel > 1) {
+        if (isInsideClosure()) {
             leaveFunction();
             Locator locator = names.get(node);
             if (locator == null) {
                 String name = generateName();
                 Collection<String> environment = getVariables();
                 register(name, functionType);
-                declarations.add(declaration(qualify(name), closure(argument.getName(), environment, body, functionType)));
+                declarations.add(declaration(qualify(name), closure(functionType, argument.getName(), body, environment)));
                 locator = new ClosureLocator(qualify(name), environment);
                 names.put(node, locator);
             }
@@ -1140,6 +1279,10 @@ public class Translator implements SyntaxVisitor {
         } else {
             return func(functionType, argument.getName(), body);
         }
+    }
+
+    private boolean isInsideClosure() {
+        return functionLevel > 1;
     }
 
     private PropertyInitializers translateProperties(InitializerExpression node, RecordType recordType) {

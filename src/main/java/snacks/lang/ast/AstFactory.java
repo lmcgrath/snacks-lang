@@ -1,11 +1,12 @@
 package snacks.lang.ast;
 
-import static java.util.Arrays.asList;
+import snacks.lang.Type;
+import snacks.lang.Type.RecordType.Property;
 
 import java.util.Collection;
 import java.util.List;
-import snacks.lang.Type;
-import snacks.lang.Type.RecordType.Property;
+
+import static java.util.Arrays.asList;
 
 public final class AstFactory {
 
@@ -25,7 +26,7 @@ public final class AstFactory {
         return new Begin(body);
     }
 
-    public static AstNode closure(String variable, Collection<String> environment, AstNode expression, Type type) {
+    public static AstNode closure(Type type, String variable, AstNode expression, Collection<String> environment) {
         return new FunctionClosure(variable, environment, expression, type);
     }
 
