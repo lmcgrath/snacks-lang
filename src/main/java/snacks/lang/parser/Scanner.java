@@ -91,7 +91,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     public Scanner(String source, InputStream stream) {
         this.source = source;
-        this.braces = new ArrayDeque<>();
+        this.braces = new ArrayDeque<>(asList(new BraceCounter(State.DEFAULT)));
         this.reader = new InputStreamReader(stream, UTF_8);
         this.states = new ArrayDeque<>(asList(State.DEFAULT));
         this.string = new StringBuilder();
@@ -192,19 +192,14 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private void beginInterpolation() {
         enterState(State.DEFAULT);
-        braces.push(new BraceCounter());
+        braces.push(new BraceCounter(State.INTERPOLATION));
     }
 
     private void bracesDown() {
-        if (!braces.isEmpty()) {
-            braces.peek().bracesDown();
-        }
+        braces.peek().bracesDown();
     }
 
     private void bracesUp() {
-        if (braces.isEmpty()) {
-            braces.push(new BraceCounter());
-        }
         braces.peek().bracesUp();
     }
 
@@ -304,7 +299,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private boolean endOfInterpolation() {
-        if (!braces.isEmpty() && braces.peek().isEnd()) {
+        if (!braces.isEmpty() && braces.peek().isEndOf(State.INTERPOLATION)) {
             leaveState();
             braces.pop();
             return true;
@@ -1291,18 +1286,23 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
 
     private static final class BraceCounter {
 
+        private final State state;
         private int count;
 
+        public BraceCounter(State state) {
+            this.state = state;
+        }
+
         public void bracesDown() {
-            count--;
+            this.count--;
         }
 
         public void bracesUp() {
             count++;
         }
 
-        public boolean isEnd() {
-            return count < 0;
+        public boolean isEndOf(State state) {
+            return this.state == state && count < 0;
         }
     }
 
