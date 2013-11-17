@@ -1,15 +1,16 @@
 package snacks.lang.parser;
 
+import beaver.Symbol;
+import org.junit.Test;
+
+import java.util.ArrayList;
+
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.parser.CompilerUtil.expression;
 import static snacks.lang.parser.CompilerUtil.parse;
 import static snacks.lang.parser.syntax.SyntaxFactory.*;
-
-import java.util.ArrayList;
-import beaver.Symbol;
-import org.junit.Test;
 
 public class ParserTest {
 
@@ -61,15 +62,36 @@ public class ParserTest {
 
     @Test
     public void shouldParseMap() {
-        assertThat(expression("{ 'one' => 1, 'two' => 2 }"), equalTo(map(
-            entry(literal("one"), literal(1)),
-            entry(literal("two"), literal(2))
+        assertThat(expression("insert { 1 => 'one', 2 => 'two' }"), equalTo(msg(
+            id("insert"),
+            map(
+                entry(literal(1), literal("one")),
+                entry(literal(2), literal("two"))
+            )
         )));
     }
 
     @Test
     public void shouldParseEmptyMap() {
         assertThat(expression("{:}"), equalTo(map()));
+    }
+
+    @Test
+    public void shouldParseEmptyMapInExpression() {
+        expression(
+            "insert {:} 3 'three' == { 3 => 'three' }"
+        );
+        assertThat(parse("entry = insert {:} 3 'three' == 'pie'"), equalTo(module(
+            def("entry", msg(
+                id("insert"),
+                map(),
+                literal(3),
+                literal("three"),
+                id("=="),
+                literal("pie")
+
+            ))
+        )));
     }
 
     @Test

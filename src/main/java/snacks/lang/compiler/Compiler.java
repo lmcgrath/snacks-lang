@@ -1,8 +1,111 @@
 package snacks.lang.compiler;
 
-import static me.qmx.jitescript.util.CodegenUtils.*;
+import me.qmx.jitescript.AnnotationArrayValue;
+import me.qmx.jitescript.CodeBlock;
+import me.qmx.jitescript.JDKVersion;
+import me.qmx.jitescript.JiteClass;
+import me.qmx.jitescript.VisibleAnnotation;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.tree.LabelNode;
+import snacks.lang.Errorize;
+import snacks.lang.Infix;
+import snacks.lang.Invokable;
+import snacks.lang.JavaUtils;
+import snacks.lang.MatchException;
+import snacks.lang.Operator;
+import snacks.lang.Prefix;
+import snacks.lang.Snack;
+import snacks.lang.SnackDefinition;
+import snacks.lang.SnackType;
+import snacks.lang.SnacksList;
+import snacks.lang.SnacksRegistry;
+import snacks.lang.Symbol;
+import snacks.lang.Type;
+import snacks.lang.Type.AlgebraicType;
+import snacks.lang.Type.FunctionType;
+import snacks.lang.Type.RecordType;
+import snacks.lang.Type.RecordType.Property;
+import snacks.lang.Type.RecursiveType;
+import snacks.lang.TypeGenerator;
+import snacks.lang.Unit;
+import snacks.lang.ast.Access;
+import snacks.lang.ast.Apply;
+import snacks.lang.ast.Assign;
+import snacks.lang.ast.AstNode;
+import snacks.lang.ast.Begin;
+import snacks.lang.ast.BooleanConstant;
+import snacks.lang.ast.Break;
+import snacks.lang.ast.CharacterConstant;
+import snacks.lang.ast.Closure;
+import snacks.lang.ast.ClosureLocator;
+import snacks.lang.ast.Continue;
+import snacks.lang.ast.DeclarationLocator;
+import snacks.lang.ast.DeclaredConstant;
+import snacks.lang.ast.DeclaredConstructor;
+import snacks.lang.ast.DeclaredExpression;
+import snacks.lang.ast.DeclaredRecord;
+import snacks.lang.ast.DeclaredType;
+import snacks.lang.ast.DoubleConstant;
+import snacks.lang.ast.Embrace;
+import snacks.lang.ast.Exceptional;
+import snacks.lang.ast.ExpressionConstant;
+import snacks.lang.ast.Function;
+import snacks.lang.ast.FunctionClosure;
+import snacks.lang.ast.Generator;
+import snacks.lang.ast.GuardCase;
+import snacks.lang.ast.GuardCases;
+import snacks.lang.ast.Hurl;
+import snacks.lang.ast.Initializer;
+import snacks.lang.ast.IntegerConstant;
+import snacks.lang.ast.Locator;
+import snacks.lang.ast.LogicalAnd;
+import snacks.lang.ast.LogicalOr;
+import snacks.lang.ast.Loop;
+import snacks.lang.ast.MatchConstant;
+import snacks.lang.ast.MatchConstructor;
+import snacks.lang.ast.NamedNode;
+import snacks.lang.ast.Nop;
+import snacks.lang.ast.PatternCase;
+import snacks.lang.ast.PatternCases;
+import snacks.lang.ast.Reducer;
+import snacks.lang.ast.Reference;
+import snacks.lang.ast.ReferencesEqual;
+import snacks.lang.ast.Result;
+import snacks.lang.ast.Sequence;
+import snacks.lang.ast.StringConstant;
+import snacks.lang.ast.SymbolConstant;
+import snacks.lang.ast.TupleInitializer;
+import snacks.lang.ast.UndefinedSymbolException;
+import snacks.lang.ast.UnitConstant;
+import snacks.lang.ast.VariableDeclaration;
+import snacks.lang.ast.VariableLocator;
+import snacks.lang.ast.VoidFunction;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import static me.qmx.jitescript.util.CodegenUtils.c;
+import static me.qmx.jitescript.util.CodegenUtils.ci;
+import static me.qmx.jitescript.util.CodegenUtils.p;
+import static me.qmx.jitescript.util.CodegenUtils.params;
+import static me.qmx.jitescript.util.CodegenUtils.sig;
 import static org.apache.commons.lang.StringUtils.join;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_ABSTRACT;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PROTECTED;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static snacks.lang.JavaUtils.javaGetter;
 import static snacks.lang.JavaUtils.javaName;
 import static snacks.lang.SnackKind.TYPE;
@@ -12,20 +115,6 @@ import static snacks.lang.Type.SimpleType;
 import static snacks.lang.Type.UnionType;
 import static snacks.lang.Type.VariableType;
 import static snacks.lang.Types.isInvokable;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import me.qmx.jitescript.*;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.tree.LabelNode;
-import snacks.lang.*;
-import snacks.lang.Type.AlgebraicType;
-import snacks.lang.Type.FunctionType;
-import snacks.lang.Type.RecordType;
-import snacks.lang.Type.RecordType.Property;
-import snacks.lang.Type.RecursiveType;
-import snacks.lang.ast.*;
 
 public class Compiler implements Generator, TypeGenerator, Reducer {
 
@@ -544,7 +633,7 @@ public class Compiler implements Generator, TypeGenerator, Reducer {
 
     @Override
     public void generatePatternCases(PatternCases node) {
-        CodeBlock block = beginBlock();
+        CodeBlock block = block();
         for (PatternCase pattern : node.getPatterns()) {
             generate(pattern);
         }

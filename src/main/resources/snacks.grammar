@@ -16,7 +16,8 @@
     VAR, WHILE, SEMICOLON, COLON, QUOTE, TRIPLE_QUOTE, TRIPLE_DQUOTE, LSQUARE, RSQUARE, LCURLY, RCURLY, USE, CHARACTER,
     BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE, PIPE,
     LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
-    QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE, SYMBOL_CONSTRUCTOR
+    QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE, SYMBOL_CONSTRUCTOR, EMPTY_MAP,
+    EMPTY_SET
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -380,13 +381,13 @@ tuple_literal
     ;
 
 set_literal
-    = LCURLY COMMA RCURLY                               {: return set(); :}
+    = EMPTY_SET                                         {: return set(); :}
     | LCURLY expression.e COMMA RCURLY                  {: return set(e); :}
     | LCURLY expression.e COMMA list.es COMMA? RCURLY   {: return set(e, es); :}
     ;
 
 map_literal
-    = LCURLY COLON RCURLY                   {: return map(); :}
+    = EMPTY_MAP                             {: return map(); :}
     | LCURLY keyed_list.e COMMA? nl* RCURLY {: return map(e); :}
     | LCURLY map_list.e COMMA? nl* RCURLY   {: return map(e); :}
     ;
