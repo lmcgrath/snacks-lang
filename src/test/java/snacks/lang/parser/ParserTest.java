@@ -1,16 +1,15 @@
 package snacks.lang.parser;
 
-import beaver.Symbol;
-import org.junit.Test;
-
-import java.util.ArrayList;
-
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.parser.CompilerUtil.expression;
 import static snacks.lang.parser.CompilerUtil.parse;
 import static snacks.lang.parser.syntax.SyntaxFactory.*;
+
+import java.util.ArrayList;
+import beaver.Symbol;
+import org.junit.Test;
 
 public class ParserTest {
 
@@ -541,10 +540,10 @@ public class ParserTest {
     @Test
     public void shouldParseRightHandOfAssignmentAsOneMsg() {
         Symbol tree = parse(
-            "main = { x = x + 1 }"
+            "main = { var x = x + 1 }"
         );
         assertThat(tree, equalTo(module(
-            def("main", invokable(block(assign(id("x"), msg(id("x"), id("+"), literal(1))))))
+            def("main", invokable(block(var("x", msg(id("x"), id("+"), literal(1))))))
         )));
     }
 

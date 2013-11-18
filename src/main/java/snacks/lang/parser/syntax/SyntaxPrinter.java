@@ -236,13 +236,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitMapLiteral(MapLiteral node) {
-        for (Symbol entry : node.getEntries()) {
-            print(entry);
-        }
-    }
-
-    @Override
     public void visitMessage(Message node) {
         for (Symbol element : node.getElements()) {
             print(element);

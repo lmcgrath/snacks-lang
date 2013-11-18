@@ -1,10 +1,5 @@
 package snacks.lang.parser;
 
-import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
-
 import static org.apache.commons.lang.StringUtils.join;
 import static org.hamcrest.Matchers.both;
 import static org.junit.Assert.assertThat;
@@ -13,11 +8,45 @@ import static snacks.lang.parser.Terminals.*;
 import static snacks.lang.parser.TokenKindMatcher.hasKind;
 import static snacks.lang.parser.TokenValueMatcher.hasValue;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
+import org.junit.Test;
+
 public class ScannerTest {
 
     @Test
     public void shouldGetInteger() {
         assertThat(scan("123").nextToken(), hasKind(INTEGER));
+    }
+
+    @Test
+    public void shouldGetLProps() {
+        assertThat(scan("{ property = value").nextToken(), hasKind(LPROPS));
+    }
+
+    @Test
+    public void shouldGetRProps() {
+        Scanner scanner = scan("{ property = value }");
+        scanner.nextToken();
+        scanner.nextToken();
+        scanner.nextToken();
+        scanner.nextToken();
+        assertThat(scanner.nextToken(), hasKind(RPROPS));
+    }
+
+    @Test
+    public void shouldGetLCurly() {
+        assertThat(scan("{ waffles and apples }").nextToken(), hasKind(LCURLY));
+    }
+
+    @Test
+    public void shouldGetRCurly() {
+        Scanner scanner = scan("{ waffles and bananas }");
+        scanner.nextToken();
+        scanner.nextToken();
+        scanner.nextToken();
+        scanner.nextToken();
+        assertThat(scanner.nextToken(), hasKind(RCURLY));
     }
 
     @Test

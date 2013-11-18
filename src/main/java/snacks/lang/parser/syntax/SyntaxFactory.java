@@ -1,19 +1,18 @@
 package snacks.lang.parser.syntax;
 
-import beaver.Symbol;
-import snacks.lang.Operator;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
 import static snacks.lang.Fixity.LEFT;
 import static snacks.lang.Fixity.NONE;
 import static snacks.lang.Fixity.RIGHT;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import beaver.Symbol;
+import snacks.lang.Operator;
 
 public final class SyntaxFactory {
 
@@ -110,7 +109,7 @@ public final class SyntaxFactory {
         return new EmbraceCase(var, type, expression);
     }
 
-    public static Symbol entry(Symbol key, Symbol value) {
+    public static MapEntry entry(Symbol key, Symbol value) {
         return new MapEntry(key, value);
     }
 
@@ -214,8 +213,14 @@ public final class SyntaxFactory {
         return new IteratorLoop(var, elements, body);
     }
 
-    public static Symbol map(Symbol... entries) {
-        return new MapLiteral(entries);
+    public static Symbol map(MapEntry... entries) {
+        Symbol empty = qid("snacks", "lang", "EmptyMap");
+        Symbol entry = qid("snacks", "lang", "MapEntry");
+        Symbol tail = empty;
+        for (int i = entries.length - 1; i >= 0; i--) {
+            tail = apply(apply(apply(apply(entry, entries[i].getKey()), entries[i].getValue()), tail), empty);
+        }
+        return tail;
     }
 
     public static Symbol matchAny() {

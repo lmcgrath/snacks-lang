@@ -17,7 +17,7 @@
     BREAK, NEWLINE, GOES_TO, APPLIES_TO, COMMA, INTEGER, ASSIGN, IN, THROWAWAY, LINTERPOLATE, DATA, RINTERPOLATE, PIPE,
     LINDEX, FWORD, DOUBLE_COLON, LFUNC, LFUNC_MULTILINE, CONTINUE, INFIX, LEFT_INFIX, RIGHT_INFIX, PREFIX, UNIT,
     QUOTED_IDENTIFIER, QUOTED_OPERATOR, LPATTERN, PROTOCOL, IMPLEMENT, DERIVES, WHERE, SYMBOL_CONSTRUCTOR, EMPTY_MAP,
-    EMPTY_SET
+    EMPTY_SET, LPROPS, RPROPS
 ;
 
 %init {: report = new ParserEvents(); :};
@@ -70,7 +70,8 @@
 %typeof begin_case = "Symbol[]";
 %typeof qualified_identifier = "QualifiedIdentifier";
 %typeof qualified_fword = "QualifiedIdentifier";
-%typeof initializer_properties = "Symbol[]";
+%typeof map_entry = "MapEntry";
+%typeof keyed_entry = "MapEntry";
 
 module
     = module_statements.e term* {: return module(e); :}
@@ -297,8 +298,10 @@ expression
 
 postfix_expression
     = primary_expression
-    | postfix_expression.e initializer_properties.p {: return initializer(e, p); :}
-    | postfix_expression.e DOT IDENTIFIER.id        {: return access(e, id); :}
+    | postfix_expression.e LPROPS properties.p COMMA? RPROPS
+        {: return initializer(e, p); :}
+    | postfix_expression.e DOT IDENTIFIER.id
+        {: return access(e, id); :}
     | postfix_expression.e LINDEX postfix_expression.a+ COMMA? RSQUARE
         {:
             Symbol result = apply(id("[]"), e);
@@ -345,11 +348,6 @@ string_literal
     | DQUOTE interpolation_list.e DQUOTE                {: return e; :}
     | TRIPLE_QUOTE STRING.val TRIPLE_QUOTE              {: return literal(val); :}
     | TRIPLE_DQUOTE interpolation_list.e TRIPLE_DQUOTE  {: return e; :}
-    ;
-
-initializer_properties
-    = LCURLY properties.p COMMA? RCURLY {: return new Symbol(p); :}
-    | LCURLY COMMA? RCURLY              {: return new Symbol(new Symbol[0]); :}
     ;
 
 properties
@@ -532,7 +530,7 @@ pattern
     | qualified_identifier.id                       {: return matchName(id); :}
     | qualified_identifier.id argument_matcher.m+   {: return matchConstructor(type(id), asList(m)); :}
     | qualified_identifier.id LCURLY RCURLY         {: return matchRecord(type(id), new ArrayList<Symbol>()); :}
-    | qualified_identifier.id LCURLY property_matchers.m COMMA? RCURLY
+    | qualified_identifier.id LPROPS property_matchers.m COMMA? RPROPS
         {: return matchRecord(type(id), asList(m)); :}
     | LPAREN pattern.p COMMA RPAREN
         {: return matchConstructor(type("snacks", "lang", "Tuple1"), asList(p)); :}

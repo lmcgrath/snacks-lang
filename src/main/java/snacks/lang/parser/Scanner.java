@@ -195,6 +195,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         braces.push(new BraceCounter(State.INTERPOLATION));
     }
 
+    private void beginProps() {
+        braces.push(new BraceCounter(State.PROPERTIES));
+    }
+
     private void bracesDown() {
         braces.peek().bracesDown();
     }
@@ -299,8 +303,17 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
     }
 
     private boolean endOfInterpolation() {
-        if (!braces.isEmpty() && braces.peek().isEndOf(State.INTERPOLATION)) {
+        if (braces.peek().isEndOf(State.INTERPOLATION)) {
             leaveState();
+            braces.pop();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean endOfProperties() {
+        if (braces.peek().isEndOf(State.PROPERTIES)) {
             braces.pop();
             return true;
         } else {
@@ -688,6 +701,10 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
                 } else if (peek() == ':' && lookAhead(1) == '}') {
                     read(2);
                     return accept(EMPTY_MAP);
+                } else if (isProperties()) {
+                    beginProps();
+                    detectNewlines();
+                    return accept(LPROPS);
                 } else {
                     bracesUp();
                     return detectFunctionMultiline();
@@ -695,7 +712,9 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             case '}':
                 read();
                 bracesDown();
-                if (endOfInterpolation()) {
+                if (endOfProperties()) {
+                    return accept(RPROPS);
+                } else if (endOfInterpolation()) {
                     return accept(RINTERPOLATE);
                 } else {
                     detectSuffix();
@@ -764,6 +783,29 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
             return scanIdentifier();
         }
         return error();
+    }
+
+    private boolean isProperties() {
+        try (LookAhead ignore = new LookAhead()) {
+            while (isWhitespace(peek())) {
+                read();
+            }
+            if (isIdentifier(peek())) {
+                while (isIdentifier(peek())) {
+                    read();
+                }
+            }
+            while (peek() == '\'') {
+                read();
+            }
+            while (isWhitespace(peek())) {
+                read();
+            }
+            if (peek() == '=' && isWhitespace(lookAhead(1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Action scanDoubleQuote() {
@@ -1282,6 +1324,7 @@ public class Scanner extends beaver.Scanner implements AutoCloseable {
         QUOTED_OPERATOR,
         DATA_DECLARATION,
         TYPE_SIGNATURE,
+        PROPERTIES,
     }
 
     private static final class BraceCounter {

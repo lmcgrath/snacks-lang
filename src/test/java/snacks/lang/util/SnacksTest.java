@@ -19,7 +19,7 @@ import snacks.lang.parser.SymbolEnvironment;
 import snacks.lang.runtime.OutResource;
 import snacks.lang.runtime.SnacksClassLoader;
 
-public class SnacksTest {
+public abstract class SnacksTest {
 
     @Rule
     public final OutResource out;
