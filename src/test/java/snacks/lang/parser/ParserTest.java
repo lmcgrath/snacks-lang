@@ -1,15 +1,16 @@
 package snacks.lang.parser;
 
+import beaver.Symbol;
+import org.junit.Test;
+
+import java.util.ArrayList;
+
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static snacks.lang.parser.CompilerUtil.expression;
 import static snacks.lang.parser.CompilerUtil.parse;
 import static snacks.lang.parser.syntax.SyntaxFactory.*;
-
-import java.util.ArrayList;
-import beaver.Symbol;
-import org.junit.Test;
 
 public class ParserTest {
 

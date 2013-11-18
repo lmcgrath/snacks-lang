@@ -1,5 +1,9 @@
 package snacks.lang;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+
+import java.util.Objects;
+
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
@@ -9,8 +13,6 @@ import static snacks.lang.Types.*;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Objects;
-import org.apache.commons.lang.builder.EqualsBuilder;
 
 @Snack(name = "Map", kind = TYPE)
 public abstract class SnacksMap<K, V> implements Iterable<Tuple2<K, V>> {

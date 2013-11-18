@@ -1,19 +1,25 @@
 package snacks.lang.parser;
 
-import static java.util.Arrays.asList;
-import static java.util.Arrays.copyOf;
-import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
-import static snacks.lang.parser.Terminals.*;
+import snacks.lang.util.Position;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
-import snacks.lang.util.Position;
+
+import static java.util.Arrays.asList;
+import static java.util.Arrays.copyOf;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
+import static snacks.lang.parser.Terminals.*;
 
 public class Scanner extends beaver.Scanner implements AutoCloseable {
 

@@ -1,5 +1,10 @@
 package snacks.lang.parser;
 
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
+
 import static org.apache.commons.lang.StringUtils.join;
 import static org.hamcrest.Matchers.both;
 import static org.junit.Assert.assertThat;
@@ -7,10 +12,6 @@ import static org.junit.Assert.fail;
 import static snacks.lang.parser.Terminals.*;
 import static snacks.lang.parser.TokenKindMatcher.hasKind;
 import static snacks.lang.parser.TokenValueMatcher.hasValue;
-
-import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
-import org.junit.Test;
 
 public class ScannerTest {
 
