@@ -70,8 +70,6 @@ public interface SyntaxVisitor {
 
     void visitMapEntry(MapEntry node);
 
-    void visitMapLiteral(MapLiteral node);
-
     void visitMessage(Message node);
 
     void visitModule(Module node);

@@ -1,12 +1,12 @@
 package snacks.lang.runtime;
 
-import org.junit.Test;
-import snacks.lang.SnacksException;
-import snacks.lang.util.SnacksTest;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+
+import org.junit.Test;
+import snacks.lang.SnacksException;
+import snacks.lang.util.SnacksTest;
 
 public class RuntimeTest extends SnacksTest {
 
@@ -825,21 +825,6 @@ public class RuntimeTest extends SnacksTest {
             "main = () -> assert $ 2 `add` 3 == 5",
             "add = (a b) -> a + b"
         );
-    }
-
-    @Test
-    public void shouldCreateList() {
-        run("main = () -> assert $ string [1, 2, 3] == '[1, 2, 3]'");
-    }
-
-    @Test
-    public void shouldCreateEmptyList() {
-        run("main = () -> assert $ string [] == '[]'");
-    }
-
-    @Test
-    public void shouldCreateListOfTuples() {
-        run("main = () -> assert $ string [(1, 2), (3, 4)] == '[(1, 2), (3, 4)]'");
     }
 
     @Test

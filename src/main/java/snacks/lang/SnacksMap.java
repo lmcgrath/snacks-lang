@@ -1,24 +1,19 @@
 package snacks.lang;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-
-import java.util.Objects;
-
 import static java.util.Arrays.asList;
 import static snacks.lang.SnackKind.EXPRESSION;
 import static snacks.lang.SnackKind.TYPE;
 import static snacks.lang.SnacksMap.EmptyMap.emptyMap;
 import static snacks.lang.SnacksMap.MapEntry.mapEntry;
-import static snacks.lang.Types.algebraic;
-import static snacks.lang.Types.func;
-import static snacks.lang.Types.property;
-import static snacks.lang.Types.record;
-import static snacks.lang.Types.recur;
-import static snacks.lang.Types.simple;
-import static snacks.lang.Types.var;
+import static snacks.lang.Types.*;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 @Snack(name = "Map", kind = TYPE)
-public abstract class SnacksMap<K, V> {
+public abstract class SnacksMap<K, V> implements Iterable<Tuple2<K, V>> {
 
     public static Type keyType() {
         return var("snacks.lang.Map#k");
@@ -103,6 +98,31 @@ public abstract class SnacksMap<K, V> {
         @Override
         public boolean isEmpty() {
             return true;
+        }
+
+        @Override
+        public Iterator<Tuple2<K, V>> iterator() {
+            return new Iterator<Tuple2<K, V>>() {
+                @Override
+                public boolean hasNext() {
+                    return false;
+                }
+
+                @Override
+                public Tuple2<K, V> next() {
+                    throw new NoSuchElementException();
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        @Override
+        public String toString() {
+            return "{:}";
         }
 
         @Snack(name = "EmptyMap", kind = EXPRESSION)
@@ -191,6 +211,31 @@ public abstract class SnacksMap<K, V> {
             return false;
         }
 
+        @Override
+        public Iterator<Tuple2<K, V>> iterator() {
+            return new IteratorImpl<>(this);
+        }
+
+        @Override
+        public String toString() {
+            Iterator<Tuple2<K, V>> entries = iterator();
+            Tuple2<K, V> entry = entries.next();
+            StringBuilder builder = new StringBuilder();
+            builder.append("{ ");
+            builder.append(entry.get_0());
+            builder.append(" => ");
+            builder.append(entry.get_1());
+            while (entries.hasNext()) {
+                entry = entries.next();
+                builder.append(", ");
+                builder.append(entry.get_0());
+                builder.append(" => ");
+                builder.append(entry.get_1());
+            }
+            builder.append(" }");
+            return builder.toString();
+        }
+
         @Snack(name = "MapEntry", kind = EXPRESSION)
         public static final class Constructor {
 
@@ -262,6 +307,38 @@ public abstract class SnacksMap<K, V> {
                     return new MapEntry(key, value, left, right);
                 }
             }
+        }
+    }
+
+    private static final class IteratorImpl<K, V> implements Iterator<Tuple2<K, V>> {
+
+        private SnacksMap<K, V> map;
+
+        public IteratorImpl(SnacksMap<K, V> map) {
+            this.map = map;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return map instanceof MapEntry;
+        }
+
+        @Override
+        public Tuple2<K, V> next() {
+            if (map instanceof MapEntry) {
+                MapEntry<K, V> entry = (MapEntry<K, V>) map;
+                map = entry.getLeft();
+                return new Tuple2<>(entry.getKey(), entry.getValue());
+            } else if (map instanceof EmptyMap) {
+                throw new NoSuchElementException();
+            } else {
+                throw new MatchException("Failed to match map: " + map.getClass().getName());
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

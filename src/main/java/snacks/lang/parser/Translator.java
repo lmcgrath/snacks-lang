@@ -69,7 +69,6 @@ import snacks.lang.parser.syntax.InvokableLiteral;
 import snacks.lang.parser.syntax.IteratorLoop;
 import snacks.lang.parser.syntax.LoopExpression;
 import snacks.lang.parser.syntax.MapEntry;
-import snacks.lang.parser.syntax.MapLiteral;
 import snacks.lang.parser.syntax.Message;
 import snacks.lang.parser.syntax.Module;
 import snacks.lang.parser.syntax.NamedPattern;
@@ -522,11 +521,6 @@ public class Translator implements SyntaxVisitor {
 
     @Override
     public void visitMapEntry(MapEntry node) {
-        throw new UnsupportedOperationException(); // TODO
-    }
-
-    @Override
-    public void visitMapLiteral(MapLiteral node) {
         throw new UnsupportedOperationException(); // TODO
     }
 
