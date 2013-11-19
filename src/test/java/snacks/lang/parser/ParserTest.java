@@ -30,7 +30,7 @@ public class ParserTest {
 
     @Test
     public void shouldParseList() {
-        Symbol element = qid("snacks", "lang", "ListElement");
+        Symbol element = qid("snacks", "lang", "ListEntry");
         Symbol empty = qid("snacks", "lang", "EmptyList");
         assertThat(expression("[a]"), equalTo(apply(apply(element, id("a")), empty)));
         assertThat(expression("[a, b,]"), equalTo(apply(apply(element, id("a")), apply(apply(element, id("b")), empty))));

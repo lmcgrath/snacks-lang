@@ -15,8 +15,8 @@ public abstract class SnacksList<T> implements Iterable<T> {
         List<T> result = new ArrayList<>();
         SnacksList<T> tail = list;
         while (true) {
-            if (tail instanceof ListElement) {
-                ListElement<T> element = (ListElement<T>) tail;
+            if (tail instanceof ListEntry) {
+                ListEntry<T> element = (ListEntry<T>) tail;
                 result.add(element.get_0());
                 tail = element.get_1();
             } else if (tail instanceof EmptyList) {
@@ -42,7 +42,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
     public static <T> SnacksList<T> toList(T... elements) {
         SnacksList<T> tail = EmptyList.value();
         for (int i = elements.length - 1; i >= 0; i--) {
-            tail = new ListElement<>(elements[i], tail);
+            tail = new ListEntry<>(elements[i], tail);
         }
         return tail;
     }
@@ -51,20 +51,20 @@ public abstract class SnacksList<T> implements Iterable<T> {
         List<T> list = new ArrayList<>(elements);
         SnacksList<T> tail = EmptyList.value();
         for (int i = list.size() - 1; i >= 0; i--) {
-            tail = new ListElement<>(list.get(i), tail);
+            tail = new ListEntry<>(list.get(i), tail);
         }
         return tail;
     }
 
     @SnackType
-    public static Type type() {
+    public static Type listType() {
         return listOf(var("snacks.lang.List#a"));
     }
 
     public static Type listOf(Type type) {
         return algebraic("snacks.lang.List", asList(type), asList(
             simple("snacks.lang.EmptyList"),
-            record("snacks.lang.ListElement", asList(type), asList(
+            record("snacks.lang.ListEntry", asList(type), asList(
                 property("_0", type),
                 property("_1", recur("snacks.lang.List", asList(type)))
             ))
@@ -81,16 +81,16 @@ public abstract class SnacksList<T> implements Iterable<T> {
 
     public abstract int size();
 
-    @Snack(name = "ListElement", kind = TYPE, arguments = "snacks.lang.List#a")
-    public static final class ListElement<T> extends SnacksList<T> {
+    @Snack(name = "ListEntry", kind = TYPE, arguments = "snacks.lang.List#a")
+    public static final class ListEntry<T> extends SnacksList<T> {
 
         @SnackType
         public static Type type() {
-            return record("snacks.lang.ListElement", asList(var("snacks.lang.List#a")), asList(
+            return record("snacks.lang.ListEntry", asList(var("snacks.lang.List#a")), asList(
                 property("_0", var("snacks.lang.List#a")),
                 property("_1", algebraic("snacks.lang.List", asList(var("snacks.lang.List#a")), asList(
                     simple("snacks.lang.EmptyList"),
-                    recur("snacks.lang.ListElement", asList(var("snacks.lang.List#a")))
+                    recur("snacks.lang.ListEntry", asList(var("snacks.lang.List#a")))
                 )))
             ));
         }
@@ -123,7 +123,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
         private final T _0;
         private final SnacksList<T> _1;
 
-        public ListElement(T _0, SnacksList<T> _1) {
+        public ListEntry(T _0, SnacksList<T> _1) {
             this._0 = _0;
             this._1 = _1;
         }
@@ -132,8 +132,8 @@ public abstract class SnacksList<T> implements Iterable<T> {
         public boolean equals(Object o) {
             if (o == this) {
                 return true;
-            } else if (o instanceof ListElement) {
-                ListElement other = (ListElement) o;
+            } else if (o instanceof ListEntry) {
+                ListEntry other = (ListEntry) o;
                 return new EqualsBuilder()
                     .append(_0, other._0)
                     .append(_1, other._1)
@@ -165,7 +165,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
             if (!(remainder instanceof EmptyList)) {
                 while (!(remainder instanceof EmptyList)) {
                     builder.append(", ");
-                    ListElement tail = (ListElement) remainder;
+                    ListEntry tail = (ListEntry) remainder;
                     builder.append(tail._0);
                     remainder = tail._1;
                 }
@@ -174,7 +174,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
             return builder.toString();
         }
 
-        @Snack(name = "ListElement", kind = EXPRESSION)
+        @Snack(name = "ListEntry", kind = EXPRESSION)
         public static final class Constructor {
 
             private static Constructor instance;
@@ -188,7 +188,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
 
             @SnackType
             public static Type type() {
-                return func(var("snacks.lang.List#a"), func(SnacksList.type(), ListElement.type()));
+                return func(var("snacks.lang.List#a"), func(SnacksList.listType(), ListEntry.type()));
             }
 
             public Object apply(Object value) {
@@ -205,7 +205,7 @@ public abstract class SnacksList<T> implements Iterable<T> {
 
                 @SuppressWarnings("unchecked")
                 public Object apply(Object tail) {
-                    return new ListElement(value, (SnacksList) tail);
+                    return new ListEntry(value, (SnacksList) tail);
                 }
             }
         }
@@ -303,13 +303,13 @@ public abstract class SnacksList<T> implements Iterable<T> {
 
         @Override
         public boolean hasNext() {
-            return tail instanceof ListElement;
+            return tail instanceof ListEntry;
         }
 
         @Override
         public T next() {
-            if (tail instanceof ListElement) {
-                ListElement<T> element = (ListElement<T>) tail;
+            if (tail instanceof ListEntry) {
+                ListEntry<T> element = (ListEntry<T>) tail;
                 T data = element.get_0();
                 tail = element.get_1();
                 return data;

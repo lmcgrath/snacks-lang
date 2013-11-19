@@ -88,7 +88,6 @@ import snacks.lang.parser.syntax.RecordDeclaration;
 import snacks.lang.parser.syntax.RecordMatcher;
 import snacks.lang.parser.syntax.RegexLiteral;
 import snacks.lang.parser.syntax.Result;
-import snacks.lang.parser.syntax.SetLiteral;
 import snacks.lang.parser.syntax.Signature;
 import snacks.lang.parser.syntax.StringLiteral;
 import snacks.lang.parser.syntax.SubImport;
@@ -665,11 +664,6 @@ public class Translator implements SyntaxVisitor {
     @Override
     public void visitResult(Result node) {
         result = result(translate(node.getExpression()));
-    }
-
-    @Override
-    public void visitSetLiteral(SetLiteral node) {
-        throw new UnsupportedOperationException(); // TODO
     }
 
     @Override

@@ -360,16 +360,8 @@ property
     ;
 
 list_literal
-    = LSQUARE RSQUARE
-        {: return qid("snacks", "lang", "EmptyList"); :}
-    | LSQUARE list.es COMMA? RSQUARE
-        {:
-            Symbol tail = qid("snacks", "lang", "EmptyList");
-            for (int i = es.length - 1; i >= 0; i--) {
-                tail = apply(apply(qid("snacks", "lang", "ListElement"), es[i]), tail);
-            }
-            return tail;
-        :}
+    = LSQUARE RSQUARE                   {: return list(); :}
+    | LSQUARE list.es COMMA? RSQUARE    {: return list(es); :}
     ;
 
 tuple_literal

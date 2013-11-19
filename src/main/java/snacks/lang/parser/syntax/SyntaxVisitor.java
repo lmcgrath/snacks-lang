@@ -108,8 +108,6 @@ public interface SyntaxVisitor {
 
     void visitResult(Result node);
 
-    void visitSetLiteral(SetLiteral node);
-
     void visitSignature(Signature node);
 
     void visitStringLiteral(StringLiteral node);

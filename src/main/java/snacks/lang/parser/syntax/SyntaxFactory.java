@@ -185,6 +185,14 @@ public final class SyntaxFactory {
         return new OperatorDeclaration(new Operator(LEFT, precedence, 2, id));
     }
 
+    public static Symbol list(Symbol... entries) {
+        Symbol tail = qid("snacks", "lang", "EmptyList");
+        for (int i = entries.length - 1; i >= 0; i--) {
+            tail = apply(apply(qid("snacks", "lang", "ListEntry"), entries[i]), tail);
+        }
+        return tail;
+    }
+
     public static Symbol literal(String value) {
         return new StringLiteral(value);
     }
@@ -341,11 +349,25 @@ public final class SyntaxFactory {
     }
 
     public static Symbol set(Symbol element, Symbol[] elements) {
-        return new SetLiteral(element, elements);
+        Symbol[] newElements = new Symbol[elements.length + 1];
+        newElements[0] = element;
+        arraycopy(elements, 0, newElements, 1, elements.length);
+        return set(newElements);
     }
 
-    public static Symbol set(Symbol... elements) {
-        return new SetLiteral(elements);
+    public static Symbol set(Symbol... entries) {
+        Symbol empty = qid("snacks", "lang", "EmptySet");
+        Symbol entry = qid("snacks", "lang", "SetEntry");
+        Symbol list = qid("snacks", "lang", "ListEntry");
+        Symbol emptyList = qid("snacks", "lang", "EmptyList");
+        Symbol hashOf = qid("snacks", "lang", "hashOf");
+        Symbol tail = empty;
+        for (int i = entries.length - 1; i >= 0; i--) {
+            Symbol elements = apply(apply(list, entries[i]), emptyList);
+            Symbol hash = apply(hashOf, entries[i]);
+            tail = apply(apply(apply(apply(entry, hash), elements), tail), empty);
+        }
+        return tail;
     }
 
     public static Symbol sig(String identifier, Symbol type) {

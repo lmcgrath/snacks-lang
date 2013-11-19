@@ -366,13 +366,6 @@ public class SyntaxPrinter implements SyntaxVisitor {
     }
 
     @Override
-    public void visitSetLiteral(SetLiteral node) {
-        for (Symbol element : node.getElements()) {
-            print(element);
-        }
-    }
-
-    @Override
     public void visitSignature(Signature node) {
         print(node.getIdentifier());
         print(node.getType());
